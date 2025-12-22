@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Sign in – ScalVest</title>
+<title>Sign in – ScaleVest</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -109,7 +109,7 @@ ul{
 }
 .modal-left{
   width:50%;
-  background:url("scalvestauth.jpg") center/cover no-repeat;
+  background:url("scalevestauth.jpg") center/cover no-repeat;
   position:relative;
 }
 .modal-left::after{
@@ -168,7 +168,7 @@ ul{
     </div>
 
     <div class="modal-right">
-      <h3 id="authTitle">New to ScalVest?</h3>
+      <h3 id="authTitle">New to ScaleVest?</h3>
       <p id="authSubtitle">Create an account</p>
 
       <p id="authSwitch">
@@ -252,11 +252,11 @@ function switchToSigninUI(){
   AUTH_MODE = "signin";
   authTitle.innerText = "Welcome back";
   authSubtitle.innerText = "Sign in to continue";
-  authSwitch.innerHTML = `New to ScalVest? <span onclick="switchToSignupUI()">Create account</span>`;
+  authSwitch.innerHTML = `New to ScaleVest? <span onclick="switchToSignupUI()">Create account</span>`;
 }
 function switchToSignupUI(){
   AUTH_MODE = "signup";
-  authTitle.innerText = "New to ScalVest?";
+  authTitle.innerText = "New to ScaleVest?";
   authSubtitle.innerText = "Create an account";
   authSwitch.innerHTML = `Already have an account? <span onclick="switchToSigninUI()">Sign in</span>`;
 }
