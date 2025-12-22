@@ -4,24 +4,23 @@
 <meta charset="UTF-8">
 <title>Inventory</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 
 <style>
 *{box-sizing:border-box;font-family:Inter}
-body{
-  margin:0;
-  background:#f6f7fb;
-  padding:30px;
-}
+body{margin:0;background:#f6f7fb;padding:30px}
 
 /* HEADER */
 .top{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:30px;
+  margin-bottom:30px
 }
 .top h2{margin:0;font-size:22px}
+.top .actions{display:flex;gap:10px}
 .top button{
   padding:12px 18px;
   border:none;
@@ -29,42 +28,19 @@ body{
   background:#000;
   color:#fff;
   font-weight:600;
-  cursor:pointer;
+  cursor:pointer
 }
 
 /* STATS */
-.stats{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:20px;
-  margin-bottom:30px;
-}
-.stat{
-  background:#fff;
-  padding:22px;
-  border-radius:20px;
-  box-shadow:0 10px 25px rgba(0,0,0,.06);
-}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px}
+.stat{background:#fff;padding:22px;border-radius:20px;box-shadow:0 10px 25px rgba(0,0,0,.06)}
 .stat span{color:#666;font-size:14px}
 .stat h3{margin:8px 0 0;font-size:26px}
 
 /* TABLE */
-.table{
-  background:#fff;
-  border-radius:22px;
-  box-shadow:0 15px 35px rgba(0,0,0,.08);
-  overflow:hidden;
-}
-.head,.row{
-  display:grid;
-  grid-template-columns:2fr 1fr 1fr 2fr;
-  padding:16px 22px;
-  align-items:center;
-}
-.head{
-  background:#f1f3f7;
-  font-weight:600;
-}
+.table{background:#fff;border-radius:22px;box-shadow:0 15px 35px rgba(0,0,0,.08);overflow:hidden}
+.head,.row{display:grid;grid-template-columns:2fr 1fr 1fr 2fr;padding:16px 22px;align-items:center}
+.head{background:#f1f3f7;font-weight:600}
 .row:not(:last-child){border-bottom:1px solid #eee}
 
 /* STATUS */
@@ -72,42 +48,32 @@ body{
 .status.low{color:#d97706}
 .status.out{color:#dc2626}
 
-/* ACTIONS */
-.actions button{
-  margin-right:6px;
-  padding:6px 12px;
-  border-radius:10px;
-  border:1px solid #ddd;
-  background:#fff;
-  cursor:pointer;
-}
-.actions .remove{
-  color:#dc2626;
-  border-color:#dc2626;
-}
+/* BUTTONS */
+.row button{margin-right:6px;padding:6px 12px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer}
+.remove{color:#dc2626;border-color:#dc2626}
 
-/* MODAL */
-#modal{
+/* MODALS */
+.modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.45);
+  background:rgba(0,0,0,.5);
   display:none;
   align-items:center;
   justify-content:center;
+  z-index:1000
 }
 .modal-box{
   width:380px;
   background:#fff;
-  padding:28px;
-  border-radius:22px;
+  padding:26px;
+  border-radius:22px
 }
-.modal-box h3{margin-top:0}
 .modal-box input{
   width:100%;
   padding:14px;
   border-radius:14px;
   border:1px solid #ddd;
-  margin-bottom:12px;
+  margin-bottom:12px
 }
 .modal-box button{
   width:100%;
@@ -117,47 +83,82 @@ body{
   background:#000;
   color:#fff;
   font-weight:600;
-  cursor:pointer;
+  cursor:pointer
+}
+
+/* SCANNER */
+#scanner{
+  position:relative;
+  width:100%;
+  height:240px;
+  background:#000;
+  border-radius:14px;
+  overflow:hidden
+}
+.laser{
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:2px;
+  background:red;
+  box-shadow:0 0 10px red;
+  animation:scan 2s linear infinite
+}
+@keyframes scan{
+  0%{top:0}
+  50%{top:100%}
+  100%{top:0}
 }
 </style>
 </head>
 
 <body>
 
+<audio id="beep" src="https://assets.mixkit.co/sfx/preview/mixkit-beep-tone-2864.mp3"></audio>
+
 <!-- HEADER -->
 <div class="top">
   <h2 id="businessName">Inventory</h2>
-  <button onclick="openModal()">Add Product</button>
+  <div class="actions">
+    <button onclick="openScanner()">Scan Barcode</button>
+    <button onclick="openAdd()">Add Product</button>
+  </div>
 </div>
 
 <!-- STATS -->
 <div class="stats">
   <div class="stat"><span>Total Products</span><h3 id="total">0</h3></div>
-  <div class="stat"><span>Low in quantity</span><h3 id="low">0</h3></div>
-  <div class="stat"><span>Out of Stock</span><h3 id="out">0</h3></div>
+  <div class="stat"><span>Low</span><h3 id="low">0</h3></div>
+  <div class="stat"><span>Out</span><h3 id="out">0</h3></div>
 </div>
 
 <!-- TABLE -->
 <div class="table">
   <div class="head">
-    <div>Product</div>
-    <div>Quantity</div>
-    <div>Status</div>
-    <div>Actions</div>
+    <div>Product</div><div>Quantity</div><div>Status</div><div>Actions</div>
   </div>
   <div id="products"></div>
 </div>
 
 <!-- ADD PRODUCT MODAL -->
-<div id="modal">
+<div id="addModal" class="modal">
   <div class="modal-box">
     <h3>Add Product</h3>
-<button onclick="openScanner()">Scan Barcode</button>
-
     <input id="pname" placeholder="Product name">
     <input id="pqty" type="number" placeholder="Quantity">
-    <input id="punit" placeholder="Unit (kg, gm, pcs…)">
-    <button onclick="addProduct()">Save Product</button>
+    <input id="punit" placeholder="Unit">
+    <button onclick="addProduct()">Save</button>
+  </div>
+</div>
+
+<!-- SCANNER MODAL -->
+<div id="scannerModal" class="modal">
+  <div class="modal-box">
+    <h3>Scan Barcode</h3>
+    <p style="font-size:13px;color:#666">Allow camera permission</p>
+    <div id="scanner"><div class="laser"></div></div>
+    <button onclick="closeScanner()">Close</button>
   </div>
 </div>
 
@@ -168,88 +169,107 @@ body{
 
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-  authDomain: "scalevest-163a0.firebaseapp.com",
-  databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-  projectId: "scalevest-163a0"
+  apiKey:"AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+  authDomain:"scalevest-163a0.firebaseapp.com",
+  databaseURL:"https://scalevest-163a0-default-rtdb.firebaseio.com",
+  projectId:"scalevest-163a0"
 });
 
-const auth = firebase.auth();
-const db = firebase.database();
+const auth=firebase.auth(), db=firebase.database();
+let inventory={}, invRef;
+let scannerRunning=false, scanLock=false, lastCode="";
 
-let inventory = {};
-let invRef;
-
-/* AUTH + BUSINESS */
-auth.onAuthStateChanged(user=>{
-  if(!user){ location.href="login.html"; return; }
-
-  const businessId = user.uid;
-  invRef = db.ref(`Businesses/${businessId}/inventory`);
-
-  db.ref(`BusinessOwners/${businessId}/businessName`)
-    .once("value")
-    .then(s=> document.getElementById("businessName").textContent = s.val() || "Inventory");
-
-  invRef.on("value",snap=>{
-    inventory = snap.val() || {};
-    render();
-  });
+/* AUTH */
+auth.onAuthStateChanged(u=>{
+  if(!u){location.href="login.html";return;}
+  invRef=db.ref(`Businesses/${u.uid}/inventory`);
+  invRef.on("value",s=>{inventory=s.val()||{};render();});
 });
 
-/* MODAL */
-function openModal(){ document.getElementById("modal").style.display="flex"; }
-function closeModal(){ document.getElementById("modal").style.display="none"; }
+/* MODALS */
+function openAdd(){addModal.style.display="flex"}
+function openScanner(){scannerModal.style.display="flex"; startScanner()}
+function closeScanner(){
+  scannerModal.style.display="none";
+  if(scannerRunning){Quagga.stop();scannerRunning=false;}
+}
 
-/* ADD PRODUCT */
+/* ADD */
 function addProduct(){
-  const name=pname.value.trim();
-  const qty=parseFloat(pqty.value);
-  const unit=punit.value.trim();
-  if(!name||isNaN(qty)||!unit) return alert("Fill all fields");
-
-  invRef.push({name,quantity:qty,unit,createdAt:Date.now()});
+  if(!pname.value||!pqty.value||!punit.value)return alert("Fill all fields");
+  invRef.push({name:pname.value,quantity:+pqty.value,unit:punit.value});
   pname.value=pqty.value=punit.value="";
-  closeModal();
+  addModal.style.display="none";
 }
 
-/* UPDATE QTY */
-function updateQty(id,type){
-  const amt=parseFloat(prompt("Enter amount"));
-  if(isNaN(amt)||amt<=0) return;
-  let q=inventory[id].quantity;
-  q = type==="inc" ? q+amt : Math.max(0,q-amt);
-  invRef.child(id).update({quantity:q});
+/* SCANNER */
+function startScanner(){
+  if(scannerRunning) return;
+
+  Quagga.init({
+    inputStream:{
+      type:"LiveStream",
+      target:scanner,
+      constraints:{facingMode:{exact:"environment"}}
+    },
+    decoder:{readers:["ean_reader","ean_8_reader","upc_reader","code_128_reader"]}
+  },err=>{
+    if(err){alert("Camera error or not HTTPS");return;}
+    Quagga.start(); scannerRunning=true;
+  });
+
+  Quagga.offDetected();
+  Quagga.onDetected(d=>handleBarcode(d.codeResult.code));
 }
 
-/* REMOVE */
-function removeProduct(id){
-  if(confirm("Remove product?")) invRef.child(id).remove();
+/* SMART SCAN */
+async function handleBarcode(code){
+  if(scanLock||code===lastCode) return;
+  scanLock=true; lastCode=code;
+
+  document.getElementById("beep").play();
+  if(navigator.vibrate) navigator.vibrate(200);
+
+  const found=Object.entries(inventory).find(([_,p])=>p.barcode===code);
+  if(found){
+    invRef.child(found[0]).update({quantity:found[1].quantity+1});
+    return resetScan();
+  }
+
+  let name="Unknown Product";
+  try{
+    const r=await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+    const j=await r.json();
+    if(j.status===1) name=j.product.product_name||name;
+  }catch(e){}
+
+  invRef.push({
+    name, quantity:1, unit:"pcs", barcode:code, createdAt:Date.now()
+  });
+
+  resetScan();
+}
+
+function resetScan(){
+  setTimeout(()=>{scanLock=false;},1200);
 }
 
 /* RENDER */
 function render(){
   products.innerHTML="";
   let lowC=0,outC=0;
-
   Object.entries(inventory).forEach(([id,p])=>{
-    let status="In Stock",cls="ok";
-    if(p.quantity===0){status="Out of Stock";cls="out";outC++}
-    else if(p.quantity<10){status="Low in quantity";cls="low";lowC++}
-
+    let s="In Stock",c="ok";
+    if(p.quantity===0){s="Out";c="out";outC++}
+    else if(p.quantity<10){s="Low";c="low";lowC++}
     products.innerHTML+=`
-      <div class="row">
-        <div>${p.name}</div>
-        <div>${p.quantity} ${p.unit}</div>
-        <div class="status ${cls}">${status}</div>
-        <div class="actions">
-          <button onclick="updateQty('${id}','inc')">Increase</button>
-          <button onclick="updateQty('${id}','dec')">Decrease</button>
-          <button class="remove" onclick="removeProduct('${id}')">Remove</button>
-        </div>
-      </div>`;
+    <div class="row">
+      <div>${p.name}</div>
+      <div>${p.quantity} ${p.unit}</div>
+      <div class="status ${c}">${s}</div>
+      <div><button class="remove" onclick="invRef.child('${id}').remove()">Remove</button></div>
+    </div>`;
   });
-
   total.textContent=Object.keys(inventory).length;
   low.textContent=lowC;
   out.textContent=outC;
