@@ -208,11 +208,26 @@ ul{
 <div class="email-overlay" id="signinModal">
   <div class="email-glass">
     <h3>Sign in</h3>
+
     <input id="signinEmail" placeholder="Email">
     <input id="signinPassword" type="password">
+
     <button onclick="emailSignin()">Sign in</button>
+
+    <p style="text-align:right;font-size:12px;margin-top:8px;">
+      <span style="cursor:pointer;color:#93c5fd" onclick="forgotPassword()">
+        Forgot password?
+      </span>
+    </p>
+
+    <div class="divider"><span>or</span></div>
+
+    <button class="auth-btn" onclick="googleLogin()">Continue with Google</button>
+    <button class="auth-btn" onclick="appleLogin()">Continue with Apple</button>
+    <button class="auth-btn" onclick="facebookLogin()">Continue with Facebook</button>
   </div>
 </div>
+
 
 <!-- VERIFY -->
 <div class="email-overlay" id="verifyingModal">
@@ -247,7 +262,10 @@ function getRedirectURL(){
 
 /* UI */
 function emailAuthHandler(){ signupModal.style.display="flex"; }
-function switchToSigninUI(){ signinModal.style.display="flex"; signupModal.style.display="none"; }
+function switchToSigninUI(){
+  signupModal.style.display="none";
+  signinModal.style.display="flex";
+}
 function checkPasswordRules(){
   const p = signupPassword.value;
   rule_length.innerText=(p.length>=6?"✅":"❌")+" At least 6 characters";
@@ -291,6 +309,18 @@ function emailSignup(){
   });
 }
 
+function forgotPassword(){
+  const email = signinEmail.value;
+  if(!email) return alert("Enter your email first");
+
+  auth.sendPasswordResetEmail(email)
+    .then(()=>{
+      alert("Password reset email sent");
+    })
+    .catch(err=>{
+      alert(err.message);
+    });
+}
 
 /* SIGNIN */
 function emailSignin(){
