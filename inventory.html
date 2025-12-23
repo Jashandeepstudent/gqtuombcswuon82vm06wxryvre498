@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -404,8 +403,7 @@ function startVoice(){
   }
 
   recognition = new webkitSpeechRecognition();
- recognition.lang = "hi-IN"; // supports Hindi + English mixed
-
+  recognition.lang = "en-US";
   recognition.continuous = false;
   recognition.interimResults = false;
 
@@ -426,8 +424,7 @@ function startVoice(){
   recognition.onresult = e => {
     const text = e.results[0][0].transcript.toLowerCase();
     console.log("VOICE:", text);
-    handleAIVoice(text);
-
+    processVoice(text);
   };
 
   recognition.start();
@@ -499,32 +496,20 @@ function extractNumber(text){
   return match ? parseInt(match[0]) : null;
 }
 
-function changeByName(name, diff, unit="pcs"){
+function changeByName(name, diff){
   if(!name) return showToast("Say product name");
 
-  // Find product with matching name AND unit
-  const found = Object.entries(inventory).find(([_,p])=>{
-    return p.name.toLowerCase() === name.toLowerCase() && (p.unit || "pcs") === unit;
-  });
+  const found = Object.entries(inventory)
+    .find(([_,p])=>p.name.toLowerCase() === name.toLowerCase());
 
-  if(!found){
-    // If not found with exact unit, try matching just name
-    const fallback = Object.entries(inventory).find(([_,p])=>p.name.toLowerCase()===name.toLowerCase());
-    if(fallback){
-      const [id, p] = fallback;
-      invRef.child(id).update({ quantity: Math.max(0, p.quantity + diff) });
-      return showToast(`${name} (${p.unit || "pcs"}) updated`);
-    }
-    return showToast("Product not found");
-  }
+  if(!found) return showToast("Product not found");
 
-  const [id, p] = found;
+  const [id,p] = found;
   const newQty = Math.max(0, p.quantity + diff);
+
   invRef.child(id).update({ quantity: newQty });
-  showToast(`${name} (${unit}) updated`);
+  showToast(`${name} updated`);
 }
-
-
 
 function removeByName(name){
   if(!name) return showToast("Say product name");
@@ -536,70 +521,6 @@ function removeByName(name){
 
   invRef.child(found[0]).remove();
   showToast(`${name} removed`);
-}
-async function handleAIVoice(text){
-  try{
-    showToast("Thinking...");
-    const res = await fetch("https://voiceserver-ahh8.onrender.com/voice", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text })
-    });
-
-    const cmd = await res.json();
-    console.log("SERVER CMD:", cmd);
-
-    if(!cmd || !cmd.action){
-      speak("Sorry, I did not understand");
-      return;
-    }
-
-    const qty = cmd.quantity || 1;
-    const unit = cmd.unit || "pcs";
-
-    if(cmd.action === "add"){
-      invRef.push({
-        name: cmd.product,
-        quantity: qty,
-        unit
-      });
-      speak(`${qty} ${unit} of ${cmd.product} added`);
-    }
-
-    if(cmd.action === "increase"){
-      changeByName(cmd.product, qty, unit);
-      speak(`${cmd.product} increased by ${qty} ${unit}`);
-    }
-
-    if(cmd.action === "decrease"){
-      changeByName(cmd.product, -qty, unit);
-      speak(`${cmd.product} reduced by ${qty} ${unit}`);
-    }
-
-    if(cmd.action === "remove"){
-      removeByName(cmd.product);
-      speak(`${cmd.product} removed`);
-    }
-
-  }catch(err){
-    console.error(err);
-    speak("Server error");
-  }
-}
-
-function speak(text){
-  if(!("speechSynthesis" in window)) return;
-
-  const msg = new SpeechSynthesisUtterance(text);
-
-msg.lang = text.match(/[अ-ह]/) ? "hi-IN" : "en-US";
-
-  msg.rate = 0.95;
-  msg.pitch = 1;
-  msg.volume = 1;
-
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(msg);
 }
 
 </script>
