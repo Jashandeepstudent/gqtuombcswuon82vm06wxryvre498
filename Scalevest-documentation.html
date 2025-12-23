@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Insupra Documentation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  background: #0e1117;
+  color: #e5e7eb;
+}
+
+/* HEADER */
+header {
+  padding: 24px 60px;
+  border-bottom: 1px solid #1f2933;
+  background: #0b0f14;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 26px;
+  color: #ffffff;
+}
+
+/* CONTAINER */
+.container {
+  padding: 70px 60px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* INTRO */
+.intro {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.intro h2 {
+  font-size: 40px;
+  margin-bottom: 16px;
+  color: #ffffff;
+}
+
+.intro p {
+  font-size: 18px;
+  color: #cbd5e1;
+  max-width: 700px;
+  margin: auto;
+}
+
+/* OPTION BOXES */
+.option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 28px;
+  margin-top: 50px;
+}
+
+.option-card {
+  background: #0b0f14;
+  border: 1px solid #1f2933;
+  border-radius: 16px;
+  padding: 36px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.option-card:hover {
+  transform: translateY(-6px);
+  border-color: #2563eb;
+}
+
+.option-card svg {
+  width: 42px;
+  height: 42px;
+  stroke: #2563eb;
+  margin-bottom: 18px;
+}
+
+.option-card h3 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  color: #ffffff;
+}
+
+.option-card p {
+  font-size: 15px;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+/* SECTIONS */
+.section {
+  margin-top: 100px;
+}
+
+.section h2 {
+  font-size: 32px;
+  margin-bottom: 16px;
+  color: #ffffff;
+}
+
+.section p {
+  font-size: 16px;
+  color: #cbd5e1;
+  line-height: 1.7;
+}
+
+.info-boxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 30px;
+}
+
+.info-box {
+  background: #0b0f14;
+  border: 1px solid #1f2933;
+  border-radius: 14px;
+  padding: 26px;
+}
+
+.info-box h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #ffffff;
+}
+
+.info-box ul {
+  padding-left: 18px;
+}
+
+.info-box li {
+  margin-bottom: 10px;
+  color: #cbd5e1;
+}
+
+/* FOOTER */
+footer {
+  margin-top: 120px;
+  padding: 40px;
+  border-top: 1px solid #1f2933;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  header, .container {
+    padding: 30px 24px;
+  }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Insupra Documentation</h1>
+</header>
+
+<div class="container">
+
+  <!-- INTRO -->
+  <div class="intro">
+    <h2>Choose what describes you</h2>
+    <p>
+      Insupra adapts to your role. Select your path to understand
+      how the platform works for you.
+    </p>
+  </div>
+
+  <!-- OPTION BOXES -->
+  <div class="option-grid">
+
+    <!-- BUSINESS -->
+    <div class="option-card" onclick="location.href='#business'">
+      <!-- BUSINESS SVG -->
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M3 21h18M4 21V7a2 2 0 012-2h12a2 2 0 012 2v14M9 21V9h6v12" />
+      </svg>
+      <h3>Small Business</h3>
+      <p>Track operations, cashflow, and growth in one trusted system.</p>
+    </div>
+
+    <!-- STARTUP -->
+    <div class="option-card" onclick="location.href='#startup'">
+      <!-- STARTUP SVG -->
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12 2l3 7h7l-5.5 4 2 7-6.5-4.5L6 20l2-7L2 9h7z" />
+      </svg>
+      <h3>Startup</h3>
+      <p>Replace pitch decks with verified traction and real metrics.</p>
+    </div>
+
+    <!-- INVESTOR -->
+    <div class="option-card" onclick="location.href='#investor'">
+      <!-- INVESTOR SVG -->
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="1.6">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12 1v22M5 6l7-5 7 5M5 18l7 5 7-5" />
+      </svg>
+      <h3>Investor</h3>
+      <p>Discover companies early using real performance signals.</p>
+    </div>
+
+  </div>
+
+  <!-- BUSINESS SECTION -->
+  <div class="section" id="business">
+    <h2>For Small Businesses</h2>
+    <p>Insupra becomes your single source of operational truth.</p>
+
+    <div class="info-boxes">
+      <div class="info-box">
+        <h4>Operational Tracking</h4>
+        <ul>
+          <li>Revenue & expenses</li>
+          <li>Inventory & cashflow</li>
+          <li>Growth trends</li>
+        </ul>
+      </div>
+
+      <div class="info-box">
+        <h4>Scale Ready</h4>
+        <ul>
+          <li>Clean historical data</li>
+          <li>Credibility</li>
+          <li>Ai Partner as Business Partner</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- STARTUP SECTION -->
+  <div class="section" id="startup">
+    <h2>For Startups</h2>
+    <p>Show traction, not promises.</p>
+
+    <div class="info-boxes">
+      <div class="info-box">
+        <h4>Verified Metrics</h4>
+        <ul>
+          <li>Live performance data</li>
+          <li>No inflated numbers</li>
+          <li>Standardized metrics</li>
+        </ul>
+      </div>
+
+      <div class="info-box">
+        <h4>Investor Access</h4>
+        <ul>
+          <li>Signal-based discovery</li>
+          <li>Direct questions</li>
+          <li>Faster decisions</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVESTOR SECTION -->
+  <div class="section" id="investor">
+    <h2>For Investors</h2>
+    <p>Invest using reality, not storytelling.</p>
+
+    <div class="info-boxes">
+      <div class="info-box">
+        <h4>Early Discovery</h4>
+        <ul>
+          <li>Pre-round visibility</li>
+          <li>Real traction signals</li>
+          <li>Comparable metrics</li>
+        </ul>
+      </div>
+
+      <div class="info-box">
+        <h4>Lower Risk</h4>
+        <ul>
+          <li>Verified data</li>
+          <li>Reduced diligence time</li>
+          <li>Founder accountability</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  © 2025 Insupra — Building clarity between business and capital.
+</footer>
+
+</body>
+</html>
