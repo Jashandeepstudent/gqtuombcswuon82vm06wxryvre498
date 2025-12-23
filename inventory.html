@@ -156,6 +156,7 @@ body{margin:0;background:#f6f7fb;padding:30px}
     <button onclick="addProduct()">Save</button>
   </div>
 </div>
+<input id="barcodeInput" style="position:absolute; left:-9999px;">
 
 <div id="scannerModal" class="modal">
   <div class="modal-box">
@@ -206,6 +207,15 @@ function openScanner(){
   scannerModal.style.display="flex";
   startScanner();
 }
+const input = document.getElementById('barcodeInput');
+input.focus();
+
+input.addEventListener('keypress', e => {
+  if (e.key === 'Enter') {
+    handleBarcode(input.value); // your existing scan handler
+    input.value = '';
+  }
+});
 
 function closeScanner(){scannerModal.style.display="none";if(scannerRunning){Quagga.stop();scannerRunning=false}}
 
