@@ -1,343 +1,1033 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Sign in – ScaleVest</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <meta charset="UTF-8">
+  <title>ScaelVest – Business & Investment Intelligence</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<style>
-*{box-sizing:border-box;font-family:Inter}
-body{margin:0;color:#fff}
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-/* VIDEO BG */
-#bgVideo{
-  position:fixed;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  z-index:-2;
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: #0e1117;
+      color: #ffffff;
+    }
+
+   /* HEADER / NAVBAR */
+header {
+  position: relative;
+  width: 100%;
+  background: #ffffff;
+  padding: 16px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
 }
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  background:rgba(10,15,25,.45);
-  z-index:-1;
+
+header .left {
+  display: flex;
+  align-items: center;
+}
+
+header img {
+  height: 34px;
+}
+.investor-icon img {
+  width: 40px;
+  height: 40px;
+  display: block;
+}
+.purpose-card:hover .investor-icon img {
+  transform: scale(1.08);
+}
+
+/* RIGHT NAV */
+header .right {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+/* RIGHT NAV */
+header .right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+/* MODAL OVERLAY */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+/* MODAL CONTAINER */
+.modal {
+  width: 900px;
+  height: 520px;
+  background: white;
+  border-radius: 14px;
+  display: flex;
+  overflow: hidden;
+}
+
+/* LEFT SIDE */
+.modal-left {
+  width: 50%;
+  background: url("join-bg.jpg") center/cover no-repeat;
+  position: relative;
+}
+
+.modal-left::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+}
+
+.overlay-text {
+  position: relative;
+  z-index: 2;
+  padding: 40px;
+  color: white;
+}
+
+.overlay-text h2 {
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.overlay-text ul {
+  list-style: none;
+  padding: 0;
+}
+
+.overlay-text li {
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.overlay-text li::before {
+  content: "✓";
+  margin-right: 10px;
+  color: white;
+  font-weight: bold;
+}
+
+/* RIGHT SIDE */
+.modal-right {
+  width: 50%;
+  padding: 40px;
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.modal-right h3 {
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+
+.small-text {
+  font-size: 14px;
+  color: #475569;
+  margin-bottom: 20px;
+}
+
+.link {
+  color: #2563eb;
+  cursor: pointer;
+  font-weight: 500;
 }
 
 /* AUTH BUTTONS */
-.auth-btn{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  width:100%;
-  padding:13px 16px;
-  margin-bottom:12px;
-  border-radius:10px;
-  border:1px solid #e5e7eb;
-  background:#fff;
-  font-weight:600;
-  cursor:pointer;
-}
-.auth-btn img{width:18px;height:18px}
-
-/* MODALS */
-.modal-overlay,.email-overlay{
-  position:fixed;
-  inset:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-.email-overlay{
-  background:rgba(0,0,0,.45);
-  backdrop-filter:blur(8px);
-  display:none;
-  z-index:100;
-}
-.email-glass{
-  width:360px;
-  padding:28px;
-  border-radius:20px;
-  background:rgba(255,255,255,.15);
-  backdrop-filter:blur(20px);
-}
-.email-glass input{
-  width:100%;
-  padding:12px;
-  margin-bottom:10px;
-  border-radius:10px;
-  border:none;
-  background:rgba(255,255,255,.2);
-  color:#fff;
-}
-.email-glass button{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:12px;
-  background:#2563eb;
-  color:#fff;
-  font-weight:600;
-  cursor:pointer;
+.auth-btn {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #e5e7eb;
+  background: white;
 }
 
-ul{
-  margin:6px 0 14px 14px;
-  padding:0;
-  font-size:12px;
-  line-height:1.6;
+.auth-btn:hover {
+  background: #f8fafc;
 }
 
-.modal{
-  width:900px;
-  height:520px;
-  background:#fff;
-  border-radius:16px;
-  display:flex;
-  overflow:hidden;
+.google { }
+.email { }
+.apple { }
+.facebook { }
+
+.terms {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 20px;
 }
-.modal-left{
-  width:50%;
-  background:url("scalevestauth.jpg") center/cover no-repeat;
-  position:relative;
+
+/* TEXT LINKS */
+.nav-link {
+  font-family: 'Inter', sans-serif;
+  font-size: 14.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #0f172a;
+  cursor: pointer;
+  transition: color 0.2s ease;
 }
-.modal-left::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,.55);
+
+.nav-link:hover {
+  color: #2563eb;
 }
-.overlay-text{
-  position:relative;
-  z-index:2;
-  padding:42px;
+
+/* JOIN BUTTON */
+.join-btn {
+  font-family: 'Inter', sans-serif;
+  padding: 8px 18px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
-.modal-right{
-  width:50%;
-  padding:40px;
-  color:#000;
+
+.join-btn:hover {
+  background: #1e4fd8;
 }
-.divider{
-  text-align:center;
-  margin:18px 0;
-  position:relative;
+.nav-link {
+  font-weight: 400;
 }
-.divider span{
-  background:#fff;
-  padding:0 10px;
-  font-size:12px;
-  color:#6b7280;
+
+/* TEXT LINKS */
+.nav-link {
+  font-size: 15px;
+  font-weight: 500;
+  color: #0e1117;
+  cursor: pointer;
 }
-.divider::before{
-  content:"";
-  position:absolute;
-  top:50%;
-  left:0;
-  right:0;
-  height:1px;
-  background:#e5e7eb;
-  z-index:-1;
+
+.nav-link:hover {
+  text-decoration: underline;
 }
-.loader{
-  width:42px;
-  height:42px;
-  border:4px solid rgba(255,255,255,.3);
-  border-top:4px solid #60a5fa;
-  border-radius:50%;
-  animation:spin 1s linear infinite;
-  margin:0 auto 14px;
+
+/* JOIN BUTTON */
+.join-btn {
+  padding: 8px 18px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 999px; /* pill style */
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
 }
-@keyframes spin{to{transform:rotate(360deg)}}
-</style>
+
+.join-btn:hover {
+  background: #1e4fd8;
+}
+
+
+    /* HERO SECTION */
+    .hero {
+      position: relative;
+      height: 70vh;
+      min-height: 600px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    .hero video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      z-index: 1;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(8, 12, 20, 0.75);
+      z-index: 2;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 3;
+      padding: 0 60px;
+      max-width: 900px;
+    }
+
+    .hero-content h1 {
+      font-size: 48px;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .hero-content p {
+      font-size: 18px;
+      color: #cbd5e1;
+      max-width: 650px;
+      line-height: 1.6;
+    }
+
+    .hero-buttons {
+      margin-top: 30px;
+    }
+
+    .hero-buttons button {
+      padding: 14px 26px;
+      margin-right: 12px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+
+    .primary {
+      background: #2563eb;
+      color: white;
+    }
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon img {
+  width: 40px;
+  height: 40px;
+  display: block;
+}
+
+    .secondary {
+      background: transparent;
+      color: #e5e7eb;
+      border: 1px solid #334155;
+    }
+@media (max-width: 768px) {
+  header {
+    padding: 14px 24px;
+  }
+
+  .nav-link {
+    display: none; /* hides text links on mobile */
+  }
+
+  .join-btn {
+    padding: 8px 14px;
+  }
+}
+
+    /* CONTENT SECTION */
+    .sections {
+      background: #0b0f14;
+      padding: 80px 60px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .card {
+      background: #0e1117;
+      border: 1px solid #1f2933;
+      border-radius: 12px;
+      padding: 28px;
+    }
+
+    .card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      color: #9ca3af;
+      line-height: 1.5;
+    }
+.modal-left {
+  width: 50%;
+  background: url("scalevestauth.jpg") center/cover no-repeat;
+  position: relative;
+}
+.modal-right h3 {
+  font-size: 24px;
+  margin-bottom: 22px;
+}
+/* RIGHT PANEL BASE */
+.modal-right {
+  background: #ffffff;
+  color: #0f172a;
+}
+/* PURPOSE MODAL */
+.purpose-modal {
+  width: 720px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 40px;
+  position: relative;
+  text-align: center;
+}
+
+.purpose-modal h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.purpose-sub {
+  color: #64748b;
+  font-size: 15px;
+  margin-top: 8px;
+}
+
+.purpose-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  margin-top: 36px;
+}
+
+.purpose-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 28px 20px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: #ffffff;
+}
+
+.purpose-card:hover {
+  transform: translateY(-6px);
+  border-color: #2563eb;
+  box-shadow: 0 20px 40px rgba(37,99,235,0.15);
+}
+
+.purpose-card h3 {
+  margin-top: 16px;
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.purpose-card p {
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.purpose-card .icon {
+  font-size: 36px;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .purpose-modal {
+    width: 92%;
+  }
+
+  .purpose-cards {
+    grid-template-columns: 1fr;
+  }
+}
+/* CARD ROW */
+.purpose-cards {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+/* CARD STYLE */
+.purpose-card {
+  width: 220px;
+  padding: 20px 16px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.purpose-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+}
+
+/* ICON */
+.purpose-card .icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+  background: #f1f5f9;
+}
+
+.purpose-card .icon img {
+  width: 36px;
+  height: 36px;
+}
+
+/* TEXT */
+.purpose-card h3 {
+  margin: 8px 0 6px;
+  font-size: 16px;
+}
+
+.purpose-card p {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+@media (max-width: 768px) {
+  .purpose-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+/* CLOSE BUTTON */
+.close-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  font-size: 18px;
+  color: #000;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* HEADING */
+.auth-heading {
+  font-size: 24px;
+  font-weight: 700;
+  color: #000;
+  margin-bottom: 22px;
+}
+
+.sub-heading {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-top: 6px;
+}
+
+/* AUTH BUTTONS – CLEAN BLACK STYLE */
+.auth-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 14px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #ffffff;
+  color: #000;
+  border: 1px solid #d1d5db;
+}
+
+.auth-btn:hover {
+  background: #f9fafb;
+}
+
+/* ICONS */
+.auth-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+/* DIVIDER */
+.divider {
+  text-align: center;
+  margin: 20px 0;
+  position: relative;
+}
+
+.divider span {
+  background: #fff;
+  padding: 0 10px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e5e7eb;
+  z-index: -1;
+}
+/* VIDEO CARDS */
+.video-card {
+  position: relative;
+  height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: none;
+}
+
+/* VIDEO */
+.video-card video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+/* DARK OVERLAY */
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.65),
+    rgba(0,0,0,0.85)
+  );
+  z-index: 2;
+}
+
+/* CONTENT */
+.card-content {
+  position: relative;
+  z-index: 3;
+  padding: 28px;
+  color: #ffffff;
+}
+
+.card-content h3 {
+  margin-top: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.card-content p {
+  color: #e5e7eb;
+  line-height: 1.6;
+  margin-top: 10px;
+}
+
+/* HOVER EFFECT (OPTIONAL BUT 🔥) */
+.video-card:hover video {
+  transform: scale(1.05);
+  transition: transform 0.6s ease;
+}
+
+/* TERMS */
+.terms {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 16px;
+  text-align: center;
+}
+
+.terms .link {
+  color: #2563eb;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.sub-heading {
+  display: block;
+  font-size: 14px;
+  font-weight: 400;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* AUTH BUTTONS WITH LOGOS */
+.auth-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #e5e7eb;
+  background: white;
+}
+
+.auth-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+/* DIVIDER */
+.divider {
+  text-align: center;
+  margin: 18px 0;
+  position: relative;
+}
+
+.divider span {
+  background: white;
+  padding: 0 10px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e5e7eb;
+  z-index: -1;
+}
+
+/* LOGO BOTTOM */
+.auth-logo {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.auth-logo img {
+  height: 28px;
+  opacity: 0.9;
+}
+/* DESCRIPTION UNDER HEADING */
+.auth-desc {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 24px;
+}
+
+.auth-link {
+  color: #2563eb;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+
+    footer {
+      padding: 40px;
+      text-align: center;
+      color: #64748b;
+      border-top: 1px solid #1f2933;
+    }
+
+    @media (max-width: 768px) {
+      header, .hero-content, .sections {
+        padding: 24px;
+      }
+
+      .hero-content h1 {
+        font-size: 34px;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-<video id="bgVideo" autoplay muted loop playsinline>
-  <source src="loginpage.mp4" type="video/mp4">
-</video>
+<header>
+  <div class="left">
+    <!-- TEMP LOGO -->
+    <img src="https://dummyimage.com/120x40/000/fff&text=ScaleVest "ScaleVest Logo">
+  </div>
 
-<div class="modal-overlay">
+  <div class="right">
+    <span class="nav-link">English</span>
+    <span class="nav-link">Sign in</span>
+    <span class="nav-link">Explore</span>
+    <button class="join-btn" onclick="openModal()">Join</button>
+
+  </div>
+</header>
+
+
+<section class="hero">
+  <video id="bgVideo" autoplay muted playsinline></video>
+
+  <div class="hero-content">
+    <h1>Where real business data becomes clear decisions</h1>
+    <p>
+      ScaleVest connects small businesses, startups, and investors through
+      verified operational data — not assumptions or pitch decks.
+    </p>
+
+    <div class="hero-buttons">
+      <button class="primary" onclick="openPurposeModal()">Get Started</button>
+
+      <button class="secondary" onclick="window.location.href='Scalevest-documentation.html'">
+  See how it works
+</button>
+
+    </div>
+  </div>
+</section>
+<!-- JOIN MODAL -->
+<div class="modal-overlay" id="joinModal">
   <div class="modal">
-    <div class="modal-left">
-      <div class="overlay-text">
-        <h2>Verified • Secure • Scalable</h2>
+
+
+<div class="modal-left">
+  <div class="overlay-text">
+    <h2>Your business grows here</h2>
+    <ul>
+      <li>All-in-one business setup</li>
+      <li>Scale and grow</li>
+      <li>Analyze from here</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- RIGHT SIDE (FORM) -->
+<div class="modal-right">
+  <span class="close-btn" onclick="closeModal()">✕</span>
+
+<h3 class="auth-heading">
+  New to ScaleVest?
+  <span class="sub-heading">Create a new account</span>
+</h3>
+
+<p class="auth-desc">
+  Already have an account?
+  <span class="auth-link" onclick="openSignIn()">Sign in</span>
+</p>
+
+  <!-- PRIMARY AUTH -->
+  <button class="auth-btn google">
+    <img src="google.svg"> Continue with Google
+  </button>
+
+  <button class="auth-btn email">
+    <img src="email.svg"> Continue with Email
+  </button>
+
+  <div class="divider">
+    <span>or</span>
+  </div>
+
+  <!-- SECONDARY AUTH -->
+  <button class="auth-btn apple">
+    <img src="apple.svg"> Continue with Apple
+  </button>
+
+  <button class="auth-btn facebook">
+    <img src="facebook.svg"> Continue with Facebook
+  </button>
+
+
+
+  <p class="terms">
+    By registering, you agree to
+    <span class="link">ScaleVest Terms & Conditions</span>
+  </p>
+</div>
+
+
+  </div>
+</div>
+
+<section class="sections">
+  <div class="cards">
+
+    <!-- SMALL BUSINESS -->
+    <div class="card video-card">
+      <video autoplay muted loop playsinline>
+        <source src="business.mp4" type="video/mp4">
+      </video>
+      <div class="card-overlay"></div>
+      <div class="card-content">
+        <h3>For Small Businesses</h3>
+        <p>
+          Track inventory, sales,records,cashflow, and growth etc. in one place.
+          Understand what truly drives profit.
+        </p>
       </div>
     </div>
 
-    <div class="modal-right">
-      <h3 id="authTitle">New to ScaleVest?</h3>
-      <p id="authSubtitle">Create an account</p>
-
-      <p id="authSwitch">
-        Already have an account?
-        <span onclick="switchToSigninUI()">Sign in</span>
-      </p>
-
-      <button class="auth-btn" onclick="googleLogin()">Continue with Google</button>
-      <button class="auth-btn" onclick="emailAuthHandler()">Continue with Email</button>
-
-      <div class="divider"><span>or</span></div>
-
-      <button class="auth-btn" onclick="appleLogin()">Continue with Apple</button>
-      <button class="auth-btn" onclick="facebookLogin()">Continue with Facebook</button>
+    <!-- STARTUPS -->
+    <div class="card video-card">
+      <video autoplay muted loop playsinline>
+        <source src="startup.mp4" type="video/mp4">
+      </video>
+      <div class="card-overlay"></div>
+      <div class="card-content">
+        <h3>For Startups</h3>
+        <p>
+          Show real traction, not slides.
+          Let investors see verified performance , pitch for direct answer or meeting.
+        </p>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- SIGNUP -->
-<div class="email-overlay" id="signupModal">
-  <div class="email-glass">
-    <h3>Create account</h3>
-    <input id="signupEmail" placeholder="Email">
-    <input id="signupPassword" type="password" placeholder="Password" oninput="checkPasswordRules()">
-    <ul>
-      <li id="rule_length">❌ At least 6 characters</li>
-      <li id="rule_number">❌ Contains a number</li>
-      <li id="rule_special">❌ Contains a special character</li>
-    </ul>
-    <button onclick="emailSignup()">Create account</button>
-  </div>
-</div>
+    <!-- INVESTORS -->
+    <div class="card video-card">
+      <video autoplay muted loop playsinline>
+        <source src="investor.mp4" type="video/mp4">
+      </video>
+      <div class="card-overlay"></div>
+      <div class="card-content">
+        <h3>For Investors</h3>
+        <p>
+          Discover promising companies early through real data signals and pitches,
+          not cold outreach.
+        </p>
+      </div>
+    </div>
 
-<!-- SIGNIN -->
-<div class="email-overlay" id="signinModal">
-  <div class="email-glass">
-    <h3>Sign in</h3>
-    <input id="signinEmail" placeholder="Email">
-    <input id="signinPassword" type="password">
-    <button onclick="emailSignin()">Sign in</button>
   </div>
-</div>
+</section>
 
-<!-- VERIFY -->
-<div class="email-overlay" id="verifyingModal">
-  <div class="email-glass" style="text-align:center">
-    <div class="loader"></div>
-    <h3>Verifying your email</h3>
-    <p>Check your inbox and click the link</p>
-    <button onclick="resendVerification()">Resend email</button>
-    <p id="resendMsg"></p>
-  </div>
-</div>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<footer>
+  © 2025 ScaleVest. Building clarity between business and capital.
+</footer>
+<script>
+  const modal = document.getElementById("joinModal");
+
+  function openModal() {
+    modal.style.display = "flex";
+  }
+
+  function closeModal() {
+    modal.style.display = "none";
+  }
+</script>
 
 <script>
-firebase.initializeApp({
-  apiKey:"AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-  authDomain:"scalevest-163a0.firebaseapp.com",
-  projectId:"scalevest-163a0"
-});
+  const videos = [
+    "hero1.mp4"
+  ];
 
-const auth = firebase.auth();
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  const video = document.getElementById("bgVideo");
+  let index = 0;
 
-/* 🔥 GITHUB PAGES SAFE REDIRECT */
-function getRedirectURL(){
-  return window.location.origin +
-    window.location.pathname.replace(/\/[^\/]*$/, "/") +
-    "login.html";
-}
+  function setVideo(src) {
+    video.src = src;
+    video.muted = true;
+    video.playsInline = true;
 
-/* UI */
-function emailAuthHandler(){ signupModal.style.display="flex"; }
-function switchToSigninUI(){ signinModal.style.display="flex"; signupModal.style.display="none"; }
-function checkPasswordRules(){
-  const p = signupPassword.value;
-  rule_length.innerText=(p.length>=6?"✅":"❌")+" At least 6 characters";
-  rule_number.innerText=(/\d/.test(p)?"✅":"❌")+" Contains a number";
-  rule_special.innerText=(/[!@#$%^&*]/.test(p)?"✅":"❌")+" Contains a special character";
-}
-function validPassword(p){
-  return p.length>=6 && /\d/.test(p) && /[!@#$%^&*]/.test(p);
-}
-function showVerifying(){
-  signupModal.style.display="none";
-  signinModal.style.display="none";
-  verifyingModal.style.display="flex";
-}
-
-/* SIGNUP */
-function emailSignup(){
-  if(!validPassword(signupPassword.value))
-    return alert("Password does not meet requirements");
-
-  auth.createUserWithEmailAndPassword(
-    signupEmail.value,
-    signupPassword.value
-  )
-  .then(async cred=>{
-    await cred.user.sendEmailVerification({
-      url: getRedirectURL()
-    });
-
-    // ❌ DO NOT SIGN OUT
-    showVerifying();
-  })
-  .catch(err=>{
-    if(err.code==="auth/email-already-in-use"){
-      alert("Account already exists. Please sign in.");
-      switchToSigninUI();
-      signupModal.style.display="none";
-    }else{
-      alert(err.message);
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Autoplay fallback (mobile safety)
+        video.setAttribute("controls", "controls");
+      });
     }
-  });
-}
-
-
-/* SIGNIN */
-function emailSignin(){
-  auth.signInWithEmailAndPassword(signinEmail.value, signinPassword.value)
-  .then(async res=>{
-    await res.user.reload();
-    if(!res.user.emailVerified){
-      showVerifying();
-      await auth.signOut();
-      return;
-    }
-    location.href="mainbusinesshub.html";
-  }).catch(e=>alert(e.message));
-}
-
-/* RESEND */
-async function resendVerification(){
-  const user = auth.currentUser;
-  if(!user) return resendMsg.innerText="Sign in again";
-  await user.sendEmailVerification({ url:getRedirectURL() });
-  resendMsg.innerText="✅ Email sent again";
-}
-
-/* SOCIAL */
-function googleLogin(){
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-  .then(()=>location.href="mainbusinesshub.html");
-}
-function facebookLogin(){
-  auth.signInWithPopup(new firebase.auth.FacebookAuthProvider())
-  .then(()=>location.href="mainbusinesshub.html");
-}
-function appleLogin(){
-  auth.signInWithPopup(new firebase.auth.OAuthProvider("apple.com"))
-  .then(()=>location.href="mainbusinesshub.html");
-}
-
-/* AUTO LOGIN AFTER VERIFY */
-auth.onAuthStateChanged(async user=>{
-  if(!user) return;
-  await user.reload();
-  if(user.emailVerified){
-    location.href="mainbusinesshub.html";
-  }else{
-    showVerifying();
   }
-});
+
+  video.addEventListener("ended", () => {
+    index = (index + 1) % videos.length;
+    setVideo(videos[index]);
+  });
+
+  // Start first video after page load
+  window.addEventListener("load", () => {
+    setVideo(videos[index]);
+  });
+</script>
+<!-- PURPOSE MODAL -->
+<div class="modal-overlay" id="purposeModal" style="z-index:200">
+  <div class="purpose-modal">
+
+    <span class="close-btn" onclick="closePurposeModal()">✕</span>
+
+    <h2>What brings you to ScaleVest?</h2>
+    <p class="purpose-sub">
+      Choose one to personalize your experience
+    </p>
+
+    <div class="purpose-cards">
+  <!-- INVESTOR -->
+  <div class="purpose-card" onclick="goTo('investor-side.html')">
+    <div class="icon">
+      <img src="investor.svg" alt="Investor">
+    </div>
+    <h3>Investor</h3>
+    <p>Discover verified businesses & data-backed opportunities</p>
+  </div>
+
+  <!-- STARTUP -->
+  <div class="purpose-card" onclick="goTo('startup-side.html')">
+    <div class="icon">
+      <img src="startup.svg" alt="Startup Founder">
+    </div>
+    <h3>Startup Founder</h3>
+    <p>Show traction, raise capital & grow faster</p>
+  </div>
+
+  <!-- BUSINESS -->
+  <div class="purpose-card" onclick="goTo('business-side.html')">
+    <div class="icon">
+      <img src="shop.svg" alt="Business Owner">
+    </div>
+    <h3>Business Owner</h3>
+    <p>Track operations, profit & performance clearly</p>
+  </div>
+</div>
+
+</div>
+<script>
+  function openPurposeModal() {
+    document.getElementById("purposeModal").style.display = "flex";
+  }
+
+  function closePurposeModal() {
+    document.getElementById("purposeModal").style.display = "none";
+  }
+</script>
+
+<script>
+  function goTo(page) {
+    window.location.href = page;
+  }
 </script>
 
 </body>
