@@ -525,65 +525,24 @@ function removeByName(name){
   invRef.child(found[0]).remove();
   showToast(`${name} removed`);
 }
-async function aiUnderstand(text){
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "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"
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-content: `
-You are an inventory command parser.
-
-User may speak Hindi, English, or Hinglish.
-
-Detect:
-- action: add | increase | decrease | remove
-- product name
-- quantity (number)
-- unit (kg, g, litre, ml, pcs, packet, dozen)
-
-Rules:
-- If unit not spoken, use "pcs"
-- Hindi units mapping:
-  kilo = kg
-  kilo gram = kg
-  litre = litre
-  liter = litre
-  gram = g
-  packet = packet
-  piece = pcs
-  number = pcs
-
-Return ONLY JSON like:
-{
- "action":"increase",
- "product":"rice",
- "quantity":2,
- "unit":"kg"
-}
-`
-
-        },
-        { role: "user", content: text }
-      ]
-    })
-  });
-
-  const data = await res.json();
-  return JSON.parse(data.choices[0].message.content);
-}
 async function handleAIVoice(text){
   try{
     showToast("Thinking...");
-    const cmd = await aiUnderstand(text);
 
-    console.log("AI CMD:", cmd);
+  const res = await fetch("https://voiceserver-ahh8.onrender.com/voice", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ text })
+});
+
+
+    const cmd = await res.json();
+    console.log("SERVER CMD:", cmd);
+
+    if(!cmd || !cmd.action){
+      speak("Sorry, I did not understand");
+      return;
+    }
 
     const qty = cmd.quantity || 1;
     const unit = cmd.unit || "pcs";
@@ -594,31 +553,30 @@ async function handleAIVoice(text){
         quantity: qty,
         unit
       });
-      speak(`Added ${qty} ${unit} of ${cmd.product}`);
-      showToast(`Added ${cmd.product}`);
+      speak(`${qty} ${unit} of ${cmd.product} added`);
     }
 
     if(cmd.action === "increase"){
       changeByName(cmd.product, qty);
-      speak(`${cmd.product} stock increased by ${qty} ${unit}`);
+      speak(`${cmd.product} increased by ${qty}`);
     }
 
     if(cmd.action === "decrease"){
       changeByName(cmd.product, -qty);
-      speak(`${cmd.product} stock reduced by ${qty} ${unit}`);
+      speak(`${cmd.product} reduced by ${qty}`);
     }
 
     if(cmd.action === "remove"){
       removeByName(cmd.product);
-      speak(`${cmd.product} removed from inventory`);
+      speak(`${cmd.product} removed`);
     }
 
-  }catch(e){
-    console.error(e);
-    speak("Sorry, I didn't understand");
-    showToast("AI error");
+  }catch(err){
+    console.error(err);
+    speak("Server error");
   }
 }
+
 function speak(text){
   if(!("speechSynthesis" in window)) return;
 
@@ -632,14 +590,6 @@ msg.lang = text.match(/[अ-ह]/) ? "hi-IN" : "en-US";
 
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(msg);
-}
-if(cmd.action !== "add"){
-  const found = Object.values(inventory)
-    .find(p => p.name.toLowerCase().includes(cmd.product.toLowerCase()));
-
-  if(found && found.unit !== unit){
-    speak(`Warning. Unit mismatch. Stored in ${found.unit}`);
-  }
 }
 
 </script>
