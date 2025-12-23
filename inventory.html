@@ -128,13 +128,14 @@ body{margin:0;background:#f6f7fb;padding:30px}
 
 <div class="top">
   <h2>Inventory</h2>
- <div class="actions">
-  <button onclick="openScanner()">Scan Barcode</button>
-  <button onclick="openAdd()">Add Product</button>
-  <button onclick="startVoice()">🎙 Voice</button>
+  <div class="actions">
+    <button onclick="openScanner()">Scan Barcode</button>
+    <button onclick="openAdd()">Add Product</button>
+    <button onclick="startVoice()">🎙 Voice</button>
+    <button id="notifToggle" onclick="toggleNotifications()">Notifications: OFF</button>
+  </div>
 </div>
 
-</div>
 
 <div class="stats">
   <div class="stat"><span>Total Products</span><h3 id="total">0</h3></div>
@@ -389,6 +390,46 @@ function changeQty(id, direction){
 
   invRef.child(id).update({ quantity: newQty });
 }
+let notificationsAllowed = false;
+
+auth.onAuthStateChanged(async u => {
+  if (!u) return;
+  
+  // Load business notification setting from Firebase
+  const notifRef = db.ref(`Businesses/${u.uid}/settings/notificationsAllowed`);
+  notifRef.on("value", snap => {
+    notificationsAllowed = snap.val() || false;
+    updateNotifButton();
+  });
+});
+
+function toggleNotifications(){
+  notificationsAllowed = !notificationsAllowed;
+  db.ref(`Businesses/${auth.currentUser.uid}/settings`).update({ notificationsAllowed });
+  updateNotifButton();
+}
+
+function updateNotifButton(){
+  const btn = document.getElementById("notifToggle");
+  btn.textContent = `Notifications: ${notificationsAllowed ? "ON" : "OFF"}`;
+}
+function sendPushNotification(title, message){
+  if(!notificationsAllowed) return; // 🚫 blocked
+  if(Notification.permission === "granted"){
+    new Notification(title, { body: message, icon: "/icon.png" });
+  }
+}
+if(p.quantity === 0 && !p.notifiedOut){
+  sendPushNotification("Out of Stock", `${p.name} is out of stock!`);
+  p.notifiedOut = true;
+  invRef.child(id).update({ notifiedOut: true });
+}
+else if(p.quantity <= 5 && !p.notifiedLow){
+  sendPushNotification("Low Stock", `${p.name} is almost out of stock!`);
+  p.notifiedLow = true;
+  invRef.child(id).update({ notifiedLow: true });
+}
+
 /* ===============================
    🎙️ VOICE ASSISTANT ENGINE
 ================================ */
