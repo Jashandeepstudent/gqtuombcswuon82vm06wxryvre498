@@ -6,7 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script src="https://unpkg.com/@zxing/library@latest"></script>
+
 
 <style>
 *{box-sizing:border-box;font-family:Inter}
@@ -43,6 +44,11 @@ body{margin:0;background:#f6f7fb;padding:30px}
   gap: 10px;
   flex-wrap: wrap; /* allow buttons to wrap if not enough space */
 }
+.scan-zone{
+  inset: 38% 18%;
+  border: 2px solid rgba(0,255,0,.8);
+}
+
 .top .actions button{
   padding:12px 18px;
   border:none;
@@ -52,6 +58,30 @@ body{margin:0;background:#f6f7fb;padding:30px}
   font-weight:600;
   cursor:pointer;
   white-space: nowrap; /* prevent text wrapping inside button */
+}
+#scanner video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+#torchBtn{
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:#000;
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  width:42px;
+  height:42px;
+  font-size:18px;
+  z-index:50;
+}
+
+.scan-zone{
+  inset:38% 18%;
+  border:2px solid rgba(0,255,0,.9);
 }
 
 /* MODALS */
@@ -160,11 +190,17 @@ body{margin:0;background:#f6f7fb;padding:30px}
 <div id="scannerModal" class="modal">
   <div class="modal-box">
     <h3>Scan Barcode</h3>
-    <div id="scanner">
-      <div class="scan-zone"></div>
-      <div class="laser"></div>
-      <div id="scanCount" class="counter">0</div>
-    </div>
+<div id="scanner">
+  <video id="video" muted playsinline></video>
+
+  <div class="scan-zone"></div>
+  <div class="laser"></div>
+
+  <div class="counter" id="scanCount">0</div>
+
+  <button id="torchBtn" onclick="toggleTorch()">🔦</button>
+</div>
+
     <button onclick="closeScanner()">Close</button>
   </div>
 </div>
@@ -244,36 +280,127 @@ function greenFlash(){
 
 
 /* 🔥 INSANE MODE INIT */
-function startScanner(){
-  if(scannerRunning) return;
+let lastScanned = {}; // track last scanned codes to prevent duplicates
+let codeReader;
+let scanActive = false;
+let videoStream = null;
+let torchOn = false;
+let lastScanTime = 0;
 
-  const isLaptop=!/Android|iPhone/i.test(navigator.userAgent);
+async function startScanner(){
+  if(scanActive) return;
 
-  Quagga.init({
-    inputStream:{
-      type:"LiveStream",
-      target:scanner,
-      constraints:{
-        facingMode:isLaptop?"user":"environment",
-        width:{ideal:1280},
-        height:{ideal:720}
-      }
-    },
-    locator:{patchSize:"small",halfSample:true},
-    numOfWorkers:navigator.hardwareConcurrency||4,
-    frequency:10,
-    decoder:{readers:["ean_reader","upc_reader","code_128_reader"]},
-    locate:true
-  },e=>{
-    if(e){alert("Camera / HTTPS error");return;}
-    Quagga.start();scannerRunning=true;
-  });
+  unlockAudio();
+  scanActive = true;
 
-  Quagga.onDetected(d=>{
-    if(d.codeResult.confidence<0.75) return;
-    handleBarcode(d.codeResult.code);
+  const video = document.getElementById("video");
+
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const backCam = devices.find(d => d.kind==="videoinput" && /back|rear|environment/i.test(d.label));
+
+  const constraints = {
+    video: {
+      deviceId: backCam ? { exact: backCam.deviceId } : undefined,
+      facingMode: "environment",
+      width: { ideal: 1280 },
+      height: { ideal: 720 },
+      advanced: [
+        { zoom: 1 },
+        { focusMode: "continuous" },
+        { exposureMode: "continuous" },
+        { whiteBalanceMode: "continuous" }
+      ]
+    }
+  };
+
+  videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+  video.srcObject = videoStream;
+  await video.play();
+
+  codeReader = new ZXing.BrowserMultiFormatReader();
+
+  codeReader.decodeFromVideoElement(video,(result,err)=>{
+    if(!result) return;
+
+    const now = Date.now();
+    if(now - lastScanTime < 400) return; // bulk-safe
+    lastScanTime = now;
+
+    handleBarcode(result.text);
+
+    if(navigator.vibrate) navigator.vibrate([30,20,30]);
   });
 }
+function toggleTorch(){
+  if(!videoStream) return;
+
+  const track = videoStream.getVideoTracks()[0];
+  const caps = track.getCapabilities();
+  if(!caps.torch) return alert("Torch not supported");
+
+  torchOn = !torchOn;
+  track.applyConstraints({ advanced:[{ torch: torchOn }]});
+}
+
+function closeScanner(){
+  scannerModal.style.display="none";
+  scanActive = false;
+
+  if(codeReader){
+    codeReader.reset();
+    codeReader = null;
+  }
+
+  if(videoStream){
+    videoStream.getTracks().forEach(t=>t.stop());
+    videoStream = null;
+  }
+}
+function openScanner(){
+  scannerModal.style.display="flex";
+  startScanner();
+}
+
+
+
+async function handleBarcode(code){
+  const now = Date.now();
+
+  // Prevent scanning the same code within 2 seconds
+  if(lastScanned[code] && now - lastScanned[code] < 2000) return;
+  lastScanned[code] = now;
+
+  scanTotal++;
+  document.getElementById("scanCount").textContent = scanTotal;
+
+  let name = "Unknown Product";
+  const found = Object.entries(inventory).find(([_,p])=>p.barcode===code);
+
+  if(found){
+    name = found[1].name;
+    invRef.child(found[0]).update({
+      quantity: found[1].quantity + 1
+    });
+    document.getElementById("beep-ok").play().catch(()=>{});
+  }else{
+    document.getElementById("beep-new").play().catch(()=>{});
+    try{
+      const r = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+      const j = await r.json();
+      if(j.status === 1) name = j.product.product_name || name;
+    }catch(e){}
+    invRef.push({
+      name,
+      quantity: 1,
+      unit: "pcs",
+      barcode: code
+    });
+  }
+
+  greenFlash();
+  showToast(name);
+}
+
 
 async function handleBarcode(code){
   const now = Date.now();
