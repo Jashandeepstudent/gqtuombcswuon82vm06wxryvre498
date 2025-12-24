@@ -403,8 +403,7 @@ function startVoice(){
   }
 
   recognition = new webkitSpeechRecognition();
-recognition.lang = "hi-IN";
-
+  recognition.lang = "en-US";
   recognition.continuous = false;
   recognition.interimResults = false;
 
@@ -413,12 +412,10 @@ recognition.lang = "hi-IN";
     showToast("Listening...");
   };
 
- recognition.onerror = (e) => {
-  listening = false;
-  console.error("Voice error:", e);
-  showToast("Mic permission denied");
-};
-
+  recognition.onerror = () => {
+    listening = false;
+    showToast("Voice error");
+  };
 
   recognition.onend = () => {
     listening = false;
@@ -427,8 +424,7 @@ recognition.lang = "hi-IN";
   recognition.onresult = e => {
     const text = e.results[0][0].transcript.toLowerCase();
     console.log("VOICE:", text);
-   handleAIVoice(text);
-
+    processVoice(text);
   };
 
   recognition.start();
@@ -482,58 +478,6 @@ function processVoice(cmd){
   }
 
   showToast("Command not understood");
-}
-async function handleAIVoice(text) {
-  showToast("Thinking...");
-
-  try {
-    const res = await fetch("/api/openai", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text })
-    });
-
-    if (!res.ok) {
-      showToast("Server error");
-      return;
-    }
-
-    const cmd = await res.json();
-    console.log("AI CMD:", cmd);
-
-    if (!cmd || !cmd.action || !cmd.product) {
-      showToast("Didn't understand");
-      return;
-    }
-
-    const qty = Number(cmd.quantity || 1);
-    const unit = cmd.unit || "pcs";
-
-    if (cmd.action === "add") {
-      invRef.push({
-        name: cmd.product,
-        quantity: qty,
-        unit: unit
-      });
-      showToast(`Added ${qty} ${unit} ${cmd.product}`);
-    }
-
-    if (cmd.action === "increase") {
-      changeByName(cmd.product, qty);
-    }
-
-    if (cmd.action === "decrease") {
-      changeByName(cmd.product, -qty);
-    }
-
-    if (cmd.action === "remove") {
-      removeByName(cmd.product);
-    }
-
-  } catch (err) {
-    console.error("VOICE API ERROR:", err);
-    showToast("API not reachable");
-  }
 }
 
 /* ===============================
