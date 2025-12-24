@@ -41,7 +41,12 @@ app.post("/api/parse-voice", async (req, res) => {
     });
 
     const data = await response.json();
-    const text = data?.choices?.[0]?.message?.content || "";
+   const choices = data.choices;
+if (!choices || choices.length === 0 || !choices[0].message) {
+  return res.status(500).json({ error: "No valid response from OpenAI" });
+}
+const text = choices[0].message.content;
+
 
     let parsed = { action: null, name: null, quantity: 1 };
 
