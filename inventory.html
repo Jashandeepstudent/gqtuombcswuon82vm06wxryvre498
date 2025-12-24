@@ -483,39 +483,56 @@ function processVoice(cmd){
 
   showToast("Command not understood");
 }
-async function handleAIVoice(text){
+async function handleAIVoice(text) {
   showToast("Thinking...");
 
-  const res = await fetch("/api/openai", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text })
-  });
+  try {
+    const res = await fetch("/api/openai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text })
+    });
 
-  const cmd = await res.json();
-  console.log("AI CMD:", cmd);
+    if (!res.ok) {
+      showToast("Server error");
+      return;
+    }
 
-  if(!cmd || !cmd.action){
-    showToast("Didn't understand");
-    return;
-  }
+    const cmd = await res.json();
+    console.log("AI CMD:", cmd);
 
-  const qty = cmd.quantity || 1;
+    if (!cmd || !cmd.action || !cmd.product) {
+      showToast("Didn't understand");
+      return;
+    }
 
-  if(cmd.action === "add"){
-    invRef.push({ name: cmd.product, quantity: qty, unit: cmd.unit || "pcs" });
-  }
+    const qty = Number(cmd.quantity || 1);
+    const unit = cmd.unit || "pcs";
 
-  if(cmd.action === "increase"){
-    changeByName(cmd.product, qty);
-  }
+    if (cmd.action === "add") {
+      invRef.push({
+        name: cmd.product,
+        quantity: qty,
+        unit: unit
+      });
+      showToast(`Added ${qty} ${unit} ${cmd.product}`);
+    }
 
-  if(cmd.action === "decrease"){
-    changeByName(cmd.product, -qty);
-  }
+    if (cmd.action === "increase") {
+      changeByName(cmd.product, qty);
+    }
 
-  if(cmd.action === "remove"){
-    removeByName(cmd.product);
+    if (cmd.action === "decrease") {
+      changeByName(cmd.product, -qty);
+    }
+
+    if (cmd.action === "remove") {
+      removeByName(cmd.product);
+    }
+
+  } catch (err) {
+    console.error("VOICE API ERROR:", err);
+    showToast("API not reachable");
   }
 }
 
