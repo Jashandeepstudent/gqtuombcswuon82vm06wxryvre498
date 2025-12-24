@@ -11,30 +11,38 @@
 body {
   margin: 0;
   font-family: Inter, sans-serif;
-  background: #000;
-  color: white;
+  background: black;
   overflow: hidden;
 }
 
+/* START BUTTON */
 #startBtn {
-  position: absolute;
+  position: fixed;
   inset: 0;
+  z-index: 99999;
   background: #000;
   color: #00ff55;
-  font-size: 22px;
+  font-size: 26px;
+  font-weight: bold;
   border: none;
   cursor: pointer;
-  z-index: 999;
 }
 
+/* CAMERA VIEW */
 #scanner {
-  width: 100vw;
-  height: 100vh;
-  position: relative;
+  position: fixed;
+  inset: 0;
   display: none;
+  z-index: 1;
+  pointer-events: none;
 }
 
-/* Green Scan Box */
+/* Enable clicks AFTER start */
+#scanner.active {
+  pointer-events: auto;
+}
+
+/* GREEN BOX */
 .scan-box {
   position: absolute;
   top: 25%;
@@ -45,27 +53,24 @@ body {
   border-radius: 12px;
   box-shadow: 0 0 20px #00ff55;
   pointer-events: none;
-  z-index: 10;
 }
 
-/* Flash effect */
+/* FLASH */
 .flash {
   position: fixed;
   inset: 0;
-  background: rgba(0,255,0,0.25);
+  background: rgba(0,255,0,.25);
   opacity: 0;
   transition: .15s;
-  z-index: 999;
+  z-index: 9999;
 }
-.flash.show {
-  opacity: 1;
-}
+.flash.show { opacity: 1; }
 </style>
 </head>
 
 <body>
 
-<button id="startBtn">▶ START SCANNER</button>
+<button id="startBtn">▶ TAP TO START SCANNER</button>
 
 <div id="scanner">
   <div class="scan-box"></div>
@@ -74,30 +79,31 @@ body {
 <div id="flash" class="flash"></div>
 
 <script>
-const flash = document.getElementById("flash");
 const startBtn = document.getElementById("startBtn");
 const scannerDiv = document.getElementById("scanner");
+const flash = document.getElementById("flash");
 
 function greenFlash() {
   flash.classList.add("show");
   setTimeout(() => flash.classList.remove("show"), 120);
 }
 
-startBtn.addEventListener("click", async () => {
-  startBtn.innerText = "Starting camera...";
-  
+startBtn.onclick = async () => {
   try {
-    // Ask browser permission FIRST
+    startBtn.innerText = "REQUESTING CAMERA...";
+    
     await navigator.mediaDevices.getUserMedia({ video: true });
 
     startBtn.style.display = "none";
     scannerDiv.style.display = "block";
+    scannerDiv.classList.add("active");
 
     startScanner();
+
   } catch (e) {
     alert("Camera permission denied");
   }
-});
+};
 
 function startScanner() {
   ScanditSDK.configure(
@@ -124,18 +130,14 @@ function startScanner() {
       element: scannerDiv,
       playSoundOnScan: false,
       vibrateOnScan: true,
-      scanSettings: scanSettings,
+      scanSettings,
       visible: true
     });
 
     scanner.on("scan", result => {
       const code = result.barcodes[0].data;
       console.log("SCANNED:", code);
-
       greenFlash();
-
-      // 🔥 Add your inventory logic here
-      // addProductByBarcode(code);
     });
 
   });
