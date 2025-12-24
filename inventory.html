@@ -434,25 +434,28 @@ function startVoice(){
    🧠 COMMAND PROCESSOR
 ================================ */
 
-async function processVoice(cmd) {
-  console.log("VOICE:", cmd);
-
+async function processVoice(cmd){
   try {
-    // Send the spoken command to your backend
     const response = await fetch("https://scaleai.onrender.com/api/parse-voice", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ command: cmd })
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({command: cmd})
     });
+
+    if (!response.ok) {
+      showToast("Voice backend error");
+      return;
+    }
 
     const data = await response.json();
 
-    // If OpenAI couldn't determine action
-    if (!data?.action || !data.name) return showToast("Command not understood");
+    if (!data?.action || !data?.name) {
+      showToast("Command not understood");
+      return;
+    }
 
-    const { action, name, quantity } = data;
+    const {action, name, quantity} = data;
 
-    // Perform inventory action
     switch (action.toLowerCase()) {
       case "add":
       case "increase":
@@ -465,16 +468,15 @@ async function processVoice(cmd) {
         removeByName(name);
         break;
       default:
-        return showToast("Command not recognized");
+        showToast("Command not recognized");
     }
 
-    showToast(`${action} executed for "${name}" (${quantity || 1})`);
-
   } catch (err) {
-    console.error("Voice processing error:", err);
+    console.error(err);
     showToast("Error processing voice command");
   }
 }
+
 
 /* ===============================
    🔧 HELPERS
