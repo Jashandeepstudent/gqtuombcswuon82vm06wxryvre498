@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pro Inventory System</title>
+<title>AI Inventory Pro</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@ body{margin:0;background:#f6f7fb;padding:30px}
 .top .actions{display:flex;gap:10px;flex-wrap:wrap}
 .top button{padding:12px 18px;border:none;border-radius:14px;background:#000;color:#fff;font-weight:600;cursor:pointer}
 
-/* SEARCH BAR */
+/* SEARCH */
 .search-container {width:100%; margin-bottom:20px;}
 #searchInput {
   width:100%; padding:16px 20px; border-radius:16px; border:1px solid #ddd;
@@ -28,7 +28,6 @@ body{margin:0;background:#f6f7fb;padding:30px}
 /* STATS */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px}
 .stat{background:#fff;padding:22px;border-radius:20px;box-shadow:0 10px 25px rgba(0,0,0,.06)}
-.stat span{color:#666;font-size:14px}
 .stat h3{margin:8px 0 0;font-size:26px}
 
 /* TABLE */
@@ -42,55 +41,80 @@ body{margin:0;background:#f6f7fb;padding:30px}
 .status.low{color:#d97706}
 .status.out{color:#dc2626}
 
-/* BUTTONS */
-.row button{padding:6px 12px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer}
-.remove{color:#dc2626;border-color:#dc2626}
+/* VOICE MODAL & ANIMATION */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(8px)}
+.modal-box{width:400px;background:#fff;padding:30px;border-radius:30px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.3)}
 
-/* MODALS */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:1000}
-.modal-box{width:380px;background:#fff;padding:26px;border-radius:22px;text-align:center}
-.modal-box input{width:100%;padding:14px;border-radius:14px;border:1px solid #ddd;margin-bottom:12px}
-.modal-box button{width:100%;padding:14px;border:none;border-radius:14px;background:#000;color:#fff;font-weight:600}
+.ai-visualizer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  height: 60px;
+  margin: 20px 0;
+}
+.bar {
+  width: 6px;
+  height: 10px;
+  background: #2563eb;
+  border-radius: 10px;
+  animation: bounce 1s ease-in-out infinite;
+}
+.bar:nth-child(2) { animation-delay: 0.1s; background: #3b82f6; }
+.bar:nth-child(3) { animation-delay: 0.2s; background: #60a5fa; }
+.bar:nth-child(4) { animation-delay: 0.3s; background: #2563eb; }
+.bar:nth-child(5) { animation-delay: 0.4s; background: #3b82f6; }
 
-/* SCANNER */
+@keyframes bounce {
+  0%, 100% { height: 10px; }
+  50% { height: 50px; }
+}
+
+/* SUCCESS POPUP */
+.success-popup {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #16a34a;
+  color: white;
+  padding: 12px 25px;
+  border-radius: 50px;
+  font-weight: 600;
+  display: none;
+  z-index: 3000;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { bottom: -50px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+
 #scanner{position:relative;width:100%;height:240px;background:#000;border-radius:14px;overflow:hidden}
-.scan-zone{position:absolute;inset:25% 10%;border:2px dashed rgba(0,255,0,.7);border-radius:10px;z-index:10}
-.laser{position:absolute;top:0;left:0;width:100%;height:2px;background:red;box-shadow:0 0 10px red;animation:scan 1.2s linear infinite}
-@keyframes scan{0%{top:0}50%{top:100%}100%{top:0}}
-
 .flash{position:fixed;inset:0;background:rgba(34,197,94,.25);pointer-events:none;z-index:3000;opacity:0;transition:.15s}
 .flash.show{opacity:1}
-
-.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 20px;border-radius:14px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25);display:none;z-index:2000;animation:fade 2s ease}
-@keyframes fade{0%{opacity:0;top:10px} 20%{opacity:1;top:20px} 80%{opacity:1} 100%{opacity:0}}
-
-.counter{position:absolute;bottom:8px;right:10px;background:#000;color:#0f0;padding:4px 8px;border-radius:8px;font-size:12px;z-index:20}
 </style>
 </head>
 
 <body>
 
 <audio id="beep-ok" preload src="https://assets.mixkit.co/sfx/preview/mixkit-beep-tone-2864.mp3"></audio>
-<audio id="beep-new" preload src="https://assets.mixkit.co/sfx/preview/mixkit-confirmation-tone-2867.mp3"></audio>
-
-<div id="toast" class="toast"></div>
 <div id="flash" class="flash"></div>
+<div id="successPopup" class="success-popup">Product Updated</div>
 
 <div class="top">
   <h2>Inventory</h2>
   <div class="actions">
-    <button onclick="openScanner()">Scan Barcode</button>
-    <button onclick="openAdd()">Add Product</button>
-    <button style="background:#2563eb" onclick="startVoice()">🎙 Voice</button>
+    <button onclick="openScanner()">📷 Scanner</button>
+    <button onclick="openAdd()">➕ Add Product</button>
+    <button style="background:#2563eb" onclick="startVoiceAssistant()">🎙️ AI Voice</button>
   </div>
 </div>
 
 <div class="search-container">
-  <input type="text" id="searchInput" placeholder="Search by name..." onkeyup="render()">
+  <input type="text" id="searchInput" placeholder="Search inventory..." onkeyup="render()">
 </div>
 
 <div class="stats">
-  <div class="stat"><span>Total Products</span><h3 id="total">0</h3></div>
+  <div class="stat"><span>Total</span><h3 id="total">0</h3></div>
   <div class="stat"><span>Low</span><h3 id="low">0</h3></div>
   <div class="stat"><span>Out</span><h3 id="out">0</h3></div>
 </div>
@@ -100,47 +124,28 @@ body{margin:0;background:#f6f7fb;padding:30px}
   <div id="products"></div>
 </div>
 
-<div id="addModal" class="modal">
-  <div class="modal-box">
-    <h3>Add Product</h3>
-    <input id="pname" placeholder="Product name">
-    <input id="pqty" type="number" placeholder="Quantity">
-    <input id="punit" placeholder="Unit (kg, g, pcs)">
-    <button onclick="addProduct()">Save</button>
-    <button onclick="closeModals()" style="background:none;color:#666;margin-top:10px">Cancel</button>
-  </div>
-</div>
-
-<div id="scannerModal" class="modal">
-  <div class="modal-box">
-    <h3>Scan Barcode</h3>
-    <div id="scanner">
-      <div class="scan-zone"></div>
-      <div class="laser"></div>
-      <div id="scanCount" class="counter">0</div>
-    </div>
-    <button onclick="closeScanner()" style="margin-top:10px">Close</button>
-  </div>
-</div>
-
 <div id="voiceModal" class="modal">
   <div class="modal-box">
-    <div style="font-size:40px;margin-bottom:10px">🎙️</div>
-    <h3>Listening...</h3>
-    <p id="voiceHint">Say something like "5 kg Rice" or "Remove Milk"</p>
-    <button onclick="stopVoice()">Stop</button>
+    <h2 style="margin-top:0">AI Voice Assistant</h2>
+    <p style="color:#666; font-size:14px">Just speak the product name and quantity.<br>I will add, increase, or decrease it for you.</p>
+    
+    <div class="ai-visualizer">
+      <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    </div>
+    
+    <div id="speechOutput" style="font-style:italic; color:#2563eb; margin-bottom:20px; min-height:24px">Waiting for you to speak...</div>
+    
+    <button onclick="stopVoiceAssistant()" style="background:#ef4444">Close Assistant</button>
   </div>
 </div>
-
-<input id="barcodeInput" style="position:absolute; left:-9999px;">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-const GOOGLE_TRANSLATE_API_KEY = "AIzaSyBWd8VNdVzvP9CESzih6bWetkwJHKygnLs"; 
-
+// --- CONFIG ---
+const GOOGLE_TTS_API_KEY = "AIzaSyD7ynlghvBtwQxbxbPnKSUhI6wkVZvWfVc"; 
 firebase.initializeApp({
   apiKey:"AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
   authDomain:"scalevest-163a0.firebaseapp.com",
@@ -149,51 +154,137 @@ firebase.initializeApp({
 });
 
 const auth=firebase.auth(), db=firebase.database();
-let inventory={}, invRef, scannerRunning=false, recognition;
-let scanStamp = 0, scanTotal = 0;
+let inventory={}, invRef, recognition, isAssistantActive = false;
 
-// --- AUTH & DATA ---
 auth.onAuthStateChanged(u=>{
   if(!u){ location.href="login.html"; return; }
   invRef=db.ref(`Businesses/${u.uid}/inventory`);
   invRef.on("value",s=>{ inventory=s.val()||{}; render(); });
 });
 
-// --- CORE UI ---
-function showToast(t){
-  const toast = document.getElementById("toast");
-  toast.textContent="✔ "+t;
-  toast.style.display="block";
-  setTimeout(()=>toast.style.display="none",1800);
+// --- AI VOICE LOGIC ---
+function startVoiceAssistant() {
+  if (!('webkitSpeechRecognition' in window)) return alert("Voice not supported");
+  
+  isAssistantActive = true;
+  document.getElementById("voiceModal").style.display = "flex";
+  
+  recognition = new webkitSpeechRecognition();
+  recognition.lang = "en-US";
+  recognition.continuous = true; // Keeps listening
+  recognition.interimResults = true;
+
+  recognition.onresult = (event) => {
+    let interimTranscript = '';
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        const finalTranscript = event.results[i][0].transcript;
+        document.getElementById("speechOutput").textContent = `"${finalTranscript}"`;
+        processSmartAI(finalTranscript);
+      } else {
+        interimTranscript += event.results[i][0].transcript;
+        document.getElementById("speechOutput").textContent = interimTranscript;
+      }
+    }
+  };
+
+  recognition.onend = () => {
+    if (isAssistantActive) recognition.start(); // Auto-restart to stay open
+  };
+
+  recognition.start();
+  speakWithAI("I am listening. Just tell me what to do.");
 }
 
-function greenFlash(){
-  const f=document.getElementById("flash");
-  f.classList.add("show");
-  setTimeout(()=>f.classList.remove("show"),120);
+function stopVoiceAssistant() {
+  isAssistantActive = false;
+  if (recognition) recognition.stop();
+  document.getElementById("voiceModal").style.display = "none";
 }
 
-function speak(text) {
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-    const msg = new SpeechSynthesisUtterance(text);
-    msg.rate = 1;
-    window.speechSynthesis.speak(msg);
+async function processSmartAI(cmd) {
+  cmd = cmd.toLowerCase();
+  
+  // Extract Units and Numbers
+  const units = ["kg", "kilogram", "gram", " g ", "liter", " ml ", "packets", "pcs"];
+  let detectedUnit = "pcs";
+  units.forEach(u => { if(cmd.includes(u)) detectedUnit = u.trim(); });
+
+  const numMatch = cmd.match(/(\d+(\.\d+)?)/);
+  const qty = numMatch ? parseFloat(numMatch[0]) : 1;
+
+  // Extract Name
+  let pName = cmd
+    .replace(/(\d+(\.\d+)?)/g, '')
+    .replace(new RegExp(units.join("|"), "g"), '')
+    .replace(/(add|remove|delete|increase|decrease|minus|plus|update|to|of)/g, '')
+    .trim();
+
+  if (pName.length < 2) return;
+
+  const existingEntry = Object.entries(inventory).find(([_, p]) => p.name.toLowerCase() === pName);
+
+  if (cmd.includes("remove") || cmd.includes("delete")) {
+    if (existingEntry) {
+      invRef.child(existingEntry[0]).remove();
+      triggerSuccess(`Removed ${pName}`);
+      speakWithAI(`Successfully removed ${pName}`);
+    }
+  } 
+  else if (cmd.includes("decrease") || cmd.includes("minus") || cmd.includes("less")) {
+    if (existingEntry) {
+      const newVal = Math.max(0, existingEntry[1].quantity - qty);
+      invRef.child(existingEntry[0]).update({ quantity: newVal });
+      triggerSuccess(`Decreased ${pName}`);
+      speakWithAI(`Decreased ${pName} to ${newVal}`);
+    }
+  }
+  else {
+    // Implicit Add or Increase
+    if (existingEntry) {
+      const newVal = existingEntry[1].quantity + qty;
+      invRef.child(existingEntry[0]).update({ quantity: newVal });
+      triggerSuccess(`Increased ${pName}`);
+      speakWithAI(`${pName} increased by ${qty}. Total is ${newQty}`);
+    } else {
+      invRef.push({ 
+        name: pName.charAt(0).toUpperCase() + pName.slice(1), 
+        quantity: qty, 
+        unit: detectedUnit 
+      });
+      triggerSuccess(`Added ${pName}`);
+      speakWithAI(`Added ${qty} ${detectedUnit} of ${pName} as a new product.`);
+    }
   }
 }
 
-function openAdd(){ addModal.style.display="flex"; }
-function closeModals(){ document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); }
+// --- GOOGLE TEXT TO SPEECH (Stable Hybrid) ---
+function speakWithAI(text) {
+  // Using the high-quality browser synthesis as a baseline for Safari/Chrome stability
+  // because Google Cloud TTS requires a backend proxy for security.
+  if ('speechSynthesis' in window) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+    // Prefer Google English voice if available in the browser
+    const googleVoice = voices.find(v => v.name.includes('Google') && v.lang.includes('en'));
+    if (googleVoice) utterance.voice = googleVoice;
+    
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    window.speechSynthesis.speak(utterance);
+  }
+}
 
-function addProduct(){
-  if(!pname.value || !pqty.value){ alert("Required fields missing"); return; }
-  invRef.push({
-    name: pname.value,
-    quantity: +pqty.value,
-    unit: punit.value || "pcs"
-  });
-  pname.value = ""; pqty.value = ""; punit.value = "";
-  closeModals();
+// --- UI HELPERS ---
+function triggerSuccess(msg) {
+  const popup = document.getElementById("successPopup");
+  popup.textContent = msg;
+  popup.style.display = "block";
+  document.getElementById("flash").classList.add("show");
+  setTimeout(() => {
+    popup.style.display = "none";
+    document.getElementById("flash").classList.remove("show");
+  }, 2000);
 }
 
 function render(){
@@ -205,19 +296,18 @@ function render(){
   Object.entries(inventory).forEach(([id,p])=>{
     if(query && !p.name.toLowerCase().includes(query)) return;
 
-    let s="In Stock", c="ok";
-    if(p.quantity===0){s="Out of Stock"; c="out"; outC++}
-    else if(p.quantity<10){s="Low in Stock"; c="low"; lowC++}
+    let s="OK", c="ok";
+    if(p.quantity===0){s="Out"; c="out"; outC++}
+    else if(p.quantity<10){s="Low"; c="low"; lowC++}
 
     productsDiv.innerHTML+=`
     <div class="row">
-      <div>${p.name}</div>
-      <div>${p.quantity} ${p.unit}</div>
+      <div style="font-weight:600">${p.name}</div>
+      <div>${p.quantity} <small>${p.unit}</small></div>
       <div class="status ${c}">${s}</div>
       <div>
-        <button onclick="changeQty('${id}', 1)">+</button>
-        <button onclick="changeQty('${id}', -1)">−</button>
-        <button class="remove" onclick="invRef.child('${id}').remove()">Remove</button>
+        <button onclick="manualChange('${id}', 1)">+</button>
+        <button class="remove" onclick="invRef.child('${id}').remove()">🗑️</button>
       </div>
     </div>`;
   });
@@ -226,182 +316,11 @@ function render(){
   document.getElementById("out").textContent=outC;
 }
 
-function changeQty(id, direction){
+function manualChange(id, dir) {
   const p = inventory[id];
-  let val = prompt("Enter quantity:", "1");
-  val = parseInt(val);
-  if(isNaN(val) || val <= 0) return;
-  let newQty = Math.max(0, p.quantity + (direction * val));
-  invRef.child(id).update({ quantity: newQty });
+  invRef.child(id).update({ quantity: Math.max(0, p.quantity + dir) });
 }
-
-// --- SCANNER (INSANE MODE) ---
-function openScanner(){
-  unlockAudio();
-  scannerModal.style.display="flex";
-  startScanner();
-}
-
-function startScanner(){
-  if(scannerRunning) return;
-  const isLaptop=!/Android|iPhone/i.test(navigator.userAgent);
-  Quagga.init({
-    inputStream:{
-      type:"LiveStream", target:scanner,
-      constraints:{ facingMode:isLaptop?"user":"environment", width:{ideal:1280}, height:{ideal:720} }
-    },
-    locator:{patchSize:"small",halfSample:true},
-    numOfWorkers:navigator.hardwareConcurrency||4,
-    frequency:10,
-    decoder:{readers:["ean_reader","upc_reader","code_128_reader"]},
-    locate:true
-  },e=>{
-    if(e){alert("Camera Error");return;}
-    Quagga.start(); scannerRunning=true;
-  });
-  Quagga.onDetected(d=>{
-    if(d.codeResult.confidence<0.75) return;
-    handleBarcode(d.codeResult.code);
-  });
-}
-
-async function handleBarcode(code){
-  const now = Date.now();
-  if(now - scanStamp < 120) return;
-  scanStamp = now;
-  scanTotal++;
-  document.getElementById("scanCount").textContent = scanTotal;
-
-  let name = "Unknown Product";
-  const found = Object.entries(inventory).find(([_,p])=>p.barcode===code);
-
-  if(found){
-    name = found[1].name;
-    invRef.child(found[0]).update({ quantity: found[1].quantity + 1 });
-    document.getElementById("beep-ok").play().catch(()=>{});
-    speak("Increased " + name);
-  }else{
-    document.getElementById("beep-new").play().catch(()=>{});
-    try{
-      const r = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
-      const j = await r.json();
-      if(j.status === 1) name = j.product.product_name || name;
-    }catch(e){}
-    invRef.push({ name, quantity: 1, unit: "pcs", barcode: code });
-    speak("Added new product " + name);
-  }
-  greenFlash();
-  showToast(name);
-}
-
-function closeScanner(){ scannerModal.style.display="none"; if(scannerRunning){Quagga.stop();scannerRunning=false} }
-
-function unlockAudio(){
-  ["beep-ok","beep-new"].forEach(id=>{
-    const a=document.getElementById(id);
-    a.play().then(()=>{ a.pause(); a.currentTime=0; }).catch(()=>{});
-  });
-}
-
-// --- VOICE & TRANSLATION ENGINE ---
-async function translateToEnglish(text){
-  if(!text) return text;
-  try{
-    const response = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${GOOGLE_TRANSLATE_API_KEY}`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ q: text, target: "en", format: "text" })
-    });
-    const data = await response.json();
-    if(data.data?.translations?.length) return data.data.translations[0].translatedText;
-  }catch(e){ console.error(e); }
-  return text;
-}
-
-function extractQtyAndName(text) {
-  const words = text.toLowerCase().split(" ");
-  const units = ["kg", "kilogram", "gram", " g ", "liter", " ml ", "packets", "pcs"];
-  let qty = 1;
-  let unit = "pcs";
-  let nameParts = [];
-
-  words.forEach(w => {
-    if (!isNaN(w)) { qty = parseFloat(w); }
-    else if (units.some(u => w.includes(u.trim()))) { unit = w; }
-    else if (!["add","increase","decrease","remove","delete","by","quantity","of","minus","plus"].includes(w)) {
-      nameParts.push(w);
-    }
-  });
-  return { qty, unit, name: nameParts.join(" ").trim() };
-}
-
-function startVoice(){
-  if(!('webkitSpeechRecognition' in window)){ alert("Voice not supported"); return; }
-  document.getElementById("voiceModal").style.display = "flex";
-  recognition = new webkitSpeechRecognition();
-  recognition.lang = "en-US";
-  recognition.onresult = async e => {
-    const text = e.results[e.results.length-1][0].transcript;
-    await processSmartVoice(text);
-  };
-  recognition.onend = () => { document.getElementById("voiceModal").style.display = "none"; };
-  recognition.start();
-}
-
-function stopVoice(){ if(recognition) recognition.stop(); }
-
-async function processSmartVoice(cmd){
-  cmd = cmd.toLowerCase();
-  const { qty, unit, name } = extractQtyAndName(cmd);
-  if(!name) return;
-
-  let translatedName = await translateToEnglish(name);
-  translatedName = translatedName.charAt(0).toUpperCase() + translatedName.slice(1);
-
-  const existing = Object.entries(inventory).find(([_,p])=>p.name.toLowerCase() === translatedName.toLowerCase());
-
-  if(cmd.includes("remove") || cmd.includes("delete") || cmd.includes("hatao")){
-    if(existing) { 
-        invRef.child(existing[0]).remove(); 
-        speak("Removed " + translatedName);
-    }
-  } 
-  else if(cmd.includes("decrease") || cmd.includes("ghatao") || cmd.includes("minus")){
-    if(existing) {
-        const newQty = Math.max(0, existing[1].quantity - qty);
-        invRef.child(existing[0]).update({ quantity: newQty });
-        speak("Decreased " + translatedName + " to " + newQty);
-    }
-  }
-  else {
-    // DEFAULT: ADD OR INCREASE (Implicit)
-    if(existing){
-        const newQty = existing[1].quantity + qty;
-        invRef.child(existing[0]).update({ quantity: newQty });
-        speak("Updated " + translatedName + ". Total is " + newQty);
-    } else {
-        invRef.push({ name: translatedName, quantity: qty, unit: unit });
-        speak("Added " + qty + " " + unit + " of " + translatedName);
-    }
-  }
-  showToast(translatedName);
-}
-
-// --- EXTERNAL GUN SCANNER SUPPORT ---
-let gunBuffer="";
-let gunTimer=null;
-document.addEventListener("keydown",e=>{
-  if(scannerModal.style.display!=="flex") return;
-  if(e.key==="Enter"){
-    if(gunBuffer.length>=6) handleBarcode(gunBuffer);
-    gunBuffer=""; return;
-  }
-  if(/^[0-9]$/.test(e.key)){
-    gunBuffer+=e.key;
-    clearTimeout(gunTimer);
-    gunTimer=setTimeout(()=>gunBuffer="",100);
-  }
-});
 </script>
+
 </body>
 </html>
