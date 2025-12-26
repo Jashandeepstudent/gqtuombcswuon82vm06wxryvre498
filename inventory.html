@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Smart Inventory</title>
+    <title>Smart Inventory Pro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
@@ -16,7 +16,6 @@
         .top button{padding:12px 18px;border:none;border-radius:14px;background:#000;color:#fff;font-weight:600;cursor:pointer;transition:0.2s}
         .top button:hover{opacity:0.8}
 
-        /* Search Bar Style */
         .search-container{margin-bottom:20px; display:flex; gap:10px;}
         .search-bar{flex:1; padding:15px 20px; border-radius:15px; border:1px solid #ddd; font-size:16px; box-shadow:0 4px 12px rgba(0,0,0,0.03); outline:none; transition:0.3s;}
         .search-bar:focus{border-color:#4f46e5; box-shadow:0 4px 12px rgba(79,70,229,0.1);}
@@ -41,7 +40,6 @@
         .modal-box input{width:100%;padding:14px;border-radius:14px;border:1px solid #ddd;margin-bottom:12px}
         .modal-box button{width:100%;padding:14px;border:none;border-radius:14px;background:#000;color:#fff;font-weight:600;cursor:pointer}
 
-        /* Scanner Styling */
         #scanner{position:relative;width:100%;height:240px;background:#000;border-radius:14px;overflow:hidden}
         .scan-zone{position:absolute;inset:25% 10%;border:2px dashed rgba(0,255,0,.7);border-radius:10px;z-index:10}
         .laser{position:absolute;top:0;left:0;width:100%;height:2px;background:red;box-shadow:0 0 10px red;animation:scan 1.2s linear infinite}
@@ -91,7 +89,7 @@
     <div class="modal-box">
         <h3 id="voiceStatus">🎙 Listening...</h3>
         <canvas id="waveform" width="300" height="100" style="width:100%;height:100px;background:#f9fafb;border-radius:15px;margin:10px 0"></canvas>
-        <p id="liveTranscript"> Speak Something</p>
+        <p id="liveTranscript">Preparing Microphone...</p>
         <button onclick="stopVoice()" style="background:#dc2626">Stop Listening</button>
     </div>
 </div>
@@ -122,7 +120,9 @@ firebase.initializeApp({
 });
 
 const auth=firebase.auth(), db=firebase.database();
-let inventory={}, invRef, recognition, audioContext, analyser, animationId, isProcessing=false;
+let inventory={}, invRef, recognition, audioContext, analyser, animationId;
+let isProcessing = false;
+let recognitionActive = false;
 
 auth.onAuthStateChanged(u=>{
     if(!u) return;
@@ -170,6 +170,8 @@ function openAdd(){document.getElementById("addModal").style.display="flex"}
 function closeModals(){
     document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
     if(typeof Quagga !== 'undefined') Quagga.stop();
+    recognitionActive = false;
+    if(recognition) recognition.stop();
 }
 
 function addProduct(){
@@ -179,7 +181,55 @@ function addProduct(){
     n.value=""; q.value=""; u.value=""; closeModals();
 }
 
-// --- VOICE LOGIC ---
+// --- VOICE LOGIC (REFACTORED FOR CHROME/SAFARI) ---
+function startVoice() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return alert("Speech recognition not supported.");
+
+    // Resume AudioContext for Safari
+    if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+
+    document.getElementById("voiceModal").style.display = "flex";
+    document.getElementById("liveTranscript").textContent = "Say something like 'Add 5 Apples'";
+    
+    recognitionActive = true;
+    isProcessing = false;
+    
+    initRecognition();
+    startVisualizer();
+}
+
+function initRecognition() {
+    if (!recognitionActive) return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.continuous = false; // False is more stable for command-based apps
+    recognition.interimResults = false;
+
+    recognition.onresult = async (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById("liveTranscript").textContent = transcript;
+        isProcessing = true;
+        await processVoice(transcript);
+    };
+
+    recognition.onend = () => {
+        // Only restart if the user hasn't closed the modal and we aren't waiting on AI
+        if (recognitionActive && !isProcessing) {
+            setTimeout(initRecognition, 400);
+        }
+    };
+
+    recognition.onerror = (e) => {
+        console.error("Speech Error:", e.error);
+        if(e.error === 'not-allowed') alert("Please enable Microphone access.");
+    };
+
+    try { recognition.start(); } catch(e) {}
+}
+
 async function processVoice(userSpeech){
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
     try {
@@ -187,34 +237,16 @@ async function processVoice(userSpeech){
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
-                contents: [{parts: [{text: `Rules: Default action is UPDATE. Detect item, number, and unit (kg, l, pcs, box). User said: ${userSpeech}. Respond JSON only: {"action":"UPDATE"|"REMOVE","product":"item","quantity":10,"unit":"kg"}`}]}]
+                contents: [{parts: [{text: `Rules: Detect item, number, and action. If user says 'sold' or 'minus', use REMOVE. Else use UPDATE. User said: ${userSpeech}. Respond JSON only: {"action":"UPDATE"|"REMOVE","product":"item","quantity":10,"unit":"kg"}`}]}]
             })
         });
         const data = await response.json();
-        const dec = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json|```/g, "").trim());
+        const rawText = data.candidates[0].content.parts[0].text.replace(/```json|```/g, "").trim();
+        const dec = JSON.parse(rawText);
         executeDecision(dec);
-    } catch (err) { manualParse(userSpeech); }
-}
-
-function manualParse(speech){
-    const s = speech.toLowerCase();
-    const qty = parseInt(s.replace(/[^0-9]/g, '')) || 1;
-    const isRemove = s.includes("remove") || s.includes("minus") || s.includes("sold");
-    let unit = "pcs";
-    if(s.includes("kg")) unit = "kg"; else if(s.includes("liter")) unit = "L"; else if(s.includes("box")) unit = "box";
-    
-    const ignore = ["add","plus","remove","to","the","of","kg","liter","pcs","box"];
-    const productName = s.split(" ").filter(w=> !ignore.includes(w) && isNaN(w)).join(" ").trim();
-
-    if(!productName) return;
-    let bestId = Object.keys(inventory).find(id => inventory[id].name.toLowerCase().includes(productName));
-
-    if(bestId){
-        updateQty(bestId, isRemove ? -qty : qty);
-        speak(`Updated ${inventory[bestId].name}`);
-    } else {
-        invRef.push({name: capitalizeWords(productName), quantity: qty, unit: unit});
-        speak(`Added ${productName}`);
+    } catch (err) { 
+        console.log("Gemini Error, falling back to manual parse");
+        manualParse(userSpeech); 
     }
 }
 
@@ -223,50 +255,46 @@ function executeDecision(dec){
     if(dec.action === "UPDATE"){
         if(existingId) updateQty(existingId, dec.quantity);
         else invRef.push({name:capitalizeWords(dec.product), quantity:dec.quantity, unit:dec.unit||"pcs"});
-    } else if(existingId) {
-        updateQty(existingId, -dec.quantity);
+        speak(`Updated ${dec.product}`);
+    } else {
+        if(existingId) updateQty(existingId, -dec.quantity);
+        speak(`Removed ${dec.quantity} ${dec.product}`);
     }
-    speak(`Done.`);
 }
 
-function startVoice(){
-    if(!('webkitSpeechRecognition' in window)) return alert("Not supported");
-    document.getElementById("voiceModal").style.display="flex";
-    isProcessing=false; startVisualizer();
-    recognition = new webkitSpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.onresult = async e=>{
-        if(e.results[e.results.length-1].isFinal && !isProcessing){
-            isProcessing=true;
-            const t = e.results[e.results.length-1][0].transcript;
-            document.getElementById("liveTranscript").textContent = t;
-            await processVoice(t);
-        }
-    };
-    recognition.onend = ()=>{if(!isProcessing && document.getElementById("voiceModal").style.display==="flex") restartRecognition()};
-    recognition.start();
+function manualParse(s){
+    const qty = parseInt(s.replace(/[^0-9]/g, '')) || 1;
+    const productName = s.toLowerCase().replace(/[0-9]/g, '').replace('add', '').replace('remove', '').trim();
+    if(!productName) { isProcessing=false; return; }
+    invRef.push({name: capitalizeWords(productName), quantity: qty, unit: "pcs"});
+    speak(`Added ${productName}`);
 }
 
 function speak(text){
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.onend = ()=>{isProcessing=false; if(document.getElementById("voiceModal").style.display==="flex") restartRecognition()};
+    u.onend = () => {
+        isProcessing = false;
+        if(recognitionActive) initRecognition(); // Restart listening after AI finishes talking
+    };
     window.speechSynthesis.speak(u);
 }
 
-function restartRecognition(){
-    if(document.getElementById("voiceModal").style.display!=="flex") return;
-    try{recognition.start();}catch(e){}
+function stopVoice(){
+    recognitionActive = false;
+    isProcessing = true;
+    if(recognition) recognition.stop();
+    if(animationId) cancelAnimationFrame(animationId);
+    closeModals();
 }
 
-function stopVoice(){isProcessing=true; if(recognition) recognition.stop(); closeModals()}
 function capitalizeWords(s){return s.replace(/\b\w/g, l=>l.toUpperCase())}
 
 // --- SCANNER LOGIC ---
 function openScanner() {
     document.getElementById("scannerModal").style.display="flex";
     Quagga.init({
-        inputStream: { type: "LiveStream", target: document.getElementById("scanner") },
+        inputStream: { type: "LiveStream", target: document.getElementById("scanner"), constraints: { facingMode: "environment" } },
         decoder: { readers: ["ean_reader", "upc_reader", "code_128_reader"] }
     }, err => {
         if(err) return alert("Camera Error");
@@ -279,9 +307,9 @@ Quagga.onDetected(res => {
     const found = Object.entries(inventory).find(([_, p]) => p.barcode === code);
     if (found) {
         updateQty(found[0], 1);
-        speak(`Added one ${found[1].name}`);
+        speak(`Added ${found[1].name}`);
     } else {
-        invRef.push({ name: "New Barcode Item", quantity: 1, barcode: code, unit: "pcs" });
+        invRef.push({ name: "New Item", quantity: 1, barcode: code, unit: "pcs" });
         speak("New item scanned");
     }
     closeModals();
@@ -289,14 +317,15 @@ Quagga.onDetected(res => {
 
 async function startVisualizer(){
     try{
+        if(!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const source = audioContext.createMediaStreamSource(stream);
         analyser = audioContext.createAnalyser();
         analyser.fftSize=64; source.connect(analyser);
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
         const canvas=document.getElementById("waveform"), ctx=canvas.getContext("2d");
         function draw(){
+            if(!recognitionActive) return;
             animationId=requestAnimationFrame(draw);
             analyser.getByteFrequencyData(dataArray);
             ctx.clearRect(0,0,canvas.width,canvas.height);
