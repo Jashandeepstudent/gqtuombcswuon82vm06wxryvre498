@@ -234,12 +234,7 @@ input:focus, select:focus, textarea:focus {
   0%, 100% { height: 10px; }
   50% { height: 50px; }
 }
-.btn-ai-pic {
-    background: #8b5cf6 !important;
-    color: white !important;
-    font-weight: 700;
-    box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.39);
-}
+
 /* SUCCESS POPUP */
 .success-popup {
   position: fixed;
@@ -557,25 +552,23 @@ async function processSmartAI(cmd) {
   // 1. Handle Pending Confirmation
   if (pendingAction) {
     if (cmd.includes("yes") || cmd.includes("confirm") || cmd.includes("do it")) {
-      if (pendingAction.type === 'delete') {
-        // SPEAK FIRST
-        speakWithAI(`Deleted ${pendingAction.name}.`);
-        // ACT SECOND
-        invRef.child(pendingAction.id).remove();
-        triggerSuccess(`Removed ${pendingAction.name}`);
-      }
-      pendingAction = null;
-      document.getElementById("viz").classList.remove("confirm-mode");
-      return;
+        if (pendingAction.type === 'delete') {
+            invRef.child(pendingAction.id).remove();
+            triggerSuccess(`Removed ${pendingAction.name}`);
+            speakWithAI(`Successfully deleted ${pendingAction.name}.`);
+        }
+        pendingAction = null;
+        document.getElementById("viz").classList.remove("confirm-mode");
+        return;
     } else if (cmd.includes("no") || cmd.includes("cancel")) {
-      speakWithAI("Cancelled.");
-      pendingAction = null;
-      document.getElementById("viz").classList.remove("confirm-mode");
-      return;
+        speakWithAI("Action cancelled.");
+        pendingAction = null;
+        document.getElementById("viz").classList.remove("confirm-mode");
+        return;
     }
   }
   
-  // 2. Extract Numbers
+  // 2. Extract Numbers (Support for digits and basic words)
   const numberMap = { 'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'ten': 10 };
   let qty = 1;
   const numMatch = cmd.match(/(\d+(\.\d+)?)/);
@@ -601,70 +594,58 @@ async function processSmartAI(cmd) {
 
   const existingEntry = Object.entries(inventory).find(([_, p]) => p.name.toLowerCase() === pName);
 
-  // 5. ACTION LOGIC (OPTIMIZED FOR SPEED)
+  // 5. Action Logic
   if (cmd.includes("remove") || cmd.includes("delete")) {
     if (existingEntry) {
       pendingAction = { type: 'delete', id: existingEntry[0], name: pName };
       document.getElementById("viz").classList.add("confirm-mode");
-      speakWithAI(`Delete ${pName}? Say yes to confirm.`);
+      speakWithAI(`Are you sure you want to delete ${pName}? Say yes to confirm.`);
     } else {
-      speakWithAI(`No ${pName} found.`);
+      speakWithAI(`I couldn't find ${pName} in your inventory.`);
     }
   } 
   else if (cmd.includes("decrease") || cmd.includes("minus") || cmd.includes("less") || cmd.includes("reduce")) {
     if (existingEntry) {
       const newVal = Math.max(0, existingEntry[1].quantity - qty);
-      // INSTANT VOICE FEEDBACK
-      speakWithAI(`Reduced ${pName} to ${newVal}.`);
-      // BACKGROUND DATABASE UPDATE
       invRef.child(existingEntry[0]).update({ quantity: newVal });
       triggerSuccess(`Decreased ${pName}`);
+      speakWithAI(`Decreased ${pName} by ${qty}. New total is ${newVal}.`);
     } else {
-      speakWithAI(`${pName} not found.`);
+      speakWithAI(`Product ${pName} not found to decrease.`);
     }
   }
   else {
     // Implicit Add or Increase
     if (existingEntry) {
       const newVal = existingEntry[1].quantity + qty;
-      // INSTANT VOICE FEEDBACK
-      speakWithAI(`Added ${qty}. Total is ${newVal}.`);
-      // BACKGROUND DATABASE UPDATE
       invRef.child(existingEntry[0]).update({ quantity: newVal });
       triggerSuccess(`Increased ${pName}`);
+      speakWithAI(`Added ${qty} to ${pName}. Total is now ${newVal}.`);
     } else {
-      // INSTANT VOICE FEEDBACK
-      speakWithAI(`Adding ${qty} ${detectedUnit} of ${pName}.`);
-      // BACKGROUND DATABASE UPDATE
       invRef.push({ 
         name: pName.charAt(0).toUpperCase() + pName.slice(1), 
         quantity: qty, 
         unit: detectedUnit 
       });
       triggerSuccess(`Added ${pName}`);
+      speakWithAI(`Added ${qty} ${detectedUnit} of ${pName} as a new product.`);
     }
   }
 }
 
 // --- TEXT TO SPEECH ENGINE ---
 function speakWithAI(text) {
-    if ('speechSynthesis' in window) {
-        // 1. Instantly cancel any queued speech to stop lag
-        window.speechSynthesis.cancel(); 
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        
-        // 2. Use a high pitch/rate for a "snappier" feel
-        utterance.rate = 1.2; // Slightly faster than normal
-        utterance.pitch = 1.0;
-
-        // 3. Pick the local system voice (much faster than Google network voices)
-        const voices = window.speechSynthesis.getVoices();
-        const fastVoice = voices.find(v => v.localService === true && v.lang.includes('en')) || voices[0];
-        if (fastVoice) utterance.voice = fastVoice;
-
-        window.speechSynthesis.speak(utterance);
-    }
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel(); // Stop current speech
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+    const googleVoice = voices.find(v => v.name.includes('Google') && v.lang.includes('en'));
+    if (googleVoice) utterance.voice = googleVoice;
+    
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    window.speechSynthesis.speak(utterance);
+  }
 }
 
 // --- UI HELPERS ---
