@@ -268,6 +268,7 @@ input:focus, select:focus, textarea:focus {
 <div class="top">
   <h2>Inventory</h2>
   <div class="actions">
+<button style="background:#8b5cf6" onclick="openCameraForAI()">📸 PIC (AI Scan)</button>
     <button onclick="openScanner()">📷 Scanner</button>
    <div style="position:relative; display:inline-block;">
     <button onclick="toggleAddMenu()">➕ Add Product</button>
@@ -947,6 +948,86 @@ function stopScanner() {
         });
     }
 }
+
+// --- AI IMAGE RECOGNITION (GEMINI) ---
+
+function openCameraForAI() {
+    // Create a hidden file input to trigger camera
+    let picInput = document.getElementById('aiPicInput');
+    if (!picInput) {
+        picInput = document.createElement('input');
+        picInput.id = 'aiPicInput';
+        picInput.type = 'file';
+        picInput.accept = 'image/*';
+        picInput.capture = 'environment';
+        picInput.style.display = 'none';
+        picInput.onchange = (e) => processImageWithGemini(e.target.files[0]);
+        document.body.appendChild(picInput);
+    }
+    picInput.click();
+}
+
+async function processImageWithGemini(file) {
+    if (!file) return;
+
+    triggerSuccess("Analyzing image with AI...");
+    speakWithAI("Analyzing the photo, please wait.");
+
+    // 1. Convert file to Base64
+    const base64Data = await toBase64(file);
+    const base64Image = base64Data.split(',')[1];
+
+    // 2. Prepare the prompt for Gemini
+    const prompt = "Identify all inventory items in this image. Return ONLY a JSON array of objects with 'name', 'quantity' (number), and 'unit' (e.g., pcs, kg, packets). Example: [{'name': 'Coke', 'quantity': 5, 'unit': 'pcs'}]";
+
+    try {
+        // REPLACE 'YOUR_GEMINI_API_KEY' with your actual key (or use a backend proxy)
+        const API_KEY = "AIzaSyD7ynlghvBtwQxbxbPnKSUhI6wkVZvWfVc"; 
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+            method: 'POST',
+            body: JSON.stringify({
+                contents: [{
+                    parts: [
+                        { text: prompt },
+                        { inline_data: { mime_type: "image/jpeg", data: base64Image } }
+                    ]
+                }]
+            })
+        });
+
+        const data = await response.json();
+        const textResponse = data.candidates[0].content.parts[0].text;
+        
+        // Clean the JSON response (Gemini sometimes adds markdown blocks)
+        const cleanJson = textResponse.replace(/```json|```/g, "").trim();
+        const items = JSON.parse(cleanJson);
+
+        // 3. Add found items to Inventory
+        items.forEach(item => {
+            invRef.push({
+                name: item.name.charAt(0).toUpperCase() + item.name.slice(1),
+                quantity: item.quantity,
+                unit: item.unit || "pcs"
+            });
+        });
+
+        triggerSuccess(`AI added ${items.length} items!`);
+        speakWithAI(`I found and added ${items.length} items to your inventory.`);
+
+    } catch (error) {
+        console.error("Gemini Error:", error);
+        speakWithAI("Sorry, I couldn't process that image.");
+    }
+}
+
+// Helper to convert image to base64
+const toBase64 = file => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+});
+
 </script>
 
 </body>
