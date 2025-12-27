@@ -700,8 +700,11 @@ function manualChange(id, dir) {
 
 let html5QrCode;
 let isScanning = false; 
+let lastScannedBarcode = null;
+let lastScannedTime = 0;
+let torchOn = false;
 
-// --- 1. OPEN SCANNER WITH POWER UPGRADES ---
+// --- 1. OPEN SCANNER WITH MAX POWER & VIBRATION ---
 async function openScanner() {
     let scannerModal = document.getElementById('scannerModal');
     if (!scannerModal) {
@@ -711,20 +714,19 @@ async function openScanner() {
         scannerModal.innerHTML = `
             <div class="manual-modal-box" style="padding:20px; max-width: 500px; text-align:center;">
                 <h3 style="margin-top:0">Smart Scanner Pro</h3>
-                <div id="reader" style="border-radius:15px; overflow:hidden;"></div>
+                <div id="reader" style="border-radius:15px; overflow:hidden; background:#000;"></div>
                 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin: 15px 0;">
-                    <button onclick="document.getElementById('file-input').click()" 
-                            style="background:#f0f2f5; color:#333; padding:12px; border-radius:12px; border:none; font-weight:700; cursor:pointer;">
-                        🖼️ Image
+                    <button id="torch-btn" onclick="toggleTorch()" 
+                            style="background:#fbbf24; color:#000; display:flex; padding:12px; border-radius:12px; border:none; font-weight:700; cursor:pointer;">
+                        🔦 Flashlight
                     </button>
-                    <button onclick="promptBarcodeType()" 
+                    <button onclick="openTypeModal()" 
                             style="background:#f0f2f5; color:#333; padding:12px; border-radius:12px; border:none; font-weight:700; cursor:pointer;">
-                        ⌨️ Type
+                        ⌨️ Type Barcode
                     </button>
                 </div>
 
-                <input type="file" id="file-input" accept="image/*" style="display:none" onchange="scanFromImage(event)">
                 <button class="btn-close" onclick="stopScanner()" style="width:100%;">Close Scanner</button>
             </div>
         `;
@@ -734,72 +736,139 @@ async function openScanner() {
     scannerModal.style.display = "flex";
     html5QrCode = new Html5Qrcode("reader");
     
-    // POWER SETTINGS: Smaller qrbox + Higher FPS = Easier to catch small barcodes
+    // Config optimized for small hardware barcodes
     const config = { 
         fps: 30, 
-        qrbox: { width: 250, height: 150 }, 
-        aspectRatio: 1.0 
+        qrbox: { width: 280, height: 180 }, 
+        aspectRatio: 1.0,
+        experimentalFeatures: { useBarCodeDetectorIfSupported: true }
     };
 
-    html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-        handleScanSuccess(decodedText);
-    }).then(() => {
-        // ENHANCED FOCUS: Forcing camera zoom and focus for small barcodes
-        const track = html5QrCode.getRunningTrack();
-        const capabilities = track.getCapabilities();
-        
-        // If zoom is supported, set it to 2.0x for small hardware labels
-        if (capabilities.zoom) {
-            track.applyConstraints({
-                advanced: [
-                    { zoom: 2.0 }, 
-                    { focusMode: "continuous" },
-                    { pointsOfInterest: [{ x: 0.5, y: 0.5 }] }
-                ]
-            });
-        }
-    });
+    const formats = [
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.CODE_128
+    ];
+
+    try {
+        await html5QrCode.start({ facingMode: "environment" }, { ...config, formatsToSupport: formats }, (text) => {
+            handleScanSuccess(text);
+        });
+
+        // HARDWARE WAKE-UP: Wait 1s for camera to initialize before checking flashlight
+        setTimeout(async () => {
+            const track = html5QrCode.getRunningTrack();
+            const caps = track.getCapabilities();
+            
+            // Show Torch Button if phone has it
+            if (caps.torch) {
+                document.getElementById('torch-btn').style.display = "block";
+            }
+
+            // MACRO POWER: Force 3.0x zoom to see tiny barcodes
+            if (caps.zoom) {
+                track.applyConstraints({
+                    advanced: [{ zoom: 3.0 }, { focusMode: "continuous" }]
+                });
+            }
+        }, 1000);
+
+    } catch (err) {
+        console.error("Scanner fail:", err);
+    }
 }
 
-// --- 2. SCANNING HANDLERS ---
+// --- 2. HAPTIC & LOCK LOGIC ---
 function handleScanSuccess(decodedText) {
-    if (isScanning) return; // Prevent double-scans
-    isScanning = true;
+    const now = Date.now();
     
+    // 5-Second Same-Barcode Lock
+    if (decodedText === lastScannedBarcode && (now - lastScannedTime) < 5000) return; 
+
+    lastScannedBarcode = decodedText;
+    lastScannedTime = now;
+    
+    // PHYSICAL VIBRATION (Haptic Feedback)
+    if ("vibrate" in navigator) {
+        navigator.vibrate(100); // Short 100ms buzz
+    }
+
     document.getElementById("beep-ok").play();
     processScannedBarcode(decodedText);
-    
-    // Delay before next scan allowed (1.5s)
-    setTimeout(() => { isScanning = false; }, 1500);
 }
 
-// --- 3. CORE LOGIC & INTERNET LOOKUP ---
+// --- 3. FLASHLIGHT POWER ---
+async function toggleTorch() {
+    try {
+        const track = html5QrCode.getRunningTrack();
+        torchOn = !torchOn;
+        await track.applyConstraints({
+            advanced: [{ torch: torchOn }]
+        });
+        const btn = document.getElementById('torch-btn');
+        btn.style.background = torchOn ? "#ef4444" : "#fbbf24";
+        btn.style.color = torchOn ? "#fff" : "#000";
+        btn.innerText = torchOn ? "🚫 Flash Off" : "🔦 Flashlight";
+    } catch (e) {
+        console.error("Torch error", e);
+    }
+}
+
+// --- 4. MANUAL TYPE MODAL ---
+function openTypeModal() {
+    let tModal = document.getElementById('typeModal');
+    if (!tModal) {
+        tModal = document.createElement('div');
+        tModal.id = 'typeModal';
+        tModal.className = 'modal';
+        tModal.style.zIndex = "5000";
+        document.body.appendChild(tModal);
+    }
+    tModal.innerHTML = `
+        <div class="manual-modal-box" style="border: 3px solid #000;">
+            <h3 style="margin-top:0">Manual Entry</h3>
+            <p style="color:#666; font-size:14px;">Enter the numbers below the barcode</p>
+            <input type="number" id="manual_barcode_input" placeholder="e.g. 8901030932069" autofocus>
+            <div class="modal-actions">
+                <button class="btn-save" onclick="submitManualCode()">Process Code</button>
+                <button class="btn-close" onclick="document.getElementById('typeModal').style.display='none'">Close</button>
+            </div>
+        </div>
+    `;
+    tModal.style.display = "flex";
+    setTimeout(() => document.getElementById('manual_barcode_input').focus(), 150);
+}
+
+function submitManualCode() {
+    const code = document.getElementById('manual_barcode_input').value.trim();
+    if (code) {
+        handleScanSuccess(code);
+        document.getElementById('typeModal').style.display = 'none';
+    }
+}
+
+// --- 5. CORE PROCESSOR & INTERNET ---
 async function processScannedBarcode(code) {
     const entries = Object.entries(inventory);
     const existingEntry = entries.find(([_, p]) => p.barcode === code);
 
     if (existingEntry) {
-        // SCENARIO: Item already in DB
-        const id = existingEntry[0];
-        const product = existingEntry[1];
+        const [id, product] = existingEntry;
         const newQty = Math.max(0, (product.quantity || 0) - 1);
-
         invRef.child(id).update({ quantity: newQty }).then(() => {
             triggerSuccess(`Out: ${product.name} (-1)`);
-            speakWithAI(`${product.name} reduced.`);
+            speakWithAI(`${product.name} updated.`);
         });
     } else {
-        // SCENARIO: New Barcode
-        speakWithAI("Searching internet...");
+        speakWithAI("Searching...");
         try {
-            // Free Open Food Facts API (Works for most household items)
             const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
             const data = await res.json();
-
             if (data.status === 1 && data.product.product_name) {
                 saveNewProduct(code, data.product.product_name);
             } else {
-                openNamePrompt(code); // Not found -> Beautiful Popup
+                openNamePrompt(code); 
             }
         } catch (e) {
             openNamePrompt(code);
@@ -807,29 +876,29 @@ async function processScannedBarcode(code) {
     }
 }
 
-// --- 4. BEAUTIFUL CUSTOM PROMPT ---
+// --- 6. POPUP FOR NEW ITEMS ---
 function openNamePrompt(code) {
     let pModal = document.getElementById('namePromptModal');
     if (!pModal) {
         pModal = document.createElement('div');
         pModal.id = 'namePromptModal';
         pModal.className = 'modal';
-        pModal.style.zIndex = "4000"; 
+        pModal.style.zIndex = "5001";
         document.body.appendChild(pModal);
     }
     pModal.innerHTML = `
-        <div class="manual-modal-box" style="border: 3px solid #2563eb; animation: slideUp 0.3s ease;">
-            <h3 style="margin-top:0; color:#2563eb;">New Item Found!</h3>
+        <div class="manual-modal-box" style="border: 3px solid #2563eb;">
+            <h3 style="margin-top:0; color:#2563eb;">New Item!</h3>
             <p style="font-size:12px; color:#666;">Barcode: ${code}</p>
-            <input type="text" id="custom_name" placeholder="What is this product?" autofocus>
+            <input type="text" id="custom_name" placeholder="Name of product..." autofocus>
             <div class="modal-actions">
-                <button class="btn-save" onclick="submitName('${code}')">Save Product</button>
-                <button class="btn-close" onclick="document.getElementById('namePromptModal').style.display='none'">Skip</button>
+                <button class="btn-save" onclick="submitName('${code}')">Register</button>
+                <button class="btn-close" onclick="document.getElementById('namePromptModal').style.display='none'">Cancel</button>
             </div>
         </div>
     `;
     pModal.style.display = "flex";
-    document.getElementById('custom_name').focus();
+    setTimeout(() => document.getElementById('custom_name').focus(), 150);
 }
 
 function submitName(code) {
@@ -858,13 +927,12 @@ function stopScanner() {
     if (html5QrCode) {
         html5QrCode.stop().then(() => {
             document.getElementById('scannerModal').style.display = "none";
+            torchOn = false;
         }).catch(() => {
             document.getElementById('scannerModal').style.display = "none";
         });
     }
 }
-
-
 </script>
 
 </body>
