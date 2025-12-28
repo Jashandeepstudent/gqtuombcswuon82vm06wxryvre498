@@ -32,7 +32,16 @@
     }
 
     .back-btn:hover { background: #f0f4f9; border-color: #7c3aed; color: #7c3aed; }
+.big-square svg {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
+  margin-bottom: 10px;
+}
 
+.big-square span {
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-size: 1.1rem;
+}
     /* CENTER BUTTON */
     .center-container { flex: 1; display: flex; justify-content: center; align-items: center; }
     .big-square {
@@ -77,10 +86,14 @@
 </div>
 
 <div class="center-container">
-    <div class="big-square" onclick="openCameraForAI()">
-        <div style="font-size: 60px;">📸</div>
-        <span>START SCAN</span>
-    </div>
+  <div class="big-square" onclick="openCameraForAI()">
+    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M15 21H9C5 21 3 19 3 15V9C3 5 5 3 9 3H15C19 3 21 5 21 9V15C21 19 19 21 15 21Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M17 6.5H17.01" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>AI SCAN</span>
+  </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
