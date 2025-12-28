@@ -864,11 +864,17 @@ async function processSmartAI(transcript) {
   output.textContent = "Checking with Gemini...";
 
   try {
-    const res = await fetch('/api/voice', {
+    // REPLACE the URL below with your actual Vercel deployment URL
+    // Example: https://your-project-name.vercel.app/api/voice
+  const VERCEL_API_URL = 'https://ai-inventory-pro-sigma.vercel.app/api/voice';
+
+    const res = await fetch(VERCEL_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: transcript })
     });
+
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
     const data = await res.json();
     if (data.error) throw new Error(data.error);
@@ -886,26 +892,25 @@ async function processSmartAI(transcript) {
         invRef.child(existingEntry[0]).update({ quantity: newVal });
         triggerSuccess(`Reduced ${pName}`);
     } 
-    else if (data.action === 'add') {
+    else if (data.action === 'add' || data.action === 'increase') {
         if (existingEntry) {
             invRef.child(existingEntry[0]).update({ quantity: existingEntry[1].quantity + data.qty });
         } else {
-            invRef.push({ name: data.item, quantity: data.qty, unit: data.unit });
+            invRef.push({ name: data.item, quantity: data.qty, unit: data.unit || "pcs" });
         }
-        triggerSuccess(`Added ${pName}`);
+        triggerSuccess(`Updated ${pName}`);
     }
 
-    // 2. The "Real Person" Voice Response
+    // 2. The "Real Person" Voice Response from your Vercel handler
     speakWithAI(data.reply);
     output.textContent = `"${transcript}"`;
 
   } catch (err) {
-    console.error(err);
-    speakWithAI("Sorry, I had a brain freeze. Can you say that again?");
-    output.textContent = "Error processing command.";
+    console.error("Connection Error:", err);
+    speakWithAI("Sorry, I had a brain freeze connecting to the server.");
+    output.textContent = "Error: " + err.message;
   }
-}
-// --- TEXT TO SPEECH ENGINE ---
+}// --- TEXT TO SPEECH ENGINE ---
 function speakWithAI(text) {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel(); // Stop current speech
