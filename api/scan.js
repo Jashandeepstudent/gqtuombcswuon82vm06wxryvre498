@@ -1,20 +1,21 @@
-// api/scan.js
 export default async function handler(req, res) {
-  // Check if the request is actually a POST
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Please use POST' });
+  // 1. Handle pre-flight requests (CORS)
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
-  const { imageBase64 } = req.body;
-  const KEY = process.env.GEMINI_KEY;
-
-  if (!KEY) {
-    return res.status(500).json({ error: 'API Key is missing in Vercel settings' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    // We use the 'gemini-1.5-flash' model (most stable for vision)
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`, {
+    const { imageBase64 } = req.body;
+    const KEY = process.env.GEMINI_KEY;
+
+    // Use Gemini 1.5 Flash (it is the most stable version right now)
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${KEY}`;
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -28,12 +29,10 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    
-    // Send the result back to your frontend
     return res.status(200).json(data);
-    
+
   } catch (error) {
-    console.error("Server Side Error:", error);
-    return res.status(500).json({ error: error.message });
+    console.error("Crash details:", error);
+    return res.status(500).json({ error: "Server crashed", details: error.message });
   }
 }
