@@ -1,5 +1,10 @@
 export default async function handler(req, res) {
-  // 1. Handle pre-flight requests (CORS)
+  // 1. ALLOW CONNECTING FROM YOUR FRONTEND
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Handle pre-flight browser check
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -12,10 +17,7 @@ export default async function handler(req, res) {
     const { imageBase64 } = req.body;
     const KEY = process.env.GEMINI_KEY;
 
-    // Use Gemini 1.5 Flash (it is the most stable version right now)
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${KEY}`;
-
-    const response = await fetch(apiUrl, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -32,7 +34,6 @@ export default async function handler(req, res) {
     return res.status(200).json(data);
 
   } catch (error) {
-    console.error("Crash details:", error);
-    return res.status(500).json({ error: "Server crashed", details: error.message });
+    return res.status(500).json({ error: error.message });
   }
 }
