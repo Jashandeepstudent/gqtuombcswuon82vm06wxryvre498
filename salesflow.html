@@ -2,199 +2,201 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ScalVest Enterprise – Unified Hub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Business Dashboard</title>
     <style>
-        :root { --bg: #f6f7fb; --card: #ffffff; --primary: #7c3aed; --success: #10b981; --danger: #ef4444; --text: #1e293b; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; padding: 20px; }
-        .container { max-width: 1200px; margin: auto; }
-
-        /* Dashboard Stats */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: var(--card); padding: 25px; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: 0.3s; }
-        .stat-card:hover { transform: translateY(-5px); }
-        .stat-label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-val { font-size: 28px; font-weight: 800; margin-top: 10px; }
-        .spend { color: var(--danger); }
-        .earned { color: var(--success); }
-        .stock { color: #f59e0b; }
-
-        /* Inventory Table */
-        .inventory-wrapper { background: var(--card); border-radius: 24px; padding: 25px; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; color: #64748b; font-size: 13px; border-bottom: 2px solid #f1f5f9; }
-        td { padding: 15px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-
-        /* Inputs & Buttons */
-        input { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 12px; outline: none; transition: 0.2s; }
-        input:focus { border-color: var(--primary); background: #fff; }
-        .qty-btn { width: 35px; height: 35px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-plus { background: #f5f3ff; color: var(--primary); }
-        .btn-minus { background: #fef2f2; color: var(--danger); }
-        .btn-plus:hover { background: var(--primary); color: #fff; }
-        .btn-minus:hover { background: var(--danger); color: #fff; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f0f2f5; color: #333; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         
-        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .action-btns { display: flex; gap: 10px; }
-        .btn-main { background: #000; color: #fff; padding: 12px 20px; border-radius: 14px; border: none; font-weight: 600; cursor: pointer; }
+        /* Stats Boxes */
+        .stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .stat-box { padding: 20px; border-radius: 10px; color: white; text-align: center; }
+        .spend { background-color: #e74c3c; } /* Red for Spend */
+        .earned { background-color: #2ecc71; } /* Green for Earned */
+        .stat-box h3 { margin: 0; font-size: 0.9rem; opacity: 0.9; }
+        .stat-box p { margin: 10px 0 0; font-size: 1.8rem; font-weight: bold; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { text-align: left; padding: 15px; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f9fa; font-weight: 600; }
+        input[type="text"], input[type="number"] { width: 80px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        .unit-input { width: 100px !important; }
+        
+        .save-btn { background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .save-btn:hover { background: #2980b9; }
+        .loading { text-align: center; font-style: italic; color: #666; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="nav-header">
-        <h2>Enterprise Management</h2>
-        <div class="action-btns">
-            <button class="btn-main" onclick="location.reload()">🔄 Refresh Sync</button>
+    <h2 id="bizName">Business Dashboard</h2>
+
+    <div class="stats-container">
+        <div class="stat-box spend">
+            <h3>TOTAL SPEND (Stock Value)</h3>
+            <p id="totalSpend">0.00</p>
+        </div>
+        <div class="stat-box earned">
+            <h3>TOTAL EARNED (Sales)</h3>
+            <p id="totalEarned">0.00</p>
         </div>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <span class="stat-label">Total Investment (Spent)</span>
-            <div id="dispSpend" class="stat-val spend">0.00</div>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">Total Revenue (Earned)</span>
-            <div id="dispEarned" class="stat-val earned">0.00</div>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">Net Asset Value (Stock)</span>
-            <div id="dispStock" class="stat-val stock">0.00</div>
-        </div>
-    </div>
+    <div id="status" class="loading">Checking authentication...</div>
 
-    <div class="inventory-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Product Identity</th>
-                    <th>Current Qty</th>
-                    <th>Buy Price</th>
-                    <th>Sell Price</th>
-                    <th style="text-align: right;">Quick Actions</th>
-                </tr>
-            </thead>
-            <tbody id="inventoryBody">
-                </tbody>
-        </table>
-    </div>
+    <table id="inventoryTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Unit (kg/pc)</th>
+                <th>Cost Price</th>
+                <th>Selling Price</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="inventoryBody"></tbody>
+    </table>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-        authDomain: "scalevest-163a0.firebaseapp.com",
-        databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-        projectId: "scalevest-163a0",
-        storageBucket: "scalevest-163a0.firebasestorage.app",
-        messagingSenderId: "938358950124",
-        appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
-    };
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_ID",
+    appId: "YOUR_APP_ID"
+  };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const auth = firebase.auth();
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const auth = firebase.auth();
 
-    let uID, currency = "USD", inventory = {};
+  let currentUID = null;
+  let userCurrency = "$";
+  let previousInventory = {};
 
-    const toNum = (v) => {
-        if (!v) return 0;
-        const n = parseFloat(v.toString().replace(/[^0-9.]/g, ''));
-        return isNaN(n) ? 0 : n;
-    };
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUID = user.uid;
+      checkUserSetup();
+    } else {
+      document.getElementById('status').innerHTML = "Please log in.";
+    }
+  });
 
-    auth.onAuthStateChanged(user => {
-        if (!user) return;
-        uID = user.uid;
+  async function checkUserSetup() {
+    const bizRef = db.ref(`BusinessOwners/${currentUID}`);
+    const snapshot = await bizRef.once('value');
+    const data = snapshot.val();
 
-        // 1. Listen for Currency & Financial Totals
-        db.ref(`BusinessOwners/${uID}`).on('value', snap => {
-            const data = snap.val() || {};
-            currency = data.nationalCurrency || "USD";
-            const spend = data.totalSpend || 0;
-            const earned = data.totalEarned || 0;
-            
-            document.getElementById('dispSpend').innerText = `${currency} ${spend.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            document.getElementById('dispEarned').innerText = `${currency} ${earned.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-        });
+    // 1. Ask for currency if it doesn't exist
+    if (!data || !data.nationalCurrency) {
+      const currency = prompt("Enter your currency symbol (e.g., $, PKR, INR, GBP):", "$");
+      await bizRef.update({ nationalCurrency: currency || "$" });
+      userCurrency = currency || "$";
+    } else {
+      userCurrency = data.nationalCurrency;
+    }
 
-        // 2. Listen for Inventory & Calculate Stock Value
-        db.ref(`Businesses/${uID}/inventory`).on('value', snap => {
-            inventory = snap.val() || {};
-            renderTable();
-            calculateStockValue();
-        });
+    loadInventory();
+  }
+
+  function loadInventory() {
+    const invRef = db.ref(`Businesses/${currentUID}/inventory`);
+    const statusEl = document.getElementById('status');
+    const tableEl = document.getElementById('inventoryTable');
+
+    invRef.on("value", snapshot => {
+      const currentInventory = snapshot.val() || {};
+      
+      // 2. Logic for Spend/Earned based on inventory changes
+      handleInventoryChanges(currentInventory);
+      
+      render(currentInventory);
+      calculateFinancials(currentInventory);
+      
+      statusEl.style.display = "none";
+      tableEl.style.display = "table";
+      previousInventory = JSON.parse(JSON.stringify(currentInventory)); // Deep copy
+    });
+  }
+
+  function handleInventoryChanges(newInv) {
+    // This logic runs when the quantity changes (e.g., from another device or app)
+    Object.keys(newInv).forEach(key => {
+      if (previousInventory[key]) {
+        const oldQty = previousInventory[key].quantity || 0;
+        const newQty = newInv[key].quantity || 0;
+        const sellPrice = newInv[key].sellingPrice || 0;
+
+        if (newQty < oldQty) {
+          // Items sold! Add to Total Earned
+          const itemsSold = oldQty - newQty;
+          const revenue = itemsSold * sellPrice;
+          updateTotalEarned(revenue);
+        }
+      }
+    });
+  }
+
+  function updateTotalEarned(amount) {
+    const bizRef = db.ref(`BusinessOwners/${currentUID}`);
+    bizRef.child('totalEarned').transaction(current => (current || 0) + amount);
+  }
+
+  function calculateFinancials(inv) {
+    let totalStockValue = 0;
+    Object.values(inv).forEach(item => {
+      totalStockValue += (item.quantity || 0) * (item.costPrice || 0);
     });
 
-    function calculateStockValue() {
-        let totalStock = 0;
-        Object.values(inventory).forEach(item => {
-            totalStock += (toNum(item.quantity) * toNum(item.costPrice));
-        });
-        document.getElementById('dispStock').innerText = `${currency} ${totalStock.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-    }
+    document.getElementById('totalSpend').innerText = `${userCurrency} ${totalStockValue.toFixed(2)}`;
+    
+    // Get total earned from the BusinessOwners node
+    db.ref(`BusinessOwners/${currentUID}/totalEarned`).on('value', s => {
+        document.getElementById('totalEarned').innerText = `${userCurrency} ${(s.val() || 0).toFixed(2)}`;
+    });
+  }
 
-    function renderTable() {
-        const tbody = document.getElementById('inventoryBody');
-        tbody.innerHTML = "";
-        Object.keys(inventory).forEach(id => {
-            const item = inventory[id];
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong style="color:#1e293b">${item.name || id}</strong></td>
-                <td>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <button class="qty-btn btn-minus" onclick="changeQty('${id}', -1)">-</button>
-                        <span style="font-weight:800; width:30px; text-align:center;">${item.quantity}</span>
-                        <button class="qty-btn btn-plus" onclick="changeQty('${id}', 1)">+</button>
-                    </div>
-                </td>
-                <td><input type="text" value="${item.costPrice || ''}" onchange="updateField('${id}', 'costPrice', this.value)" style="width:80px"></td>
-                <td><input type="text" value="${item.sellingPrice || ''}" onchange="updateField('${id}', 'sellingPrice', this.value)" style="width:80px"></td>
-                <td style="text-align: right;">
-                    <button onclick="deleteProduct('${id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-weight:600;">Remove</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
+  function updateProduct(key) {
+    const cp = document.getElementById(`cp-${key}`).value;
+    const sp = document.getElementById(`sp-${key}`).value;
+    const unit = document.getElementById(`unit-${key}`).value;
 
-    function updateField(id, field, val) {
-        db.ref(`Businesses/${uID}/inventory/${id}`).update({ [field]: val });
-    }
+    db.ref(`Businesses/${currentUID}/inventory/${key}`).update({
+      costPrice: parseFloat(cp) || 0,
+      sellingPrice: parseFloat(sp) || 0,
+      unitType: unit || "pcs"
+    }).then(() => alert("Saved!"));
+  }
 
-    function changeQty(id, delta) {
-        const item = inventory[id];
-        const oldQty = toNum(item.quantity);
-        const newQty = Math.max(0, oldQty + delta);
-        const cost = toNum(item.costPrice);
-        const sell = toNum(item.sellingPrice);
+  function render(inventory) {
+    const tbody = document.getElementById('inventoryBody');
+    tbody.innerHTML = "";
 
-        const updates = {};
-        updates[`Businesses/${uID}/inventory/${id}/quantity`] = newQty;
-
-        if (delta > 0) {
-            // STOCK PURCHASE: Update Total Spend (Investment)
-            db.ref(`BusinessOwners/${uID}/totalSpend`).transaction(current => (current || 0) + (Math.abs(delta) * cost));
-        } else if (delta < 0 && oldQty > 0) {
-            // STOCK SALE: Update Total Earned (Revenue)
-            db.ref(`BusinessOwners/${uID}/totalEarned`).transaction(current => (current || 0) + (Math.abs(delta) * sell));
-        }
-
-        db.ref().update(updates);
-    }
-
-    function deleteProduct(id) {
-        if(confirm("Permanently delete this item from records?")) {
-            db.ref(`Businesses/${uID}/inventory/${id}`).remove();
-        }
-    }
+    Object.keys(inventory).forEach(key => {
+      const item = inventory[key];
+      const row = `
+        <tr>
+          <td>${item.name || key}</td>
+          <td><b>${item.quantity || 0}</b></td>
+          <td><input type="text" class="unit-input" id="unit-${key}" value="${item.unitType || ''}" placeholder="per kg..."></td>
+          <td><input type="number" id="cp-${key}" value="${item.costPrice || 0}"></td>
+          <td><input type="number" id="sp-${key}" value="${item.sellingPrice || 0}"></td>
+          <td><button class="save-btn" onclick="updateProduct('${key}')">Save</button></td>
+        </tr>
+      `;
+      tbody.innerHTML += row;
+    });
+  }
 </script>
 </body>
 </html>
