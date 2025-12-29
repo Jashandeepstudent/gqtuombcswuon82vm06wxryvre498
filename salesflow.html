@@ -521,7 +521,7 @@ auth.onAuthStateChanged(user => {
   if (!user) return;
 
   // Define References
-  const profileRef = db.ref(`Businesses/${user.uid}/NationalCurrency`);
+  const profileRef = db.ref(`Businesses/${user.uid}/profile`);
   invRef = db.ref(`Businesses/${user.uid}/inventory`);
   pricesRef = db.ref(`Businesses/${user.uid}/prices`);
   salesRef = db.ref(`Businesses/${user.uid}/sales`);
