@@ -124,47 +124,24 @@ const firebaseConfig = {
         const database = firebase.database();
         const storage = firebase.storage();
 
+       // 1. Initialize variables
 let employees = {};
 let selectedEmployees = new Set();
 let employeeDeductions = {};
 
-let currentBossId = null; 
-let bossName = "Loading...";
+// 2. Get the ID from the URL parameters
+const urlParams = new URLSearchParams(window.location.search);
+const businessIdFromUrl = urlParams.get('id'); 
 
-function initApp() {
-    // Look at the BusinessOwners node in Firebase
-    database.ref("BusinessOwners").limitToLast(1).once('value', (snapshot) => {
-        const data = snapshot.val();
-        
-        if (data) {
-            // This gets the REAL UID (the key) from Firebase
-            currentBossId = Object.keys(data)[0]; 
-            const bossData = data[currentBossId];
-            
-            // Get the actual name you saved
-            bossName = bossData.name || "Boss";
-            
-            // Update the UI
-            document.getElementById('bossName').innerText = bossName;
-            
-            // Now that we have the REAL ID, load the data
+// 3. Set the currentBossId (with a fallback to avoid 'null' nodes)
+let currentBossId = businessIdFromUrl || 'BossPayEmployees'; 
+let bossName = "Boss";
+
+        function initApp() {
             loadEmployees();
             setupEventListeners();
             showWelcomePopup();
-        } else {
-            Swal.fire("Error", "No Business Owner found in Database", "error");
         }
-    });
-}
-function loadEmployees() {
-    if (!currentBossId) return;
-    // Points to BusinessOwners/[REAL_UID]/employees
-    const employeesRef = database.ref(`BusinessOwners/${currentBossId}/employees`);
-    employeesRef.on('value', (snapshot) => {
-        employees = snapshot.val() || {};
-        renderEmployees();
-    });
-}
 
         function showWelcomePopup() {
             Swal.fire({
@@ -176,13 +153,14 @@ function loadEmployees() {
             });
         }
 
-        function loadEmployees() {
-            const employeesRef = database.ref(`BusinessOwners/${currentBossId}/employees`);
-            employeesRef.on('value', (snapshot) => {
-                employees = snapshot.val() || {};
-                renderEmployees();
-            });
-        }
+       function loadEmployees() {
+    // This ensures it looks inside BusinessOwners -> [UID] -> employees
+    const employeesRef = database.ref(`BusinessOwners/${currentBossId}/employees`);
+    employeesRef.on('value', (snapshot) => {
+        employees = snapshot.val() || {};
+        renderEmployees();
+    });
+}
 
         function calculateDailySalary(monthlySalary) {
             return monthlySalary / 30;
@@ -462,11 +440,7 @@ function loadEmployees() {
             if (formValues) await addEmployeeToFirebase(formValues);
         }
 
-       async function addEmployeeToFirebase(employeeData) {
-    if (!currentBossId || currentBossId.includes('demo-boss')) {
-        Swal.fire("Error", "Valid Boss ID not found. Please refresh.", "error");
-        return;
-    }
+        async function addEmployeeToFirebase(employeeData) {
             try {
                 Swal.fire({
                     title: 'Adding Employee...',
@@ -485,17 +459,16 @@ function loadEmployees() {
                     photoURL = await snapshot.ref.getDownloadURL();
                 }
 
-                const employeeRef = database.ref(`BusinessOwners/${currentBossId}/employees`).push();
-        await employeeRef.set({
-            name: employeeData.name,
-            role: employeeData.role,
-            salary: employeeData.salary,
-            paymentDetails: employeeData.paymentDetails,
-            photoURL: photoURL,
-            createdAt: new Date().toISOString()
-        });
-        
-
+const employeeRef = database.ref(`BusinessOwners/${currentBossId}/employees`).push();
+    
+    await employeeRef.set({
+        name: employeeData.name,
+        role: employeeData.role,
+        salary: employeeData.salary,
+        paymentDetails: employeeData.paymentDetails,
+        photoURL: photoURL,
+        createdAt: new Date().toISOString()
+    });
 
                 Swal.fire({
                     icon: 'success',
