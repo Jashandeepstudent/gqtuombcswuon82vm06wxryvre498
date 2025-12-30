@@ -521,7 +521,7 @@ auth.onAuthStateChanged(user => {
   if (!user) return;
 
   // Define References
-  const profileRef = db.ref(`Businesses/${user.uid}/profile`);
+const currencyRef = db.ref(`BusinessOwners/${user.uid}/National Currency`);
   invRef = db.ref(`Businesses/${user.uid}/inventory`);
   pricesRef = db.ref(`Businesses/${user.uid}/prices`);
   salesRef = db.ref(`Businesses/${user.uid}/sales`);
@@ -529,17 +529,21 @@ auth.onAuthStateChanged(user => {
   lastKnownRef = db.ref(`Businesses/${user.uid}/last_known_inventory`);
 
   // A. Currency Check
-  profileRef.on("value", snapshot => {
+currencyRef.on("value", snapshot => {
     const data = snapshot.val();
+    
+    // Check if the node exists and contains the currency field
     if (!data || !data.currency) {
-      document.getElementById("currencyModal").style.display = "flex";
+        document.getElementById("currencyModal").style.display = "flex";
     } else {
-      userCurrency = data.currency.toUpperCase();
-      document.getElementById("currencyModal").style.display = "none";
-      render(); 
-      calculateFinancials();
+        userCurrency = data.currency.toUpperCase();
+        document.getElementById("currencyModal").style.display = "none";
+        
+        // Refresh UI with the new currency symbol
+        render(); 
+        calculateFinancials();
     }
-  });
+});
 
   // B. Load Prices
   pricesRef.on("value", snapshot => {
@@ -750,13 +754,18 @@ function savePrices() {
 }
 
 function saveCurrency() {
-  const code = document.getElementById("currencyInput").value.trim().toUpperCase();
-  if (code.length < 2) return alert("Please enter a valid currency code!");
+    const code = document.getElementById("currencyInput").value.trim().toUpperCase();
+    if (code.length < 2) return alert("Please enter a valid currency code!");
 
-  db.ref(`Businesses/${auth.currentUser.uid}/profile`).update({
-    currency: code,
-    updatedAt: firebase.database.ServerValue.TIMESTAMP
-  }).then(() => showSuccess("Currency Updated!"));
+    // Writes directly to the "National Currency" node
+    db.ref(`BusinessOwners/${auth.currentUser.uid}/National Currency`).set({
+        currency: code,
+        updatedAt: firebase.database.ServerValue.TIMESTAMP
+    }).then(() => {
+        showSuccess("Currency Updated!");
+    }).catch(error => {
+        console.error("Save failed: ", error);
+    });
 }
 
 function openPriceModal(productId, productName) {
