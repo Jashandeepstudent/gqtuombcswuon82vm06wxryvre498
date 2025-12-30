@@ -3,69 +3,929 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salary Payer | Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>UpScaleVest | Boss Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .employee-card {
+            transition: all 0.3s ease;
+        }
+        .employee-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .selected-card {
+            border: 2px solid #4F46E5;
+            background: rgba(79, 70, 229, 0.05);
+        }
+        .photo-preview {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin: 10px auto;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 font-sans">
+<body class="bg-gradient-to-br from-indigo-50 via-white to-slate-50 min-h-screen">
+    
+    <!-- Header -->
+    <header class="glass-card shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-indigo-900">UpScaleVest</h1>
+                    <p class="text-sm text-gray-600">Workforce Management Platform</p>
+                </div>
+                <button id="addEmployeeBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 md:px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+                    + Add Employee
+                </button>
+            </div>
+        </div>
+    </header>
 
-    <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-        <div class="bg-white p-10 rounded-2xl shadow-xl max-w-md w-full">
-            <h1 class="text-3xl font-bold text-gray-800 mb-4">Salary Payer</h1>
-            <p class="text-gray-600 mb-8">
-                To continue with Salary Payer, you would have to make your Boss Account.
-            </p>
-            
-            <button id="getStartedBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 shadow-lg">
-                Get Started
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 mb-24">
+        
+        <!-- Welcome Section -->
+        <div id="welcomeSection" class="glass-card rounded-2xl shadow-xl p-6 md:p-8 mb-8">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Hi, <span id="bossName">Boss</span>! 👋</h2>
+            <p class="text-gray-600">Manage your team and process payments seamlessly</p>
+        </div>
+
+        <!-- Employee Grid -->
+        <div id="employeeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Employee cards will be inserted here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="glass-card rounded-2xl shadow-xl p-12 text-center hidden">
+            <div class="text-6xl mb-4">👥</div>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">No Employees Yet</h3>
+            <p class="text-gray-500 mb-6">Add your first team member to get started</p>
+            <button class="add-first-btn bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+                Add First Employee
+            </button>
+        </div>
+    </main>
+
+    <!-- Fixed Pay Salary Button -->
+    <div class="fixed bottom-0 left-0 right-0 glass-card shadow-2xl p-4 z-50">
+        <div class="container mx-auto flex justify-center">
+            <button id="paySalaryBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-12 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+                💰 Pay Salary
             </button>
         </div>
     </div>
 
     <script>
-        // 1. Logic to get the name from your Firebase entry
-        // Note: You'll need to pass the ID or fetch the latest entry
-        const businessOwnerName = "User"; // Replace with your Firebase logic: ref.val().name
+const firebaseConfig = {
+  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+  authDomain: "scalevest-163a0.firebaseapp.com",
+  databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+  projectId: "scalevest-163a0",
+  storageBucket: "scalevest-163a0.firebasestorage.app",
+  messagingSenderId: "938358950124",
+  appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
+  measurementId: "G-QD3TWBZHR0"
+};
 
-        // 2. Beautiful Popup on Load
-        window.onload = function() {
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const storage = firebase.storage();
+
+        // State Management
+        let employees = {};
+        let selectedEmployees = new Set();
+        let currentBossId = 'demo-boss-' + Date.now();
+        let bossName = "Boss";
+
+        // Initialize App
+        function initApp() {
+            loadEmployees();
+            setupEventListeners();
+            showWelcomePopup();
+        }
+
+        // Show Welcome Popup
+        function showWelcomePopup() {
             Swal.fire({
-                title: `Hi, ${businessOwnerName}!`,
-                text: "To continue with Salary Payer, you would have to make your Boss Account.",
-                icon: "info",
-                confirmButtonText: "Let's Go",
-                confirmButtonColor: "#2563eb",
-                showClass: {
-                    popup: 'animate__animated animate__fadeInDown'
+                title: `Hi, ${bossName}! 👋`,
+                text: "Welcome to UpScaleVest. Manage your team and process salaries with ease.",
+                icon: "success",
+                confirmButtonText: "Let's Get Started",
+                confirmButtonColor: "#4F46E5"
+            });
+        }
+
+        // Load Employees from Firebase
+        function loadEmployees() {
+            const employeesRef = database.ref(`BusinessOwners/${currentBossId}/employees`);
+            
+            employeesRef.on('value', (snapshot) => {
+                employees = snapshot.val() || {};
+                renderEmployees();
+            });
+        }
+
+        // Render Employees
+        function renderEmployees() {
+            const grid = document.getElementById('employeeGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            const employeeList = Object.entries(employees);
+            
+            if (employeeList.length === 0) {
+                emptyState.classList.remove('hidden');
+                grid.innerHTML = '';
+            } else {
+                emptyState.classList.add('hidden');
+                
+grid.innerHTML = employeeList.map(([id, emp]) => `
+    <div class="employee-card glass-card rounded-2xl shadow-lg p-6 ${selectedEmployees.has(id) ? 'selected-card' : ''}" data-id="${id}">
+        <div class="flex justify-between mb-2">
+            <button onclick="editEmployee('${id}')" class="text-indigo-500 hover:text-indigo-700">✏️ Edit</button>
+            <button onclick="deleteEmployee('${id}')" class="text-red-500 hover:text-red-700">🗑️ Remove</button>
+        </div>
+        <div class="flex flex-col items-center mb-4">
+            ${emp.photoURL ? 
+                `<img src="${emp.photoURL}" alt="${emp.name}" class="w-20 h-20 rounded-full object-cover mb-3">` :
+                `<div class="w-20 h-20 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-3">
+                    ${emp.name.charAt(0).toUpperCase()}
+                </div>`
+            }
+            ${selectedEmployees.has(id) ? '<div class="text-green-600 font-bold">✓ Selected</div>' : ''}
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">${emp.name}</h3>
+        <p class="text-indigo-600 font-semibold mb-3 text-center">${emp.role}</p>
+        <div class="border-t border-gray-200 pt-3">
+            <p class="text-sm text-gray-600 mb-1">Base Salary</p>
+            <p class="text-2xl font-bold text-green-600">₹${emp.salary.toLocaleString('en-IN')}</p>
+        </div>
+        <div class="mt-3 text-xs text-gray-500">
+            <p>💳 ${emp.paymentDetails}</p>
+        </div>
+    </div>
+`).join('');
+                
+                // Add click handlers to cards
+                document.querySelectorAll('.employee-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        if (selectedEmployees.size > 0) {
+                            toggleCardSelection(card);
+                        }
+                    });
+                });
+            }
+        }
+
+        // Toggle Card Selection
+        function toggleCardSelection(card) {
+            const id = card.dataset.id;
+            
+            if (selectedEmployees.has(id)) {
+                selectedEmployees.delete(id);
+                card.classList.remove('selected-card');
+            } else {
+                selectedEmployees.add(id);
+                card.classList.add('selected-card');
+            }
+            
+            renderEmployees();
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            document.getElementById('addEmployeeBtn').addEventListener('click', showAddEmployeeForm);
+            document.querySelector('.add-first-btn')?.addEventListener('click', showAddEmployeeForm);
+            document.getElementById('paySalaryBtn').addEventListener('click', handlePaySalary);
+        }
+
+        // Handle Pay Salary Click
+        async function handlePaySalary() {
+            const employeeCount = Object.keys(employees).length;
+            
+            if (employeeCount === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Employees',
+                    text: 'Please add employees first!',
+                    confirmButtonColor: '#4F46E5'
+                });
+                return;
+            }
+
+            const { value: choice } = await Swal.fire({
+                title: 'Pay Salary',
+                text: 'How would you like to proceed?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Pay All Employees',
+                cancelButtonText: 'Select Employees',
+                confirmButtonColor: '#10B981',
+                cancelButtonColor: '#4F46E5',
+                reverseButtons: true
+            });
+
+            if (choice) {
+                // Pay All
+                selectedEmployees = new Set(Object.keys(employees));
+                renderEmployees();
+                await askForBonus();
+            } else if (choice === false) {
+                // Select Employees
+                selectedEmployees.clear();
+                renderEmployees();
+                
+                Swal.fire({
+                    title: 'Select Employees',
+                    text: 'Click on employee cards to select them for payment',
+                    icon: 'info',
+                    confirmButtonText: 'Continue',
+                    confirmButtonColor: '#4F46E5'
+                }).then(async (result) => {
+                    if (result.isConfirmed && selectedEmployees.size > 0) {
+                        await askForBonus();
+                    } else if (result.isConfirmed && selectedEmployees.size === 0) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No Selection',
+                            text: 'Please select at least one employee',
+                            confirmButtonColor: '#4F46E5'
+                        });
+                    }
+                });
+            }
+        }
+
+        // Ask for Bonus
+        async function askForBonus() {
+            if (selectedEmployees.size === 0) return;
+
+            const { value: bonusAmount } = await Swal.fire({
+                title: '💰 Add Bonus?',
+                text: 'Would you like to add a bonus amount for selected employees?',
+                input: 'number',
+                inputPlaceholder: 'Enter bonus amount (₹)',
+                inputValue: 0,
+                showCancelButton: true,
+                confirmButtonText: 'Continue',
+                confirmButtonColor: '#4F46E5',
+                inputValidator: (value) => {
+                    if (value < 0) {
+                        return 'Bonus cannot be negative!';
+                    }
                 }
             });
-        };
 
-        // 3. Razorpay Integration (Linking Bank Account via UPI)
-        document.getElementById('getStartedBtn').onclick = function(e) {
-            var options = {
-                "key": "YOUR_RAZORPAY_KEY", // Enter your Key ID from Dashboard
-                "amount": "100", // Amount in paise (100 = ₹1) to verify account
-                "currency": "INR",
-                "name": "Salary Payer",
-                "description": "Link your Business Bank Account",
-                "handler": function (response){
-                    Swal.fire("Success!", "Bank Account Linked via UPI ID: " + response.razorpay_payment_id, "success");
-                    // Here you would save the 'Boss Account' status to Firebase
+            if (bonusAmount !== undefined) {
+                calculateAndShowSummary(parseFloat(bonusAmount) || 0);
+            }
+        }
+
+        // Show Add Employee Form
+       async function showAddEmployeeForm() {
+    const { value: formValues } = await Swal.fire({
+        title: 'Add New Employee',
+        html: `
+            <div style="text-align: left;">
+                <input id="empName" class="swal2-input" placeholder="Full Name">
+                <input id="empRole" class="swal2-input" placeholder="Role (e.g. Manager)">
+                <input id="empSalary" class="swal2-input" type="number" placeholder="Salary (₹)">
+                
+                <p style="margin-top:15px; font-weight:bold; color:#4F46E5;">Payment Method:</p>
+                <input id="empUPI" class="swal2-input" placeholder="UPI ID (e.g. name@upi)">
+                <div style="text-align:center; margin:5px; color:#aaa;">- OR -</div>
+                <input id="empAcc" class="swal2-input" placeholder="Bank Account Number">
+                <input id="empIFSC" class="swal2-input" placeholder="IFSC Code">
+
+                <label style="display:block; margin-top:10px;">Photo (Optional)</label>
+                <input id="empPhoto" type="file" accept="image/*" class="swal2-file">
+            </div>
+        `,
+        preConfirm: () => {
+            const name = document.getElementById('empName').value;
+            const upi = document.getElementById('empUPI').value;
+            const acc = document.getElementById('empAcc').value;
+            const ifsc = document.getElementById('empIFSC').value;
+
+            if (!name) return Swal.showValidationMessage('Name is required');
+            if (!upi && (!acc || !ifsc)) {
+                return Swal.showValidationMessage('Provide a UPI ID or Account + IFSC');
+            }
+
+            return {
+                name: name,
+                role: document.getElementById('empRole').value,
+                salary: parseFloat(document.getElementById('empSalary').value) || 0,
+                paymentDetails: upi ? upi : `${acc} (IFSC: ${ifsc})`,
+                photo: document.getElementById('empPhoto').files[0]
+            };
+        }
+    });
+
+    if (formValues) await addEmployeeToFirebase(formValues);
+}
+
+        // Add Employee to Firebase
+        async function addEmployeeToFirebase(employeeData) {
+            try {
+                Swal.fire({
+                    title: 'Adding Employee...',
+                    text: 'Please wait',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                let photoURL = null;
+
+                // Upload photo if provided
+                if (employeeData.photo) {
+                    const photoRef = storage.ref(`employees/${currentBossId}/${Date.now()}_${employeeData.photo.name}`);
+                    const snapshot = await photoRef.put(employeeData.photo);
+                    photoURL = await snapshot.ref.getDownloadURL();
+                }
+
+                // Save to database
+                const employeeRef = database.ref(`BusinessOwners/${currentBossId}/employees`).push();
+                await employeeRef.set({
+                    name: employeeData.name,
+                    role: employeeData.role,
+                    salary: employeeData.salary,
+                    paymentDetails: employeeData.paymentDetails,
+                    photoURL: photoURL,
+                    createdAt: new Date().toISOString()
+                });
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Employee Added!',
+                    text: `${employeeData.name} has been added to your team.`,
+                    confirmButtonColor: '#4F46E5',
+                    timer: 2000
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to add employee: ' + error.message,
+                    confirmButtonColor: '#4F46E5'
+                });
+            }
+        }
+
+        // Calculate and Show Summary
+        function calculateAndShowSummary(bonus) {
+            let totalSalary = 0;
+            const selectedEmps = [];
+
+            selectedEmployees.forEach(id => {
+                const emp = employees[id];
+                totalSalary += emp.salary + bonus;
+                selectedEmps.push({
+                    name: emp.name,
+                    role: emp.role,
+                    base: emp.salary,
+                    bonus: bonus,
+                    total: emp.salary + bonus,
+                    paymentDetails: emp.paymentDetails
+                });
+            });
+
+            const platformFee = selectedEmployees.size * 5;
+            const grandTotal = totalSalary + platformFee;
+
+            Swal.fire({
+                title: '📊 Payment Summary',
+                html: `
+                    <div style="text-align: left; max-height: 400px; overflow-y: auto;">
+                        <h4 style="font-weight: bold; font-size: 1.1em; margin-bottom: 15px;">Selected Employees (${selectedEmployees.size})</h4>
+                        ${selectedEmps.map(e => `
+                            <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                                <p style="font-weight: 600; margin-bottom: 5px;">${e.name}</p>
+                                <p style="font-size: 0.9em; color: #64748b;">Base: ₹${e.base.toLocaleString('en-IN')} + Bonus: ₹${e.bonus.toLocaleString('en-IN')}</p>
+                                <p style="color: #10b981; font-weight: bold;">Total: ₹${e.total.toLocaleString('en-IN')}</p>
+                            </div>
+                        `).join('')}
+                        <div style="border-top: 2px solid #e2e8f0; padding-top: 15px; margin-top: 15px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Subtotal:</span>
+                                <span style="font-weight: 600;">₹${totalSalary.toLocaleString('en-IN')}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Platform Fee (₹5 × ${selectedEmployees.size}):</span>
+                                <span style="font-weight: 600;">₹${platformFee}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 1.3em; font-weight: bold; color: #4f46e5; margin-top: 12px;">
+                                <span>Grand Total:</span>
+                                <span>₹${grandTotal.toLocaleString('en-IN')}</span>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Proceed to Payment',
+                confirmButtonColor: '#10B981',
+                cancelButtonColor: '#6B7280',
+                width: '600px'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    processPayment(grandTotal, selectedEmps, bonus);
+                }
+            });
+        }
+
+        // Process Payment via Razorpay
+        function processPayment(amount, selectedEmps, bonus) {
+    const paymentData = {
+        selectedEmps: selectedEmps,
+        totalAmount: amount,
+        bonus: bonus
+    };
+
+    const options = {
+        key: "rzp_test_1DP5mmOlF5G5ag", // Your Razorpay Key
+        amount: amount * 100, // Amount in paise
+        currency: "INR",
+        name: "UpScaleVest",
+        description: `Salary Payment for ${selectedEmps.length} employee(s)`,
+        handler: function (response) {
+            triggerConfetti();
+            showPaymentSuccess(response.razorpay_payment_id, paymentData);
+        },
+        prefill: { name: bossName },
+        theme: { color: "#4F46E5" }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+}
+
+        // Process Payment via Razorpay
+        function processPayment(amount) {
+            const paymentData = {
+                selectedEmps: [],
+                totalAmount: amount,
+                bonus: 0
+            };
+
+            // Store payment details
+            selectedEmployees.forEach(id => {
+                const emp = employees[id];
+                paymentData.selectedEmps.push({
+                    id: id,
+                    name: emp.name,
+                    role: emp.role,
+                    baseSalary: emp.salary,
+                    bonus: 0,
+                    total: emp.salary,
+                    paymentDetails: emp.paymentDetails
+                });
+            });
+
+            const options = {
+                key: "rzp_test_1DP5mmOlF5G5ag", // Replace with YOUR Razorpay Key
+                amount: amount * 100,
+                currency: "INR",
+                name: "UpScaleVest",
+                description: `Salary Payment for ${selectedEmployees.size} employee(s)`,
+                handler: function (response) {
+                    // Trigger confetti celebration
+                    triggerConfetti();
+                    
+                    // Show payment success with receipts
+                    showPaymentSuccess(response.razorpay_payment_id, paymentData);
                 },
-                "prefill": {
-                    "name": businessOwnerName,
-                    "method": "upi"
+                prefill: {
+                    name: bossName
                 },
-                "theme": {
-                    "color": "#2563eb"
+                theme: {
+                    color: "#4F46E5"
+                },
+                modal: {
+                    ondismiss: function() {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Payment Cancelled',
+                            text: 'You can try again anytime.',
+                            confirmButtonColor: '#4F46E5'
+                        });
+                    }
                 }
             };
-            var rzp1 = new Razorpay(options);
-            rzp1.open();
-            e.preventDefault();
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+        }
+
+        // Trigger Confetti Celebration
+        function triggerConfetti() {
+            const duration = 3000;
+            const end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 3,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#4F46E5', '#10B981', '#F59E0B']
+                });
+                confetti({
+                    particleCount: 3,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#4F46E5', '#10B981', '#F59E0B']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+
+        // Show Payment Success Screen
+        function showPaymentSuccess(paymentId, paymentData) {
+            const currentDate = new Date().toLocaleString('en-IN', {
+                dateStyle: 'full',
+                timeStyle: 'short'
+            });
+
+            Swal.fire({
+                title: '🎉 Payment Successful!',
+                html: `
+                    <div style="text-align: left; padding: 10px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                            <h3 style="margin: 0 0 10px 0; color: white;">Transaction Details</h3>
+                            <p style="margin: 5px 0; font-size: 0.9em;"><strong>Payment ID:</strong> ${paymentId}</p>
+                            <p style="margin: 5px 0; font-size: 0.9em;"><strong>Date:</strong> ${currentDate}</p>
+                            <p style="margin: 5px 0; font-size: 1.2em;"><strong>Amount:</strong> ₹${paymentData.totalAmount.toLocaleString('en-IN')}</p>
+                        </div>
+
+                        <h4 style="color: #4F46E5; margin-bottom: 15px;">Employees Paid (${paymentData.selectedEmps.length})</h4>
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            ${paymentData.selectedEmps.map((emp, index) => `
+                                <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <p style="font-weight: 600; margin: 0 0 5px 0;">${emp.name}</p>
+                                        <p style="font-size: 0.85em; color: #64748b; margin: 0;">${emp.role} • ₹${emp.total.toLocaleString('en-IN')}</p>
+                                    </div>
+                                    <button onclick="generateEmployeeSlip(${index}, '${paymentId}', '${currentDate}')" style="background: #4F46E5; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85em;">
+                                        📄 Slip
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                            <button onclick="generateMasterReceipt('${paymentId}', '${currentDate}')" style="background: #10B981; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; flex: 1;">
+                                📥 Download Master Receipt
+                            </button>
+                        </div>
+                    </div>
+                `,
+                width: '700px',
+                showConfirmButton: true,
+                confirmButtonText: 'Done',
+                confirmButtonColor: '#4F46E5',
+                allowOutsideClick: false
+            }).then(() => {
+                selectedEmployees.clear();
+                renderEmployees();
+            });
+
+            // Store payment data globally for receipt generation
+            window.currentPaymentData = paymentData;
+        }
+
+        // Generate Master Receipt PDF
+        window.generateMasterReceipt = async function(paymentId, date) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const paymentData = window.currentPaymentData;
+            const platformFee = paymentData.selectedEmps.length * 5;
+            const subtotal = paymentData.totalAmount - platformFee;
+
+            // Header
+            doc.setFillColor(79, 70, 229);
+            doc.rect(0, 0, 210, 40, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(24);
+            doc.setFont(undefined, 'bold');
+            doc.text('UpScaleVest', 105, 18, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'normal');
+            doc.text('Workforce Management Platform', 105, 28, { align: 'center' });
+
+            // Receipt Title
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(18);
+            doc.setFont(undefined, 'bold');
+            doc.text('PAYMENT RECEIPT', 105, 55, { align: 'center' });
+
+            // Transaction Details Box
+            doc.setFillColor(248, 250, 252);
+            doc.rect(15, 65, 180, 35, 'F');
+            doc.setDrawColor(226, 232, 240);
+            doc.rect(15, 65, 180, 35);
+
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(100, 116, 139);
+            doc.text('Transaction ID:', 20, 73);
+            doc.text('Date & Time:', 20, 82);
+            doc.text('Payment Method:', 20, 91);
+
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(0, 0, 0);
+            doc.text(paymentId, 60, 73);
+            doc.text(date, 60, 82);
+            doc.text('Razorpay', 60, 91);
+
+            // Employee List
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('Employees Paid', 15, 115);
+
+            doc.setFillColor(79, 70, 229);
+            doc.rect(15, 120, 180, 8, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'bold');
+            doc.text('Name', 20, 125);
+            doc.text('Role', 80, 125);
+            doc.text('Base Salary', 130, 125);
+            doc.text('Amount', 170, 125);
+
+            let yPos = 135;
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+
+            paymentData.selectedEmps.forEach((emp, index) => {
+                if (yPos > 270) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+
+                if (index % 2 === 0) {
+                    doc.setFillColor(248, 250, 252);
+                    doc.rect(15, yPos - 5, 180, 8, 'F');
+                }
+
+                doc.text(emp.name.substring(0, 20), 20, yPos);
+                doc.text(emp.role.substring(0, 15), 80, yPos);
+                doc.text('₹' + emp.baseSalary.toLocaleString('en-IN'), 130, yPos);
+                doc.text('₹' + emp.total.toLocaleString('en-IN'), 170, yPos);
+                
+                yPos += 10;
+            });
+
+            // Summary Box
+            yPos += 10;
+            doc.setDrawColor(226, 232, 240);
+            doc.line(15, yPos, 195, yPos);
+            
+            yPos += 10;
+            doc.setFont(undefined, 'normal');
+            doc.text('Subtotal:', 130, yPos);
+            doc.text('₹' + subtotal.toLocaleString('en-IN'), 170, yPos);
+            
+            yPos += 8;
+            doc.text('Platform Fee (' + paymentData.selectedEmps.length + ' × ₹5):', 130, yPos);
+            doc.text('₹' + platformFee, 170, yPos);
+            
+            yPos += 10;
+            doc.setFont(undefined, 'bold');
+            doc.setFontSize(12);
+            doc.text('Grand Total:', 130, yPos);
+            doc.text('₹' + paymentData.totalAmount.toLocaleString('en-IN'), 170, yPos);
+
+            // Footer
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(100, 116, 139);
+            doc.text('This is a computer-generated receipt and does not require a signature.', 105, 285, { align: 'center' });
+            doc.text('Processed by UpScaleVest AI • Powered by Razorpay', 105, 290, { align: 'center' });
+
+            // QR Code Placeholder
+            doc.setDrawColor(200, 200, 200);
+            doc.rect(170, 270, 20, 20);
+            doc.setFontSize(6);
+            doc.text('QR', 178, 281);
+            doc.text('Verify', 175, 285);
+
+            doc.save(`UpScaleVest_MasterReceipt_${paymentId}.pdf`);
         };
+
+        // Generate Employee Salary Slip
+        window.generateEmployeeSlip = async function(empIndex, paymentId, date) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const paymentData = window.currentPaymentData;
+            const emp = paymentData.selectedEmps[empIndex];
+
+            // Header with gradient effect
+            doc.setFillColor(99, 102, 241);
+            doc.rect(0, 0, 210, 50, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(26);
+            doc.setFont(undefined, 'bold');
+            doc.text('SALARY SLIP', 105, 22, { align: 'center' });
+            
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'normal');
+            doc.text('UpScaleVest Workforce Management', 105, 35, { align: 'center' });
+
+            // Employee Info Box
+            doc.setFillColor(248, 250, 252);
+            doc.rect(15, 60, 180, 40, 'F');
+            doc.setDrawColor(79, 70, 229);
+            doc.setLineWidth(0.5);
+            doc.rect(15, 60, 180, 40);
+
+            doc.setTextColor(79, 70, 229);
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text('EMPLOYEE INFORMATION', 20, 70);
+
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text('Name:', 20, 82);
+            doc.setFont(undefined, 'bold');
+            doc.text(emp.name, 65, 82);
+
+            doc.setFont(undefined, 'normal');
+            doc.text('Role/Position:', 20, 91);
+            doc.setFont(undefined, 'bold');
+            doc.text(emp.role, 65, 91);
+
+            // Payment Details
+            doc.setFillColor(248, 250, 252);
+            doc.rect(15, 110, 180, 30, 'F');
+            doc.setDrawColor(79, 70, 229);
+            doc.rect(15, 110, 180, 30);
+
+            doc.setTextColor(79, 70, 229);
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text('PAYMENT DETAILS', 20, 120);
+
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text('Transaction ID:', 20, 130);
+            doc.setFont(undefined, 'bold');
+            doc.text(paymentId, 65, 130);
+
+            doc.setFont(undefined, 'normal');
+            doc.text('Payment Date:', 20, 137);
+            doc.setFont(undefined, 'bold');
+            doc.text(date, 65, 137);
+
+            // Earnings Breakdown
+            doc.setFillColor(16, 185, 129);
+            doc.rect(15, 150, 180, 10, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.text('EARNINGS BREAKDOWN', 20, 157);
+
+            const earnings = [
+                { label: 'Base Salary', amount: emp.baseSalary },
+                { label: 'Bonus/Incentive', amount: emp.bonus || 0 }
+            ];
+
+            let yPos = 170;
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(10);
+
+            earnings.forEach((item, index) => {
+                if (index % 2 === 0) {
+                    doc.setFillColor(248, 250, 252);
+                    doc.rect(15, yPos - 5, 180, 10, 'F');
+                }
+                doc.text(item.label, 20, yPos);
+                doc.text('₹' + item.amount.toLocaleString('en-IN'), 175, yPos, { align: 'right' });
+                yPos += 10;
+            });
+
+            // Total
+            yPos += 5;
+            doc.setDrawColor(79, 70, 229);
+            doc.setLineWidth(1);
+            doc.line(15, yPos, 195, yPos);
+
+            yPos += 10;
+            doc.setFont(undefined, 'bold');
+            doc.setFontSize(14);
+            doc.setTextColor(16, 185, 129);
+            doc.text('NET SALARY CREDITED', 20, yPos);
+            doc.text('₹' + emp.total.toLocaleString('en-IN'), 175, yPos, { align: 'right' });
+
+            // Payment Info
+            yPos += 15;
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(100, 116, 139);
+            doc.text('Credited to: ' + emp.paymentDetails, 20, yPos);
+
+            // Watermark
+            doc.setFontSize(40);
+            doc.setTextColor(200, 200, 200);
+            doc.setFont(undefined, 'bold');
+            doc.text('PAID', 105, 230, { align: 'center', angle: 45 });
+
+            // Footer
+            yPos = 270;
+            doc.setFillColor(79, 70, 229);
+            doc.rect(0, yPos, 210, 27, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.text('This is a computer-generated salary slip and does not require a signature.', 105, yPos + 8, { align: 'center' });
+            doc.text('Processed by UpScaleVest AI • Secured by Razorpay', 105, yPos + 15, { align: 'center' });
+
+            // QR Code Placeholder
+            doc.setFillColor(255, 255, 255);
+            doc.rect(175, yPos + 5, 18, 18, 'F');
+            doc.setTextColor(79, 70, 229);
+            doc.setFontSize(7);
+            doc.text('QR', 182, yPos + 13);
+            doc.text('Verify', 179, yPos + 18);
+
+            doc.save(`SalarySlip_${emp.name.replace(/\s+/g, '_')}_${paymentId}.pdf`);
+        };
+// --- REMOVE EMPLOYEE ---
+async function deleteEmployee(id) {
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "This will remove the employee from your records.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#EF4444',
+        confirmButtonText: 'Yes, delete!'
+    });
+
+    if (result.isConfirmed) {
+        await database.ref(`BusinessOwners/${currentBossId}/employees/${id}`).remove();
+        Swal.fire('Deleted!', 'Employee removed successfully.', 'success');
+    }
+}
+
+// --- EDIT EMPLOYEE ---
+async function editEmployee(id) {
+    const emp = employees[id];
+    // We use the same form style as Add Employee but pre-fill the values
+    const { value: formValues } = await Swal.fire({
+        title: 'Update Employee',
+        html: `
+            <div style="text-align: left;">
+                <input id="editName" class="swal2-input" value="${emp.name}" placeholder="Name">
+                <input id="editRole" class="swal2-input" value="${emp.role}" placeholder="Role">
+                <input id="editSalary" class="swal2-input" type="number" value="${emp.salary}" placeholder="Salary">
+                <input id="editPayment" class="swal2-input" value="${emp.paymentDetails}" placeholder="UPI or Bank Details">
+            </div>
+        `,
+        preConfirm: () => ({
+            name: document.getElementById('editName').value,
+            role: document.getElementById('editRole').value,
+            salary: parseFloat(document.getElementById('editSalary').value),
+            paymentDetails: document.getElementById('editPayment').value
+        })
+    });
+
+    if (formValues) {
+        await database.ref(`BusinessOwners/${currentBossId}/employees/${id}`).update(formValues);
+        Swal.fire('Updated!', 'Changes saved.', 'success');
+    }
+}
+        // Initialize on load
+        window.onload = initApp;
     </script>
 </body>
 </html>
