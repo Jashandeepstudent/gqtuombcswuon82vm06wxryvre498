@@ -1,30 +1,22 @@
 export default async function handler(req, res) {
     const { productName } = req.query;
-    const GEMINI_KEY = process.env.GEMINI_KEY; // Hidden in Vercel Dashboard
+    const apiKey = process.env.GEMINI_KEY;
 
-    const prompt = {
-        contents: [{
-            parts: [{
-                text: `Provide real-world origin and a 2-sentence story for the product "${productName}". 
-                Also provide a sustainability score between 1 and 100. 
-                Format the response as JSON: {"origin": "...", "story": "...", "score": 85}`
-            }]
-        }]
-    };
+    const prompt = `Provide a real-world origin, a 2-sentence description, and a sustainability score (1-100) for "${productName}". Format as JSON: {"origin": "...", "description": "...", "score": 85}`;
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
-            body: JSON.stringify(prompt)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
         });
-        
+
         const data = await response.json();
-        const textResponse = data.candidates[0].content.parts[0].text;
-        // Clean the JSON string if Gemini adds markdown code blocks
-        const jsonOnly = textResponse.replace(/```json|```/g, "").trim();
+        const rawText = data.candidates[0].content.parts[0].text;
+        const jsonString = rawText.replace(/```json|```/g, "").trim();
         
-        res.status(200).json(JSON.parse(jsonOnly));
+        res.status(200).json(JSON.parse(jsonString));
     } catch (error) {
-        res.status(500).json({ error: "Failed to fetch from Gemini" });
+        res.status(500).json({ error: "AI Fetch Failed" });
     }
 }
