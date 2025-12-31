@@ -1,1191 +1,371 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScaleVest | Boss Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <style>
-        .glass-card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        .employee-card {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        .employee-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-        .selected-card {
-            border: 2px solid #4F46E5;
-            background: rgba(79, 70, 229, 0.05);
-        }
-        .photo-preview {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 50%;
-            margin: 10px auto;
-        }
-        .deduction-controls {
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            padding: 12px;
-            margin-top: 12px;
-            border-radius: 8px;
-        }
-        .deduction-input {
-            width: 100%;
-            padding: 6px 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            margin-top: 4px;
-        }
-        .deduction-input:focus {
-            outline: none;
-            border-color: #4F46E5;
-        }
-        .history-item {
-            transition: all 0.2s ease;
-        }
-        .history-item:hover {
-            background: rgba(79, 70, 229, 0.05);
-            transform: translateX(5px);
-        }
-    </style>
-</head>
-<body class="bg-gradient-to-br from-indigo-50 via-white to-slate-50 min-h-screen">
+import React, { useState, useRef, useEffect } from 'react';
+import { Download, Play, Grid, Move, Zap, TrendingUp, AlertTriangle } from 'lucide-react';
+
+const DigitalTwinDashboard = () => {
+  const [viewMode, setViewMode] = useState('list');
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [placedBlocks, setPlacedBlocks] = useState([]);
+  const [draggedProduct, setDraggedProduct] = useState(null);
+  const [simulation, setSimulation] = useState(null);
+  const canvasRef = useRef(null);
+
+  const products = [
+    { id: 1, name: 'Espresso Blend A', stock: 45, demand: 'High', price: 24.99, velocity: 8.5 },
+    { id: 2, name: 'Cold Brew Pack', stock: 12, demand: 'Critical', price: 18.99, velocity: 9.2 },
+    { id: 3, name: 'Latte Mix Premium', stock: 67, demand: 'Medium', price: 29.99, velocity: 6.1 },
+    { id: 4, name: 'Decaf Reserve', stock: 89, demand: 'Low', price: 22.99, velocity: 3.4 },
+    { id: 5, name: 'Mocha Powder Deluxe', stock: 34, demand: 'High', price: 32.99, velocity: 7.8 },
+    { id: 6, name: 'Vanilla Syrup Pro', stock: 8, demand: 'Critical', price: 15.99, velocity: 9.5 }
+  ];
+
+  const toggleSelection = (product) => {
+    setSelectedProducts(prev => {
+      const isSelected = prev.find(p => p.id === product.id);
+      if (isSelected) {
+        return prev.filter(p => p.id !== product.id);
+      }
+      return [...prev, product];
+    });
+  };
+
+  const handleCanvasClick = (e) => {
+    if (selectedProducts.length === 0) return;
     
-    <header class="glass-card shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-4">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl md:text-3xl font-bold text-indigo-900">ScaleVest</h1>
-                    <p class="text-sm text-gray-600">Workforce Management Platform</p>
-                </div>
-                <div class="flex gap-2">
-                    <button id="historyBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 md:px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
-                        📊 History
-                    </button>
-                    <button id="addEmployeeBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 md:px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
-                        + Add Employee
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-    <main class="container mx-auto px-4 py-8 mb-24">
-        <div id="welcomeSection" class="glass-card rounded-2xl shadow-xl p-6 md:p-8 mb-8">
-            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Hi, <span id="bossName">Boss</span>! 👋</h2>
-            <p class="text-gray-600">Manage your team and process payments seamlessly</p>
-        </div>
+    const newBlock = {
+      id: Date.now(),
+      product: selectedProducts[0],
+      x: x - 60,
+      y: y - 40,
+      width: 120,
+      height: 80
+    };
 
-        <div id="employeeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    setPlacedBlocks([...placedBlocks, newBlock]);
+    setSelectedProducts([]);
+  };
 
-        <div id="emptyState" class="glass-card rounded-2xl shadow-xl p-12 text-center hidden">
-            <div class="flex justify-center mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-32 h-32 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                </svg>
-            </div>
-            <h3 class="text-2xl font-bold text-indigo-900 mb-2">No Employees Registered</h3>
-            <p class="text-gray-500 mb-8 max-w-sm mx-auto">No Employees yet, add one to get started.</p>
-            <button class="add-first-btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-10 rounded-full shadow-lg transition duration-300 transform hover:scale-105 flex items-center mx-auto gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
-                </svg>
-                Add First Employee
-            </button>
-        </div>
-    </main>
+  const runSimulation = () => {
+    const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
+    const avgVelocity = products.reduce((sum, p) => sum + p.velocity, 0) / products.length;
+    const criticalItems = products.filter(p => p.demand === 'Critical').length;
+    
+    const projectedSales = Math.round(avgVelocity * 7 * products.length);
+    const restockNeeded = products.filter(p => p.stock < 20).length;
+    const revenueProjection = Math.round(projectedSales * 25.5);
 
-    <div class="fixed bottom-0 left-0 right-0 glass-card shadow-2xl p-4 z-50">
-        <div class="container mx-auto flex justify-center">
-            <button id="paySalaryBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-12 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
-                💰 Pay Salary
-            </button>
-        </div>
-    </div>
+    setSimulation({
+      currentStock: totalStock,
+      projectedWeeklySales: projectedSales,
+      restockAlerts: restockNeeded,
+      criticalItems: criticalItems,
+      revenueProjection: revenueProjection,
+      efficiency: Math.round((1 - (criticalItems / products.length)) * 100)
+    });
+  };
 
-    <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-  authDomain: "scalevest-163a0.firebaseapp.com",
-  databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-  projectId: "scalevest-163a0",
-  storageBucket: "scalevest-163a0.firebasestorage.app",
-  messagingSenderId: "938358950124",
-  appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
-  measurementId: "G-QD3TWBZHR0"
-};
+  const generatePDF = () => {
+    const timestamp = new Date().toISOString();
+    const products_summary = products.map(p => 
+      `${String(p.name)} | Stock: ${String(p.stock)} | Demand: ${String(p.demand)} | Velocity: ${String(p.velocity)}`
+    ).join('\n');
+    
+    const layout_info = placedBlocks.map(b => 
+      `${String(b.product.name)} at position (${String(Math.round(b.x))}, ${String(Math.round(b.y))})`
+    ).join('\n');
 
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-const storage = firebase.storage();
-const auth = firebase.auth();
+    const sim_data = simulation ? `
+Stock Level: ${String(simulation.currentStock)}
+Projected Sales: ${String(simulation.projectedWeeklySales)}
+Restock Alerts: ${String(simulation.restockAlerts)}
+Revenue Projection: $${String(simulation.revenueProjection)}
+Efficiency: ${String(simulation.efficiency)}%` : 'No simulation run';
 
-// Initialize variables
-let employees = {};
-let selectedEmployees = new Set();
-let employeeDeductions = {};
-let bossName = "Boss";
-let currentBossId = null;
+    const content = `MORNING BATTLE PLAN
+Generated: ${String(timestamp)}
 
-// Format currency helper - FIXED encoding issue
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2
-    }).format(amount).replace('₹', 'Rs. ');
-}
+MISSION CRITICAL PRODUCTS:
+${products_summary}
 
-// Auth check
-auth.onAuthStateChanged((user) => {
-    if (!user) {
-        alert("Please login first");
-        window.location.href = "login.html";
-        return;
+SPATIAL LAYOUT:
+${layout_info || 'No products placed'}
+
+OPERATIONAL INTELLIGENCE:
+${sim_data}
+
+TACTICAL RECOMMENDATIONS:
+- Prioritize restocking Critical demand items
+- Optimize high-velocity product placement
+- Monitor stock levels for sub-20 inventory
+- Execute daily velocity analysis`;
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `battle-plan-${String(Date.now())}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  useEffect(() => {
+    if (viewMode === 'spatial' && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      
+      ctx.fillStyle = '#0a0a0f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Grid
+      ctx.strokeStyle = '#1a1a2e';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < canvas.width; i += 40) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, canvas.height);
+        ctx.stroke();
+      }
+      for (let i = 0; i < canvas.height; i += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(canvas.width, i);
+        ctx.stroke();
+      }
+
+      // Blocks
+      placedBlocks.forEach(block => {
+        const gradient = ctx.createLinearGradient(block.x, block.y, block.x + block.width, block.y + block.height);
+        gradient.addColorStop(0, '#4c1d95');
+        gradient.addColorStop(1, '#6366f1');
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(block.x, block.y, block.width, block.height);
+        
+        ctx.strokeStyle = '#818cf8';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(block.x, block.y, block.width, block.height);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px monospace';
+        ctx.fillText(block.product.name.substring(0, 15), block.x + 5, block.y + 20);
+        ctx.font = '10px monospace';
+        ctx.fillText(`Stock: ${String(block.product.stock)}`, block.x + 5, block.y + 40);
+        ctx.fillText(`V: ${String(block.product.velocity)}`, block.x + 5, block.y + 55);
+      });
     }
-    currentBossId = user.uid;
-    initApp();
-});
+  }, [viewMode, placedBlocks]);
 
-function initApp() {
-    loadEmployees();
-    setupEventListeners();
-    showWelcomePopup();
-}
+  const getDemandColor = (demand) => {
+    switch(demand) {
+      case 'Critical': return 'border-red-500 bg-red-500/10';
+      case 'High': return 'border-orange-500 bg-orange-500/10';
+      case 'Medium': return 'border-yellow-500 bg-yellow-500/10';
+      default: return 'border-green-500 bg-green-500/10';
+    }
+  };
 
-function showWelcomePopup() {
-    Swal.fire({
-        title: `Hi, ${bossName}! 👋`,
-        text: "Welcome to ScaleVest. Manage your team and process salaries with ease.",
-        icon: "success",
-        confirmButtonText: "Let's Get Started",
-        confirmButtonColor: "#4F46E5"
-    });
-}
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white p-6">
+      {/* Header */}
+      <div className="mb-8 border-b border-indigo-800/30 pb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent mb-2">
+              Digital Twin Control Center
+            </h1>
+            <p className="text-indigo-300/60 font-mono text-sm">Real-time Operations Command</p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setViewMode(viewMode === 'list' ? 'spatial' : 'list')}
+              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-semibold flex items-center gap-2 transition-all border border-indigo-400/20 shadow-lg shadow-indigo-500/20"
+            >
+              {viewMode === 'list' ? <Move className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
+              {viewMode === 'list' ? 'Spatial View' : 'List View'}
+            </button>
+            <button
+              onClick={runSimulation}
+              className="px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold flex items-center gap-2 transition-all border border-purple-400/20 shadow-lg shadow-purple-500/20"
+            >
+              <Play className="w-5 h-5" />
+              Run Simulation
+            </button>
+            <button
+              onClick={generatePDF}
+              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-lg font-semibold flex items-center gap-2 transition-all border border-emerald-400/20 shadow-lg shadow-emerald-500/20"
+            >
+              <Download className="w-5 h-5" />
+              Battle Plan
+            </button>
+          </div>
+        </div>
+      </div>
 
-function loadEmployees() {
-    const employeesRef = database.ref(`BusinessOwners/${currentBossId}/employees`);
-    employeesRef.on('value', (snapshot) => {
-        employees = snapshot.val() || {};
-        renderEmployees();
-    });
-}
-
-function calculateDailySalary(monthlySalary) {
-    return monthlySalary / 30;
-}
-
-function calculateLeaveDeduction(monthlySalary, leaveDays) {
-    return calculateDailySalary(monthlySalary) * leaveDays;
-}
-
-function renderEmployees() {
-    const grid = document.getElementById('employeeGrid');
-    const emptyState = document.getElementById('emptyState');
-    const employeeList = Object.entries(employees);
-    
-    if (employeeList.length === 0) {
-        emptyState.classList.remove('hidden');
-        grid.innerHTML = '';
-    } else {
-        emptyState.classList.add('hidden');
-        grid.innerHTML = employeeList.map(([id, emp]) => {
-            const deductions = employeeDeductions[id] || { leaveDays: 0, flatDeduction: 0 };
-            const leaveDeduction = calculateLeaveDeduction(emp.salary, deductions.leaveDays);
-            const totalDeduction = leaveDeduction + deductions.flatDeduction;
-            const isSelected = selectedEmployees.has(id);
-            
-            return `
-            <div class="employee-card glass-card rounded-2xl shadow-lg p-6 ${isSelected ? 'selected-card' : ''}" data-id="${id}">
-                <div class="flex justify-between mb-2">
-                    <button onclick="event.stopPropagation(); editEmployee('${id}')" class="text-indigo-500 hover:text-indigo-700">✏️ Edit</button>
-                    <button onclick="event.stopPropagation(); deleteEmployee('${id}')" class="text-red-500 hover:text-red-700">🗑️ Remove</button>
-                </div>
-                <div class="flex flex-col items-center mb-4">
-                    ${emp.photoURL ? 
-                        `<img src="${emp.photoURL}" alt="${emp.name}" class="w-20 h-20 rounded-full object-cover mb-3">` :
-                        `<div class="w-20 h-20 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-3">
-                            ${emp.name.charAt(0).toUpperCase()}
-                        </div>`
-                    }
-                    ${isSelected ? '<div class="text-green-600 font-bold">✓ Selected</div>' : ''}
-                </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">${emp.name}</h3>
-                <p class="text-indigo-600 font-semibold mb-3 text-center">${emp.role}</p>
-                <div class="border-t border-gray-200 pt-3">
-                    <p class="text-sm text-gray-600 mb-1">Base Salary</p>
-                    <p class="text-2xl font-bold text-green-600">${formatCurrency(emp.salary)}</p>
-                    ${totalDeduction > 0 ? `
-                        <p class="text-sm text-red-600 mt-2">
-                            Deductions: -${formatCurrency(totalDeduction)}
-                        </p>
-                    ` : ''}
-                </div>
-                <div class="mt-3 text-xs text-gray-500">
-                    <p>💳 ${emp.paymentDetails}</p>
-                </div>
-                ${isSelected ? `
-                <div class="deduction-controls" onclick="event.stopPropagation()">
-                    <h4 class="text-sm font-bold text-gray-700 mb-2">Adjustments</h4>
-                    <div class="mb-2">
-                        <label class="text-xs text-gray-600">Days of Leave</label>
-                        <input type="number" min="0" max="30" 
-                            class="deduction-input" 
-                            value="${deductions.leaveDays}"
-                            onchange="updateDeduction('${id}', 'leaveDays', parseFloat(this.value) || 0)"
-                            placeholder="0">
-                        ${deductions.leaveDays > 0 ? `
-                            <p class="text-xs text-red-500 mt-1">-${formatCurrency(leaveDeduction)}</p>
-                        ` : ''}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Product Cards */}
+        <div className="lg:col-span-2">
+          {viewMode === 'list' ? (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold text-indigo-300 mb-4 flex items-center gap-2">
+                <Zap className="w-6 h-6" />
+                Product Inventory
+              </h2>
+              {products.map(product => (
+                <div
+                  key={product.id}
+                  onClick={() => toggleSelection(product)}
+                  className={`p-6 rounded-xl border-2 cursor-pointer transition-all backdrop-blur-sm ${
+                    selectedProducts.find(p => p.id === product.id)
+                      ? 'border-indigo-500 bg-indigo-500/20 shadow-lg shadow-indigo-500/30'
+                      : getDemandColor(product.demand)
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="text-xl font-bold text-white">{product.name}</h3>
+                      <p className="text-sm text-indigo-300 font-mono mt-1">ID: {product.id}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        product.demand === 'Critical' ? 'bg-red-500' :
+                        product.demand === 'High' ? 'bg-orange-500' :
+                        product.demand === 'Medium' ? 'bg-yellow-500' : 'bg-green-500'
+                      }`}>
+                        {product.demand}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <p className="text-indigo-300/60">Stock</p>
+                      <p className="text-xl font-bold">{product.stock}</p>
                     </div>
                     <div>
-                        <label class="text-xs text-gray-600">Flat Deduction</label>
-                        <input type="number" min="0" 
-                            class="deduction-input" 
-                            value="${deductions.flatDeduction}"
-                            onchange="updateDeduction('${id}', 'flatDeduction', parseFloat(this.value) || 0)"
-                            placeholder="Loans, penalties, etc.">
+                      <p className="text-indigo-300/60">Price</p>
+                      <p className="text-xl font-bold">${product.price}</p>
                     </div>
-                </div>
-                ` : ''}
-            </div>
-            `;
-        }).join('');
-        
-        document.querySelectorAll('.employee-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || 
-                    e.target.parentElement.tagName === 'BUTTON') return;
-                toggleCardSelection(card.dataset.id);
-            });
-        });
-    }
-}
-
-window.updateDeduction = function(id, field, value) {
-    if (!employeeDeductions[id]) {
-        employeeDeductions[id] = { leaveDays: 0, flatDeduction: 0 };
-    }
-    employeeDeductions[id][field] = value;
-    renderEmployees();
-};
-
-function toggleCardSelection(id) {
-    if (selectedEmployees.has(id)) {
-        selectedEmployees.delete(id);
-        delete employeeDeductions[id];
-    } else {
-        selectedEmployees.add(id);
-        if (!employeeDeductions[id]) {
-            employeeDeductions[id] = { leaveDays: 0, flatDeduction: 0 };
-        }
-    }
-    renderEmployees();
-}
-
-function setupEventListeners() {
-    document.getElementById('addEmployeeBtn').addEventListener('click', showAddEmployeeForm);
-    document.querySelector('.add-first-btn')?.addEventListener('click', showAddEmployeeForm);
-    document.getElementById('paySalaryBtn').addEventListener('click', handlePaySalary);
-    document.getElementById('historyBtn').addEventListener('click', showPaymentHistory);
-}
-
-async function handlePaySalary() {
-    const employeeCount = Object.keys(employees).length;
-    
-    if (employeeCount === 0) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'No Employees',
-            text: 'Please add employees first!',
-            confirmButtonColor: '#4F46E5'
-        });
-        return;
-    }
-
-    if (selectedEmployees.size > 0) {
-        await askForBonus();
-        return;
-    }
-
-    const { value: choice } = await Swal.fire({
-        title: 'Pay Salary',
-        text: 'How would you like to proceed?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Pay All Employees',
-        cancelButtonText: 'Select Employees',
-        confirmButtonColor: '#10B981',
-        cancelButtonColor: '#4F46E5',
-        reverseButtons: true
-    });
-
-    if (choice) {
-        await askForGlobalDeductions();
-    } else if (choice === false) {
-        selectedEmployees.clear();
-        employeeDeductions = {};
-        renderEmployees();
-        
-        Swal.fire({
-            title: 'Select Employees',
-            text: 'Click on employee cards to select them and adjust deductions',
-            icon: 'info',
-            confirmButtonText: 'Continue to Payment',
-            confirmButtonColor: '#4F46E5'
-        }).then(async (result) => {
-            if (result.isConfirmed && selectedEmployees.size > 0) {
-                await askForBonus();
-            } else if (result.isConfirmed && selectedEmployees.size === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'No Selection',
-                    text: 'Please select at least one employee',
-                    confirmButtonColor: '#4F46E5'
-                });
-            }
-        });
-    }
-}
-
-async function askForGlobalDeductions() {
-    const { value: formValues } = await Swal.fire({
-        title: 'Global Deductions',
-        html: `
-            <div style="text-align: left;">
-                <p class="text-sm text-gray-600 mb-4">Apply the same deductions to all employees</p>
-                <label class="text-sm font-semibold">Days of Leave (for all)</label>
-                <input id="globalLeave" type="number" min="0" max="30" class="swal2-input" value="0" placeholder="0">
-                
-                <label class="text-sm font-semibold">Flat Deduction (for all)</label>
-                <input id="globalFlat" type="number" min="0" class="swal2-input" value="0" placeholder="0">
-            </div>
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'Continue',
-        confirmButtonColor: '#4F46E5',
-        preConfirm: () => ({
-            leaveDays: parseFloat(document.getElementById('globalLeave').value) || 0,
-            flatDeduction: parseFloat(document.getElementById('globalFlat').value) || 0
-        })
-    });
-
-    if (formValues) {
-        selectedEmployees = new Set(Object.keys(employees));
-        Object.keys(employees).forEach(id => {
-            employeeDeductions[id] = {
-                leaveDays: formValues.leaveDays,
-                flatDeduction: formValues.flatDeduction
-            };
-        });
-        renderEmployees();
-        await askForBonus();
-    }
-}
-
-async function askForBonus() {
-    if (selectedEmployees.size === 0) return;
-
-    const { value: bonusAmount } = await Swal.fire({
-        title: '💰 Add Bonus?',
-        text: 'Would you like to add a bonus amount for selected employees?',
-        input: 'number',
-        inputPlaceholder: 'Enter bonus amount',
-        inputValue: 0,
-        showCancelButton: true,
-        confirmButtonText: 'Continue',
-        confirmButtonColor: '#4F46E5',
-        inputValidator: (value) => {
-            if (value < 0) {
-                return 'Bonus cannot be negative!';
-            }
-        }
-    });
-
-    if (bonusAmount !== undefined) {
-        calculateAndShowSummary(parseFloat(bonusAmount) || 0);
-    }
-}
-
-async function showAddEmployeeForm() {
-    const { value: formValues } = await Swal.fire({
-        title: 'Add New Employee',
-        html: `
-            <div style="text-align: left;">
-                <input id="empName" class="swal2-input" placeholder="Full Name">
-                <input id="empRole" class="swal2-input" placeholder="Role (e.g. Manager)">
-                <input id="empSalary" class="swal2-input" type="number" placeholder="Salary">
-                
-                <p style="margin-top:15px; font-weight:bold; color:#4F46E5;">Payment Method:</p>
-                <input id="empUPI" class="swal2-input" placeholder="UPI ID (e.g. name@upi)">
-                <div style="text-align:center; margin:5px; color:#aaa;">- OR -</div>
-                <input id="empAcc" class="swal2-input" placeholder="Bank Account Number">
-                <input id="empIFSC" class="swal2-input" placeholder="IFSC Code">
-
-                <label style="display:block; margin-top:10px;">Photo (Optional)</label>
-                <input id="empPhoto" type="file" accept="image/*" class="swal2-file">
-            </div>
-        `,
-        preConfirm: () => {
-            const name = document.getElementById('empName').value;
-            const upi = document.getElementById('empUPI').value;
-            const acc = document.getElementById('empAcc').value;
-            const ifsc = document.getElementById('empIFSC').value;
-
-            if (!name) return Swal.showValidationMessage('Name is required');
-            if (!upi && (!acc || !ifsc)) {
-                return Swal.showValidationMessage('Provide a UPI ID or Account + IFSC');
-            }
-
-            return {
-                name: name,
-                role: document.getElementById('empRole').value,
-                salary: parseFloat(document.getElementById('empSalary').value) || 0,
-                paymentDetails: upi ? upi : `${acc} (IFSC: ${ifsc})`,
-                photo: document.getElementById('empPhoto').files[0]
-            };
-        }
-    });
-
-    if (formValues) await addEmployeeToFirebase(formValues);
-}
-
-async function addEmployeeToFirebase(employeeData) {
-    try {
-        Swal.fire({
-            title: 'Adding Employee...',
-            text: 'Please wait',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        let photoURL = null;
-
-        if (employeeData.photo) {
-            const photoRef = storage.ref(`employees/${currentBossId}/${Date.now()}_${employeeData.photo.name}`);
-            const snapshot = await photoRef.put(employeeData.photo);
-            photoURL = await snapshot.ref.getDownloadURL();
-        }
-
-        const employeeRef = database.ref(`BusinessOwners/${currentBossId}/employees`).push();
-        
-        await employeeRef.set({
-            name: employeeData.name,
-            role: employeeData.role,
-            salary: employeeData.salary,
-            paymentDetails: employeeData.paymentDetails,
-            photoURL: photoURL,
-            createdAt: new Date().toISOString()
-        });
-
-        Swal.fire({
-            icon: 'success',
-            title: 'Employee Added!',
-            text: `${employeeData.name} has been added to your team.`,
-            confirmButtonColor: '#4F46E5',
-            timer: 2000
-        });
-    } catch (error) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to add employee: ' + error.message,
-            confirmButtonColor: '#4F46E5'
-        });
-    }
-}
-
-function calculateAndShowSummary(bonus) {
-    let totalSalary = 0;
-    let totalDeductions = 0;
-    const selectedEmps = [];
-
-    selectedEmployees.forEach(id => {
-        const emp = employees[id];
-        const deductions = employeeDeductions[id] || { leaveDays: 0, flatDeduction: 0 };
-        const leaveDeduction = calculateLeaveDeduction(emp.salary, deductions.leaveDays);
-        const totalEmpDeduction = leaveDeduction + deductions.flatDeduction;
-        const netAmount = emp.salary + bonus - totalEmpDeduction;
-        
-        totalSalary += netAmount;
-        totalDeductions += totalEmpDeduction;
-        
-        selectedEmps.push({
-            name: emp.name,
-            role: emp.role,
-            baseSalary: emp.salary,
-            bonus: bonus,
-            leaveDays: deductions.leaveDays,
-            leaveDeduction: leaveDeduction,
-            flatDeduction: deductions.flatDeduction,
-            totalDeduction: totalEmpDeduction,
-            total: netAmount,
-            paymentDetails: emp.paymentDetails
-        });
-    });
-
-    const platformFee = selectedEmployees.size * 5;
-    const grandTotal = totalSalary + platformFee;
-
-    Swal.fire({
-        title: '📊 Payment Summary',
-        html: `
-            <div style="text-align: left; max-height: 400px; overflow-y: auto;">
-                <h4 style="font-weight: bold; font-size: 1.1em; margin-bottom: 15px;">Selected Employees (${selectedEmployees.size})</h4>
-                ${selectedEmps.map(e => `
-                    <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
-                        <p style="font-weight: 600; margin-bottom: 5px;">${e.name}</p>
-                        <p style="font-size: 0.85em; color: #64748b;">
-                            Base: ${formatCurrency(e.baseSalary)}
-                            ${e.bonus > 0 ? `+ Bonus: ${formatCurrency(e.bonus)}` : ''}
-                        </p>
-                        ${e.totalDeduction > 0 ? `
-                            <p style="font-size: 0.85em; color: #ef4444;">
-                                ${e.leaveDays > 0 ? `Leave (${e.leaveDays}d): -${formatCurrency(e.leaveDeduction)} ` : ''}
-                                ${e.flatDeduction > 0 ? `Deduction: -${formatCurrency(e.flatDeduction)}` : ''}
-                            </p>
-                        ` : ''}
-                        <p style="color: #10b981; font-weight: bold; margin-top: 5px;">Net: ${formatCurrency(e.total)}</p>
-                    </div>
-                `).join('')}
-                <div style="border-top: 2px solid #e2e8f0; padding-top: 15px; margin-top: 15px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>Subtotal (after deductions):</span>
-                        <span style="font-weight: 600;">${formatCurrency(totalSalary)}</span>
-                    </div>
-                    ${totalDeductions > 0 ? `
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #ef4444;">
-                        <span>Total Deductions:</span>
-                        <span style="font-weight: 600;">-${formatCurrency(totalDeductions)}</span>
-                    </div>
-                    ` : ''}
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>Platform Fee (Rs. 5 x ${selectedEmployees.size}):</span>
-                        <span style="font-weight: 600;">${formatCurrency(platformFee)}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 1.3em; font-weight: bold; color: #4f46e5; margin-top: 12px;">
-                        <span>Grand Total:</span>
-                        <span>${formatCurrency(grandTotal)}</span>
-                    </div>
-                </div>
-            </div>
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'Proceed to Payment',
-        confirmButtonColor: '#10B981',
-        cancelButtonColor: '#6B7280',
-        width: '600px'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            processPayment(grandTotal, selectedEmps, bonus);
-        }
-    });
-}
-
-function processPayment(amount, selectedEmps, bonus) {
-    const paymentData = {
-        selectedEmps: selectedEmps,
-        totalAmount: amount,
-        bonus: bonus,
-        platformFee: selectedEmps.length * 5
-    };
-
-    const options = {
-        key: "rzp_test_1DP5mmOlF5G5ag",
-        amount: amount * 100,
-        currency: "INR",
-        name: "ScaleVest",
-        description: `Salary Payment for ${selectedEmps.length} employee(s)`,
-        handler: function (response) {
-            triggerConfetti();
-            savePaymentToHistory(response.razorpay_payment_id, paymentData);
-        },
-        prefill: { name: bossName },
-        theme: { color: "#4F46E5" }
-    };
-
-    const rzp = new Razorpay(options);
-    rzp.open();
-}
-
-// Save payment to Firebase History
-async function savePaymentToHistory(paymentId, paymentData) {
-    const currentDate = new Date().toISOString();
-    const historyRef = database.ref(`BusinessOwners/${currentBossId}/paymentHistory`).push();
-    
-    await historyRef.set({
-        paymentId: paymentId,
-        date: currentDate,
-        totalAmount: paymentData.totalAmount,
-        platformFee: paymentData.platformFee,
-        bonus: paymentData.bonus,
-        employeeCount: paymentData.selectedEmps.length,
-        employees: paymentData.selectedEmps
-    });
-    
-    showPaymentSuccess(paymentId, paymentData);
-}
-
-// Trigger Confetti Celebration
-function triggerConfetti() {
-    const duration = 3000;
-    const end = Date.now() + duration;
-
-    (function frame() {
-        confetti({
-            particleCount: 3,
-            angle: 60,
-            spread: 55,
-            origin: { x: 0 },
-            colors: ['#4F46E5', '#10B981', '#F59E0B']
-        });
-        confetti({
-            particleCount: 3,
-            angle: 120,
-            spread: 55,
-            origin: { x: 1 },
-            colors: ['#4F46E5', '#10B981', '#F59E0B']
-        });
-
-        if (Date.now() < end) {
-            requestAnimationFrame(frame);
-        }
-    }());
-}
-
-// Show Payment Success Screen
-function showPaymentSuccess(paymentId, paymentData) {
-    const currentDate = new Date().toLocaleString('en-IN', {
-        dateStyle: 'full',
-        timeStyle: 'short'
-    });
-
-    Swal.fire({
-        title: '🎉 Payment Successful!',
-        html: `
-            <div style="text-align: left; padding: 10px;">
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                    <h3 style="margin: 0 0 10px 0; color: white;">Transaction Details</h3>
-                    <p style="margin: 5px 0; font-size: 0.9em;"><strong>Payment ID:</strong> ${paymentId}</p>
-                    <p style="margin: 5px 0; font-size: 0.9em;"><strong>Date:</strong> ${currentDate}</p>
-                    <p style="margin: 5px 0; font-size: 1.2em;"><strong>Amount:</strong> ${formatCurrency(paymentData.totalAmount)}</p>
-                </div>
-
-                <h4 style="color: #4F46E5; margin-bottom: 15px;">Employees Paid (${paymentData.selectedEmps.length})</h4>
-                <div style="max-height: 300px; overflow-y: auto;">
-                    ${paymentData.selectedEmps.map((emp, index) => `
-                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <p style="font-weight: 600; margin: 0 0 5px 0;">${emp.name}</p>
-                                <p style="font-size: 0.85em; color: #64748b; margin: 0;">${emp.role} • ${formatCurrency(emp.total)}</p>
-                            </div>
-                            <button onclick="generateEmployeeSlip(${index}, '${paymentId}', '${currentDate}')" style="background: #4F46E5; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85em;">
-                                📄 Slip
-                            </button>
-                        </div>
-                    `).join('')}
-                </div>
-
-                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
-                    <button onclick="generateMasterReceipt('${paymentId}', '${currentDate}')" style="background: #10B981; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; flex: 1;">
-                        📥 Download Master Receipt
-                    </button>
-                </div>
-            </div>
-        `,
-        width: '700px',
-        showConfirmButton: true,
-        confirmButtonText: 'Done',
-        confirmButtonColor: '#4F46E5',
-        allowOutsideClick: false
-    }).then(() => {
-        selectedEmployees.clear();
-        employeeDeductions = {};
-        renderEmployees();
-    });
-
-    window.currentPaymentData = paymentData;
-}
-
-// FIXED: Generate Master Receipt PDF
-window.generateMasterReceipt = function(paymentId, dateStr) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const paymentData = window.currentPaymentData;
-    
-    // Header
-    doc.setFillColor(79, 70, 229);
-    doc.rect(0, 0, 210, 40, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.text('ScaleVest', 105, 18, { align: 'center' });
-    
-    doc.setFontSize(12);
-    doc.text('Workforce Management Platform', 105, 28, { align: 'center' });
-
-    // Receipt Title
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(18);
-    doc.text('PAYMENT RECEIPT', 105, 55, { align: 'center' });
-
-    // Transaction Details Box
-    doc.setFillColor(248, 250, 252);
-    doc.rect(15, 65, 180, 35, 'F');
-    doc.setDrawColor(226, 232, 240);
-    doc.rect(15, 65, 180, 35);
-
-    doc.setFontSize(10);
-    doc.text('Transaction ID:', 20, 73);
-    doc.text('Date & Time:', 20, 82);
-    doc.text('Payment Method:', 20, 91);
-
-    doc.text(paymentId, 60, 73);
-    doc.text(dateStr, 60, 82);
-    doc.text('Razorpay', 60, 91);
-
-    // Employee List Header
-    doc.setFontSize(14);
-    doc.text('Employees Paid', 15, 115);
-
-    doc.setFillColor(79, 70, 229);
-    doc.rect(15, 120, 180, 8, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
-    doc.text('Name', 20, 125);
-    doc.text('Role', 80, 125);
-    doc.text('Base', 130, 125);
-    doc.text('Net Amount', 165, 125);
-
-    let yPos = 135;
-    doc.setTextColor(0, 0, 0);
-
-    paymentData.selectedEmps.forEach((emp, index) => {
-        if (yPos > 270) {
-            doc.addPage();
-            yPos = 20;
-        }
-
-        if (index % 2 === 0) {
-            doc.setFillColor(248, 250, 252);
-            doc.rect(15, yPos - 5, 180, 8, 'F');
-        }
-
-        const nameText = emp.name.substring(0, 20);
-        const roleText = emp.role.substring(0, 15);
-        const baseText = 'Rs. ' + emp.baseSalary.toLocaleString('en-IN');
-        const totalText = 'Rs. ' + emp.total.toLocaleString('en-IN');
-
-        doc.text(nameText, 20, yPos);
-        doc.text(roleText, 80, yPos);
-        doc.text(baseText, 130, yPos);
-        doc.text(totalText, 165, yPos);
-        
-        yPos += 10;
-    });
-
-    // Summary
-    yPos += 10;
-    doc.line(15, yPos, 195, yPos);
-    
-    yPos += 10;
-    const subtotal = paymentData.totalAmount - paymentData.platformFee;
-    
-    doc.text('Subtotal:', 130, yPos);
-    doc.text('Rs. ' + subtotal.toLocaleString('en-IN'), 170, yPos);
-    
-    yPos += 8;
-    doc.text('Platform Fee (' + paymentData.selectedEmps.length + ' x Rs. 5):', 130, yPos);
-    doc.text('Rs. ' + paymentData.platformFee, 170, yPos);
-    
-    yPos += 10;
-    doc.setFontSize(12);
-    doc.text('Grand Total:', 130, yPos);
-    doc.text('Rs. ' + paymentData.totalAmount.toLocaleString('en-IN'), 170, yPos);
-
-    // Footer
-    doc.setFontSize(8);
-    doc.setTextColor(100, 116, 139);
-    doc.text('This is a computer-generated receipt.', 105, 285, { align: 'center' });
-    doc.text('Processed by ScaleVest - Powered by Razorpay', 105, 290, { align: 'center' });
-
-    doc.save(`ScaleVest_Receipt_${paymentId}.pdf`);
-};
-
-// FIXED: Generate Employee Salary Slip
-window.generateEmployeeSlip = function(empIndex, paymentId, dateStr) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const paymentData = window.currentPaymentData;
-    const emp = paymentData.selectedEmps[empIndex];
-
-    // Header
-    doc.setFillColor(99, 102, 241);
-    doc.rect(0, 0, 210, 50, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(26);
-    doc.text('SALARY SLIP', 105, 22, { align: 'center' });
-    
-    doc.setFontSize(11);
-    doc.text('ScaleVest Payment Management', 105, 35, { align: 'center' });
-
-    // Employee Info
-    doc.setFillColor(248, 250, 252);
-    doc.rect(15, 60, 180, 40, 'F');
-    doc.setDrawColor(79, 70, 229);
-    doc.rect(15, 60, 180, 40);
-
-    doc.setTextColor(79, 70, 229);
-    doc.setFontSize(12);
-    doc.text('EMPLOYEE INFORMATION', 20, 70);
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
-    doc.text('Name:', 20, 82);
-    doc.text(emp.name, 65, 82);
-
-    doc.text('Role/Position:', 20, 91);
-    doc.text(emp.role, 65, 91);
-
-    // Payment Details
-    doc.setFillColor(248, 250, 252);
-    doc.rect(15, 110, 180, 30, 'F');
-    doc.setDrawColor(79, 70, 229);
-    doc.rect(15, 110, 180, 30);
-
-    doc.setTextColor(79, 70, 229);
-    doc.setFontSize(12);
-    doc.text('PAYMENT DETAILS', 20, 120);
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
-    doc.text('Transaction ID:', 20, 130);
-    doc.text(paymentId, 65, 130);
-
-    doc.text('Payment Date:', 20, 137);
-    doc.text(dateStr, 65, 137);
-
-    // Earnings
-    doc.setFillColor(16, 185, 129);
-    doc.rect(15, 150, 180, 10, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
-    doc.text('EARNINGS BREAKDOWN', 20, 157);
-
-    let yPos = 170;
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
-
-    doc.setFillColor(248, 250, 252);
-    doc.rect(15, yPos - 5, 180, 10, 'F');
-    doc.text('Base Salary', 20, yPos);
-    doc.text('Rs. ' + emp.baseSalary.toLocaleString('en-IN'), 175, yPos, { align: 'right' });
-    
-    yPos += 10;
-    if (emp.bonus > 0) {
-        doc.text('Bonus/Incentive', 20, yPos);
-        doc.text('Rs. ' + emp.bonus.toLocaleString('en-IN'), 175, yPos, { align: 'right' });
-        yPos += 10;
-    }
-
-    // Deductions
-    if (emp.totalDeduction > 0) {
-        yPos += 5;
-        doc.setFillColor(239, 68, 68);
-        doc.rect(15, yPos, 180, 10, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.text('DEDUCTIONS', 20, yPos + 7);
-        
-        yPos += 15;
-        doc.setTextColor(0, 0, 0);
-        
-        if (emp.leaveDeduction > 0) {
-            doc.text('Leave Deduction (' + emp.leaveDays + ' days)', 20, yPos);
-            doc.text('-Rs. ' + emp.leaveDeduction.toLocaleString('en-IN'), 175, yPos, { align: 'right' });
-            yPos += 10;
-        }
-        
-        if (emp.flatDeduction > 0) {
-            doc.text('Other Deductions', 20, yPos);
-            doc.text('-Rs. ' + emp.flatDeduction.toLocaleString('en-IN'), 175, yPos, { align: 'right' });
-            yPos += 10;
-        }
-    }
-
-    // Total
-    yPos += 5;
-    doc.setLineWidth(1);
-    doc.line(15, yPos, 195, yPos);
-
-    yPos += 10;
-    doc.setFontSize(14);
-    doc.setTextColor(16, 185, 129);
-    doc.text('NET SALARY CREDITED', 20, yPos);
-    doc.text('Rs. ' + emp.total.toLocaleString('en-IN'), 175, yPos, { align: 'right' });
-
-    // Payment Info
-    yPos += 15;
-    doc.setFontSize(10);
-    doc.setTextColor(100, 116, 139);
-    doc.text('Credited to: ' + emp.paymentDetails, 20, yPos);
-
-    // Footer
-    yPos = 270;
-    doc.setFillColor(79, 70, 229);
-    doc.rect(0, yPos, 210, 27, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
-    doc.text('This is a computer-generated salary slip.', 105, yPos + 8, { align: 'center' });
-    doc.text('Processed by ScaleVest - Secured by Razorpay', 105, yPos + 15, { align: 'center' });
-
-    doc.save(`SalarySlip_${emp.name.replace(/\s+/g, '_')}_${paymentId}.pdf`);
-};
-
-// NEW: Show Payment History
-async function showPaymentHistory() {
-    const historyRef = database.ref(`BusinessOwners/${currentBossId}/paymentHistory`);
-    const snapshot = await historyRef.once('value');
-    const historyData = snapshot.val();
-
-    if (!historyData) {
-        Swal.fire({
-            title: 'No Payment History',
-            text: 'You haven\'t made any payments yet.',
-            icon: 'info',
-            confirmButtonColor: '#4F46E5'
-        });
-        return;
-    }
-
-    const historyArray = Object.entries(historyData).map(([key, value]) => ({
-        id: key,
-        ...value
-    })).sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    const historyHTML = historyArray.map(payment => {
-        const date = new Date(payment.date).toLocaleDateString('en-IN', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-
-        return `
-            <div class="history-item" style="background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 12px; cursor: pointer; border: 1px solid #e2e8f0;" onclick="viewPaymentDetails('${payment.id}')">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <div>
-                        <p style="font-weight: 600; margin: 0; color: #1f2937;">${formatCurrency(payment.totalAmount)}</p>
-                        <p style="font-size: 0.75em; color: #6b7280; margin: 0;">${payment.employeeCount} employee(s) • ${date}</p>
+                      <p className="text-indigo-300/60">Velocity</p>
+                      <p className="text-xl font-bold">{product.velocity}</p>
                     </div>
-                    <button onclick="event.stopPropagation(); downloadHistoryReceipt('${payment.id}')" style="background: #4F46E5; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85em;">
-                        📥 Receipt
-                    </button>
+                    <div>
+                      <p className="text-indigo-300/60">Value</p>
+                      <p className="text-xl font-bold">${Math.round(product.stock * product.price)}</p>
+                    </div>
+                  </div>
                 </div>
-                <p style="font-size: 0.8em; color: #9ca3af; margin: 0;">ID: ${payment.paymentId}</p>
+              ))}
             </div>
-        `;
-    }).join('');
-
-    Swal.fire({
-        title: '📊 Payment History',
-        html: `
-            <div style="text-align: left; max-height: 500px; overflow-y: auto; padding: 10px;">
-                ${historyHTML}
+          ) : (
+            <div>
+              <h2 className="text-2xl font-bold text-indigo-300 mb-4 flex items-center gap-2">
+                <Move className="w-6 h-6" />
+                Spatial Layout Designer
+              </h2>
+              <div className="bg-slate-950/50 rounded-xl p-4 border border-indigo-800/30 backdrop-blur-sm">
+                <p className="text-sm text-indigo-300 mb-4">
+                  {selectedProducts.length > 0 
+                    ? `Click to place: ${selectedProducts[0].name}` 
+                    : 'Select a product from the sidebar to place it'}
+                </p>
+                <canvas
+                  ref={canvasRef}
+                  width={800}
+                  height={600}
+                  onClick={handleCanvasClick}
+                  className="w-full border-2 border-indigo-700/50 rounded-lg cursor-crosshair"
+                />
+              </div>
             </div>
-        `,
-        width: '600px',
-        confirmButtonText: 'Close',
-        confirmButtonColor: '#4F46E5'
-    });
-}
-
-// View Payment Details from History
-window.viewPaymentDetails = async function(historyId) {
-    const paymentRef = database.ref(`BusinessOwners/${currentBossId}/paymentHistory/${historyId}`);
-    const snapshot = await paymentRef.once('value');
-    const payment = snapshot.val();
-
-    if (!payment) return;
-
-    const date = new Date(payment.date).toLocaleString('en-IN', {
-        dateStyle: 'full',
-        timeStyle: 'short'
-    });
-
-    Swal.fire({
-        title: 'Payment Details',
-        html: `
-            <div style="text-align: left; padding: 10px;">
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                    <p style="margin: 5px 0;"><strong>Transaction ID:</strong> ${payment.paymentId}</p>
-                    <p style="margin: 5px 0;"><strong>Date:</strong> ${date}</p>
-                    <p style="margin: 5px 0; font-size: 1.2em;"><strong>Amount:</strong> ${formatCurrency(payment.totalAmount)}</p>
-                </div>
-
-                <h4 style="color: #4F46E5; margin-bottom: 15px;">Employees Paid (${payment.employeeCount})</h4>
-                <div style="max-height: 300px; overflow-y: auto;">
-                    ${payment.employees.map((emp, index) => `
-                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
-                            <p style="font-weight: 600; margin: 0 0 5px 0;">${emp.name}</p>
-                            <p style="font-size: 0.85em; color: #64748b; margin: 0;">${emp.role} • ${formatCurrency(emp.total)}</p>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `,
-        width: '600px',
-        confirmButtonText: 'Close',
-        confirmButtonColor: '#4F46E5'
-    });
-};
-
-// Download Receipt from History
-window.downloadHistoryReceipt = async function(historyId) {
-    const paymentRef = database.ref(`BusinessOwners/${currentBossId}/paymentHistory/${historyId}`);
-    const snapshot = await paymentRef.once('value');
-    const payment = snapshot.val();
-
-    if (!payment) return;
-
-    const date = new Date(payment.date).toLocaleString('en-IN', {
-        dateStyle: 'full',
-        timeStyle: 'short'
-    });
-
-    // Set as current payment data for receipt generation
-    window.currentPaymentData = {
-        selectedEmps: payment.employees,
-        totalAmount: payment.totalAmount,
-        platformFee: payment.platformFee,
-        bonus: payment.bonus
-    };
-
-    generateMasterReceipt(payment.paymentId, date);
-};
-
-// DELETE EMPLOYEE
-async function deleteEmployee(id) {
-    const result = await Swal.fire({
-        title: 'Are you sure?',
-        text: "This will remove the employee from your records.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#EF4444',
-        confirmButtonText: 'Yes, delete!'
-    });
-
-    if (result.isConfirmed) {
-        await database.ref(`BusinessOwners/${currentBossId}/employees/${id}`).remove();
-        Swal.fire('Deleted!', 'Employee removed successfully.', 'success');
-    }
-}
-
-// EDIT EMPLOYEE
-async function editEmployee(id) {
-    const emp = employees[id];
-    const { value: formValues } = await Swal.fire({
-        title: 'Update Employee',
-        html: `
-            <div style="text-align: left;">
-                <input id="editName" class="swal2-input" value="${emp.name}" placeholder="Name">
-                <input id="editRole" class="swal2-input" value="${emp.role}" placeholder="Role">
-                <input id="editSalary" class="swal2-input" type="number" value="${emp.salary}" placeholder="Salary">
-                <input id="editPayment" class="swal2-input" value="${emp.paymentDetails}" placeholder="UPI or Bank Details">
-            </div>
-        `,
-        preConfirm: () => ({
-            name: document.getElementById('editName').value,
-            role: document.getElementById('editRole').value,
-            salary: parseFloat(document.getElementById('editSalary').value),
-            paymentDetails: document.getElementById('editPayment').value
-        })
-    });
-
-    if (formValues) {
-        await database.ref(`BusinessOwners/${currentBossId}/employees/${id}`).update(formValues);
-        Swal.fire('Updated!', 'Changes saved.', 'success');
-    }
-}
-
-function showTerms() {
-    Swal.fire({
-        title: 'Terms & Conditions',
-        html: `
-            <div style="text-align: left; font-size: 0.85em; max-height: 300px; overflow-y: auto; color: #4b5563;">
-                <p><strong>1. Services:</strong> ScaleVest is an ecosystem to Scale. We provide best and revolutionary tools to scale and more for business, startups and investors.</p>
-                <p><strong>2. Accuracy:</strong> You are responsible for ensuring all Bank/UPI details are correct. ScaleVest is not responsible for lost funds due to user error.</p>
-                <p><strong>3. Fees:</strong> Each transaction includes a Rs. 5 platform fee for digital processing and receipt generation.</p>
-                <p><strong>4. Compliance:</strong> All payments are subject to Razorpay's terms of service.</p>
-            </div>
-        `,
-        confirmButtonColor: '#4F46E5'
-    });
-}
-
-function showPrivacy() {
-    Swal.fire({
-        title: 'Privacy Policy',
-        html: `
-            <div style="text-align: left; font-size: 0.85em; max-height: 300px; overflow-y: auto; color: #4b5563;">
-                <p><strong>Data Privacy:</strong> ScaleVest takes your data seriously.</p>
-                <p><strong>1. Collection:</strong> We store employee names and payment details solely for payroll purposes.</p>
-                <p><strong>2. Security:</strong> Your data is protected by Google Firebase encryption.</p>
-                <p><strong>3. Third Parties:</strong> We only share data with Razorpay to process your payments.</p>
-            </div>
-        `,
-        confirmButtonColor: '#4F46E5'
-    });
-}
-    </script>
-
-<footer class="mt-12 pb-32 text-center">
-    <div class="container mx-auto px-4">
-        <div class="glass-card max-w-4xl mx-auto p-8 rounded-2xl shadow-lg border border-indigo-100">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-                <div>
-                    <h3 class="text-xl font-bold text-indigo-900 mb-2">ScaleVest</h3>
-                    <p class="text-sm text-gray-600">The Digital Brain for Small Business Payroll. A Uniorax Product.</p>
-                </div>
-                <div>
-                    <h4 class="font-bold text-gray-800 mb-2">Support</h4>
-                    <p class="text-sm text-gray-600">📧 Support: scalevestofficial@gmail.com</p>
-                    <p class="text-sm text-gray-600">📍 India</p>
-                </div>
-                <div>
-                    <h4 class="font-bold text-gray-800 mb-2">Legal</h4>
-                    <ul class="text-sm text-gray-600 space-y-1">
-                        <li><a href="javascript:void(0)" onclick="showTerms()" class="hover:text-indigo-600 transition">Terms & Conditions</a></li>
-                       <li><a href="javascript:void(0)" onclick="showPrivacy()" class="hover:text-indigo-600 transition">Privacy Policy</a></li>
-                    </ul>
-                </div>
-            </div>
-            <p class="mt-6 text-xs text-gray-400">© 2025 UnioraX Private Limited. All rights reserved.</p>
+          )}
         </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Quick Select */}
+          {viewMode === 'spatial' && (
+            <div className="bg-slate-950/50 rounded-xl p-6 border border-indigo-800/30 backdrop-blur-sm">
+              <h3 className="text-lg font-bold text-indigo-300 mb-4">Quick Select</h3>
+              <div className="space-y-2">
+                {products.map(product => (
+                  <button
+                    key={product.id}
+                    onClick={() => toggleSelection(product)}
+                    className={`w-full p-3 rounded-lg text-left transition-all border-2 ${
+                      selectedProducts.find(p => p.id === product.id)
+                        ? 'border-indigo-500 bg-indigo-500/20'
+                        : 'border-indigo-800/30 bg-slate-900/50 hover:bg-indigo-900/20'
+                    }`}
+                  >
+                    <p className="font-semibold text-sm">{product.name}</p>
+                    <p className="text-xs text-indigo-300/60">Stock: {product.stock}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Simulation Results */}
+          {simulation && (
+            <div className="bg-slate-950/50 rounded-xl p-6 border border-purple-800/30 backdrop-blur-sm shadow-lg shadow-purple-500/10">
+              <h3 className="text-lg font-bold text-purple-300 mb-4 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Simulation Results
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg">
+                  <span className="text-indigo-300/80 text-sm">Current Stock</span>
+                  <span className="font-bold text-lg">{simulation.currentStock}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg">
+                  <span className="text-indigo-300/80 text-sm">Weekly Sales</span>
+                  <span className="font-bold text-lg">{simulation.projectedWeeklySales}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg">
+                  <span className="text-indigo-300/80 text-sm">Restock Alerts</span>
+                  <span className="font-bold text-lg text-orange-400">{simulation.restockAlerts}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg">
+                  <span className="text-indigo-300/80 text-sm">Critical Items</span>
+                  <span className="font-bold text-lg text-red-400">{simulation.criticalItems}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-purple-900/30 rounded-lg border border-purple-500/30">
+                  <span className="text-purple-300 text-sm font-semibold">Revenue 7d</span>
+                  <span className="font-bold text-xl text-emerald-400">${simulation.revenueProjection}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-indigo-900/30 rounded-lg border border-indigo-500/30">
+                  <span className="text-indigo-300 text-sm font-semibold">Efficiency</span>
+                  <span className="font-bold text-xl">{simulation.efficiency}%</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* System Status */}
+          <div className="bg-slate-950/50 rounded-xl p-6 border border-emerald-800/30 backdrop-blur-sm">
+            <h3 className="text-lg font-bold text-emerald-300 mb-4">System Status</h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                <span className="text-indigo-300/80">Digital Twin: Online</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                <span className="text-indigo-300/80">Simulation Engine: Active</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                <span className="text-indigo-300/80">Blocks Placed: {placedBlocks.length}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-</footer>
-</body>
-</html>
+  );
+};
+
+export default DigitalTwinDashboard;
