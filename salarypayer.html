@@ -506,55 +506,47 @@ transform: rotateZ(-45deg) rotateX(-60deg);
         .toggle-switch.active .toggle-slider {
             transform: translateX(24px);
         }
-/* Master Mobile Scaling Fix */
+/* Master Mobile Scaling Fix - UPDATED */
 @media (max-width: 768px) {
-    /* 1. Global UI Shrink */
-    .controls, .inventory-leaderboard, .story-card {
-        transform: scale(0.7); /* Shrinks all UIs to 70% size */
+    /* 1. Reset Positioning for Scales */
+    .controls {
+        transform: scale(0.75); /* Slightly larger for better tap targets */
         transform-origin: top left;
-        width: 180px !important;
+        left: 5px !important; /* Push it away from the extreme edge */
+        top: 5px !important;
+        width: 160px !important;
         min-width: unset !important;
     }
 
-    /* 2. Reposition Leaderboard for Scale */
     .inventory-leaderboard {
+        transform: scale(0.75);
         transform-origin: top right;
-        top: 10px;
-        right: 10px;
+        right: 5px !important; /* Push it away from the right edge */
+        top: 5px !important;
+        width: 160px !important;
+        min-width: unset !important;
     }
 
-    /* 3. Controls Layout */
-    .controls {
-        top: 10px;
-        left: 10px;
-        padding: 8px;
+    /* 2. Fix inner elements that take up too much vertical space */
+    .controls h3 {
+        font-size: 14px !important;
+        margin-bottom: 5px !important;
     }
 
-    /* 4. Hide bulky elements on small screens */
-    .control-group label, .recipe-mode, input[type="range"] {
-        display: none; 
+    .control-group {
+        margin-bottom: 8px !important;
     }
 
-    .search-bar {
-        font-size: 11px;
-        padding: 6px;
-        margin-bottom: 2px;
+    /* Hide the rotation sliders - they are too bulky for phones */
+    .control-group label:not(.search-label), 
+    input[type="range"],
+    .recipe-mode {
+        display: none !important; 
     }
 
-    .leaderboard-title { font-size: 11px; }
-    .stock-item { font-size: 10px; padding: 2px 0; }
-
-    /* 5. Shrink the Story Card specifically */
-    .story-card {
-        width: 90vw !important;
-        transform: translate(-50%, -50%) scale(0.8) !important;
-        transform-origin: center;
-        padding: 15px;
-    }
-
-    /* 6. Scale the 3D World so it fits the narrow screen */
+    /* 3. Scale the world more aggressively so UI has room */
     .world {
-        transform: rotateX(var(--world-rotateX)) rotateZ(var(--world-rotateZ)) scale(0.5);
+        transform: rotateX(var(--world-rotateX)) rotateZ(var(--world-rotateZ)) scale(0.4) !important;
     }
 }
         .stock-badge {
