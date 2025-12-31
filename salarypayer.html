@@ -1,371 +1,1145 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Download, Play, Grid, Move, Zap, TrendingUp, AlertTriangle } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Twin Shop - Firebase Live</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-const DigitalTwinDashboard = () => {
-  const [viewMode, setViewMode] = useState('list');
-  const [selectedProducts, setSelectedProducts] = useState([]);
-  const [placedBlocks, setPlacedBlocks] = useState([]);
-  const [draggedProduct, setDraggedProduct] = useState(null);
-  const [simulation, setSimulation] = useState(null);
-  const canvasRef = useRef(null);
+        :root {
+            --world-rotateX: 60deg;
+            --world-rotateZ: 45deg;
+            --grid-size: 100px;
+            --neon-primary: #00f3ff;
+            --neon-secondary: #ff00ea;
+            --neon-accent: #7fff00;
+        }
 
-  const products = [
-    { id: 1, name: 'Espresso Blend A', stock: 45, demand: 'High', price: 24.99, velocity: 8.5 },
-    { id: 2, name: 'Cold Brew Pack', stock: 12, demand: 'Critical', price: 18.99, velocity: 9.2 },
-    { id: 3, name: 'Latte Mix Premium', stock: 67, demand: 'Medium', price: 29.99, velocity: 6.1 },
-    { id: 4, name: 'Decaf Reserve', stock: 89, demand: 'Low', price: 22.99, velocity: 3.4 },
-    { id: 5, name: 'Mocha Powder Deluxe', stock: 34, demand: 'High', price: 32.99, velocity: 7.8 },
-    { id: 6, name: 'Vanilla Syrup Pro', stock: 8, demand: 'Critical', price: 15.99, velocity: 9.5 }
-  ];
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
 
-  const toggleSelection = (product) => {
-    setSelectedProducts(prev => {
-      const isSelected = prev.find(p => p.id === product.id);
-      if (isSelected) {
-        return prev.filter(p => p.id !== product.id);
-      }
-      return [...prev, product];
-    });
-  };
+        .perspective-container {
+            perspective: 2000px;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
 
-  const handleCanvasClick = (e) => {
-    if (selectedProducts.length === 0) return;
-    
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+        .world {
+            transform-style: preserve-3d;
+            transform: rotateX(var(--world-rotateX)) rotateZ(var(--world-rotateZ));
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
 
-    const newBlock = {
-      id: Date.now(),
-      product: selectedProducts[0],
-      x: x - 60,
-      y: y - 40,
-      width: 120,
-      height: 80
-    };
+        .floor {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            transform: translateZ(-50px);
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 2px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) translateZ(-50px);
+        }
 
-    setPlacedBlocks([...placedBlocks, newBlock]);
-    setSelectedProducts([]);
-  };
+        .grid-cell {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 243, 255, 0.1);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
 
-  const runSimulation = () => {
-    const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
-    const avgVelocity = products.reduce((sum, p) => sum + p.velocity, 0) / products.length;
-    const criticalItems = products.filter(p => p.demand === 'Critical').length;
-    
-    const projectedSales = Math.round(avgVelocity * 7 * products.length);
-    const restockNeeded = products.filter(p => p.stock < 20).length;
-    const revenueProjection = Math.round(projectedSales * 25.5);
+        .grid-cell.heatmap {
+            transition: background 0.5s ease;
+        }
 
-    setSimulation({
-      currentStock: totalStock,
-      projectedWeeklySales: projectedSales,
-      restockAlerts: restockNeeded,
-      criticalItems: criticalItems,
-      revenueProjection: revenueProjection,
-      efficiency: Math.round((1 - (criticalItems / products.length)) * 100)
-    });
-  };
+        .grid-cell.path-highlight {
+            background: rgba(127, 255, 0, 0.3);
+            border-color: var(--neon-accent);
+            box-shadow: 0 0 20px var(--neon-accent);
+            animation: pathPulse 1s infinite;
+        }
 
-  const generatePDF = () => {
-    const timestamp = new Date().toISOString();
-    const products_summary = products.map(p => 
-      `${String(p.name)} | Stock: ${String(p.stock)} | Demand: ${String(p.demand)} | Velocity: ${String(p.velocity)}`
-    ).join('\n');
-    
-    const layout_info = placedBlocks.map(b => 
-      `${String(b.product.name)} at position (${String(Math.round(b.x))}, ${String(Math.round(b.y))})`
-    ).join('\n');
+        @keyframes pathPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
 
-    const sim_data = simulation ? `
-Stock Level: ${String(simulation.currentStock)}
-Projected Sales: ${String(simulation.projectedWeeklySales)}
-Restock Alerts: ${String(simulation.restockAlerts)}
-Revenue Projection: $${String(simulation.revenueProjection)}
-Efficiency: ${String(simulation.efficiency)}%` : 'No simulation run';
+        .product-node {
+            position: absolute;
+            transform-style: preserve-3d;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
 
-    const content = `MORNING BATTLE PLAN
-Generated: ${String(timestamp)}
+        .product-node.jumping {
+            animation: productJump 0.6s ease-in-out;
+        }
 
-MISSION CRITICAL PRODUCTS:
-${products_summary}
+        @keyframes productJump {
+            0%, 100% { transform: translateZ(0); }
+            50% { transform: translateZ(80px); }
+        }
 
-SPATIAL LAYOUT:
-${layout_info || 'No products placed'}
+        .product-node.searching {
+            animation: searchPulse 1s infinite;
+        }
 
-OPERATIONAL INTELLIGENCE:
-${sim_data}
+        @keyframes searchPulse {
+            0%, 100% { 
+                filter: brightness(1);
+                transform: scale(1);
+            }
+            50% { 
+                filter: brightness(1.5);
+                transform: scale(1.15);
+            }
+        }
 
-TACTICAL RECOMMENDATIONS:
-- Prioritize restocking Critical demand items
-- Optimize high-velocity product placement
-- Monitor stock levels for sub-20 inventory
-- Execute daily velocity analysis`;
+        .product-card {
+            width: 100px;
+            height: 140px;
+            background: rgba(15, 15, 35, 0.7);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--neon-primary);
+            border-radius: 12px;
+            padding: 12px;
 
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `battle-plan-${String(Date.now())}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+transform: rotateZ(-45deg) rotateX(-60deg);
+    transform-style: preserve-3d; /* Allows for 3D depth */
+    box-shadow: 
+        -5px 5px 0px var(--neon-primary), /* This creates a 'side' to the card */
+        0 20px 40px rgba(0, 0, 0, 0.5);
+    animation: float 3s ease-in-out infinite;
 
-  useEffect(() => {
-    if (viewMode === 'spatial' && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      
-      ctx.fillStyle = '#0a0a0f';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Grid
-      ctx.strokeStyle = '#1a1a2e';
-      ctx.lineWidth = 1;
-      for (let i = 0; i < canvas.width; i += 40) {
-        ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i, canvas.height);
-        ctx.stroke();
-      }
-      for (let i = 0; i < canvas.height; i += 40) {
-        ctx.beginPath();
-        ctx.moveTo(0, i);
-        ctx.lineTo(canvas.width, i);
-        ctx.stroke();
-      }
 
-      // Blocks
-      placedBlocks.forEach(block => {
-        const gradient = ctx.createLinearGradient(block.x, block.y, block.x + block.width, block.y + block.height);
-        gradient.addColorStop(0, '#4c1d95');
-        gradient.addColorStop(1, '#6366f1');
-        
-        ctx.fillStyle = gradient;
-        ctx.fillRect(block.x, block.y, block.width, block.height);
-        
-        ctx.strokeStyle = '#818cf8';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(block.x, block.y, block.width, block.height);
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '12px monospace';
-        ctx.fillText(block.product.name.substring(0, 15), block.x + 5, block.y + 20);
-        ctx.font = '10px monospace';
-        ctx.fillText(`Stock: ${String(block.product.stock)}`, block.x + 5, block.y + 40);
-        ctx.fillText(`V: ${String(block.product.velocity)}`, block.x + 5, block.y + 55);
-      });
-    }
-  }, [viewMode, placedBlocks]);
+            transform: rotateZ(-45deg) rotateX(-60deg);
+            box-shadow: 0 10px 40px rgba(0, 243, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
 
-  const getDemandColor = (demand) => {
-    switch(demand) {
-      case 'Critical': return 'border-red-500 bg-red-500/10';
-      case 'High': return 'border-orange-500 bg-orange-500/10';
-      case 'Medium': return 'border-yellow-500 bg-yellow-500/10';
-      default: return 'border-green-500 bg-green-500/10';
-    }
-  };
+        .product-card::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(45deg, var(--neon-primary), var(--neon-secondary));
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white p-6">
-      {/* Header */}
-      <div className="mb-8 border-b border-indigo-800/30 pb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent mb-2">
-              Digital Twin Control Center
-            </h1>
-            <p className="text-indigo-300/60 font-mono text-sm">Real-time Operations Command</p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setViewMode(viewMode === 'list' ? 'spatial' : 'list')}
-              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-semibold flex items-center gap-2 transition-all border border-indigo-400/20 shadow-lg shadow-indigo-500/20"
-            >
-              {viewMode === 'list' ? <Move className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
-              {viewMode === 'list' ? 'Spatial View' : 'List View'}
-            </button>
-            <button
-              onClick={runSimulation}
-              className="px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold flex items-center gap-2 transition-all border border-purple-400/20 shadow-lg shadow-purple-500/20"
-            >
-              <Play className="w-5 h-5" />
-              Run Simulation
-            </button>
-            <button
-              onClick={generatePDF}
-              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-lg font-semibold flex items-center gap-2 transition-all border border-emerald-400/20 shadow-lg shadow-emerald-500/20"
-            >
-              <Download className="w-5 h-5" />
-              Battle Plan
-            </button>
-          </div>
-        </div>
-      </div>
+        .product-node:hover .product-card {
+            transform: rotateZ(-45deg) rotateX(-60deg) translateZ(30px) scale(1.1);
+            border-color: var(--neon-secondary);
+        }
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Product Cards */}
-        <div className="lg:col-span-2">
-          {viewMode === 'list' ? (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-indigo-300 mb-4 flex items-center gap-2">
-                <Zap className="w-6 h-6" />
-                Product Inventory
-              </h2>
-              {products.map(product => (
-                <div
-                  key={product.id}
-                  onClick={() => toggleSelection(product)}
-                  className={`p-6 rounded-xl border-2 cursor-pointer transition-all backdrop-blur-sm ${
-                    selectedProducts.find(p => p.id === product.id)
-                      ? 'border-indigo-500 bg-indigo-500/20 shadow-lg shadow-indigo-500/30'
-                      : getDemandColor(product.demand)
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="text-xl font-bold text-white">{product.name}</h3>
-                      <p className="text-sm text-indigo-300 font-mono mt-1">ID: {product.id}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        product.demand === 'Critical' ? 'bg-red-500' :
-                        product.demand === 'High' ? 'bg-orange-500' :
-                        product.demand === 'Medium' ? 'bg-yellow-500' : 'bg-green-500'
-                      }`}>
-                        {product.demand}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <p className="text-indigo-300/60">Stock</p>
-                      <p className="text-xl font-bold">{product.stock}</p>
-                    </div>
-                    <div>
-                      <p className="text-indigo-300/60">Price</p>
-                      <p className="text-xl font-bold">${product.price}</p>
-                    </div>
-                    <div>
-                      <p className="text-indigo-300/60">Velocity</p>
-                      <p className="text-xl font-bold">{product.velocity}</p>
-                    </div>
-                    <div>
-                      <p className="text-indigo-300/60">Value</p>
-                      <p className="text-xl font-bold">${Math.round(product.stock * product.price)}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div>
-              <h2 className="text-2xl font-bold text-indigo-300 mb-4 flex items-center gap-2">
-                <Move className="w-6 h-6" />
-                Spatial Layout Designer
-              </h2>
-              <div className="bg-slate-950/50 rounded-xl p-4 border border-indigo-800/30 backdrop-blur-sm">
-                <p className="text-sm text-indigo-300 mb-4">
-                  {selectedProducts.length > 0 
-                    ? `Click to place: ${selectedProducts[0].name}` 
-                    : 'Select a product from the sidebar to place it'}
-                </p>
-                <canvas
-                  ref={canvasRef}
-                  width={800}
-                  height={600}
-                  onClick={handleCanvasClick}
-                  className="w-full border-2 border-indigo-700/50 rounded-lg cursor-crosshair"
-                />
-              </div>
-            </div>
-          )}
-        </div>
+        .product-node:hover .product-card::before {
+            opacity: 0.3;
+        }
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Quick Select */}
-          {viewMode === 'spatial' && (
-            <div className="bg-slate-950/50 rounded-xl p-6 border border-indigo-800/30 backdrop-blur-sm">
-              <h3 className="text-lg font-bold text-indigo-300 mb-4">Quick Select</h3>
-              <div className="space-y-2">
-                {products.map(product => (
-                  <button
-                    key={product.id}
-                    onClick={() => toggleSelection(product)}
-                    className={`w-full p-3 rounded-lg text-left transition-all border-2 ${
-                      selectedProducts.find(p => p.id === product.id)
-                        ? 'border-indigo-500 bg-indigo-500/20'
-                        : 'border-indigo-800/30 bg-slate-900/50 hover:bg-indigo-900/20'
-                    }`}
-                  >
-                    <p className="font-semibold text-sm">{product.name}</p>
-                    <p className="text-xs text-indigo-300/60">Stock: {product.stock}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+        .product-node.is-low-stock .product-card {
+            opacity: 0.5;
+            border-color: #ff4444;
+        }
 
-          {/* Simulation Results */}
-          {simulation && (
-            <div className="bg-slate-950/50 rounded-xl p-6 border border-purple-800/30 backdrop-blur-sm shadow-lg shadow-purple-500/10">
-              <h3 className="text-lg font-bold text-purple-300 mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                Simulation Results
-              </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg">
-                  <span className="text-indigo-300/80 text-sm">Current Stock</span>
-                  <span className="font-bold text-lg">{simulation.currentStock}</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg">
-                  <span className="text-indigo-300/80 text-sm">Weekly Sales</span>
-                  <span className="font-bold text-lg">{simulation.projectedWeeklySales}</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg">
-                  <span className="text-indigo-300/80 text-sm">Restock Alerts</span>
-                  <span className="font-bold text-lg text-orange-400">{simulation.restockAlerts}</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg">
-                  <span className="text-indigo-300/80 text-sm">Critical Items</span>
-                  <span className="font-bold text-lg text-red-400">{simulation.criticalItems}</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-purple-900/30 rounded-lg border border-purple-500/30">
-                  <span className="text-purple-300 text-sm font-semibold">Revenue 7d</span>
-                  <span className="font-bold text-xl text-emerald-400">${simulation.revenueProjection}</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-indigo-900/30 rounded-lg border border-indigo-500/30">
-                  <span className="text-indigo-300 text-sm font-semibold">Efficiency</span>
-                  <span className="font-bold text-xl">{simulation.efficiency}%</span>
-                </div>
-              </div>
-            </div>
-          )}
+        .product-node.popular::after {
+            content: '';
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            border: 3px solid var(--neon-accent);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: popularPulse 2s infinite;
+            pointer-events: none;
+        }
+.inventory-leaderboard {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    width: 250px;
+    background: rgba(15, 15, 35, 0.85);
+    backdrop-filter: blur(10px);
+    border: 2px solid #ff4444; /* Red border for urgency */
+    border-radius: 15px;
+    padding: 15px;
+    z-index: 1000;
+    box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
+}
 
-          {/* System Status */}
-          <div className="bg-slate-950/50 rounded-xl p-6 border border-emerald-800/30 backdrop-blur-sm">
-            <h3 className="text-lg font-bold text-emerald-300 mb-4">System Status</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                <span className="text-indigo-300/80">Digital Twin: Online</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                <span className="text-indigo-300/80">Simulation Engine: Active</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-                <span className="text-indigo-300/80">Blocks Placed: {placedBlocks.length}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+.leaderboard-title {
+    color: #ff4444;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+}
+
+.stock-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 13px;
+}
+
+.stock-item:last-child { border: none; }
+
+.stock-count {
+    color: #ff4444;
+    font-weight: bold;
+}
+        @keyframes popularPulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .product-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+.product-name {
+    font-size: 13px;
+    font-weight: 900;
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.85); /* Solid black background */
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--neon-primary);
+    margin-bottom: 5px;
+    width: 100%;
+    text-shadow: 0 0 8px var(--neon-primary);
+}
+
+        .product-price {
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .story-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 500px;
+            max-height: 80vh;
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--neon-primary);
+            border-radius: 20px;
+            padding: 30px;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            overflow-y: auto;
+        }
+
+        .story-card.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .story-card h2 {
+            color: var(--neon-primary);
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .story-section {
+            margin-bottom: 20px;
+        }
+
+        .story-section h3 {
+            color: var(--neon-secondary);
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .story-section p {
+            line-height: 1.6;
+            color: #ccc;
+        }
+
+        .sustainability-score {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .score-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-accent), var(--neon-primary));
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 243, 255, 0.5);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: 2px solid var(--neon-secondary);
+            color: var(--neon-secondary);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: var(--neon-secondary);
+            color: #000;
+            transform: rotate(90deg);
+        }
+
+        .controls {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: rgba(15, 15, 35, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--neon-primary);
+            border-radius: 15px;
+            padding: 20px;
+            z-index: 100;
+            min-width: 300px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .controls h3 {
+            color: var(--neon-primary);
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--neon-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--neon-primary);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: var(--neon-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--neon-primary);
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid var(--neon-primary);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        .search-bar:focus {
+            border-color: var(--neon-secondary);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+
+        .search-bar::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .recipe-mode {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .recipe-mode select {
+            flex: 1;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--neon-primary);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .recipe-mode button {
+            padding: 8px 16px;
+            background: var(--neon-accent);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .recipe-mode button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px var(--neon-accent);
+        }
+
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: var(--neon-accent);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(24px);
+        }
+
+        .stock-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff4444;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--neon-accent);
+            border-radius: 10px;
+            padding: 15px 20px;
+            z-index: 2000;
+            transform: translateY(150%);
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            min-width: 250px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+        }
+
+        .toast-title {
+            color: var(--neon-accent);
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .toast-message {
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 3000;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(0, 243, 255, 0.1);
+            border-top-color: var(--neon-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff4444;
+            margin-right: 8px;
+            animation: statusPulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: var(--neon-accent);
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+/* Add this new animation at the bottom of your <style> section */
+@keyframes float {
+    0%, 100% { transform: rotateZ(-45deg) rotateX(-60deg) translateZ(0px); }
+    50% { transform: rotateZ(-45deg) rotateX(-60deg) translateZ(15px); }
+}
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <div style="color: var(--neon-primary); font-size: 18px;">Connecting to Firebase...</div>
     </div>
-  );
-};
+<div class="inventory-leaderboard" id="outOfStockPanel">
+    <div class="leaderboard-title">🚨 Out of Stock <span id="oosCount">0</span></div>
+    <div id="oosList"></div>
+</div>
+    <div class="controls">
+        <h3>
+            <span class="status-indicator" id="statusIndicator"></span>
+            🎮 Controls
+        </h3>
+        
+        <div class="control-group">
+            <label>🔍 Search Products</label>
+            <input type="text" class="search-bar" id="searchBar" placeholder="Search products...">
+        </div>
 
-export default DigitalTwinDashboard;
+        <div class="control-group">
+            <label>Rotate View (X-Axis): <span id="rotateX-value">60°</span></label>
+            <input type="range" id="rotateX" min="0" max="90" value="60">
+        </div>
+
+        <div class="control-group">
+            <label>Rotate View (Z-Axis): <span id="rotateZ-value">45°</span></label>
+            <input type="range" id="rotateZ" min="0" max="360" value="45">
+        </div>
+
+        <div class="control-group">
+            <label>🔥 Heatmap Overlay</label>
+            <div class="toggle-group">
+                <div class="toggle-switch" id="heatmapToggle" onclick="toggleHeatmap()">
+                    <div class="toggle-slider"></div>
+                </div>
+                <span style="color: #ccc; font-size: 12px;">Show sales heatmap</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>🛤️ Recipe Route</label>
+            <div class="recipe-mode">
+                <select id="productA">
+                    <option value="">From...</option>
+                </select>
+                <select id="productB">
+                    <option value="">To...</option>
+                </select>
+                <button onclick="showRecipeRoute()">Go</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="perspective-container">
+        <div class="world" id="world">
+            <div class="floor" id="floor"></div>
+            <div id="products-container"></div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="story-card" id="storyCard">
+        <button class="close-btn" onclick="closeStoryCard()">×</button>
+        <div id="storyContent"></div>
+    </div>
+
+    <div class="toast" id="toast">
+        <div class="toast-title" id="toastTitle"></div>
+        <div class="toast-message" id="toastMessage"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        // Firebase Configuration
+        // TODO: For production, add your API key and enable Firebase Security Rules
+        // Currently configured for open public access as per your database rules
+        const firebaseConfig = {
+            databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com"
+            // apiKey: "YOUR_API_KEY_HERE" // Uncomment and add your API key for production
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Global state
+        let productsData = [];
+        let heatmapEnabled = false;
+        let priceCache = {};
+        let currentSearchTerm = '';
+
+        // Product icon mapping (fallback if not in Firebase)
+        const iconMap = {
+            'apple': '🍎', 'bread': '🍞', 'milk': '🥛', 'fish': '🐟', 'salmon': '🐟',
+            'coffee': '☕', 'yogurt': '🥣', 'honey': '🍯', 'avocado': '🥑',
+            'pasta': '🍝', 'oil': '🫒', 'cheese': '🧀', 'egg': '🥚', 'tomato': '🍅',
+            'carrot': '🥕', 'banana': '🍌', 'orange': '🍊', 'grape': '🍇', 'strawberry': '🍓'
+        };
+
+        // Initialize floor grid
+        function initFloor() {
+            const floor = document.getElementById('floor');
+            floor.innerHTML = '';
+            for (let i = 0; i < 100; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                cell.dataset.index = i;
+                floor.appendChild(cell);
+            }
+        }
+
+        // Get product icon based on name
+        function getProductIcon(name) {
+            if (!name) return '📦';
+            const lowerName = name.toLowerCase();
+            for (const [key, icon] of Object.entries(iconMap)) {
+                if (lowerName.includes(key)) return icon;
+            }
+            return '📦';
+        }
+
+        // Generate coordinates if not provided
+        function generateCoordinates(index, total) {
+            const gridSize = 10;
+            const spacing = Math.floor(gridSize / Math.ceil(Math.sqrt(total)));
+            const row = Math.floor(index / spacing) * spacing;
+            const col = (index % spacing) * spacing;
+// This ensures items fill the 10x10 floor before moving to a new 'row'
+return {
+    x: index % 10, 
+    y: Math.floor(index / 10) % 10
+};
+        }
+
+        // Update heatmap based on sales data
+        function updateHeatmap() {
+            if (!heatmapEnabled) {
+                document.querySelectorAll('.grid-cell').forEach(cell => {
+                    cell.classList.remove('heatmap');
+                    cell.style.background = '';
+                });
+                return;
+            }
+
+            const salesMap = new Map();
+            productsData.forEach(product => {
+                const key = `${product.x}-${product.y}`;
+                salesMap.set(key, product.sales || 0);
+            });
+
+            const maxSales = Math.max(...Array.from(salesMap.values()), 1);
+
+            document.querySelectorAll('.grid-cell').forEach((cell, index) => {
+                const x = index % 10;
+                const y = Math.floor(index / 10);
+                const key = `${x}-${y}`;
+                const sales = salesMap.get(key) || 0;
+                
+                if (sales > 0) {
+                    cell.classList.add('heatmap');
+                    const intensity = sales / maxSales;
+                    const red = Math.floor(255 * intensity);
+                    const alpha = 0.3 + (intensity * 0.4);
+                    cell.style.background = `rgba(${red}, 0, 0, ${alpha})`;
+                } else {
+                    cell.style.background = '';
+                }
+            });
+        }
+
+        // Show toast notification
+        function showToast(title, message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Render shop products
+        function renderShop(products) {
+            const container = document.getElementById('products-container');
+            const productA = document.getElementById('productA');
+            const productB = document.getElementById('productB');
+            
+            container.innerHTML = '';
+            productA.innerHTML = '<option value="">From...</option>';
+            productB.innerHTML = '<option value="">To...</option>';
+
+            products.forEach((product, index) => {
+                const node = document.createElement('div');
+                node.className = 'product-node';
+                node.dataset.productId = product.id;
+                node.dataset.productName = product.name.toLowerCase();
+                node.dataset.x = product.x;
+                node.dataset.y = product.y;
+                
+                if (product.stock < 5) {
+                    node.classList.add('is-low-stock');
+                }
+                
+                if (product.sales > 50) {
+                    node.classList.add('popular');
+                }
+
+                const gridSize = 80;
+                node.style.left = `${product.x * gridSize}px`;
+                node.style.top = `${product.y * gridSize}px`;
+
+                node.innerHTML = `
+                    <div class="product-card">
+                        ${product.stock < 5 ? '<span class="stock-badge">LOW</span>' : ''}
+                        <div class="product-icon">${product.icon}</div>
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-price">${product.price}</div>
+                    </div>
+                `;
+
+                node.addEventListener('click', () => openStoryCard(product));
+                container.appendChild(node);
+
+                const option1 = document.createElement('option');
+                option1.value = product.id;
+                option1.textContent = product.name;
+                productA.appendChild(option1);
+
+                const option2 = document.createElement('option');
+                option2.value = product.id;
+                option2.textContent = product.name;
+                productB.appendChild(option2);
+            });
+
+filterProducts(currentSearchTerm);
+            updateHeatmap();
+            updateOutOfStockLeaderboard(products);
+        }
+function updateOutOfStockLeaderboard(products) {
+    const listContainer = document.getElementById('oosList');
+    const countDisplay = document.getElementById('oosCount');
+    
+    // Filter for items with 0 stock
+const outOfStockItems = products.filter(p => !p.stock || p.stock === 0 || p.stock === "0");
+    countDisplay.textContent = outOfStockItems.length;
+
+    if (outOfStockItems.length === 0) {
+        listContainer.innerHTML = '<div style="color: #7fff00; font-size: 12px;">All items in stock! ✅</div>';
+        return;
+    }
+
+    listContainer.innerHTML = outOfStockItems.map(item => `
+        <div class="stock-item">
+            <span>${item.name}</span>
+            <span class="stock-count">OUT</span>
+        </div>
+    `).join('');
+}
+        // Filter products based on search
+        function filterProducts(searchTerm) {
+            currentSearchTerm = searchTerm.toLowerCase();
+            const nodes = document.querySelectorAll('.product-node');
+            let foundCount = 0;
+
+            nodes.forEach(node => {
+                const name = node.dataset.productName;
+                const matches = !searchTerm || name.includes(currentSearchTerm);
+                
+                if (matches) {
+                    node.style.display = 'block';
+                    if (searchTerm && searchTerm.length > 2) {
+                        node.classList.add('searching');
+                        foundCount++;
+                    } else {
+                        node.classList.remove('searching');
+                    }
+                } else {
+                    node.style.display = 'none';
+                    node.classList.remove('searching');
+                }
+            });
+
+            if (searchTerm && foundCount === 1) {
+                const foundNode = Array.from(nodes).find(n => 
+                    n.style.display !== 'none'
+                );
+                if (foundNode) {
+                    foundNode.classList.add('jumping');
+                    setTimeout(() => foundNode.classList.remove('jumping'), 600);
+                }
+            }
+        }
+
+        // Listen to Firebase data
+        function listenToFirebase() {
+            const businessesRef = ref(database, '/Businesses');
+            
+            onValue(businessesRef, (snapshot) => {
+                const data = snapshot.val();
+                if (!data) {
+                    console.error('No data available');
+                    showToast('⚠️ No Data', 'No businesses found in database');
+                    document.getElementById('loading').style.display = 'none';
+                    return;
+                }
+
+                const newProducts = [];
+                let productIndex = 0;
+
+                Object.keys(data).forEach(businessId => {
+                    const business = data[businessId];
+                    
+                    if (business.inventory && business.prices) {
+                        Object.keys(business.inventory).forEach(productKey => {
+                            const coords = generateCoordinates(productIndex, 
+                                Object.keys(business.inventory).length * Object.keys(data).length);
+                            
+                            const inventory = business.inventory[productKey];
+                            const price = business.prices[productKey];
+                            
+                            const product = {
+                                id: `${businessId}-${productKey}`,
+                               name: (business.sales && Object.values(business.sales).find(s => s.productId === productKey)?.productName) || productKey.replace(/[^a-zA-Z]/g, ' ').trim().toUpperCase(),
+                                icon: getProductIcon(productKey),
+                                price: `$${parseFloat(business.prices?.[productKey]?.numericValue || business.prices?.[productKey]?.sellPrice?.numericValue || 0).toFixed(2)}`,
+                                priceValue: parseFloat(price || 0),
+                                x: coords.x,
+                                y: coords.y,
+                                stock: parseInt(inventory?.quantity || inventory || 0),
+                                sales: Math.floor(Math.random() * 100), // Mock sales data
+                                origin: business.name || 'Local Business',
+                                sustainability: Math.floor(60 + Math.random() * 40),
+                                story: `Quality product from ${business.name || 'our partners'}.`,
+                                businessId: businessId
+                            };
+
+                            // Check for price changes
+                            const cacheKey = product.id;
+                            if (priceCache[cacheKey] && priceCache[cacheKey] !== product.priceValue) {
+                                showToast('💰 Price Updated!', 
+                                    `${product.name} price changed to ${product.price}`);
+                            }
+                            priceCache[cacheKey] = product.priceValue;
+
+                            newProducts.push(product);
+                            productIndex++;
+                        });
+                    }
+                });
+
+                productsData = newProducts;
+                renderShop(productsData);
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('statusIndicator').classList.add('connected');
+                
+                if (newProducts.length > 0) {
+                    showToast('✅ Connected', `Loaded ${newProducts.length} products from Inventory`);
+                }
+            }, (error) => {
+                console.error('Firebase error:', error);
+                showToast('❌ Connection Error', error.message);
+                document.getElementById('loading').style.display = 'none';
+            });
+        }
+
+        // Open story card with animation
+        window.openStoryCard = function(product) {
+            const storyCard = document.getElementById('storyCard');
+            const overlay = document.getElementById('overlay');
+            const content = document.getElementById('storyContent');
+
+            content.innerHTML = `
+                <h2>${product.icon} ${product.name}</h2>
+                <div class="story-section">
+                    <h3>📍 Origin Story</h3>
+                    <p>${product.story}</p>
+                    <p><strong>Source:</strong> ${product.origin}</p>
+                </div>
+                <div class="story-section">
+                    <h3>🌱 Sustainability Score</h3>
+                    <div class="sustainability-score">
+                        <span>${product.sustainability}/100</span>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: ${product.sustainability}%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="story-section">
+                    <h3>📦 Stock Status</h3>
+                    <p>${product.stock} units available ${product.stock < 5 ? '⚠️ Running low!' : '✅'}</p>
+                </div>
+                <div class="story-section">
+                    <h3>💰 Price</h3>
+                    <p style="font-size: 24px; color: var(--neon-accent);">${product.price}</p>
+                </div>
+                <button class="btn" onclick="walkToProduct('${product.id}', ${product.x}, ${product.y})">🚶 Walk to Me</button>
+            `;
+
+            overlay.classList.add('active');
+            storyCard.classList.add('active');
+        };
+
+        // Close story card
+        window.closeStoryCard = function() {
+            document.getElementById('storyCard').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        };
+
+        // Walk to product - Camera tracking
+        window.walkToProduct = function(productId, x, y) {
+            const world = document.getElementById('world');
+            
+            // Calculate optimal angle to face the product
+            const centerX = 5;
+            const centerY = 5;
+            const angleZ = Math.atan2(y - centerY, x - centerX) * (180 / Math.PI);
+            const targetZ = (angleZ + 225) % 360;
+            
+            // Smoothly rotate to face the product
+            document.documentElement.style.setProperty('--world-rotateZ', `${targetZ}deg`);
+            document.getElementById('rotateZ').value = targetZ;
+            document.getElementById('rotateZ-value').textContent = `${Math.round(targetZ)}°`;
+            
+            showToast('🚶 Navigating...', `Walking to product at position (${x}, ${y})`);
+            
+            setTimeout(() => {
+                const productNode = document.querySelector(`[data-product-id="${productId}"]`);
+                if (productNode) {
+                    productNode.classList.add('jumping');
+                    setTimeout(() => productNode.classList.remove('jumping'), 600);
+                }
+            }, 500);
+            
+            closeStoryCard();
+        };
+
+        // Pathfinding algorithm
+        function tracePath(productA, productB) {
+            const prodA = productsData.find(p => p.id === productA);
+            const prodB = productsData.find(p => p.id === productB);
+
+            if (!prodA || !prodB) return [];
+
+            const path = [];
+            let x = prodA.x;
+            let y = prodA.y;
+
+            while (x !== prodB.x || y !== prodB.y) {
+                path.push({ x, y });
+                
+                if (x < prodB.x) x++;
+                else if (x > prodB.x) x--;
+                
+                if (y < prodB.y) y++;
+                else if (y > prodB.y) y--;
+            }
+            
+            path.push({ x: prodB.x, y: prodB.y });
+            return path;
+        }
+
+        // Show recipe route
+        window.showRecipeRoute = function() {
+            const productA = document.getElementById('productA').value;
+            const productB = document.getElementById('productB').value;
+
+            if (!productA || !productB) {
+                showToast('⚠️ Selection Required', 'Please select both products!');
+                return;
+            }
+
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                cell.classList.remove('path-highlight');
+            });
+
+            const path = tracePath(productA, productB);
+
+            path.forEach(point => {
+                const index = point.y * 10 + point.x;
+                const cell = document.querySelector(`[data-index="${index}"]`);
+                if (cell) {
+                    cell.classList.add('path-highlight');
+                }
+            });
+
+            showToast('🛤️ Route Created', `Path contains ${path.length} steps`);
+        };
+
+        // Toggle heatmap
+        window.toggleHeatmap = function() {
+            heatmapEnabled = !heatmapEnabled;
+            const toggle = document.getElementById('heatmapToggle');
+            toggle.classList.toggle('active');
+            updateHeatmap();
+            showToast(heatmapEnabled ? '🔥 Heatmap ON' : '❄️ Heatmap OFF', 
+                heatmapEnabled ? 'Showing sales data' : 'Heatmap disabled');
+        };
+
+        // Rotation controls
+        document.getElementById('rotateX').addEventListener('input', (e) => {
+            const value = e.target.value;
+            document.documentElement.style.setProperty('--world-rotateX', `${value}deg`);
+            document.getElementById('rotateX-value').textContent = `${value}°`;
+        });
+
+        document.getElementById('rotateZ').addEventListener('input', (e) => {
+            const value = e.target.value;
+            document.documentElement.style.setProperty('--world-rotateZ', `${value}deg`);
+            document.getElementById('rotateZ-value').textContent = `${value}°`;
+        });
+
+        // Search functionality
+        document.getElementById('searchBar').addEventListener('input', (e) => {
+            filterProducts(e.target.value);
+        });
+
+        // Close on overlay click
+        document.getElementById('overlay').addEventListener('click', () => {
+            window.closeStoryCard();
+        });
+
+        // Initialize
+        initFloor();
+        listenToFirebase();
+    </script>
+</body>
+</html>
