@@ -79,16 +79,16 @@
         }
 
         .grid-cell.heatmap-hot {
-            background: radial-gradient(circle, rgba(255, 0, 64, 0.6) 0%, rgba(255, 0, 64, 0.2) 100%) !important;
-            border-color: var(--neon-red) !important;
-            box-shadow: 0 0 40px var(--neon-red) !important;
+            background: radial-gradient(circle, rgba(255, 0, 64, 0.6) 0%, rgba(255, 0, 64, 0.2) 100%);
+            border-color: var(--neon-red);
+            box-shadow: 0 0 40px var(--neon-red);
             animation: heatPulse 2s infinite;
         }
 
         .grid-cell.heatmap-cold {
-            background: radial-gradient(circle, rgba(0, 212, 255, 0.5) 0%, rgba(0, 212, 255, 0.15) 100%) !important;
-            border-color: var(--ice-blue) !important;
-            box-shadow: 0 0 30px var(--ice-blue) !important;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.5) 0%, rgba(0, 212, 255, 0.15) 100%);
+            border-color: var(--ice-blue);
+            box-shadow: 0 0 30px var(--ice-blue);
             animation: coldPulse 3s infinite;
         }
 
@@ -102,19 +102,19 @@
             50% { opacity: 0.9; }
         }
 
-        .product-node {
+.product-node {
             position: absolute;
             transform-style: preserve-3d;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             z-index: 10;
+            /* Ensure the node is the size of one tile and centered on its coordinate */
             width: 80px;
             height: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-
         .product-node.grabbed {
             z-index: 100;
             transform: translateZ(100px) scale(1.2);
@@ -124,21 +124,6 @@
 
         .product-node.searching {
             animation: searchPulse 1s infinite;
-        }
-
-        .product-node.predicted-out .product-card {
-            border: 3px solid var(--neon-red) !important;
-            box-shadow: 0 0 50px var(--neon-red), 0 0 100px rgba(255, 0, 64, 0.5) !important;
-            animation: criticalPulse 1.5s infinite;
-        }
-
-        @keyframes criticalPulse {
-            0%, 100% { 
-                box-shadow: 0 0 50px var(--neon-red), 0 0 100px rgba(255, 0, 64, 0.5);
-            }
-            50% { 
-                box-shadow: 0 0 80px var(--neon-red), 0 0 150px rgba(255, 0, 64, 0.8);
-            }
         }
 
         @keyframes searchPulse {
@@ -153,42 +138,52 @@
         }
 
         .product-card {
-            width: 120px;
-            height: 160px;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 15px;
-            transform: rotateZ(-45deg) rotateX(-60deg);
-            transform-style: preserve-3d;
-            box-shadow: 
-                0px 0px 0px 1px rgba(0, 243, 255, 0.5),
-                -2px 2px 0px #00a3ad,
-                -4px 4px 0px #007a82,
-                -6px 6px 0px #005257,
-                -15px 15px 30px rgba(0, 0, 0, 0.7);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            transition: all 0.4s ease;
-            animation: float 4s ease-in-out infinite;
-        }
+    width: 120px;
+    height: 160px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 15px;
+    
+    /* This makes it stand upright and look thick */
+    transform: rotateZ(-45deg) rotateX(-60deg);
+    transform-style: preserve-3d;
+    
+    /* Layered shadows create the 'Physical Thickness' */
+    box-shadow: 
+        0px 0px 0px 1px rgba(0, 243, 255, 0.5), /* Sharp neon edge */
+        -2px 2px 0px #00a3ad,                   /* 3D Side Depth 1 */
+        -4px 4px 0px #007a82,                   /* 3D Side Depth 2 */
+        -6px 6px 0px #005257,                   /* 3D Side Depth 3 */
+        -15px 15px 30px rgba(0, 0, 0, 0.7);     /* Floor Shadow */
 
-        .product-card::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transform: rotate(45deg);
-            pointer-events: none;
-        }
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.4s ease;
+    animation: float 4s ease-in-out infinite;
+}
 
+/* Adding a 'Glossy Shine' overlay */
+.product-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.1), 
+        transparent
+    );
+    transform: rotate(45deg);
+    pointer-events: none;
+}
         @keyframes float {
             0%, 100% { 
                 transform: rotateZ(-45deg) rotateX(-60deg) translateZ(0px); 
@@ -209,22 +204,15 @@
             z-index: -1;
             filter: blur(10px);
         }
-
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(0, 243, 255, 0.1);
-            border-top: 3px solid var(--neon-primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
-        }
-
+.loading-spinner {
+    width: 40px; height: 40px;
+    border: 3px solid rgba(0, 243, 255, 0.1);
+    border-top: 3px solid var(--neon-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .product-node:hover .product-card {
             transform: rotateZ(-45deg) rotateX(-60deg) translateZ(40px) scale(1.15);
             border-color: var(--neon-secondary);
@@ -382,20 +370,6 @@
             line-height: 1.8;
             color: #ddd;
             font-size: 15px;
-        }
-
-        .velocity-alert {
-            background: rgba(255, 0, 64, 0.2);
-            border: 2px solid var(--neon-red);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 15px;
-            animation: alertPulse 2s infinite;
-        }
-
-        @keyframes alertPulse {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
         }
 
         .sustainability-score {
@@ -677,6 +651,20 @@
             z-index: 3000;
         }
 
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(0, 243, 255, 0.1);
+            border-top-color: var(--neon-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .status-indicator {
             display: inline-block;
             width: 10px;
@@ -779,6 +767,13 @@
                 <span style="color: #ccc; font-size: 12px;">Show sales heatmap</span>
             </div>
         </div>
+<button
+  onclick="openTimeTravel()"
+  class="mt-4 w-full px-4 py-3 rounded-xl font-bold
+         bg-gradient-to-r from-cyan-400 to-purple-500
+         text-black shadow-lg hover:scale-105 transition">
+  ⏳ Time Travel
+</button>
 
         <button class="exchange-btn" id="exchangeBtn" onclick="toggleExchangeMode()">
             🔄 Exchange Places
@@ -829,7 +824,6 @@
         let grabbedProduct = null;
         let currentUserId = null;
         let currentSearchTerm = '';
-        let timeTravelMode = false;
 
         const productDescriptions = {
             'apple': 'Fresh, crisp organic apples sourced from local orchards. High in Vitamin C and fiber, perfect for a healthy snack.',
@@ -880,6 +874,7 @@
             const x = parseInt(e.target.dataset.x);
             const y = parseInt(e.target.dataset.y);
 
+            // Check if cell is occupied
             const occupied = productsData.some(p => p.x === x && p.y === y && p.id !== grabbedProduct.id);
             if (occupied) {
                 showToast('⚠️ Space Occupied', 'This tile already has a product');
@@ -928,67 +923,33 @@
             };
         }
 
-        function calculatePredictedStock(currentStock, dailySales) {
-            const stock = parseInt(currentStock) || 0;
-            const velocity = parseInt(dailySales) || 0;
-            
-            // WTH Clause: If velocity is >= 90% of stock, predict OUT
-            if (velocity >= (stock * 0.9)) {
-                return 0;
-            }
-            
-            // Standard burn rate calculation
-            return Math.max(0, stock - velocity);
-        }
-
-        function applyTimeTravelPredictions() {
-            if (!timeTravelMode) {
-                document.querySelectorAll('.product-node').forEach(node => {
-                    node.classList.remove('predicted-out');
-                });
-                return;
-            }
-
-            productsData.forEach(product => {
-                const predictedStock = calculatePredictedStock(product.stock, product.sales);
-                const node = document.querySelector(`[data-product-id="${product.id}"]`);
-                
-                if (node) {
-                    if (predictedStock === 0) {
-                        node.classList.add('predicted-out');
-                    } else {
-                        node.classList.remove('predicted-out');
-                    }
-                }
-                
-                // Store predicted stock for story card
-                product.predictedStock = predictedStock;
-            });
-        }
-
         function updateHeatmap() {
-            const cells = document.querySelectorAll('.grid-cell');
-            
-            cells.forEach(cell => {
-                cell.classList.remove('heatmap-hot', 'heatmap-cold');
-            });
+    // FIX 1: Change '.tile' to '.grid-cell' to match your initFloor function
+    const cells = document.querySelectorAll('.grid-cell');
+    
+    // Reset all cells first
+    cells.forEach(cell => {
+        cell.classList.remove('heatmap-hot', 'heatmap-cold');
+        cell.style.background = 'rgba(255, 255, 255, 0.03)'; // Back to default
+    });
 
-            if (!heatmapEnabled) return;
+    if (!heatmapEnabled) return;
 
-            productsData.forEach(product => {
-                const cellIndex = (product.y * 10) + product.x;
-                const cell = cells[cellIndex];
+    productsData.forEach(product => {
+        // Calculate the 1D index from X and Y
+        const cellIndex = (product.y * 10) + product.x;
+        const cell = cells[cellIndex];
 
-                if (cell) {
-                    if (product.sales > 50) {
-                        cell.classList.add('heatmap-hot');
-                    } else if (product.sales > 0) {
-                        cell.classList.add('heatmap-cold');
-                    }
-                }
-            });
+        if (cell) {
+            // FIX 2: Apply the CSS classes defined in your <style> block
+            if (product.sales > 50) {
+                cell.classList.add('heatmap-hot');
+            } else if (product.sales > 0) {
+                cell.classList.add('heatmap-cold');
+            }
         }
-
+    });
+}
         function showToast(title, message) {
             const toast = document.getElementById('toast');
             document.getElementById('toastTitle').textContent = title;
@@ -1017,8 +978,9 @@
                     node.classList.add('popular');
                 }
 
+// This centers the products on the 800px floor by offsetting from the center (50%)
                 const gridSize = 80;
-                const offset = 5 * gridSize;
+                const offset = 5 * gridSize; // Centers the 10x10 grid (800px / 2)
                 node.style.left = `calc(50% + ${(product.x * gridSize) - offset}px)`;
                 node.style.top = `calc(50% + ${(product.y * gridSize) - offset}px)`;
 
@@ -1044,7 +1006,6 @@
 
             filterProducts(currentSearchTerm);
             updateHeatmap();
-            applyTimeTravelPredictions();
             updateOutOfStockLeaderboard(products);
         }
 
@@ -1111,211 +1072,169 @@
                     window.location.href = "login.html"; 
                     return;
                 }
+loadSalesTransactions();
 
                 currentUserId = user.uid;
                 const businessRef = ref(database, `Businesses/${currentUserId}`);
                 
                 onValue(businessRef, (snapshot) => {
-    const business = snapshot.val();
-    
-    if (!business) {
-        console.error('No business data available');
-        showToast('⚠️ No Data', 'Your inventory folder is empty.');
-        document.getElementById('loading').style.display = 'none';
-        return;
-    }
+                    const business = snapshot.val();
+                    
+                    if (!business) {
+                        console.error('No business data available');
+                        showToast('⚠️ No Data', 'Your inventory folder is empty.');
+                        document.getElementById('loading').style.display = 'none';
+                        return;
+                    }
 
-    // --- STEP 1: CALCULATE ACTUAL SALES FROM TRANSACTIONS ---
-    const salesTotals = {};
-    
-    // We look at the root of the business object for transaction nodes
-    // (identified by having a 'productId' and 'quantity')
-    Object.keys(business).forEach(key => {
-        const entry = business[key];
-        if (entry && entry.productId && entry.quantity) {
-            const pId = entry.productId;
-            // Sum up the quantities for each product ID found in transactions
-            salesTotals[pId] = (salesTotals[pId] || 0) + parseInt(entry.quantity);
+                    const newProducts = [];
+                    let productIndex = 0;
+
+                    if (business.inventory) {
+                        const productKeys = Object.keys(business.inventory);
+                        
+                        productKeys.forEach(productKey => {
+                            const inventory = business.inventory[productKey];
+                            const priceData = business.prices?.[productKey];
+                            
+const storedX = inventory.x;
+                            const storedY = inventory.y;
+                            // Ensure we use the stored tile index (0-9)
+                            const coords = (storedX !== undefined && storedY !== undefined) 
+                                ? { x: parseInt(storedX), y: parseInt(storedY) }
+                                : generateCoordinates(productIndex, productKeys.length);
+                            
+                            const product = {
+                                id: productKey,
+                                name: inventory.name || productKey.replace(/[^a-zA-Z]/g, ' ').trim().toUpperCase(),
+                                icon: getProductIcon(inventory.name || productKey),
+                                price: `${parseFloat(priceData?.numericValue || priceData?.sellPrice?.numericValue || 0).toFixed(2)}`,
+                                priceValue: parseFloat(priceData?.numericValue || 0),
+                                x: coords.x,
+                                y: coords.y,
+                                stock: parseInt(inventory?.quantity || inventory || 0),
+                               sales: parseInt(inventory.sold || 0),
+                                origin: business.name || 'My Shop',
+                                sustainability: 75 + Math.floor(Math.random() * 20),
+                                story: getProductDescription(inventory.name || productKey),
+                                businessId: currentUserId
+                            };
+
+                            newProducts.push(product);
+                            productIndex++;
+                        });
+                    }
+
+                    productsData = newProducts;
+                    renderShop(productsData);
+                    
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('statusIndicator').classList.add('connected');
+                    
+                    if (newProducts.length > 0) {
+                        showToast('✅ Connected', `Loaded ${newProducts.length} items from your inventory`);
+                    }
+                }, (error) => {
+                    console.error('Firebase error:', error);
+                    showToast('❌ Connection Error', error.message);
+                    document.getElementById('loading').style.display = 'none';
+                });
+            });
         }
-    });
+let salesTransactions = [];
 
-    const newProducts = [];
-    let productIndex = 0;
+function loadSalesTransactions() {
+  if (!currentUserId) return;
 
-    if (business.inventory) {
-        const productKeys = Object.keys(business.inventory);
+  const salesRef = ref(database, `Businesses/${currentUserId}/sales`);
+
+  onValue(salesRef, (snapshot) => {
+    salesTransactions = Object.values(snapshot.val() || {});
+  });
+}
+
+window.openStoryCard = async function(product) {
+    const storyCard = document.getElementById('storyCard');
+    const overlay = document.getElementById('overlay');
+    const content = document.getElementById('storyContent');
+
+    // 1. Show Loading State immediately
+    content.innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 20px; color: var(--neon-primary); font-family: monospace; letter-spacing: 2px; animation: pulse 1.5s infinite;">
+                AI ENGINE: ANALYZING ${product.name.toUpperCase()}...
+            </p>
+        </div>
+    `;
+    
+    overlay.classList.add('active');
+    storyCard.classList.add('active');
+
+    try {
+        // 2. Fetch from your Vercel Backend
+        const response = await fetch(`/api/gemini?productName=${encodeURIComponent(product.name)}`);
         
-        productKeys.forEach(productKey => {
-            const inventory = business.inventory[productKey];
-            const priceData = business.prices?.[productKey];
+        if (!response.ok) throw new Error('AI Server Offline');
+        
+        const aiData = await response.json();
+
+        // 3. Render full content with AI Data
+        content.innerHTML = `
+            <h2 style="text-shadow: 0 0 15px var(--neon-primary); font-size: 28px;">${product.icon} ${product.name}</h2>
             
-            const storedX = inventory.x;
-            const storedY = inventory.y;
-            const coords = (storedX !== undefined && storedY !== undefined) 
-                ? { x: parseInt(storedX), y: parseInt(storedY) }
-                : generateCoordinates(productIndex, productKeys.length);
-            
-            // --- STEP 2: APPLY THE DYNAMIC SALES DATA ---
-            const actualSales = salesTotals[productKey] || 0;
+            <div class="story-section">
+                <h3>📖 AI Product Journey</h3>
+                <p style="line-height: 1.6; font-style: italic; color: #eee; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                    "${aiData.description || product.story}"
+                </p>
+                <p style="margin-top: 10px;"><strong>🌍 Verified Origin:</strong> <span style="color: var(--ice-blue);">${aiData.origin || product.origin}</span></p>
+            </div>
 
-            const product = {
-                id: productKey,
-                name: inventory.name || productKey.replace(/[^a-zA-Z]/g, ' ').trim().toUpperCase(),
-                icon: getProductIcon(inventory.name || productKey),
-                price: `${parseFloat(priceData?.numericValue || priceData?.sellPrice?.numericValue || 0).toFixed(2)}`,
-                priceValue: parseFloat(priceData?.numericValue || 0),
-                x: coords.x,
-                y: coords.y,
-                stock: parseInt(inventory?.quantity || inventory || 0),
-                // Instead of inventory.sold, we use our calculated total
-                sales: actualSales, 
-                origin: business.name || 'My Shop',
-                sustainability: 75 + Math.floor(Math.random() * 20),
-                story: getProductDescription(inventory.name || productKey),
-                businessId: currentUserId
-            };
-
-            newProducts.push(product);
-            productIndex++;
-        });
-    }
-
-    productsData = newProducts;
-    renderShop(productsData);
-    
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('statusIndicator').classList.add('connected');
-    
-    if (newProducts.length > 0) {
-        showToast('✅ Connected', `Velocity calculated: Loaded ${newProducts.length} items`);
-    }
-}, (error) => {
-    console.error('Firebase error:', error);
-    showToast('❌ Connection Error', error.message);
-    document.getElementById('loading').style.display = 'none';
-});
-
-        window.openStoryCard = async function(product) {
-            const storyCard = document.getElementById('storyCard');
-            const overlay = document.getElementById('overlay');
-            const content = document.getElementById('storyContent');
-
-            content.innerHTML = `
-                <div style="text-align: center; padding: 40px;">
-                    <div class="loading-spinner"></div>
-                    <p style="margin-top: 20px; color: var(--neon-primary); font-family: monospace; letter-spacing: 2px; animation: pulse 1.5s infinite;">
-                        AI ENGINE: ANALYZING ${product.name.toUpperCase()}...
-                    </p>
+            <div class="story-section">
+                <h3>🌱 Sustainability Score</h3>
+                <div class="sustainability-score" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                    <span style="font-size: 20px; font-weight: bold; color: var(--neon-primary);">${aiData.score || product.sustainability}/100</span>
+                    <div class="score-bar" style="height: 10px; background: #333; border-radius: 5px; margin-top: 10px; overflow: hidden;">
+                        <div class="score-fill" style="width: ${aiData.score || product.sustainability}%; height: 100%; transition: width 1s ease-out;
+                             background: ${(aiData.score || product.sustainability) > 80 ? 'var(--neon-accent)' : 'var(--neon-secondary)'};
+                             box-shadow: 0 0 10px ${(aiData.score || product.sustainability) > 80 ? 'var(--neon-accent)' : 'var(--neon-secondary)'};">
+                        </div>
+                    </div>
                 </div>
-            `;
-            
-            overlay.classList.add('active');
-            storyCard.classList.add('active');
+            </div>
 
-            try {
-                const response = await fetch(`https://ai-inventory-pro-sigma.vercel.app/api/gemini?productName=${encodeURIComponent(product.name)}&stock=${product.stock}&sales=${product.sales}`);
-                
-                if (!response.ok) throw new Error('AI Server Offline');
-                
-                const aiData = await response.json();
-                const predictedStock = calculatePredictedStock(product.stock, product.sales);
-
-                content.innerHTML = `
-                    <h2 style="text-shadow: 0 0 15px var(--neon-primary); font-size: 28px;">${product.icon} ${product.name}</h2>
-                    
-                    <div class="story-section">
-                        <h3>🤖 AI Product Analysis</h3>
-                        <p style="line-height: 1.6; font-style: italic; color: #eee; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
-                            "${aiData.description || product.story}"
-                        </p>
-                        <p style="margin-top: 10px;"><strong>🌍 Verified Origin:</strong> <span style="color: var(--ice-blue);">${aiData.origin || product.origin}</span></p>
-                    </div>
-
-                    ${aiData.prediction ? `
-                    <div class="story-section" style="background: rgba(0, 243, 255, 0.1); border-left-color: var(--neon-primary);">
-                        <h3>🔮 AI Prediction</h3>
-                        <p style="color: #fff;">${aiData.prediction}</p>
-                    </div>
-                    ` : ''}
-
-                    <div class="story-section">
-                        <h3>🌱 Sustainability Score</h3>
-                        <div class="sustainability-score" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                            <span style="font-size: 20px; font-weight: bold; color: var(--neon-primary);">${aiData.score || product.sustainability}/100</span>
-                            <div class="score-bar" style="height: 10px; background: #333; border-radius: 5px; margin-top: 10px; overflow: hidden;">
-                                <div class="score-fill" style="width: ${aiData.score || product.sustainability}%; height: 100%; transition: width 1s ease-out;
-                                     background: ${(aiData.score || product.sustainability) > 80 ? 'var(--neon-accent)' : 'var(--neon-secondary)'};
-                                     box-shadow: 0 0 10px ${(aiData.score || product.sustainability) > 80 ? 'var(--neon-accent)' : 'var(--neon-secondary)'};">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    ${predictedStock === 0 ? `
-                    <div class="velocity-alert">
-                        <h3 style="color: var(--neon-red); margin-bottom: 10px;">⚠️ VELOCITY ALERT</h3>
-                        <p style="color: #fff; font-weight: bold;">This item is predicted to sell out within 24 hours based on current burn rate!</p>
-                        <p style="margin-top: 10px; font-size: 14px; color: #ddd;">
-                            <strong>Current Stock:</strong> ${product.stock} units<br>
-                            <strong>Daily Velocity:</strong> ${product.sales} units/day<br>
-                            <strong>Predicted Stock:</strong> <span style="color: var(--neon-red); font-weight: bold;">0 units</span>
-                        </p>
-                    </div>
-                    ` : ''}
-
-                    <div class="story-section" style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,243,255,0.05); padding: 15px; border-radius: 12px;">
-                        <div>
-                            <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">📦 Current Stock</h3>
-                            <p style="font-size: 20px; margin: 5px 0 0 0;">${product.stock} units ${product.stock < 5 ? '⚠️' : '✅'}</p>
-                            ${timeTravelMode ? `<p style="font-size: 12px; color: var(--neon-accent); margin-top: 5px;">🔮 Predicted: ${predictedStock} units</p>` : ''}
-                        </div>
-                        <div style="text-align: right;">
-                            <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">💰 Price</h3>
-                            <p style="font-size: 32px; color: var(--neon-accent); font-weight: bold; margin: 5px 0 0 0;">${product.price}</p>
-                            <p style="font-size: 12px; color: #888; margin-top: 5px;">🔥 ${product.sales} sold/day</p>
-                        </div>
-                    </div>
-                `;
-            } catch (error) {
-                console.error("Gemini AI Error:", error);
-                const predictedStock = calculatePredictedStock(product.stock, product.sales);
-                const isVelocityAlert = predictedStock === 0;
-                
-                content.innerHTML = `
-                    <div style="background: rgba(255,0,0,0.1); border: 1px solid var(--neon-red); padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
-                        <p style="color: var(--neon-red); margin: 0; font-size: 13px;">⚠️ AI ENGINE OFFLINE - SHOWING CACHED DATA</p>
-                    </div>
-                    <h2>${product.icon} ${product.name}</h2>
-                    
-                    <div class="story-section">
-                        <h3>📖 Product Journey</h3>
-                        <p>${product.story}</p>
-                        <p style="margin-top: 10px;"><strong>Sourced from:</strong> ${product.origin}</p>
-                    </div>
-
-                    ${isVelocityAlert ? `
-                    <div class="velocity-alert">
-                        <h3 style="color: var(--neon-red); margin-bottom: 10px;">⚠️ VELOCITY ALERT</h3>
-                        <p style="color: #fff; font-weight: bold;">Critical inventory depletion detected!</p>
-                        <p style="margin-top: 10px; font-size: 14px; color: #ddd;">
-                            <strong>Current Stock:</strong> ${product.stock} units<br>
-                            <strong>Daily Velocity:</strong> ${product.sales} units/day<br>
-                            <strong>Predicted Stock (24h):</strong> <span style="color: var(--neon-red); font-weight: bold;">${predictedStock} units</span>
-                        </p>
-                    </div>
-                    ` : ''}
-
-                    <div class="story-section">
-                        <h3>📊 Inventory Stats</h3>
-                        <p><strong>💰 Price:</strong> <span style="color: var(--neon-accent)">${product.price}</span></p>
-                        <p><strong>📦 Current Stock:</strong> ${product.stock} units</p>
-                        <p><strong>🔥 Sales Velocity:</strong> ${product.sales} units/day</p>
-                        ${timeTravelMode ? `<p><strong>🔮 Predicted Stock:</strong> <span style="color: ${predictedStock === 0 ? 'var(--neon-red)' : 'var(--neon-accent)'};">${predictedStock} units</span></p>` : ''}
-                    </div>
-                `;
-            }
-        };
-
+            <div class="story-section" style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,243,255,0.05); padding: 15px; border-radius: 12px;">
+                <div>
+                    <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">📦 Stock Status</h3>
+                    <p style="font-size: 20px; margin: 5px 0 0 0;">${product.stock} units ${product.stock < 5 ? '⚠️' : '✅'}</p>
+                </div>
+                <div style="text-align: right;">
+                    <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">💰 Current Price</h3>
+                    <p style="font-size: 32px; color: var(--neon-accent); font-weight: bold; margin: 5px 0 0 0;">${product.price}</p>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error("Gemini AI Error:", error);
+        // Fallback to local data if the AI fails
+        content.innerHTML = `
+            <div style="background: rgba(255,0,0,0.1); border: 1px solid var(--neon-red); padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
+                <p style="color: var(--neon-red); margin: 0; font-size: 13px;">⚠️ AI ENGINE OFFLINE - SHOWING CACHED DATA</p>
+            </div>
+            <h2>${product.icon} ${product.name}</h2>
+            <div class="story-section">
+                <h3>📖 Product Journey</h3>
+                <p>${product.story}</p>
+                <p style="margin-top: 10px;"><strong>Sourced from:</strong> ${product.origin}</p>
+            </div>
+            <div class="story-section">
+                <h3>💰 Price: <span style="color: var(--neon-accent)">${product.price}</span></h3>
+                <h3>📦 Stock: ${product.stock} units</h3>
+            </div>
+        `;
+    }
+};
         window.closeStoryCard = function() {
             document.getElementById('storyCard').classList.remove('active');
             document.getElementById('overlay').classList.remove('active');
@@ -1341,32 +1260,67 @@
             }
         };
 
-        window.toggleHeatmap = function() {
-            heatmapEnabled = !heatmapEnabled;
-            const toggle = document.getElementById('heatmapToggle');
-            toggle.classList.toggle('active');
-            updateHeatmap();
-            
-            if (heatmapEnabled) {
-                showToast('🔥 Heatmap Active', 'Visualizing sales performance...');
-                setTimeout(() => {
-                    showToast('💡 Color Guide', '🔴 RED = High Sales (50+) | 🔵 BLUE = Active Sales (1-49) | ⚫ GRAY = No Sales');
-                }, 1500);
-            } else {
-                showToast('❄️ Heatmap Off', 'Returning to standard view');
-            }
-        };
+window.toggleHeatmap = function() {
+    heatmapEnabled = !heatmapEnabled;
+    const toggle = document.getElementById('heatmapToggle');
+    toggle.classList.toggle('active');
+    updateHeatmap();
+    
+    if (heatmapEnabled) {
+        showToast('🔥 Heatmap Active', 'Calculating sales performance...');
+        
+        // This is the 3-second explanatory popup
+        setTimeout(() => {
+            showToast('💡 Color Guide', '🟠 ORANGE = High Sales | 🔵 BLUE = Low Sales | ⚫ GRAY = No Data');
+        }, 1000);
+    } else {
+        showToast('❄️ Heatmap Off', 'Returning to standard view');
+    }
+};
+window.openTimeTravel = async function () {
+  document.getElementById("timeTravelModal").classList.remove("hidden");
+  const box = document.getElementById("timeTravelContent");
+  box.innerHTML = "Analyzing data...";
 
-        window.toggleTimeTravel = function() {
-            timeTravelMode = !timeTravelMode;
-            applyTimeTravelPredictions();
-            
-            if (timeTravelMode) {
-                showToast('🔮 Time Travel Active', 'Showing 24h burn rate predictions');
-            } else {
-                showToast('⏰ Real-Time View', 'Showing current inventory');
-            }
-        };
+  const velocities = calculateSalesVelocity(salesTransactions);
+  const payload = { salesHistory: salesTransactions };
+
+  let ai = {};
+  try {
+    ai = await runTimeTravelAI(payload);
+  } catch {
+    ai = {};
+  }
+
+  box.innerHTML = velocities.map(v => {
+    const product = productsData.find(p => p.id === v.productId);
+    if (!product) return "";
+
+    const predicted = Math.max(
+      0,
+      Math.round(product.stock - v.velocityPerHour * 24)
+    );
+
+    return `
+      <div class="p-3 rounded-xl border border-cyan-400/30
+           ${predicted === 0 ? 'bg-red-900/40' : 'bg-slate-800'}">
+        <div class="font-bold text-cyan-300">${product.name}</div>
+        <div class="text-xs text-gray-300">
+          Current: ${product.stock} |
+          Velocity: ${v.velocityPerHour.toFixed(2)}/hr |
+          <span class="font-bold ${
+            predicted === 0 ? 'text-red-400' : 'text-green-400'
+          }">
+            Predicted (24h): ${predicted}
+          </span>
+        </div>
+      </div>
+    `;
+  }).join("");
+};
+window.closeTimeTravel = function () {
+  document.getElementById("timeTravelModal").classList.add("hidden");
+};
 
         document.getElementById('rotateX').addEventListener('input', (e) => {
             const value = e.target.value;
@@ -1387,9 +1341,64 @@
         document.getElementById('overlay').addEventListener('click', () => {
             window.closeStoryCard();
         });
+function calculateSalesVelocity(transactions) {
+  const now = Date.now();
+  const map = {};
+
+  transactions.forEach(tx => {
+    if (!map[tx.productId]) {
+      map[tx.productId] = { qty: 0, first: tx.timestamp };
+    }
+    map[tx.productId].qty += tx.quantity;
+    map[tx.productId].first = Math.min(map[tx.productId].first, tx.timestamp);
+  });
+
+  return Object.entries(map).map(([pid, data]) => {
+    const hours = Math.max((now - data.first) / 3600000, 1);
+    return {
+      productId: pid,
+      velocityPerHour: data.qty / hours
+    };
+  });
+}
+async function runTimeTravelAI(payload) {
+  const res = await fetch(
+    "https://ai-inventory-pro-sigma.vercel.app/api/gemini",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }
+  );
+  return res.json();
+}
 
         initFloor();
         listenToFirebase();
     </script>
+
+<div id="timeTravelModal"
+     class="hidden fixed inset-0 bg-black/80 z-[5000] flex items-center justify-center">
+
+  <div class="bg-slate-900 border border-cyan-400 rounded-2xl
+              w-[90%] max-w-2xl p-6 relative text-white">
+    <button onclick="closeTimeTravel()"
+            class="absolute top-3 right-4 text-xl">✖</button>
+
+    <h2 class="text-2xl text-cyan-400 mb-4">
+      🔮 Inventory Time Travel
+    </h2>
+
+    <div id="timeTravelContent"
+         class="space-y-3 text-sm text-gray-200">
+      Analyzing data...
+    </div>
+
+    <div class="mt-4 text-xs text-red-400 text-center">
+      ITS JUST A PREDICTION BY AN AI; WE DO NOT ASSURE THIS WILL HAPPEN.
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
