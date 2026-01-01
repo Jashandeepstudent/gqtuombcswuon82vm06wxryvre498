@@ -523,7 +523,13 @@
             cursor: pointer;
             box-shadow: 0 0 10px var(--neon-primary);
         }
-
+/* Update this section in your <style> tag */
+.grid-cell.heatmap-hot {
+    background: radial-gradient(circle, rgba(255, 165, 0, 0.6) 0%, rgba(255, 165, 0, 0.2) 100%);
+    border-color: #ffa500; /* Orange */
+    box-shadow: 0 0 40px #ffa500;
+    animation: heatPulse 2s infinite;
+}
         input[type="range"]::-moz-range-thumb {
             width: 18px;
             height: 18px;
@@ -977,19 +983,21 @@
 
             if (!heatmapEnabled) return;
 
-            productsData.forEach(product => {
-                // Calculate the 1D index from X and Y
-                const cellIndex = (product.y * 10) + product.x;
-                const cell = cells[cellIndex];
+productsData.forEach(product => {
+    const cellIndex = (product.y * 10) + product.x;
+    const cell = cells[cellIndex];
 
-                if (cell) {
-                    if (product.sales > 50) {
-                        cell.classList.add('heatmap-hot');
-                    } else if (product.sales > 0) {
-                        cell.classList.add('heatmap-cold');
-                    }
-                }
-            });
+    if (cell) {
+        // If sales are 50 or more, make it HOT
+        if (product.sales >= 50) {
+            cell.classList.add('heatmap-hot');
+        } 
+        // Even if sales are 0, show COLD so the tile still changes color
+        else {
+            cell.classList.add('heatmap-cold');
+        }
+    }
+});
         }
         
         // Expose to window for onclick handlers
