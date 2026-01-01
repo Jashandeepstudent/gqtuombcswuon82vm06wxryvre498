@@ -767,13 +767,6 @@
                 <span style="color: #ccc; font-size: 12px;">Show sales heatmap</span>
             </div>
         </div>
-<button
-  onclick="openTimeTravel()"
-  class="mt-4 w-full px-4 py-3 rounded-xl font-bold
-         bg-gradient-to-r from-cyan-400 to-purple-500
-         text-black shadow-lg hover:scale-105 transition">
-  ⏳ Time Travel
-</button>
 
         <button class="exchange-btn" id="exchangeBtn" onclick="toggleExchangeMode()">
             🔄 Exchange Places
@@ -1140,10 +1133,6 @@ const storedX = inventory.x;
                 });
             });
         }
-if (!product || !product.name) {
-  alert("Invalid product data");
-  return;
-}
 
 window.openStoryCard = async function(product) {
     const storyCard = document.getElementById('storyCard');
@@ -1180,7 +1169,8 @@ const response = await fetch(`/api/gemini?productName=${encodeURIComponent(produ
             <div class="story-section">
                 <h3>📖 AI Product Journey</h3>
                 <p style="line-height: 1.6; font-style: italic; color: #eee; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
-                    "${aiData.description || product.story}"
+                    "${aiData?.description ?? product.story}"
+
                 </p>
                 <p style="margin-top: 10px;"><strong>🌍 Verified Origin:</strong> <span style="color: var(--ice-blue);">${aiData.origin || product.origin}</span></p>
             </div>
