@@ -404,20 +404,19 @@ body {
         }
         .close-btn:hover { background: var(--neon-secondary); color: #000; transform: rotate(90deg); }
 
-.controls {
+        .controls {
             position: fixed;
-            bottom: 0; left: 0; right: 0; /* Bottom Sheet for Mobile */
-            background: rgba(15, 15, 35, 0.95);
-            backdrop-filter: blur(20px);
-            border-top: 2px solid var(--neon-primary);
-            padding: 15px;
-            z-index: 1000;
-            max-height: 40vh;
+            top: 30px;
+            left: 30px;
+            background: rgba(15, 15, 35, 0.9);
+            backdrop-filter: blur(15px);
+            border: 3px solid var(--neon-primary);
+            border-radius: 15px;
+            padding: 20px;
+            z-index: 100;
+            min-width: 320px;
+            max-height: 90vh;
             overflow-y: auto;
-            border-radius: 20px 20px 0 0;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
         }
         .controls h3 { color: var(--neon-primary); margin-bottom: 15px; font-size: 18px; }
         .control-group { margin-bottom: 15px; }
