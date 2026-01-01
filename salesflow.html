@@ -542,9 +542,6 @@ h2 {
       Download Report
     </button>
   </div>
- <button class="upload-shop-btn" onclick="openTableUpload()">
-    📊 Table Bulk Upload
-</button>
   <div class="grid-header">
     <div>Product Name</div>
     <div>Quantity</div>
@@ -601,26 +598,6 @@ h2 {
     </div>
   </div>
 </div>
-<div id="tableUploadModal" class="story-card" style="width: 90vw; max-width: 1000px;">
-    <button class="close-btn" onclick="closeTableUpload()">×</button>
-    <h2>Bulk Price Manager</h2>
-    <p style="color: #94a3b8; margin-bottom: 20px;">Fill in the prices below. Only numbers are accepted.</p>
-    
-    <div style="overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 12px;">
-        <table style="width: 100%; border-collapse: collapse; color: white; text-align: left;">
-            <thead>
-                <tr style="border-bottom: 2px solid var(--neon-primary);">
-                    <th style="padding: 15px;">Product Name</th>
-                    <th style="padding: 15px;">Stock</th>
-                    <th style="padding: 15px;">Cost Price ($)</th>
-                    <th style="padding: 15px;">Selling Price ($)</th>
-                </tr>
-            </thead>
-            <tbody id="bulkTableBody">
-                </tbody>
-        </table>
-    </div>
-
     <button class="exchange-btn" onclick="saveAllPrices()" style="margin-top: 20px;">
         💾 Save All Changes
     </button>
@@ -693,88 +670,6 @@ function renderComparisonBadge(comparison, periodName) {
       ${arrow} ${Math.abs(comparison.percentage).toFixed(1)}% ${periodName}
     </div>
   `;
-}
-function openTableUpload() {
-    const modal = document.getElementById('tableUploadModal');
-    const tbody = document.getElementById('bulkTableBody');
-    const overlay = document.querySelector('.overlay');
-    
-    tbody.innerHTML = ''; // Clear existing
-    
-    // productsData comes from your existing Firebase fetch logic
-    productsData.forEach(product => {
-        const tr = document.createElement('tr');
-        tr.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
-        
-        // Use existing prices if they exist, otherwise empty
-        const currentCost = product.costPrice || '';
-        const currentSell = product.sellPrice || '';
-
-        tr.innerHTML = `
-            <td style="padding: 15px;">${product.name} ${product.icon || ''}</td>
-            <td style="padding: 15px;">${product.stock}</td>
-            <td style="padding: 15px;">
-                <input type="number" class="bulk-cost" data-id="${product.id}" 
-                       value="${currentCost}" placeholder="0.00" 
-                       style="background:rgba(255,255,255,0.1); border:1px solid var(--neon-primary); color:white; padding:5px; border-radius:4px; width:100px;">
-            </td>
-            <td style="padding: 15px;">
-                <input type="number" class="bulk-sell" data-id="${product.id}" 
-                       value="${currentSell}" placeholder="0.00" 
-                       style="background:rgba(255,255,255,0.1); border:1px solid var(--neon-accent); color:white; padding:5px; border-radius:4px; width:100px;">
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-
-    modal.classList.add('active');
-    overlay.classList.add('active');
-}
-
-function saveAllPrices() {
-    const updates = {};
-    const costInputs = document.querySelectorAll('.bulk-cost');
-    const sellInputs = document.querySelectorAll('.bulk-sell');
-    let hasError = false;
-
-    costInputs.forEach((input, index) => {
-        const productId = input.getAttribute('data-id');
-        const costVal = input.value.trim();
-        const sellVal = sellInputs[index].value.trim();
-
-        // VALIDATION: Skip empty ones, but ensure others are numbers
-        if (costVal !== "" && sellVal !== "") {
-            if (isNaN(costVal) || isNaN(sellVal)) {
-                hasError = true;
-            } else {
-                updates[`Businesses/${currentUserId}/prices/${productId}/costPrice`] = parseFloat(costVal);
-                updates[`Businesses/${currentUserId}/prices/${productId}/sellPrice`] = parseFloat(sellVal);
-                updates[`Businesses/${currentUserId}/prices/${productId}/updatedAt`] = Date.now();
-            }
-        }
-    });
-
-    if (hasError) {
-        alert("❌ Some entries are not valid numbers. Please fix them.");
-        return;
-    }
-
-    // FIREBASE BULK UPDATE
-    if (Object.keys(updates).length > 0) {
-        update(ref(database), updates).then(() => {
-            showToast("✅ Success", "All prices updated in real-time.");
-            closeTableUpload();
-        }).catch(err => {
-            alert("Error saving: " + err.message);
-        });
-    } else {
-        alert("No changes to save.");
-    }
-}
-
-function closeTableUpload() {
-    document.getElementById('tableUploadModal').classList.remove('active');
-    document.querySelector('.overlay').classList.remove('active');
 }
 function getTimeRanges() {
   const now = new Date();
