@@ -1,4 +1,15 @@
 export default async function handler(req, res) {
+
+    // 🔥 CORS FIX — ADD THESE LINES
+    res.setHeader("Access-Control-Allow-Origin", "*"); // or https://upscalevest.site
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+    // 🔥 CORS FIX — HANDLE PREFLIGHT
+    if (req.method === "OPTIONS") {
+        return res.status(200).end();
+    }
+
     const { productName } = req.query;
     const apiKey = process.env.GEMINI_KEY;
 
@@ -11,18 +22,22 @@ export default async function handler(req, res) {
     Respond ONLY with raw JSON. Format: {"origin": "...", "description": "...", "score": 85}`;
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        });
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            }
+        );
 
         const data = await response.json();
 
         // 2. CRITICAL FIX: Check if candidates exist before accessing them
         if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) {
             console.error("Gemini Blocked/Empty Response:", data);
-            // Return a "Mock" response so the frontend doesn't show an error
             return res.status(200).json({
                 origin: "Global",
                 description: `The ${productName} is a high-quality item sourced from sustainable global partners.`,
@@ -32,10 +47,14 @@ export default async function handler(req, res) {
 
         const rawText = data.candidates[0].content.parts[0].text;
         const jsonString = rawText.replace(/```json|```/g, "").trim();
-        
+
         res.status(200).json(JSON.parse(jsonString));
+
     } catch (error) {
         console.error("Backend Error:", error);
-        res.status(500).json({ error: "AI Fetch Failed", details: error.message });
+        res.status(500).json({
+            error: "AI Fetch Failed",
+            details: error.message
+        });
     }
 }
