@@ -1184,26 +1184,29 @@ content.innerHTML = `
                 currentUserId = user ? user.uid : "demo-user";
                 const businessRef = ref(database, `Businesses/${currentUserId}`);
                 
-                onValue(businessRef, (snapshot) => {
-                    const business = snapshot.val();
-                    let newProducts = [];
-                    
-                    if (business && business.inventory) {
-                        Object.keys(business.inventory).forEach((key, index) => {
-                            const inv = business.inventory[key];
-                            newProducts.push({
-                                id: key,
-                                name: inv.name || key,
-                                icon: iconMap[key.toLowerCase()] || '📦',
-                                price: `${parseFloat(priceData?.numericValue || priceData?.sellPrice?.numericValue || 0).toFixed(2)}`,
-                                stock: parseInt(inv.quantity || 0),
-                                sales: parseInt(inventory.sold || 0),
-
-                                x: parseInt(inv.x !== undefined ? inv.x : index % 10),
-                                y: parseInt(inv.y !== undefined ? inv.y : Math.floor(index / 10) % 10),
-                                // Auto-assign floor if missing
-                                floor: Math.floor(index / 100) 
-                            });
+onValue(businessRef, (snapshot) => {
+    const business = snapshot.val();
+    let newProducts = [];
+    
+    if (business && business.inventory) {
+        Object.keys(business.inventory).forEach((key, index) => {
+            const inv = business.inventory[key];
+            
+            // 1. Correctly format the price from your database
+            const formattedPrice = inv.price ? `$${parseFloat(inv.price).toFixed(2)}` : '$0.00';
+            
+            // 2. Build the product object using the 'inv' reference
+            newProducts.push({
+                id: key,
+                name: inv.name || key,
+                icon: iconMap[key.toLowerCase()] || '📦',
+                price: formattedPrice, 
+                stock: parseInt(inv.quantity || 0),
+                sales: parseInt(inv.sold || 0), 
+                x: parseInt(inv.x !== undefined ? inv.x : index % 10),
+                y: parseInt(inv.y !== undefined ? inv.y : Math.floor(index / 10) % 10),
+                floor: Math.floor(index / 100) 
+            });
                         });
                     } else {
                         // Demo data
