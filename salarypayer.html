@@ -472,11 +472,7 @@
             color: #000;
             transform: rotate(90deg);
         }
-.grid-cell.heatmap-hot {
-    background: radial-gradient(circle, rgba(255, 165, 0, 0.6) 0%, rgba(255, 165, 0, 0.2) 100%);
-    border-color: #ffa500;
-    box-shadow: 0 0 40px #ffa500;
-}
+
         .controls {
             position: fixed;
             top: 30px;
@@ -970,31 +966,40 @@
             };
         }
 
-       function updateHeatmap() {
-    const cells = document.querySelectorAll('.grid-cell');
-    cells.forEach(cell => {
-        cell.classList.remove('heatmap-hot', 'heatmap-cold');
-        cell.style.background = 'rgba(255, 255, 255, 0.03)';
-    });
-
-    if (!heatmapEnabled) return;
-
-    productsData.forEach(product => {
-        const cellIndex = (product.y * 10) + product.x;
-        const cell = cells[cellIndex];
-
-        if (cell) {
-            // Use Number() to make sure "51" is treated as 51
-            const salesCount = Number(product.sales); 
-
-            if (salesCount >= 50) { 
-                cell.classList.add('heatmap-hot'); // This will trigger the Orange/Red glow
-            } else if (salesCount > 0) {
-                cell.classList.add('heatmap-cold'); // This is your Blue glow
+               function updateHeatmap() {
+            if (!heatmapEnabled) {
+                document.querySelectorAll('.grid-cell').forEach(cell => {
+                    cell.classList.remove('heatmap');
+                    cell.style.background = '';
+                });
+                return;
             }
+
+            const salesMap = new Map();
+            productsData.forEach(product => {
+                const key = `${product.x}-${product.y}`;
+                salesMap.set(key, product.sales || 0);
+            });
+
+            const maxSales = Math.max(...Array.from(salesMap.values()), 1);
+
+            document.querySelectorAll('.grid-cell').forEach((cell, index) => {
+                const x = index % 10;
+                const y = Math.floor(index / 10);
+                const key = `${x}-${y}`;
+                const sales = salesMap.get(key) || 0;
+                
+                if (sales > 0) {
+                    cell.classList.add('heatmap');
+                    const intensity = sales / maxSales;
+                    const red = Math.floor(255 * intensity);
+                    const alpha = 0.3 + (intensity * 0.4);
+                    cell.style.background = `rgba(${red}, 0, 0, ${alpha})`;
+                } else {
+                    cell.style.background = '';
+                }
+            });
         }
-    });
-}
         // Expose to window for onclick handlers
         window.toggleHeatmap = function() {
             heatmapEnabled = !heatmapEnabled;
