@@ -1169,76 +1169,66 @@ node.style.transform = `translateZ(${floorZ}px)`;
             </h2>
 
             <div class="story-section" style="border-left-color: var(--neon-accent); background: rgba(127, 255, 0, 0.05);">
-                <h3>💰 Market Value</h3>
+                <h3>💰 Your Sales Price</h3>
                 <p style="font-size: 24px; color: var(--neon-accent); font-weight: bold; text-shadow: 0 0 10px var(--neon-accent);">
                     ${product.price}
                 </p>
             </div>
 
             <div class="story-section">
-                <h3>🌍 Sourcing Origin</h3>
-                <p style="color: var(--ice-blue); font-weight: bold; letter-spacing: 1px;">
-                    📍 ${aiData.origin || 'Global Distribution'}
-                </p>
-            </div>
-
-            <div class="story-section">
-                <h3>📖 AI Product Journey</h3>
-                <p style="font-style: italic; color: #eee; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; line-height: 1.6;">
-                    "${aiData.description || 'Analyzing supply chain data...'}"
-                </p>
-                <div style="margin-top: 10px; font-size: 12px; color: var(--neon-secondary);">
-                    Sustainability Score: ${aiData.score || 0}/100
-                </div>
-            </div>
-
-            <div class="story-section">
                 <h3>📦 Inventory Management</h3>
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 15px;">
                     <div style="display: flex; align-items: center; gap: 20px;">
-                        <div style="text-align: center;">
-                            <button onclick="updateStockPrompt('${product.id}', 'decrease')" style="background:none; border:2px solid var(--neon-red); border-radius:10px; padding: 8px 15px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: 0.3s;" onmouseover="this.style.background='var(--neon-red)'" onmouseout="this.style.background='none'">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="white" style="margin-right:5px;"><path d="M19 13H5v-2h14v2z"/></svg>
-                                <span style="color:white; font-weight:bold; font-size:12px;">DECREASE</span>
-                            </button>
-                        </div>
-
-                        <span id="modal-stock-val" style="font-size: 32px; font-weight: bold; min-width: 60px; text-align: center; color: var(--neon-primary);">${product.stock}</span>
                         
-                        <button onclick="updateStockPrompt('${product.id}', 'increase')" style="background: var(--neon-accent); border: none; padding: 10px 20px; border-radius: 10px; color: #000; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; box-shadow: 0 0 15px var(--neon-accent);">
+                        <button onclick="updateStockPrompt('${product.id}', 'decrease')" 
+                            style="background:none; border:2px solid var(--neon-red); border-radius:10px; padding: 8px 15px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: 0.3s; box-shadow: 0 0 10px var(--neon-red), inset 0 0 5px var(--neon-red); animation: pulseRed 2s infinite;"
+                            onmouseover="this.style.background='rgba(255, 0, 64, 0.2)'" onmouseout="this.style.background='none'">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="white" style="margin-right:5px;"><path d="M19 13H5v-2h14v2z"/></svg>
+                            <span style="color:white; font-weight:bold; font-size:12px;">DECREASE</span>
+                        </button>
+
+                        <span id="modal-stock-val" style="font-size: 32px; font-weight: bold; min-width: 60px; text-align: center; color: var(--neon-primary); text-shadow: 0 0 10px var(--neon-primary);">${product.stock}</span>
+                        
+                        <button onclick="updateStockPrompt('${product.id}', 'increase')" 
+                            style="background: var(--neon-accent); border: none; padding: 10px 20px; border-radius: 10px; color: #000; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; box-shadow: 0 0 15px var(--neon-accent);">
                             RESTOCK
                         </button>
                     </div>
                     
                     <p>
-                        <span id="stock-status-badge" style="font-size: 14px; padding: 4px 12px; border-radius: 4px; background: ${product.stock < 5 ? 'var(--neon-red)' : 'var(--neon-accent)'}; color: #000; font-weight: bold;">
+                        <span id="stock-status-badge" style="font-size: 14px; padding: 4px 12px; border-radius: 4px; background: ${product.stock < 5 ? 'var(--neon-red)' : 'var(--neon-accent)'}; color: #000; font-weight: bold; transition: 0.3s;">
                             ${product.stock < 5 ? 'LOW STOCK' : 'STABLE'}
                         </span>
                     </p>
                 </div>
             </div>
+
+            <style>
+                @keyframes pulseRed {
+                    0% { box-shadow: 0 0 5px var(--neon-red); }
+                    50% { box-shadow: 0 0 20px var(--neon-red), inset 0 0 10px var(--neon-red); }
+                    100% { box-shadow: 0 0 5px var(--neon-red); }
+                }
+            </style>
         `;
     } catch (e) {
         content.innerHTML = `<p style="color:red">Error loading details</p>`;
     }
 };
 
-// New function to handle the "How much" popup
 window.updateStockPrompt = function(productId, mode) {
     const promptMsg = mode === 'increase' ? "How many units are you adding to stock?" : "How many units are you removing from stock?";
     const amount = prompt(promptMsg, "0");
     
     if (amount === null || amount === "" || isNaN(amount)) return;
     
-    const change = parseInt(amount);
-    if (change <= 0) return;
+    const change = Math.abs(parseInt(amount)); // Ensure positive number input
+    if (change === 0) return;
 
-    // Call original logic with calculated change
     const finalChange = mode === 'increase' ? change : -change;
     updateStock(productId, finalChange);
 };
 
-// Supporting Function updated for better UI feedback
 window.updateStock = function(productId, change) {
     const product = productsData.find(p => p.id === productId);
     if (!product) return;
@@ -1248,9 +1238,7 @@ window.updateStock = function(productId, change) {
     updates[`Businesses/${currentUserId}/inventory/${productId}/quantity`] = newStock;
     
     update(ref(database), updates).then(() => {
-        // Update the local data object so the badge stays accurate
         product.stock = newStock;
-        
         const valDisplay = document.getElementById('modal-stock-val');
         const badge = document.getElementById('stock-status-badge');
         
