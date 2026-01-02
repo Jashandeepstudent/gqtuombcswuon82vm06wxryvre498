@@ -1204,7 +1204,7 @@ node.style.transform = `translateZ(${floorZ}px)`;
             }
         }
 
-       window.openStoryCard = async function(product) {
+window.openStoryCard = async function(product) {
     const storyCard = document.getElementById('storyCard');
     const overlay = document.getElementById('overlay');
     const content = document.getElementById('storyContent');
@@ -1212,10 +1212,22 @@ node.style.transform = `translateZ(${floorZ}px)`;
     overlay.classList.add('active');
     storyCard.classList.add('active');
     storyCard.style.overflow = "hidden";
-    storyCard.style.maxHeight = "90vh";
-    content.innerHTML = `<div class="loading-spinner"></div><p style="text-align:center;color:var(--neon-primary)">AI ANALYZING...</p>`;
+    storyCard.style.maxHeight = "90vh"; 
+
+    content.innerHTML = `<p style="text-align:center;color:var(--neon-primary);padding:20px;font-size:12px;">AI ANALYZING...</p>`;
 
     try {
+        // 1. FETCH BUSINESS CURRENCY
+        const bizSnapshot = await get(ref(database, `Businesses/${currentUserId}`));
+        const bizData = bizSnapshot.val() || {};
+        const userCurrency = bizData.currency || "USD"; // Fallback to USD
+
+        // 2. FORMAT PRICE BASED ON USER CURRENCY
+        const formattedPrice = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: userCurrency,
+        }).format(product.price);
+
         const response = await fetch(`https://ai-inventory-pro-sigma.vercel.app/api/gemini?productName=${encodeURIComponent(product.name)}`);
         const aiData = response.ok ? await response.json() : {};
         
@@ -1234,12 +1246,12 @@ node.style.transform = `translateZ(${floorZ}px)`;
             </div>
         </div>
     </div>
-            <div class="story-section" style="border-left-color: var(--neon-accent); background: rgba(127, 255, 0, 0.05);">
-                <h3>💰 Price Value</h3>
-                <p style="font-size: 24px; color: var(--neon-accent); font-weight: bold; text-shadow: 0 0 10px var(--neon-accent);">
-                    ${product.price}
-                </p>
-            </div>
+<div class="story-section" style="border-left-color: var(--neon-accent); background: rgba(127, 255, 0, 0.05); padding: 10px; margin-bottom: 8px;">
+        <h3 style="font-size: 11px; margin-bottom: 2px; color: #888;">💰 PRICE VALUE</h3>
+        <p style="font-size: 24px; color: var(--neon-accent); font-weight: bold; text-shadow: 0 0 10px var(--neon-accent); margin: 0;">
+            ${formattedPrice}
+        </p>
+    </div>
 
             <div class="story-section">
                 <h3>📦 Inventory Management</h3>
