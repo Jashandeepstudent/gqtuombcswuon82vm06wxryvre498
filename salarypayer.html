@@ -1211,7 +1211,8 @@ node.style.transform = `translateZ(${floorZ}px)`;
     
     overlay.classList.add('active');
     storyCard.classList.add('active');
-    
+    storyCard.style.overflow = "hidden";
+    storyCard.style.maxHeight = "90vh";
     content.innerHTML = `<div class="loading-spinner"></div><p style="text-align:center;color:var(--neon-primary)">AI ANALYZING...</p>`;
 
     try {
