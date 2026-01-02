@@ -362,259 +362,134 @@ function showError(elementId, message){
 }
 
 /* EMAIL SIGNUP - Fixed */
-async function emailSignup(){
+/* EMAIL SIGNUP - Modified to bypass verification */
+async function emailSignup() {
   const email = signupEmail.value.trim();
   const password = signupPassword.value;
 
-  if(!email){
+  if (!email) {
     showError('signupError', 'Please enter your email');
     return;
   }
-
-  if(!validPassword(password)){
+  if (!validPassword(password)) {
     showError('signupError', 'Password does not meet requirements');
     return;
   }
 
   isAuthFlowActive = true;
-
   try {
-    const cred = await auth.createUserWithEmailAndPassword(email, password);
-    
-    // Send verification email
-    await cred.user.sendEmailVerification({
-      url: getRedirectURL(),
-      handleCodeInApp: false
-    });
-
-    showVerifying();
-  } catch(err) {
+    await auth.createUserWithEmailAndPassword(email, password);
+    // Redirect immediately without sending verification email
+    window.location.href = "mainbusinesshub.html";
+  } catch (err) {
     isAuthFlowActive = false;
-    
-    if(err.code === "auth/email-already-in-use"){
+    if (err.code === "auth/email-already-in-use") {
       showError('signupError', 'Account already exists. Please sign in.');
       setTimeout(() => {
-        signupModal.style.display="none";
+        signupModal.style.display = "none";
         switchToSigninUI();
       }, 2000);
-    } else if(err.code === "auth/invalid-email"){
-      showError('signupError', 'Please enter a valid email address');
-    } else if(err.code === "auth/weak-password"){
-      showError('signupError', 'Password is too weak');
     } else {
       showError('signupError', err.message);
     }
   }
 }
 
-/* EMAIL SIGNIN - Fixed */
-async function emailSignin(){
+/* EMAIL SIGNIN - Modified to bypass verification */
+async function emailSignin() {
   const email = signinEmail.value.trim();
   const password = signinPassword.value;
 
-  if(!email || !password){
+  if (!email || !password) {
     showError('signinError', 'Please enter email and password');
     return;
   }
 
   isAuthFlowActive = true;
-
   try {
-    // CORRECTED: Use signIn, NOT createUser
-    const cred = await auth.signInWithEmailAndPassword(email, password);
-    
-    // Check if they need verification
-    if(!cred.user.emailVerified) {
-      await cred.user.sendEmailVerification({
-        url: getRedirectURL(),
-        handleCodeInApp: false // Set to false for standard web flow
-      });
-      showVerifying();
-    } else {
-      window.location.href = "mainbusinesshub.html";
-    }
-  } catch(err) {
+    await auth.signInWithEmailAndPassword(email, password);
+    // Redirect immediately regardless of verification status
+    window.location.href = "mainbusinesshub.html";
+  } catch (err) {
     isAuthFlowActive = false;
-    // Map Firebase errors to user-friendly messages
-    if(err.code === "auth/user-not-found") {
-        showError('signinError', 'Account not found. Please sign up first.');
-    } else if(err.code === "auth/wrong-password") {
-        showError('signinError', 'Incorrect password.');
-    } else {
-        showError('signinError', err.message);
-    }
-  }
-}/* FORGOT PASSWORD */
-async function forgotPassword(){
-  const email = signinEmail.value.trim();
-  
-  if(!email){
-    showError('signinError', 'Please enter your email first');
-    return;
-  }
-
-  try {
-    await auth.sendPasswordResetEmail(email);
-    showError('signinError', '✅ Password reset email sent! Check your inbox.');
-  } catch(err) {
-    if(err.code === "auth/user-not-found"){
-      showError('signinError', 'No account found with this email');
+    if (err.code === "auth/user-not-found") {
+      showError('signinError', 'Account not found. Please sign up first.');
+    } else if (err.code === "auth/wrong-password") {
+      showError('signinError', 'Incorrect password.');
     } else {
       showError('signinError', err.message);
     }
   }
 }
 
-/* CHECK VERIFICATION STATUS */
-async function checkVerificationStatus(){
-  const user = auth.currentUser;
-  if(!user){
-    resendMsg.innerText = "❌ Please sign in again";
+/* FORGOT PASSWORD */
+async function forgotPassword() {
+  const email = signinEmail.value.trim();
+  if (!email) {
+    showError('signinError', 'Please enter your email first');
     return;
   }
-
   try {
-    await user.reload();
-    
-    if(user.emailVerified){
-      resendMsg.innerText = "✅ Verified! Redirecting...";
-      setTimeout(() => {
-        window.location.href = "mainbusinesshub.html";
-      }, 1000);
-    } else {
-      resendMsg.innerText = "❌ Not verified yet. Check your email.";
-    }
-  } catch(err) {
-    resendMsg.innerText = "❌ Error checking status";
-  }
-}
-
-/* RESEND VERIFICATION */
-async function resendVerification(){
-  const user = auth.currentUser;
-  
-  if(!user){
-    resendMsg.innerText = "❌ Please sign in again";
-    return;
-  }
-
-  try {
-    await user.sendEmailVerification({
-      url: getRedirectURL(),
-      handleCodeInApp: false
-    });
-    resendMsg.innerText = "✅ Verification email sent again!";
-  } catch(err) {
-    if(err.code === "auth/too-many-requests"){
-      resendMsg.innerText = "⏰ Too many requests. Wait a moment.";
-    } else {
-      resendMsg.innerText = "❌ " + err.message;
-    }
+    await auth.sendPasswordResetEmail(email);
+    showError('signinError', '✅ Password reset email sent! Check your inbox.');
+  } catch (err) {
+    showError('signinError', err.message);
   }
 }
 
 /* SIGN OUT */
-async function signOutAndClose(){
+async function signOutAndClose() {
   await auth.signOut();
   closeModals();
   isAuthFlowActive = false;
 }
 
-/* GOOGLE LOGIN */
-async function googleLogin(){
+/* SOCIAL LOGINS */
+async function googleLogin() {
   isAuthFlowActive = true;
-  
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
     await auth.signInWithPopup(provider);
     window.location.href = "mainbusinesshub.html";
-  } catch(err) {
+  } catch (err) {
     isAuthFlowActive = false;
     alert("Google sign-in failed: " + err.message);
   }
 }
 
-/* FACEBOOK LOGIN */
-async function facebookLogin(){
+async function facebookLogin() {
   isAuthFlowActive = true;
-  
   try {
     const provider = new firebase.auth.FacebookAuthProvider();
-    // Request additional permissions if needed
     provider.addScope('email');
-    
     await auth.signInWithPopup(provider);
     window.location.href = "mainbusinesshub.html";
-  } catch(err) {
+  } catch (err) {
     isAuthFlowActive = false;
-    
-    if(err.code === "auth/account-exists-with-different-credential"){
-      alert("An account already exists with this email using a different sign-in method.");
-    } else if(err.code === "auth/popup-blocked"){
-      alert("Popup was blocked. Please allow popups for this site.");
-    } else if(err.code === "auth/popup-closed-by-user"){
-      // User closed popup, just return
-      return;
-    } else {
-      alert("Facebook sign-in failed: " + err.message);
-    }
+    alert("Facebook sign-in failed: " + err.message);
   }
 }
 
-/* APPLE LOGIN */
-async function appleLogin(){
+async function appleLogin() {
   isAuthFlowActive = true;
-  
   try {
     const provider = new firebase.auth.OAuthProvider('apple.com');
-    // Request additional scopes
     provider.addScope('email');
     provider.addScope('name');
-    
     await auth.signInWithPopup(provider);
     window.location.href = "mainbusinesshub.html";
-  } catch(err) {
+  } catch (err) {
     isAuthFlowActive = false;
-    
-    if(err.code === "auth/account-exists-with-different-credential"){
-      alert("An account already exists with this email using a different sign-in method.");
-    } else if(err.code === "auth/popup-blocked"){
-      alert("Popup was blocked. Please allow popups for this site.");
-    } else if(err.code === "auth/popup-closed-by-user"){
-      // User closed popup, just return
-      return;
-    } else {
-      alert("Apple sign-in failed: " + err.message);
-    }
+    alert("Apple sign-in failed: " + err.message);
   }
 }
 
-/* AUTH STATE LISTENER - Fixed to prevent loops */
-auth.onAuthStateChanged(async user => {
-  // Don't interfere if we're actively in an auth flow
-  if(isAuthFlowActive) return;
-  
-  if(!user){
-    // User is not signed in, show main modal
-    return;
-  }
-
-  try {
-    await user.reload();
-    
-    if(user.emailVerified){
-      // User is verified, redirect to hub
-      window.location.href = "mainbusinesshub.html";
-    } else {
-      // User exists but not verified
-      // Only show verification modal if they used email/password
-      const providerData = user.providerData[0];
-      if(providerData && providerData.providerId === "password"){
-        showVerifying();
-      }
-    }
-  } catch(err) {
-    console.error("Error in auth state:", err);
+/* AUTH STATE LISTENER - Modified to redirect all users */
+auth.onAuthStateChanged(user => {
+  if (isAuthFlowActive) return;
+  if (user) {
+    // If the user is logged in, always send them to the hub
+    window.location.href = "mainbusinesshub.html";
   }
 });
 </script>
