@@ -388,7 +388,12 @@
             <button class="btn btn-primary" style="width:100%" onclick="saveOrder()">Add Order</button>
         </div>
     </div>
+<div id="legal-loading" style="display:none; text-align:center; margin: 15px 0;">
+    <div class="spinner" style="width:20px; height:20px; border-width:2px; margin: 0 auto 10px;"></div>
+    <div style="font-size: 0.8rem; color: var(--primary-blue);">Processing & Uploading...</div>
+</div>
 
+<button id="legal-save-btn" class="btn btn-primary" style="width:100%" onclick="saveLegal()">Save Document</button>
     <div id="team-modal" class="modal-overlay">
         <div class="modal glass">
             <i class="fas fa-times close-modal" onclick="closeModals()"></i>
@@ -637,8 +642,14 @@ async function saveLegal() {
     const cat = document.getElementById('legal-cat').value;
     const name = document.getElementById('legal-name').value;
     const fileInput = document.getElementById('legal-file');
+    const loadingDiv = document.getElementById('legal-loading');
+    const saveBtn = document.getElementById('legal-save-btn');
     
     if(!name || fileInput.files.length === 0) return alert("File and Name required");
+
+    // SHOW LOADING
+    loadingDiv.style.display = 'block';
+    saveBtn.style.display = 'none';
 
     const file = fileInput.files[0];
     const fileId = Date.now();
@@ -655,7 +666,6 @@ async function saveLegal() {
 
         // 2. Generate and Upload Thumbnail
         if (file.type === "application/pdf") {
-            // Render PDF to Canvas
             const arrayBuffer = await file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
             const page = await pdf.getPage(1);
@@ -666,17 +676,15 @@ async function saveLegal() {
             canvas.width = viewport.width;
             await page.render({ canvasContext: context, viewport: viewport }).promise;
             
-            // Convert Canvas to Blob and upload
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
             const thumbRef = firebase.storage().ref(thumbPath);
             await thumbRef.put(blob);
             thumbUrl = await thumbRef.getDownloadURL();
         } 
         else if (file.type.startsWith("image/")) {
-            thumbUrl = mainUrl; // Use original image as thumb
+            thumbUrl = mainUrl; 
         } 
         else {
-            // Generic icon for other docs (Word, etc)
             thumbUrl = "https://cdn-icons-png.flaticon.com/512/337/337948.png";
         }
 
@@ -684,21 +692,25 @@ async function saveLegal() {
         await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/legaldocuments`).push({
             name: name,
             category: cat,
-            url: mainUrl,       // Link to actual file
-            preview: thumbUrl,  // Visual thumbnail
+            url: mainUrl,
+            preview: thumbUrl,
             timestamp: fileId
         });
 
         updateMeta('legal');
         closeModals();
-        alert("File & Thumbnail saved successfully!");
         
     } catch (e) {
         console.error(e);
         alert("Error uploading: " + e.message);
+    } finally {
+        // HIDE LOADING & RESET
+        loadingDiv.style.display = 'none';
+        saveBtn.style.display = 'block';
+        fileInput.value = "";
+        document.getElementById('legal-name').value = "";
     }
 }
-
         function saveNote() {
             const title = document.getElementById('note-title').value;
             const content = document.getElementById('note-content').value;
