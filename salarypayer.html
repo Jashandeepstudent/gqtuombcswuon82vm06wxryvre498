@@ -1366,18 +1366,20 @@ onValue(businessRef, (snapshot) => {
     const business = snapshot.val();
     let newProducts = [];
     
-    // Get the inventory and the price list from your data
+    // 1. Extract the currency from the root of the business object
+    const userCurrency = business?.currency || "USD"; 
+    
     const inventory = business?.inventory || {};
     const priceList = business?.prices || {};
 
     if (inventory) {
         Object.keys(inventory).forEach((key, index) => {
             const inv = inventory[key];
-            
-            // FIX: Look up the price using the product key in the prices node
             const priceData = priceList[key];
             const priceValue = priceData?.sellPrice?.numericValue || 0;
-            const formattedPrice = `$${parseFloat(priceValue).toFixed(2)}`;
+            
+            // 2. Use the dynamic currency instead of the hardcoded '$'
+            const formattedPrice = `${userCurrency} ${parseFloat(priceValue).toFixed(2)}`;
             
             newProducts.push({
                 id: key,
