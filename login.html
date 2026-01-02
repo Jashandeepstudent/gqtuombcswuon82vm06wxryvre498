@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -92,13 +93,13 @@ body::before{
   font-size:14px;
 }
 .email-glass button:hover{background:#1d4ed8}
-.email-glass button:disabled{background:#6b7280;cursor:not-allowed}
 
-.otp-input {
-  letter-spacing: 8px;
-  font-size: 24px !important;
-  text-align: center;
-  font-weight: 700;
+ul{
+  margin:6px 0 14px 14px;
+  padding:0;
+  font-size:12px;
+  line-height:1.6;
+  color:#fff;
 }
 
 .modal{
@@ -133,6 +134,9 @@ body::before{
 }
 .modal-right h3{margin-top:0;font-size:24px}
 .modal-right p{font-size:14px;color:#6b7280}
+#authSwitch{cursor:pointer}
+#authSwitch span{color:#2563eb;font-weight:600}
+#authSwitch span:hover{text-decoration:underline}
 
 .divider{
   text-align:center;
@@ -155,6 +159,16 @@ body::before{
   background:#e5e7eb;
   z-index:-1;
 }
+.loader{
+  width:42px;
+  height:42px;
+  border:4px solid rgba(255,255,255,.3);
+  border-top:4px solid #60a5fa;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin:0 auto 14px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 .error-msg{
   background:rgba(239,68,68,.1);
@@ -188,6 +202,11 @@ body::before{
       <h3 id="authTitle">New to ScaleVest?</h3>
       <p id="authSubtitle">Create an account to get started</p>
 
+      <p id="authSwitch">
+        Already have an account?
+        <span onclick="switchToSigninUI()">Sign in</span>
+      </p>
+
       <button class="auth-btn" onclick="googleLogin()">
         <span>🔵</span> Continue with Google
       </button>
@@ -207,31 +226,70 @@ body::before{
   </div>
 </div>
 
-<!-- EMAIL MODAL -->
-<div class="email-overlay" id="emailModal">
+<!-- SIGNUP -->
+<div class="email-overlay" id="signupModal">
   <div class="email-glass">
-    <h3>Sign in / Sign up</h3>
-    <div class="error-msg" id="emailError"></div>
-    <input id="authEmail" type="email" placeholder="name@company.com" autocomplete="email">
-    <button onclick="handleEmailSubmit()" id="sendOtpBtn">Continue</button>
+    <h3>Create account</h3>
+    <div class="error-msg" id="signupError"></div>
+    <input id="signupEmail" type="email" placeholder="Email" autocomplete="email">
+    <input id="signupPassword" type="password" placeholder="Password" autocomplete="new-password" oninput="checkPasswordRules()">
+    <ul>
+      <li id="rule_length">❌ At least 6 characters</li>
+      <li id="rule_number">❌ Contains a number</li>
+      <li id="rule_special">❌ Contains a special character</li>
+    </ul>
+    <button onclick="emailSignup()">Create account</button>
     <p style="text-align:center;font-size:12px;margin-top:12px;color:#fff;">
       <span style="cursor:pointer" onclick="closeModals()">← Back</span>
     </p>
   </div>
 </div>
 
-<!-- OTP MODAL -->
-<div class="email-overlay" id="otpModal">
+<!-- SIGNIN -->
+<div class="email-overlay" id="signinModal">
   <div class="email-glass">
-    <h3>Enter OTP</h3>
-    <p style="margin-top:0;font-size:13px;color:#d1d5db;margin-bottom:12px;">
-      We sent a 6-digit code to <br><span id="otpEmailDisplay" style="color:#fff;font-weight:600"></span>
+    <h3>Sign in</h3>
+    <div class="error-msg" id="signinError"></div>
+    <input id="signinEmail" type="email" placeholder="Email" autocomplete="email">
+    <input id="signinPassword" type="password" placeholder="Password" autocomplete="current-password">
+
+    <button onclick="emailSignin()">Sign in</button>
+
+    <p style="text-align:right;font-size:12px;margin-top:8px;">
+      <span style="cursor:pointer;color:#93c5fd" onclick="forgotPassword()">
+        Forgot password?
+      </span>
     </p>
-    <div class="error-msg" id="otpError"></div>
-    <input id="otpInput" type="text" placeholder="123456" maxlength="6" class="otp-input" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-    <button onclick="verifyOtp()" id="verifyBtn">Verify & Sign In</button>
+
+    <div class="divider"><span>or</span></div>
+
+    <button class="auth-btn" onclick="googleLogin()">
+      <span>🔵</span> Continue with Google
+    </button>
+    <button class="auth-btn" onclick="appleLogin()">
+      <span>🍎</span> Continue with Apple
+    </button>
+    <button class="auth-btn" onclick="facebookLogin()">
+      <span>📘</span> Continue with Facebook
+    </button>
+    
     <p style="text-align:center;font-size:12px;margin-top:12px;color:#fff;">
-      <span style="cursor:pointer" onclick="backToEmail()">← Change Email</span>
+      <span style="cursor:pointer" onclick="closeModals()">← Back</span>
+    </p>
+  </div>
+</div>
+
+<!-- VERIFY -->
+<div class="email-overlay" id="verifyingModal">
+  <div class="email-glass" style="text-align:center">
+    <div class="loader"></div>
+    <h3>Verify your email</h3>
+    <p>We sent a verification link to your email. Click the link to continue.</p>
+    <button onclick="checkVerificationStatus()">I've verified my email</button>
+    <button onclick="resendVerification()" style="background:#6b7280;margin-top:8px">Resend email</button>
+    <p id="resendMsg" style="font-size:12px;color:#fff"></p>
+    <p style="text-align:center;font-size:12px;margin-top:12px;color:#fff;">
+      <span style="cursor:pointer" onclick="signOutAndClose()">← Sign out</span>
     </p>
   </div>
 </div>
@@ -250,36 +308,51 @@ firebase.initializeApp({
 const auth = firebase.auth();
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-// State
-let generatedOTP = null;
-let currentEmail = null;
+// Track if we're in the middle of auth flow
+let isAuthFlowActive = false;
 
-// UI Elements
-const emailModal = document.getElementById('emailModal');
-const otpModal = document.getElementById('otpModal');
-const emailError = document.getElementById('emailError');
-const otpError = document.getElementById('otpError');
-const authEmail = document.getElementById('authEmail');
-const otpInput = document.getElementById('otpInput');
-const otpEmailDisplay = document.getElementById('otpEmailDisplay');
-const sendOtpBtn = document.getElementById('sendOtpBtn');
+/* REDIRECT URL - Fixed for GitHub Pages */
+function getRedirectURL() {
+  // Returns the exact current page URL without query parameters
+  return window.location.origin + window.location.pathname;
+}
 
 /* UI HELPERS */
 function emailAuthHandler(){ 
-  emailModal.style.display="flex";
-  emailError.style.display="none";
-  authEmail.value = "";
-  authEmail.focus();
+  signupModal.style.display="flex";
+  signupError.style.display="none";
+}
+
+function switchToSigninUI(){
+  signupModal.style.display="none";
+  signinModal.style.display="flex";
+  signinError.style.display="none";
+  authTitle.innerText = "Welcome back";
+  authSubtitle.innerText = "Sign in to your account";
 }
 
 function closeModals(){
-  emailModal.style.display="none";
-  otpModal.style.display="none";
+  signupModal.style.display="none";
+  signinModal.style.display="none";
+  verifyingModal.style.display="none";
 }
 
-function backToEmail(){
-  otpModal.style.display="none";
-  emailModal.style.display="flex";
+function showVerifying(){
+  signupModal.style.display="none";
+  signinModal.style.display="none";
+  verifyingModal.style.display="flex";
+  resendMsg.innerText = "";
+}
+
+function checkPasswordRules(){
+  const p = signupPassword.value;
+  rule_length.innerText=(p.length>=6?"✅":"❌")+" At least 6 characters";
+  rule_number.innerText=(/\d/.test(p)?"✅":"❌")+" Contains a number";
+  rule_special.innerText=(/[!@#$%^&*]/.test(p)?"✅":"❌")+" Contains a special character";
+}
+
+function validPassword(p){
+  return p.length>=6 && /\d/.test(p) && /[!@#$%^&*]/.test(p);
 }
 
 function showError(elementId, message){
@@ -288,129 +361,262 @@ function showError(elementId, message){
   el.style.display = "block";
 }
 
-/* SEND OTP */
-async function handleEmailSubmit(){
-  const email = authEmail.value.trim();
-  
-  if(!email || !/\S+@\S+\.\S+/.test(email)){
-    showError('emailError', 'Please enter a valid email address');
+/* EMAIL SIGNUP - Fixed */
+async function emailSignup(){
+  const email = signupEmail.value.trim();
+  const password = signupPassword.value;
+
+  if(!email){
+    showError('signupError', 'Please enter your email');
     return;
   }
 
-  // Generate 6-digit OTP
-  generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-  currentEmail = email;
+  if(!validPassword(password)){
+    showError('signupError', 'Password does not meet requirements');
+    return;
+  }
 
-  // UI Loading
-  const originalText = sendOtpBtn.innerText;
-  sendOtpBtn.innerText = "Sending code...";
-  sendOtpBtn.disabled = true;
+  isAuthFlowActive = true;
 
   try {
-    const response = await fetch('/api/send-otp', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: email,
-        otp: generatedOTP
-      })
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    
+    // Send verification email
+    await cred.user.sendEmailVerification({
+      url: getRedirectURL(),
+      handleCodeInApp: false
     });
 
-    if(!response.ok){
-      const data = await response.json();
-      throw new Error(data.message || 'Failed to send email');
-    }
-
-    // Success - Switch to OTP modal
-    emailModal.style.display = "none";
-    otpModal.style.display = "flex";
-    otpEmailDisplay.innerText = email;
-    otpInput.value = "";
-    otpError.style.display = "none";
-    otpInput.focus();
-
+    showVerifying();
   } catch(err) {
-    showError('emailError', "Error: " + err.message);
-  } finally {
-    sendOtpBtn.innerText = originalText;
-    sendOtpBtn.disabled = false;
+    isAuthFlowActive = false;
+    
+    if(err.code === "auth/email-already-in-use"){
+      showError('signupError', 'Account already exists. Please sign in.');
+      setTimeout(() => {
+        signupModal.style.display="none";
+        switchToSigninUI();
+      }, 2000);
+    } else if(err.code === "auth/invalid-email"){
+      showError('signupError', 'Please enter a valid email address');
+    } else if(err.code === "auth/weak-password"){
+      showError('signupError', 'Password is too weak');
+    } else {
+      showError('signupError', err.message);
+    }
   }
 }
 
-/* VERIFY OTP */
-async function verifyOtp(){
-  const inputCode = otpInput.value.trim();
-  
-  if(inputCode.length !== 6){
-    showError('otpError', 'Please enter the 6-digit code');
+/* EMAIL SIGNIN - Fixed */
+async function emailSignin(){
+  const email = signinEmail.value.trim();
+  const password = signinPassword.value;
+
+  if(!email || !password){
+    showError('signinError', 'Please enter email and password');
     return;
   }
 
-  if(inputCode !== generatedOTP){
-    showError('otpError', 'Invalid code. Please try again.');
-    return;
-  }
-
-  // Code is valid
-  const verifyBtn = document.getElementById('verifyBtn');
-  verifyBtn.innerText = "Verifying...";
-  verifyBtn.disabled = true;
+  isAuthFlowActive = true;
 
   try {
-    // Authenticate with Firebase
-    // Since we don't have a backend to mint custom tokens, we use signInAnonymously 
-    // as a placeholder for client-side demo, or we could use passwordless email link (but user wanted OTP).
-    // For this specific request "Simulate the Firebase User creation", signInAnonymously is best.
+    // CORRECTED: Use signIn, NOT createUser
+    const cred = await auth.signInWithEmailAndPassword(email, password);
     
-    await auth.signInAnonymously();
-    
-    // Success redirect
-    window.location.href = "mainbusinesshub.html";
-    
+    // Check if they need verification
+    if(!cred.user.emailVerified) {
+      await cred.user.sendEmailVerification({
+        url: getRedirectURL(),
+        handleCodeInApp: false // Set to false for standard web flow
+      });
+      showVerifying();
+    } else {
+      window.location.href = "mainbusinesshub.html";
+    }
   } catch(err) {
-    showError('otpError', 'Authentication error: ' + err.message);
-    verifyBtn.innerText = "Verify & Sign In";
-    verifyBtn.disabled = false;
+    isAuthFlowActive = false;
+    // Map Firebase errors to user-friendly messages
+    if(err.code === "auth/user-not-found") {
+        showError('signinError', 'Account not found. Please sign up first.');
+    } else if(err.code === "auth/wrong-password") {
+        showError('signinError', 'Incorrect password.');
+    } else {
+        showError('signinError', err.message);
+    }
   }
+}/* FORGOT PASSWORD */
+async function forgotPassword(){
+  const email = signinEmail.value.trim();
+  
+  if(!email){
+    showError('signinError', 'Please enter your email first');
+    return;
+  }
+
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showError('signinError', '✅ Password reset email sent! Check your inbox.');
+  } catch(err) {
+    if(err.code === "auth/user-not-found"){
+      showError('signinError', 'No account found with this email');
+    } else {
+      showError('signinError', err.message);
+    }
+  }
+}
+
+/* CHECK VERIFICATION STATUS */
+async function checkVerificationStatus(){
+  const user = auth.currentUser;
+  if(!user){
+    resendMsg.innerText = "❌ Please sign in again";
+    return;
+  }
+
+  try {
+    await user.reload();
+    
+    if(user.emailVerified){
+      resendMsg.innerText = "✅ Verified! Redirecting...";
+      setTimeout(() => {
+        window.location.href = "mainbusinesshub.html";
+      }, 1000);
+    } else {
+      resendMsg.innerText = "❌ Not verified yet. Check your email.";
+    }
+  } catch(err) {
+    resendMsg.innerText = "❌ Error checking status";
+  }
+}
+
+/* RESEND VERIFICATION */
+async function resendVerification(){
+  const user = auth.currentUser;
+  
+  if(!user){
+    resendMsg.innerText = "❌ Please sign in again";
+    return;
+  }
+
+  try {
+    await user.sendEmailVerification({
+      url: getRedirectURL(),
+      handleCodeInApp: false
+    });
+    resendMsg.innerText = "✅ Verification email sent again!";
+  } catch(err) {
+    if(err.code === "auth/too-many-requests"){
+      resendMsg.innerText = "⏰ Too many requests. Wait a moment.";
+    } else {
+      resendMsg.innerText = "❌ " + err.message;
+    }
+  }
+}
+
+/* SIGN OUT */
+async function signOutAndClose(){
+  await auth.signOut();
+  closeModals();
+  isAuthFlowActive = false;
 }
 
 /* GOOGLE LOGIN */
 async function googleLogin(){
+  isAuthFlowActive = true;
+  
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
     await auth.signInWithPopup(provider);
     window.location.href = "mainbusinesshub.html";
   } catch(err) {
+    isAuthFlowActive = false;
     alert("Google sign-in failed: " + err.message);
   }
 }
 
 /* FACEBOOK LOGIN */
 async function facebookLogin(){
+  isAuthFlowActive = true;
+  
   try {
     const provider = new firebase.auth.FacebookAuthProvider();
+    // Request additional permissions if needed
     provider.addScope('email');
+    
     await auth.signInWithPopup(provider);
     window.location.href = "mainbusinesshub.html";
   } catch(err) {
-    alert("Facebook sign-in failed: " + err.message);
+    isAuthFlowActive = false;
+    
+    if(err.code === "auth/account-exists-with-different-credential"){
+      alert("An account already exists with this email using a different sign-in method.");
+    } else if(err.code === "auth/popup-blocked"){
+      alert("Popup was blocked. Please allow popups for this site.");
+    } else if(err.code === "auth/popup-closed-by-user"){
+      // User closed popup, just return
+      return;
+    } else {
+      alert("Facebook sign-in failed: " + err.message);
+    }
   }
 }
 
 /* APPLE LOGIN */
 async function appleLogin(){
+  isAuthFlowActive = true;
+  
   try {
     const provider = new firebase.auth.OAuthProvider('apple.com');
+    // Request additional scopes
     provider.addScope('email');
     provider.addScope('name');
+    
     await auth.signInWithPopup(provider);
     window.location.href = "mainbusinesshub.html";
   } catch(err) {
-    alert("Apple sign-in failed: " + err.message);
+    isAuthFlowActive = false;
+    
+    if(err.code === "auth/account-exists-with-different-credential"){
+      alert("An account already exists with this email using a different sign-in method.");
+    } else if(err.code === "auth/popup-blocked"){
+      alert("Popup was blocked. Please allow popups for this site.");
+    } else if(err.code === "auth/popup-closed-by-user"){
+      // User closed popup, just return
+      return;
+    } else {
+      alert("Apple sign-in failed: " + err.message);
+    }
   }
 }
+
+/* AUTH STATE LISTENER - Fixed to prevent loops */
+auth.onAuthStateChanged(async user => {
+  // Don't interfere if we're actively in an auth flow
+  if(isAuthFlowActive) return;
+  
+  if(!user){
+    // User is not signed in, show main modal
+    return;
+  }
+
+  try {
+    await user.reload();
+    
+    if(user.emailVerified){
+      // User is verified, redirect to hub
+      window.location.href = "mainbusinesshub.html";
+    } else {
+      // User exists but not verified
+      // Only show verification modal if they used email/password
+      const providerData = user.providerData[0];
+      if(providerData && providerData.providerId === "password"){
+        showVerifying();
+      }
+    }
+  } catch(err) {
+    console.error("Error in auth state:", err);
+  }
+});
 </script>
 
 </body>
