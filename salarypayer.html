@@ -1204,7 +1204,6 @@ node.style.transform = `translateZ(${floorZ}px)`;
             }
         }
 
-
 async function getOwnerCurrency() {
     const auth = getAuth();
     const user = auth.currentUser;
@@ -1237,19 +1236,26 @@ async function getOwnerCurrency() {
     content.innerHTML = `<div class="loading-spinner"></div><p style="text-align:center;color:var(--neon-primary)">AI ANALYZING...</p>`;
 
    try {
-        // 1. Fetch the exact currency from your Owner Node
         const myCurrency = await getOwnerCurrency();
 
-        // 2. Fetch AI analysis for the product
+        // 1. CLEAN THE PRICE: Remove symbols/commas and convert to a number
+        let rawPrice = product.price;
+        if (typeof rawPrice === 'string') {
+            // This removes everything except numbers and dots
+            rawPrice = parseFloat(rawPrice.replace(/[^0-9.]/g, ''));
+        }
+
+        // 2. CHECK FOR VALID NUMBER: Fallback to 0 if cleaning fails
+        const numericPrice = isNaN(rawPrice) ? 0 : rawPrice;
+
         const response = await fetch(`https://ai-inventory-pro-sigma.vercel.app/api/gemini?productName=${encodeURIComponent(product.name)}`);
         const aiData = response.ok ? await response.json() : {};
 
-        // 3. Format the price using the Owner's Currency
-        // This handles symbols ($ vs £) and decimals automatically
+        // 3. FORMAT: Now it will work because numericPrice is a real Number
         const formattedPrice = new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: myCurrency 
-        }).format(product.price);
+        }).format(numericPrice);
         
        content.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; border-bottom: 1px solid rgba(0, 243, 255, 0.2); padding-bottom: 15px;">
@@ -1266,11 +1272,9 @@ async function getOwnerCurrency() {
             </div>
         </div>
     </div>
-            <div class="story-section" style="border-left-color: var(--neon-accent); background: rgba(127, 255, 0, 0.05);">
-                <h3>💰 Price Value</h3>
-                <p style="font-size: 24px; color: var(--neon-accent); font-weight: bold; text-shadow: 0 0 10px var(--neon-accent);">
-                    ${formattedPrice}
-                </p>
+<p style="font-size: 24px; color: var(--neon-accent); font-weight: bold;">
+                ${formattedPrice}
+            </p>
             </div>
 
             <div class="story-section">
