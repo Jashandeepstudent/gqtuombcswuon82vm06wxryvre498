@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScaleVest Hub</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #050505;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-blur: 15px;
+            --primary-blue: #2563eb;
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(37, 99, 235, 0.05) 0%, transparent 40%);
+        }
+
+        /* Utility: Glassmorphism */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Layout */
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 20px;
+        }
+
+        h1 { font-weight: 700; font-size: 1.5rem; letter-spacing: -0.5px; }
+        h2 { font-weight: 600; font-size: 1.25rem; margin-bottom: 20px; }
+        .subtitle { color: var(--text-muted); font-size: 0.875rem; font-weight: 400; }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            padding: 25px;
+            transition: transform 0.2s, background 0.2s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 180px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            color: var(--primary-blue);
+            margin-bottom: 15px;
+        }
+
+        .card-title { font-size: 1.1rem; font-weight: 600; }
+        .card-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; }
+
+        /* Sections */
+        .section-view { display: none; padding-top: 20px; animation: fadeIn 0.4s ease; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary { background: var(--primary-blue); color: white; }
+        .btn-primary:hover { background: #1d4ed8; box-shadow: 0 0 15px rgba(37, 99, 235, 0.4); }
+        
+        .btn-secondary { background: rgba(255,255,255,0.1); color: white; }
+        .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+
+        /* Forms & Inputs */
+        input, select, textarea {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            padding: 12px;
+            border-radius: 8px;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            margin-bottom: 15px;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary-blue);
+        }
+
+        /* Lists & Items */
+        .item-list { display: grid; gap: 15px; }
+        
+        .list-item {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .list-item-content { flex: 1; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .badge-red { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .badge-green { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+
+        /* Thumbnails for docs */
+        .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .doc-card { text-align: center; padding: 15px; position: relative; }
+        .doc-thumb { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; background: #222; }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center; z-index: 100;
+        }
+        .modal { width: 90%; max-width: 500px; padding: 30px; position: relative; }
+        .close-modal { position: absolute; top: 15px; right: 15px; cursor: pointer; color: var(--text-muted); }
+
+        /* Team Specific */
+        .job-item { 
+            background: rgba(255,255,255,0.02); 
+            padding: 10px; border-radius: 6px; margin-top: 5px; 
+            display: flex; align-items: center; gap: 10px;
+        }
+        .job-completed { opacity: 0.5; text-decoration: line-through; }
+        .check-box { 
+            width: 18px; height: 18px; border: 1px solid #555; border-radius: 4px; 
+            display: flex; align-items: center; justify-content: center; cursor: pointer; 
+        }
+        .check-box.checked { background: var(--success); border-color: var(--success); }
+
+        /* Loading */
+        #loading { position: fixed; inset: 0; background: #050505; z-index: 999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--primary-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;}
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="loading">
+        <div class="spinner"></div>
+        <div style="color: #666; font-size: 0.9rem;">Verifying Access...</div>
+    </div>
+
+    <div class="container">
+        <header class="glass">
+            <div>
+                <h1>ScaleVest Hub</h1>
+                <div class="subtitle" id="user-status">Connecting...</div>
+            </div>
+            <div id="header-actions">
+                <button class="btn btn-secondary" onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <div id="dashboard-view">
+            <div class="dashboard-grid">
+                
+                <div class="card glass" onclick="navTo('legal-view')">
+                    <i class="fas fa-file-contract card-icon"></i>
+                    <div>
+                        <div class="card-title">Legal Documents</div>
+                        <div class="card-meta" id="meta-legal">No updates</div>
+                    </div>
+                </div>
+
+                <div class="card glass" onclick="navTo('transactions-view')">
+                    <i class="fas fa-chart-line card-icon"></i>
+                    <div>
+                        <div class="card-title">Transactions</div>
+                        <div class="card-meta" id="meta-trans">Pending approvals</div>
+                    </div>
+                </div>
+
+                <div class="card glass" onclick="navTo('orders-view')">
+                    <i class="fas fa-box-open card-icon"></i>
+                    <div>
+                        <div class="card-title">Pending Orders</div>
+                        <div class="card-meta" id="meta-orders">Check deadlines</div>
+                    </div>
+                </div>
+
+                <div class="card glass" onclick="navTo('notes-view')">
+                    <i class="fas fa-sticky-note card-icon"></i>
+                    <div>
+                        <div class="card-title">Notes</div>
+                        <div class="card-meta" id="meta-notes">Quick thoughts</div>
+                    </div>
+                </div>
+
+                <div class="card glass" onclick="navTo('team-view')">
+                    <i class="fas fa-users card-icon"></i>
+                    <div>
+                        <div class="card-title">Team & Staffing</div>
+                        <div class="card-meta" id="meta-team">Manage assignments</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="legal-view" class="section-view">
+            <div class="top-bar glass" style="padding: 15px 25px;">
+                <h2>Legal Documents</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">Back</button>
+                    <button class="btn btn-primary" onclick="openModal('legal-modal')">+ Add New</button>
+                </div>
+            </div>
+            <div class="doc-grid" id="legal-list">
+                </div>
+        </div>
+
+        <div id="transactions-view" class="section-view">
+            <div class="top-bar glass" style="padding: 15px 25px;">
+                <h2>Business Transactions</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">Back</button>
+                    <button class="btn btn-primary" onclick="openModal('trans-modal')">+ Add Transaction</button>
+                </div>
+            </div>
+            <div class="item-list" id="trans-list">
+                </div>
+        </div>
+
+        <div id="orders-view" class="section-view">
+            <div class="top-bar glass" style="padding: 15px 25px;">
+                <h2>Pending Orders</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">Back</button>
+                    <button class="btn btn-primary" onclick="openModal('order-modal')">+ Add Order</button>
+                </div>
+            </div>
+            <div class="item-list" id="orders-list">
+                </div>
+        </div>
+
+        <div id="notes-view" class="section-view">
+            <div class="top-bar glass" style="padding: 15px 25px;">
+                <h2>Notes</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">Back</button>
+                    <button class="btn btn-primary" onclick="openModal('note-modal')">+ New Note</button>
+                </div>
+            </div>
+            <div class="dashboard-grid" id="notes-list">
+                </div>
+        </div>
+
+        <div id="team-view" class="section-view">
+            <div class="top-bar glass" style="padding: 15px 25px;">
+                <h2>Team & Staffing</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">Back</button>
+                    <button class="btn btn-primary" onclick="openModal('team-modal')">+ Add Member</button>
+                </div>
+            </div>
+            <div class="dashboard-grid" id="team-list">
+                </div>
+        </div>
+
+        <div id="member-detail-view" class="section-view">
+            <div class="top-bar glass" style="padding: 15px 25px;">
+                <h2 id="member-name-header">Member Details</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="navTo('team-view')">Back</button>
+                    <button class="btn btn-primary" onclick="openJobModal()">Assign Job</button>
+                </div>
+            </div>
+            <div class="glass" style="padding: 20px; margin-bottom: 20px;">
+                <h3 style="margin-bottom:15px; color: var(--text-muted);">Assigned Jobs</h3>
+                <div class="item-list" id="member-jobs-list">
+                    </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="legal-modal" class="modal-overlay">
+        <div class="modal glass">
+            <i class="fas fa-times close-modal" onclick="closeModals()"></i>
+            <h2>Add Document</h2>
+            <select id="legal-cat"><option value="Image">Image</option><option value="PDF">PDF</option><option value="Doc">Document</option></select>
+            <input type="text" id="legal-name" placeholder="Document Name">
+            <input type="file" id="legal-file">
+            <button class="btn btn-primary" style="width:100%" onclick="saveLegal()">Save Document</button>
+        </div>
+    </div>
+
+    <div id="note-modal" class="modal-overlay">
+        <div class="modal glass">
+            <i class="fas fa-times close-modal" onclick="closeModals()"></i>
+            <h2>New Note</h2>
+            <input type="text" id="note-title" placeholder="Title">
+            <textarea id="note-content" rows="4" placeholder="Content..."></textarea>
+            <input type="date" id="note-date">
+            <button class="btn btn-primary" style="width:100%" onclick="saveNote()">Save Note</button>
+        </div>
+    </div>
+
+    <div id="trans-modal" class="modal-overlay">
+        <div class="modal glass">
+            <i class="fas fa-times close-modal" onclick="closeModals()"></i>
+            <h2>New Transaction</h2>
+            <select id="trans-type">
+                <option value="owe">I Owe Them (Red)</option>
+                <option value="owed">They Owe Me (Green)</option>
+            </select>
+            <input type="text" id="trans-name" placeholder="Entity Name">
+            <input type="number" id="trans-amount" placeholder="Amount">
+            <input type="text" id="trans-details" placeholder="Details">
+            <input type="date" id="trans-date">
+            <div style="margin-bottom:10px; font-size:0.8rem; color:#aaa;">Upload Receipt (Optional):</div>
+            <input type="file" id="trans-file">
+            <button class="btn btn-primary" style="width:100%" onclick="saveTransaction()">Save Transaction</button>
+        </div>
+    </div>
+
+    <div id="order-modal" class="modal-overlay">
+        <div class="modal glass">
+            <i class="fas fa-times close-modal" onclick="closeModals()"></i>
+            <h2>New Order</h2>
+            <select id="order-cat">
+                <option value="Photo">Photo</option>
+                <option value="PDF">PDF</option>
+                <option value="Doc">Doc</option>
+                <option value="Text">Text</option>
+            </select>
+            <input type="text" id="order-desc" placeholder="Order Description/Link">
+            <div style="margin-bottom:5px; font-size:0.8rem;">Deadline:</div>
+            <input type="date" id="order-deadline">
+            <button class="btn btn-primary" style="width:100%" onclick="saveOrder()">Add Order</button>
+        </div>
+    </div>
+
+    <div id="team-modal" class="modal-overlay">
+        <div class="modal glass">
+            <i class="fas fa-times close-modal" onclick="closeModals()"></i>
+            <h2>Add Team Member</h2>
+            <input type="text" id="team-name" placeholder="Full Name">
+            <input type="text" id="team-role" placeholder="Role">
+            <input type="email" id="team-email" placeholder="Email">
+            <select id="team-status">
+                <option value="Active">Active</option>
+                <option value="Contractor">Contractor</option>
+            </select>
+            <button class="btn btn-primary" style="width:100%" onclick="saveMember()">Add Member</button>
+        </div>
+    </div>
+
+    <div id="job-modal" class="modal-overlay">
+        <div class="modal glass">
+            <i class="fas fa-times close-modal" onclick="closeModals()"></i>
+            <h2>Assign Job</h2>
+            <input type="text" id="job-desc" placeholder="Job Description">
+            <button class="btn btn-primary" style="width:100%" onclick="saveJob()">Assign</button>
+        </div>
+    </div>
+
+    <div id="preview-modal" class="modal-overlay" onclick="closeModals()">
+        <img id="preview-img" style="max-width:90%; max-height:90vh; border-radius:8px; box-shadow:0 0 50px rgba(0,0,0,0.5);">
+    </div>
+
+
+    <script>
+        // --- 1. CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+            authDomain: "scalevest-163a0.firebaseapp.com",
+            databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+            projectId: "scalevest-163a0",
+            storageBucket: "scalevest-163a0.firebasestorage.app",
+            messagingSenderId: "938358950124",
+            appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
+            measurementId: "G-QD3TWBZHR0"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        let currentUserId = null;
+        let activeMemberId = null;
+
+        // --- 2. AUTHENTICATION & REDIRECT LOGIC ---
+        
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // SUCCESS: User is logged in.
+                console.log("User verified:", user.uid);
+                currentUserId = user.uid;
+                document.getElementById('user-status').innerText = `ID: ${user.uid.substring(0,6)}...`;
+                
+                // Hide loading screen and show content
+                document.getElementById('loading').style.display = 'none';
+                
+                // Initialize Database Listeners
+                initListeners();
+            } else {
+                // FAILURE: No user logged in.
+                console.log("No user found. Redirecting to login.html...");
+                
+                // Redirect logic
+                window.location.href = "login.html"; 
+            }
+        });
+
+        function logout() {
+            auth.signOut().then(() => {
+                window.location.href = "login.html";
+            });
+        }
+
+        // --- 3. NAVIGATION ---
+        function navTo(viewId) {
+            document.querySelectorAll('.section-view, #dashboard-view').forEach(el => el.style.display = 'none');
+            document.getElementById(viewId).style.display = 'block';
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModals() {
+            document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
+        }
+
+        // --- 4. DATA HANDLING HELPER ---
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function updateMeta(type) {
+            const dateStr = new Date().toISOString().split('T')[0];
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/meta/${type}lastdate`).set(dateStr);
+        }
+
+        // --- 5. SECTION LOGIC ---
+
+        function initListeners() {
+            const baseRef = `BusinessOwners/${currentUserId}/BusinessItems`;
+
+            // Legal Listener
+            db.ref(`${baseRef}/legaldocuments`).on('value', snapshot => {
+                const list = document.getElementById('legal-list');
+                list.innerHTML = '';
+                snapshot.forEach(child => {
+                    const doc = child.val();
+                    const div = document.createElement('div');
+                    div.className = 'doc-card glass';
+                    let thumb = doc.url && doc.url.startsWith('data:image') ? doc.url : 'https://via.placeholder.com/150/000000/FFFFFF/?text=DOC';
+                    div.innerHTML = `
+                        <img src="${thumb}" class="doc-thumb" onclick="previewDoc('${doc.url}')">
+                        <div style="font-weight:bold">${doc.name}</div>
+                        <div style="font-size:0.8rem; color:#aaa">${doc.category}</div>
+                    `;
+                    list.appendChild(div);
+                });
+                if(snapshot.exists()) document.getElementById('meta-legal').innerText = "Last update: Today";
+            });
+
+            // Transactions Listener
+            db.ref(`${baseRef}/transactions`).on('value', snapshot => {
+                const list = document.getElementById('trans-list');
+                list.innerHTML = '';
+                snapshot.forEach(child => {
+                    const t = child.val();
+                    const colorClass = t.type === 'owe' ? 'badge-red' : 'badge-green';
+                    const label = t.type === 'owe' ? 'I Owe' : 'Owed to Me';
+                    
+                    const div = document.createElement('div');
+                    div.className = 'list-item glass';
+                    div.innerHTML = `
+                        <div class="list-item-content">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <span style="font-weight:600; font-size:1.1rem;">${t.name}</span>
+                                <span class="badge ${colorClass}">${label}</span>
+                            </div>
+                            <div style="color:#aaa; font-size:0.9rem;">${t.details}</div>
+                            <div style="margin-top:8px; font-weight:bold;">$${t.amount} <span style="font-weight:400; color:#666; font-size:0.8rem; margin-left:10px;">${t.date}</span></div>
+                            ${t.photo ? `<button class="btn btn-secondary" style="margin-top:10px; padding:5px 10px; font-size:0.7rem;" onclick="previewDoc('${t.photo}')">View Receipt</button>` : ''}
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            });
+
+            // Notes Listener
+            db.ref(`${baseRef}/notes`).on('value', snapshot => {
+                const list = document.getElementById('notes-list');
+                list.innerHTML = '';
+                snapshot.forEach(child => {
+                    const n = child.val();
+                    const div = document.createElement('div');
+                    div.className = 'card glass';
+                    div.style.height = 'auto';
+                    div.innerHTML = `
+                        <div class="card-title">${n.title}</div>
+                        <div style="color:#ccc; font-size:0.9rem; margin:10px 0; white-space: pre-wrap;">${n.content}</div>
+                        <div class="card-meta">${n.date || ''}</div>
+                    `;
+                    list.appendChild(div);
+                });
+            });
+
+            // Pending Orders Listener
+            db.ref(`${baseRef}/pendingorders`).on('value', snapshot => {
+                const list = document.getElementById('orders-list');
+                list.innerHTML = '';
+                snapshot.forEach(child => {
+                    const o = child.val();
+                    const div = document.createElement('div');
+                    div.className = 'list-item glass';
+                    div.innerHTML = `
+                        <div class="list-item-content">
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="font-weight:600;">${o.category}</span>
+                                <span style="color:var(--danger); font-size:0.8rem;">Due: ${o.deadline}</span>
+                            </div>
+                            <div style="margin-top:5px; color:#ddd;">${o.desc}</div>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            });
+
+            // Team Listener
+            db.ref(`${baseRef}/teamandstaff`).on('value', snapshot => {
+                const list = document.getElementById('team-list');
+                list.innerHTML = '';
+                snapshot.forEach(child => {
+                    const m = child.val();
+                    const key = child.key;
+                    const div = document.createElement('div');
+                    div.className = 'card glass';
+                    div.onclick = () => openMemberView(key, m.name);
+                    div.innerHTML = `
+                        <i class="fas fa-user-circle card-icon"></i>
+                        <div>
+                            <div class="card-title">${m.name}</div>
+                            <div style="font-size:0.9rem; color:var(--primary-blue);">${m.role}</div>
+                            <div class="card-meta">${m.status}</div>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            });
+        }
+
+        // --- 6. SAVE FUNCTIONS ---
+
+        async function saveLegal() {
+            const cat = document.getElementById('legal-cat').value;
+            const name = document.getElementById('legal-name').value;
+            const fileInput = document.getElementById('legal-file');
+            
+            if(!name) return alert("Name required");
+
+            let url = "";
+            if(fileInput.files.length > 0) {
+                url = await fileToBase64(fileInput.files[0]);
+            }
+
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/legaldocuments`).push({
+                category: cat, name: name, url: url, timestamp: Date.now()
+            });
+            updateMeta('legal');
+            closeModals();
+        }
+
+        function saveNote() {
+            const title = document.getElementById('note-title').value;
+            const content = document.getElementById('note-content').value;
+            const date = document.getElementById('note-date').value;
+
+            if(!title) return alert("Title required");
+
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/notes`).push({
+                title, content, date, timestamp: Date.now()
+            });
+            updateMeta('notes');
+            closeModals();
+        }
+
+        async function saveTransaction() {
+            const type = document.getElementById('trans-type').value;
+            const name = document.getElementById('trans-name').value;
+            const amount = document.getElementById('trans-amount').value;
+            const details = document.getElementById('trans-details').value;
+            const date = document.getElementById('trans-date').value;
+            const fileInput = document.getElementById('trans-file');
+
+            if(!name || !amount) return alert("Name and Amount required");
+
+            let photo = "";
+            if(fileInput.files.length > 0) {
+                photo = await fileToBase64(fileInput.files[0]);
+            }
+
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/transactions`).push({
+                type, name, amount, details, date, photo, timestamp: Date.now()
+            });
+            updateMeta('transaction');
+            closeModals();
+        }
+
+        function saveOrder() {
+            const cat = document.getElementById('order-cat').value;
+            const desc = document.getElementById('order-desc').value;
+            const deadline = document.getElementById('order-deadline').value;
+
+            if(!desc) return alert("Description required");
+
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/pendingorders`).push({
+                category: cat, desc, deadline, timestamp: Date.now()
+            });
+            updateMeta('pendingorders');
+            closeModals();
+        }
+
+        function saveMember() {
+            const name = document.getElementById('team-name').value;
+            const role = document.getElementById('team-role').value;
+            const email = document.getElementById('team-email').value;
+            const status = document.getElementById('team-status').value;
+
+            if(!name) return alert("Name required");
+
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff`).push({
+                name, role, email, status, timestamp: Date.now()
+            });
+            updateMeta('team');
+            closeModals();
+        }
+
+        // --- 7. TEAM MEMBER & JOB LOGIC ---
+
+        function openMemberView(id, name) {
+            activeMemberId = id;
+            document.getElementById('member-name-header').innerText = name;
+            
+            // Listen for jobs for this specific member
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${id}/jobs`).on('value', snapshot => {
+                const list = document.getElementById('member-jobs-list');
+                list.innerHTML = '';
+                if(!snapshot.exists()) {
+                    list.innerHTML = '<div style="color:#777; font-style:italic;">No jobs assigned yet.</div>';
+                    return;
+                }
+                
+                snapshot.forEach(child => {
+                    const job = child.val();
+                    const jobId = child.key;
+                    const isCompleted = job.completed === true;
+                    
+                    const div = document.createElement('div');
+                    div.className = `job-item ${isCompleted ? 'job-completed' : ''}`;
+                    div.innerHTML = `
+                        <div class="check-box ${isCompleted ? 'checked' : ''}" onclick="toggleJob('${jobId}', ${!isCompleted})">
+                            ${isCompleted ? '<i class="fas fa-check" style="font-size:10px; color:black;"></i>' : ''}
+                        </div>
+                        <div style="flex:1;">${job.desc}</div>
+                    `;
+                    list.appendChild(div);
+                });
+            });
+
+            navTo('member-detail-view');
+        }
+
+        function openJobModal() {
+            openModal('job-modal');
+        }
+
+        function saveJob() {
+            const desc = document.getElementById('job-desc').value;
+            if(!desc) return alert("Description required");
+            
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${activeMemberId}/jobs`).push({
+                desc: desc, completed: false
+            });
+            closeModals();
+            document.getElementById('job-desc').value = '';
+        }
+
+        function toggleJob(jobId, status) {
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${activeMemberId}/jobs/${jobId}`).update({
+                completed: status
+            });
+        }
+
+        function previewDoc(url) {
+            if(!url) return;
+            const img = document.getElementById('preview-img');
+            img.src = url;
+            document.getElementById('preview-modal').style.display = 'flex';
+        }
+
+    </script>
+</body>
+</html>
