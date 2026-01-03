@@ -1926,11 +1926,7 @@ function checkDeadlines() {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
     const todayStr = today.toISOString().split('T')[0];
-
-    if (acknowledged === today) return;
-
-if (snoozeTimestamp && Date.now() < parseInt(snoozeTimestamp)) return;
-
+    
     const baseRef = `BusinessOwners/${currentUserId}/BusinessItems`;
     let urgentAlerts = []; // Tomorrow's deadlines
     let criticalAlerts = []; // Today's deadlines
@@ -2150,17 +2146,12 @@ function playBeepSound() {
 // Dismiss mega alert
 function dismissMegaAlert() {
     const overlay = document.getElementById('mega-alert-overlay');
+    overlay.style.animation = 'alertFadeOut 0.5s ease';
     
-    // 1. Save acknowledgment to localStorage so it doesn't reappear today
-    const today = new Date().toISOString().split('T')[0];
-    localStorage.setItem('megaAlertAcknowledged', today);
-
-    // 2. Clear content to stop all heavy animations (fixes lag)
-    overlay.style.display = 'none';
-    overlay.innerHTML = ''; 
-    
-    // 3. Reset the shake listener
-    overlay.onclick = null;
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        overlay.style.animation = 'alertFadeIn 0.5s ease';
+    }, 500);
 }
 
 // Snooze alert for 1 hour
