@@ -797,19 +797,19 @@ h2 {
 </div>
 <div id="settingsModal" class="modal">
   <div class="modal-box">
-    <h3>⚙️ Dashboard Settings</h3>
-    <p>Manage your regional preferences</p>
+    <h3>⚙️ General Settings</h3>
+    <p>Change your business currency below</p>
     
-    <div class="settings-option">
-      <label style="font-weight: 700; font-size: 13px; color: #64748b;">CURRENT CURRENCY</label>
-      <div style="display: flex; gap: 10px;">
-          <input type="text" id="settingsCurrencyInput" placeholder="USD" maxlength="3" style="flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; text-transform: uppercase; font-weight: bold;">
-          <button class="btn-save" onclick="updateCurrencyFromSettings()">Update</button>
+    <div class="price-inputs">
+      <div class="input-group">
+        <label>Active Currency</label>
+        <input type="text" id="settingsCurrencyInput" maxlength="3" style="text-transform: uppercase;">
       </div>
     </div>
 
-    <div class="modal-actions" style="margin-top: 30px;">
-      <button class="btn-cancel" style="grid-column: span 2;" onclick="closeSettings()">Close</button>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSettingsModal()">Close</button>
+      <button class="btn-save" onclick="updateCurrency()">Update Currency</button>
     </div>
   </div>
 </div>
