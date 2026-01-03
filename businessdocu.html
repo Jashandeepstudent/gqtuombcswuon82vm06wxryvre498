@@ -2448,9 +2448,12 @@ db.ref(`${baseRef}/transactions`).on('value', snapshot => {
                                 <div class="card-meta">${m.status}</div>
                             </div>
                         </div>
-                        <button class="btn btn-danger" style="margin-top: 16px; width: 100%;" onclick="event.stopPropagation(); confirmDelete(() => deleteMember('${key}'))">
-                            <i class="fas fa-trash"></i> Remove
-                        </button>
+<button class="btn btn-danger btn-sm" 
+        style="margin-top: 16px; width: auto; padding: 4px 8px;" 
+        onclick="event.stopPropagation(); confirmDelete(() => deleteMember('${key}'))" 
+        title="Remove">
+    <i class="fas fa-trash"></i>
+</button>
                     `;
                     list.appendChild(div);
                 });
