@@ -502,7 +502,18 @@ h2 {
   text-align: center;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
+#settingsModal .modal-box {
+    max-width: 350px;
+    border: 2px solid #7c3aed;
+}
 
+.settings-option {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: left;
+    margin-top: 20px;
+}
 .modal-box h3 {
   margin: 0 0 10px 0;
   font-size: 20px;
@@ -637,13 +648,20 @@ h2 {
 
 <div class="top">
   <div style="display: flex; align-items: center; gap: 15px;">
-    <a href="inventory.html" class="back-nav-btn">
+    <a href="mainbusinesshub.html" class="back-nav-btn">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
         <line x1="19" y1="12" x2="5" y2="12"/>
         <polyline points="12 19 5 12 12 5"/>
       </svg>
     </a>
     <h2>💰 Financial Dashboard</h2>
+<button onclick="openSettings()" class="back-nav-btn" style="border:none; cursor:pointer; margin-left: 5px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+</div>
   </div>
 
   <div class="filter-container" style="position: relative;">
@@ -777,7 +795,24 @@ h2 {
     </div>
   </div>
 </div>
+<div id="settingsModal" class="modal">
+  <div class="modal-box">
+    <h3>⚙️ Dashboard Settings</h3>
+    <p>Manage your regional preferences</p>
+    
+    <div class="settings-option">
+      <label style="font-weight: 700; font-size: 13px; color: #64748b;">CURRENT CURRENCY</label>
+      <div style="display: flex; gap: 10px;">
+          <input type="text" id="settingsCurrencyInput" placeholder="USD" maxlength="3" style="flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; text-transform: uppercase; font-weight: bold;">
+          <button class="btn-save" onclick="updateCurrencyFromSettings()">Update</button>
+      </div>
+    </div>
 
+    <div class="modal-actions" style="margin-top: 30px;">
+      <button class="btn-cancel" style="grid-column: span 2;" onclick="closeSettings()">Close</button>
+    </div>
+  </div>
+</div>
 <div id="currencyModal" class="modal">
   <div class="modal-box">
     <h3>🌍 Regional Settings</h3>
@@ -1195,6 +1230,34 @@ function calculateFinancials() {
     }
 
     if (typeof renderPerformanceChart === 'function') renderPerformanceChart(filter);
+}
+// Function to open settings and pre-fill the input with current currency
+function openSettingsModal() {
+    document.getElementById("settingsCurrencyInput").value = userCurrency;
+    document.getElementById("settingsModal").style.display = "flex";
+}
+
+function closeSettingsModal() {
+    document.getElementById("settingsModal").style.display = "none";
+}
+
+// Function to save the new currency to Firebase
+function updateCurrency() {
+    const newCode = document.getElementById("settingsCurrencyInput").value.trim().toUpperCase();
+    if (newCode.length < 2) return alert("Please enter a valid currency code.");
+
+    const uid = auth.currentUser.uid;
+    db.ref(`BusinessOwners/${uid}/National Currency`).set({
+        currency: newCode,
+        updatedAt: firebase.database.ServerValue.TIMESTAMP
+    }).then(() => {
+        showSuccess("Currency Updated!");
+        closeSettingsModal();
+        // The existing .on("value") listener in your auth state will 
+        // automatically trigger calculateFinancials() and render()
+    }).catch(error => {
+        alert("Error updating settings: " + error.message);
+    });
 }
 auth.onAuthStateChanged(user => {
     if (!user) return;
