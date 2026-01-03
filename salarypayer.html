@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Digi Command Centre </title>
+    <title> Digital Command Centre </title>
     <style>
         * {
             margin: 0;
@@ -199,7 +199,82 @@ body {
             background: rgba(127, 255, 0, 0.2);
             box-shadow: 0 0 30px var(--neon-accent);
         }
+/* ========== DEADLINE MONITORING SYSTEM CSS ========== */
+.deadline-hud {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 15, 35, 0.95);
+    border: 2px solid var(--neon-primary);
+    border-radius: 15px;
+    padding: 15px 25px;
+    z-index: 2100;
+    display: none;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 0 40px var(--neon-primary);
+    animation: hudPulse 2s infinite;
+    max-width: 90%;
+}
 
+.deadline-hud.active {
+    display: flex;
+}
+
+.deadline-hud.warning {
+    border-color: var(--neon-orange);
+    box-shadow: 0 0 40px var(--neon-orange);
+}
+
+.deadline-hud.critical {
+    border-color: var(--neon-red);
+    box-shadow: 0 0 40px var(--neon-red);
+    animation: criticalPulse 1s infinite;
+}
+
+@keyframes hudPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+}
+
+@keyframes criticalPulse {
+    0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+    50% { opacity: 0.7; transform: translateX(-50%) scale(1.05); }
+}
+
+.deadline-icon {
+    font-size: 28px;
+}
+
+.deadline-info {
+    flex: 1;
+}
+
+.deadline-title {
+    font-weight: bold;
+    font-size: 14px;
+    color: #fff;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.deadline-description {
+    font-size: 12px;
+    color: #ccc;
+}
+
+@media (max-width: 768px) {
+    .deadline-hud {
+        top: 60px;
+        padding: 10px 15px;
+        font-size: 11px;
+    }
+    .deadline-icon {
+        font-size: 20px;
+    }
+}
         /* Heatmap Classes */
         .grid-cell.heatmap-high {
             background: rgba(255, 170, 0, 0.6) !important;
@@ -660,9 +735,6 @@ body {
     </style>
 </head>
 <body>
-<div id="hudBanner" style="position: fixed; top: 0; left: 0; width: 100%; height: 50px; background: rgba(0,0,0,0.9); border-bottom: 3px solid var(--neon-primary); z-index: 5000; display: none; align-items: center; justify-content: center; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;">
-    <span id="hudBannerText" style="color: white; text-shadow: 0 0 10px var(--neon-primary);"></span>
-</div>
     <div class="loading" id="loading">
         <div class="loading-spinner"></div>
         <div style="color: var(--neon-primary); font-size: 18px;">Loading Digital Twin...</div>
@@ -671,6 +743,14 @@ body {
     <div class="time-warp-overlay"></div>
 
     <div class="time-travel-active-overlay" id="timeTravelActiveIndicator">
+<!-- ========== DEADLINE ALERT HUD ========== -->
+<div class="deadline-hud" id="deadlineHud">
+    <div class="deadline-icon">⚠️</div>
+    <div class="deadline-info">
+        <div class="deadline-title" id="deadlineTitle">DEADLINE APPROACHING</div>
+        <div class="deadline-description" id="deadlineDesc">No urgent items</div>
+    </div>
+</div>
         <span style="font-size: 20px;">⏳</span>
         <div style="text-align: center;">
             <div style="font-weight: bold; letter-spacing: 1px;">FUTURE STATE (+24H)</div>
@@ -792,64 +872,10 @@ body {
         let isFirebaseListening = false;
         let isTimeTravelMode = false;
         let futureProductsData = [];
-// --- NEW GLOBAL STATE ---
+// ========== DEADLINE MONITORING GLOBALS ==========
 let simulatedTime = new Date();
-let businessItems = []; // To store mapped data from Firebase
-
-// --- SCAN DEADLINES FUNCTION ---
-async function scanDeadlines() {
-    let highestAlert = 0;
-    let urgentItemName = "";
-
-    // 1. Gather all deadlines from the current data
-    // (Ensure your Firebase listeners populate businessItems with dates/deadlines)
-    businessItems.forEach(item => {
-        const deadline = new Date(item.deadline || item.date || item.lastdate);
-        if (isNaN(deadline)) return;
-
-        // Requirement 5: Math Logic
-        const diffInMs = deadline.getTime() - simulatedTime.getTime();
-        const diffInDays = Math.round(diffInMs / (1000 * 60 * 60 * 24));
-
-        if (diffInDays <= 0) {
-            highestAlert = 2; // RED
-            urgentItemName = item.name || "Task/Payment";
-        } else if (diffInDays === 1) {
-            highestAlert = Math.max(highestAlert, 1); // ORANGE
-            urgentItemName = item.name || "Task/Payment";
-        }
-    });
-
-    updateGlobalTheme(highestAlert, urgentItemName);
-    
-    // Sync to SimulationState node
-    const simRef = ref(database, `SimulationState/${currentUserId}`);
-    update(simRef, {
-        simulatedTime: simulatedTime.toISOString(),
-        alertLevel: highestAlert,
-        urgentItem: urgentItemName
-    });
-}
-
-// --- DYNAMIC THEME UPDATE ---
-function updateGlobalTheme(level, name) {
-    const root = document.documentElement;
-    const banner = document.getElementById('hudBanner');
-    const bannerText = document.getElementById('hudBannerText');
-
-    if (level === 2) {
-        root.style.setProperty('--neon-primary', '#ff0040'); // Red
-        banner.style.display = 'flex';
-        bannerText.innerText = `🚨 DEADLINE: ${name}`;
-    } else if (level === 1) {
-        root.style.setProperty('--neon-primary', '#ffaa00'); // Orange
-        banner.style.display = 'flex';
-        bannerText.innerText = `⚠️ 1 DAY LEFT: ${name}`;
-    } else {
-        root.style.setProperty('--neon-primary', '#00f3ff'); // Normal
-        banner.style.display = 'none';
-    }
-}
+let activeAlerts = [];
+let deadlineCheckInterval = null;
         const iconMap = {
             'apple': '🍎', 'bread': '🍞', 'milk': '🥛', 'fish': '🐟', 'salmon': '🐟',
             'coffee': '☕', 'yogurt': '🥣', 'honey': '🍯', 'avocado': '🥑',
@@ -1080,109 +1106,261 @@ node.style.transform = `translateZ(${floorZ}px)`;
                 node.classList.add('is-low-stock');
             }
         }
+// ==================== DEADLINE MONITORING SYSTEM ====================
 
+async function scanDeadlines() {
+    if (!currentUserId) return;
+    
+    activeAlerts = [];
+    const businessItemsRef = ref(database, `BusinessOwners/${currentUserId}/BusinessItems`);
+    
+    onValue(businessItemsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (!data) {
+            updateAlertUI();
+            return;
+        }
+        
+        // Scan Transactions
+        if (data.transactions) {
+            Object.entries(data.transactions).forEach(([id, transaction]) => {
+                if (transaction.date) {
+                    checkDeadline({
+                        id,
+                        name: transaction.name || 'Transaction',
+                        date: transaction.date,
+                        type: 'Transaction',
+                        icon: '💰',
+                        details: transaction.details || ''
+                    });
+                }
+            });
+        }
+        
+        // Scan Pending Orders
+        if (data.pendingOrders) {
+            Object.entries(data.pendingOrders).forEach(([id, order]) => {
+                if (order.deadline) {
+                    checkDeadline({
+                        id,
+                        name: order.name || 'Order',
+                        date: order.deadline,
+                        type: 'Order',
+                        icon: '📦',
+                        details: order.description || ''
+                    });
+                }
+            });
+        }
+        
+        // Scan Team Tasks
+        if (data.teamTasks) {
+            Object.entries(data.teamTasks).forEach(([id, task]) => {
+                if (task.deadline) {
+                    checkDeadline({
+                        id,
+                        name: task.name || 'Task',
+                        date: task.deadline,
+                        type: 'Task',
+                        icon: '✅',
+                        details: task.description || ''
+                    });
+                }
+            });
+        }
+        
+        // Scan Notes
+        if (data.notes) {
+            Object.entries(data.notes).forEach(([id, note]) => {
+                if (note.lastdate) {
+                    checkDeadline({
+                        id,
+                        name: note.title || 'Note',
+                        date: note.lastdate,
+                        type: 'Note',
+                        icon: '📝',
+                        details: note.content || ''
+                    });
+                }
+            });
+        }
+        
+        updateAlertUI();
+    }, { onlyOnce: true });
+}
+
+function checkDeadline(item) {
+    const itemDate = new Date(item.date);
+    const diffMs = itemDate - simulatedTime;
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+    
+    let urgency = null;
+    
+    if (diffDays === 1) {
+        urgency = 'warning'; // 1 day left
+    } else if (diffDays <= 0) {
+        urgency = 'critical'; // Deadline reached or passed
+    }
+    
+    if (urgency) {
+        activeAlerts.push({
+            ...item,
+            urgency,
+            daysLeft: diffDays
+        });
+    }
+}
+
+function updateAlertUI() {
+    const hud = document.getElementById('deadlineHud');
+    const title = document.getElementById('deadlineTitle');
+    const desc = document.getElementById('deadlineDesc');
+    
+    if (activeAlerts.length === 0) {
+        hud.classList.remove('active', 'warning', 'critical');
+        // Reset color theme
+        document.documentElement.style.setProperty('--neon-primary', '#00f3ff');
+        return;
+    }
+    
+    // Sort by urgency (critical first)
+    activeAlerts.sort((a, b) => {
+        if (a.urgency === 'critical' && b.urgency !== 'critical') return -1;
+        if (a.urgency !== 'critical' && b.urgency === 'critical') return 1;
+        return 0;
+    });
+    
+    const topAlert = activeAlerts[0];
+    
+    // Update HUD
+    hud.classList.add('active');
+    hud.classList.remove('warning', 'critical');
+    hud.classList.add(topAlert.urgency);
+    
+    if (topAlert.urgency === 'critical') {
+        title.textContent = '🚨 DEADLINE REACHED';
+        desc.textContent = `${topAlert.icon} ${topAlert.name}`;
+        document.documentElement.style.setProperty('--neon-primary', '#ff0040');
+    } else {
+        title.textContent = '⚠️ 1 DAY LEFT';
+        desc.textContent = `${topAlert.icon} ${topAlert.name}`;
+        document.documentElement.style.setProperty('--neon-primary', '#ffaa00');
+    }
+    
+    // Show toast notification
+    if (topAlert.urgency === 'critical') {
+        showToast('🚨 CRITICAL DEADLINE', `${topAlert.name} deadline has been reached!`);
+    } else {
+        showToast('⚠️ DEADLINE WARNING', `${topAlert.name} has 1 day left`);
+    }
+}
+
+async function advanceTimeAndScan() {
+    // Advance simulated time by 24 hours
+    simulatedTime = new Date(simulatedTime.getTime() + (24 * 60 * 60 * 1000));
+    
+    // Sync to Firebase
+    const simulationStateRef = ref(database, `SimulationState/${currentUserId}`);
+    await update(simulationStateRef, {
+        simulatedTime: simulatedTime.toISOString(),
+        lastUpdated: Date.now()
+    });
+    
+    // Scan for deadlines
+    scanDeadlines();
+    
+    // Update UI to show simulated date
+    showToast('⏰ Time Advanced', `Simulated Date: ${simulatedTime.toLocaleDateString()}`);
+}
+
+// ==================== END DEADLINE SYSTEM ====================
         // --- TIME TRAVEL (2) ---
         window.openTimeTravel = async function() {
-            // 1. Play Cinematic Animation
-            document.body.classList.add('time-warp-active');
-            
-// 2. Transition World after delay
+    // FIRST: Advance time and check deadlines
+    await advanceTimeAndScan();
+    
+    // THEN: Play cinematic animation
+    document.body.classList.add('time-warp-active');
+    
+    // Transition World after delay
     setTimeout(async () => {
         document.body.classList.remove('time-warp-active');
         isTimeTravelMode = true;
-        
-        // --- JUMP 24 HOURS ---
-        simulatedTime.setDate(simulatedTime.getDate() + 1);
-        
-        // --- TRIGGER DEADLINE SCAN ---
-        await scanDeadlines();
-
         document.body.classList.add('time-travel-active-world');
         document.getElementById('timeTravelActiveIndicator').classList.add('active');
+        
+        const simulationParams = {
+            volatility: 0.18,
+            decayRate: 0.05,
+            growthCap: 1.5,
+            iterations: 1000
+        };
+
+        const deepAnalyticsBatch = productsData.map(p => ({
+            uid: p.id,
+            label: p.name,
+            inventory: p.stock,
+            throughput: p.sales,
+            dailyRate: p.velocity || (Math.random() * 4) + 1,
+            unitValue: p.priceValue || 5.0,
+            historyScore: p.sustainability || 75
+        }));
+
+        try {
+            const response = await fetch('https://ai-inventory-pro-sigma.vercel.app/api/gemini', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    task: "peak_analytical_prediction",
+                    parameters: simulationParams,
+                    dataset: deepAnalyticsBatch,
+                    horizon: "24h_cycle",
+                    analysisDepth: "max"
+                })
+            });
+
+            const aiIntelligence = response.ok ? await response.json() : null;
+            
+            futureProductsData = productsData.map(p => {
+                const baseV = p.velocity || (Math.random() * 4) + 1;
+                const drift = (Math.random() - 0.5) * simulationParams.volatility;
+                const mathVelocity = baseV * Math.exp(drift);
+                const aiFactor = aiIntelligence?.insights?.[p.id]?.predictionFactor || 1.0;
+                const weightAI = 0.7;
+                const weightMath = 0.3;
                 
-                // --- ADVANCED MATHEMATICAL ENGINE ---
-                // Based on Monte Carlo Simulations and Markov Chain models for inventory drift
-                const simulationParams = {
-                    volatility: 0.18,      // Increased variance for stress testing
-                    decayRate: 0.05,       // Exponential decay factor for stale items
-                    growthCap: 1.5,        // Upper bound for viral demand spikes
-                    iterations: 1000       // Virtual simulation cycles
-                };
-
-                // Enhanced Dataset for Gemini Pro Vision & Analytics
-                const deepAnalyticsBatch = productsData.map(p => ({
-                    uid: p.id,
-                    label: p.name,
-                    inventory: p.stock,
-                    throughput: p.sales,
-                    dailyRate: p.velocity || (Math.random() * 4) + 1,
-                    unitValue: p.priceValue || 5.0,
-                    historyScore: p.sustainability || 75
-                }));
-
-                try {
-                    // Deep Gemini Integration: Peak Level Analytical Analysis
-                    const response = await fetch('https://ai-inventory-pro-sigma.vercel.app/api/gemini', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            task: "peak_analytical_prediction",
-                            parameters: simulationParams,
-                            dataset: deepAnalyticsBatch,
-                            horizon: "24h_cycle",
-                            analysisDepth: "max"
-                        })
-                    });
-
-                    const aiIntelligence = response.ok ? await response.json() : null;
-                    
-                    // --- HYBRID PREDICTION ENGINE (Local Calculus + AI Insight) ---
-                    futureProductsData = productsData.map(p => {
-                        const baseV = p.velocity || (Math.random() * 4) + 1;
-                        
-                        // Local Mathematical Modeling: Non-linear regression proxy
-                        // V(t) = V0 * (1 + sin(t)) * exp(drift)
-                        const drift = (Math.random() - 0.5) * simulationParams.volatility;
-                        const mathVelocity = baseV * Math.exp(drift);
-                        
-                        // AI Influence Factor (Weighted 70% for peak intelligence)
-                        const aiFactor = aiIntelligence?.insights?.[p.id]?.predictionFactor || 1.0;
-                        const weightAI = 0.7;
-                        const weightMath = 0.3;
-                        
-                        const optimizedVelocity = (mathVelocity * weightMath) + (baseV * aiFactor * weightAI);
-                        const finalStock = Math.max(0, Math.floor(p.stock - optimizedVelocity));
-                        
-                        // Extract high-level reasoning from Gemini
-                        let reasoning = aiIntelligence?.insights?.[p.id]?.deepReason || "";
-                        if (!reasoning) {
-                            if (finalStock === 0) reasoning = "Calculated supply-chain exhaustion via demand spike";
-                            else if (finalStock < 5) reasoning = "Asymptotic approach to critical stock floor";
-                            else reasoning = "Equilibrium maintained via predictive flow model";
-                        }
-
-                        return {
-                            ...p,
-                            stock: finalStock,
-                            velocity: optimizedVelocity,
-                            futureReason: reasoning,
-                            predictionConfidence: aiIntelligence?.meta?.confidence || 0.98
-                        };
-                    });
-
-                } catch (e) {
-                    console.error("Peak Analysis Engine Offline, utilizing recursive heuristics", e);
-                    futureProductsData = productsData.map(p => ({
-                        ...p,
-                        stock: Math.max(0, p.stock - ((p.velocity || 2) * 1.2)),
-                        futureReason: "Heuristic projection (Engine Fallback)"
-                    }));
+                const optimizedVelocity = (mathVelocity * weightMath) + (baseV * aiFactor * weightAI);
+                const finalStock = Math.max(0, Math.floor(p.stock - optimizedVelocity));
+                
+                let reasoning = aiIntelligence?.insights?.[p.id]?.deepReason || "";
+                if (!reasoning) {
+                    if (finalStock === 0) reasoning = "Calculated supply-chain exhaustion via demand spike";
+                    else if (finalStock < 5) reasoning = "Asymptotic approach to critical stock floor";
+                    else reasoning = "Equilibrium maintained via predictive flow model";
                 }
 
-                renderShop(futureProductsData);
-                showToast('🚀 Peak Logic Synchronized', 'AI Intelligence & Calculus Engine integrated');
-            }, 2000);
-        };
+                return {
+                    ...p,
+                    stock: finalStock,
+                    velocity: optimizedVelocity,
+                    futureReason: reasoning,
+                    predictionConfidence: aiIntelligence?.meta?.confidence || 0.98
+                };
+            });
+
+        } catch (e) {
+            console.error("Peak Analysis Engine Offline, utilizing recursive heuristics", e);
+            futureProductsData = productsData.map(p => ({
+                ...p,
+                stock: Math.max(0, p.stock - ((p.velocity || 2) * 1.2)),
+                futureReason: "Heuristic projection (Engine Fallback)"
+            }));
+        }
+
+        renderShop(futureProductsData);
+        showToast('🚀 Peak Logic Synchronized', 'AI + Deadline tracking active');
+    }, 2000);
+};
 
         window.exitTimeTravel = function() {
             isTimeTravelMode = false;
@@ -1474,6 +1652,21 @@ window.updateStock = function(productId, change) {
             
             onAuthStateChanged(auth, (user) => {
                 currentUserId = user ? user.uid : "demo-user";
+simulatedTime = new Date(); // Reset to current time
+scanDeadlines();
+
+// Listen for simulation state changes from other tabs/devices
+const simulationStateRef = ref(database, `SimulationState/${currentUserId}`);
+onValue(simulationStateRef, (snapshot) => {
+    const state = snapshot.val();
+    if (state && state.simulatedTime) {
+        const newTime = new Date(state.simulatedTime);
+        if (newTime.getTime() !== simulatedTime.getTime()) {
+            simulatedTime = newTime;
+            scanDeadlines();
+        }
+    }
+});
                 const businessRef = ref(database, `Businesses/${currentUserId}`);
                 
 onValue(businessRef, (snapshot) => {
