@@ -612,20 +612,565 @@ h2 {
     grid-template-columns: 1fr;
   }
   
+/* ============================================
+   ENHANCED CHART SECTION
+   ============================================ */
+
+.chart-section {
+  background: white;
+  padding: 35px;
+  border-radius: 24px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 30px;
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #10b981, #f59e0b);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.chart-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.chart-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Chart Type Switcher */
+.chart-controls {
+  display: flex;
+  gap: 6px;
+  background: #f8fafc;
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.chart-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.chart-btn span {
+  display: none;
+}
+
+.chart-btn:hover {
+  background: white;
+  color: #1e293b;
+  transform: translateY(-1px);
+}
+
+.chart-btn.active {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.chart-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.chart-btn:hover svg {
+  transform: scale(1.15);
+}
+
+/* Chart Legend */
+.chart-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 25px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: white;
+  border-radius: 12px;
+  transition: transform 0.2s ease;
+}
+
+.legend-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.legend-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.legend-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.legend-text strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.legend-text span {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* Chart Container */
+.chart-container {
+  position: relative;
+  height: 350px;
+  margin-bottom: 25px;
+  padding: 15px;
+  background: #fafbfc;
+  border-radius: 16px;
+}
+
+/* Chart Summary */
+.chart-summary {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 2px solid #3b82f6;
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.summary-icon {
+  font-size: 36px;
+  flex-shrink: 0;
+}
+
+.summary-content {
+  flex: 1;
+}
+
+.summary-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1e40af;
+  margin: 0 0 6px 0;
+}
+
+.summary-text {
+  font-size: 14px;
+  color: #1e3a8a;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.summary-highlight {
+  background: white;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  color: #1e40af;
+  display: inline-block;
+  margin: 0 2px;
+}
+
+/* ============================================
+   UPGRADED METRIC CARDS
+   ============================================ */
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.metric-card {
+  background: white;
+  padding: 28px 24px;
+  border-radius: 20px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--card-color), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.metric-card:hover::before {
+  opacity: 1;
+}
+
+.metric-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* Card Color Variants */
+.revenue-card { --card-color: #3b82f6; }
+.profit-card { --card-color: #10b981; }
+.spend-card { --card-color: #f59e0b; }
+.performance-card { --card-color: #8b5cf6; }
+
+/* Metric Icon */
+.metric-icon-wrapper {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  opacity: 0.1;
+}
+
+.metric-icon {
+  font-size: 64px;
+  line-height: 1;
+}
+
+.metric-card:hover .metric-icon-wrapper {
+  opacity: 0.15;
+  transform: scale(1.1);
+  transition: all 0.3s ease;
+}
+
+/* Metric Content */
+.metric-content {
+  position: relative;
+  z-index: 1;
+}
+
+.metric-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.metric-value {
+  font-size: 36px;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 8px;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.metric-sub {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+/* Comparison Badge */
+.comparison-container {
+  margin-top: 12px;
+}
+
+.comparison-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.comparison-up {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%);
+  color: #059669;
+  border: 1.5px solid rgba(16, 185, 129, 0.3);
+}
+
+.comparison-down {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.15) 100%);
+  color: #dc2626;
+  border: 1.5px solid rgba(239, 68, 68, 0.3);
+}
+
+.comparison-neutral {
+  background: rgba(148, 163, 184, 0.1);
+  color: #64748b;
+  border: 1.5px solid rgba(148, 163, 184, 0.2);
+}
+
+/* Enhanced Margin Gauge */
+.margin-gauge {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.margin-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.margin-percentage {
+  font-size: 16px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.margin-bar-wrapper {
+  position: relative;
+}
+
+.margin-bar {
+  height: 12px;
+  background: #f1f5f9;
+  border-radius: 50px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.margin-fill {
+  height: 100%;
+  border-radius: 50px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.margin-profit {
+  background: linear-gradient(90deg, #10b981, #059669);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+}
+
+.margin-loss {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+.margin-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shine 2s infinite;
+}
+
+@keyframes shine {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.margin-indicators {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  padding: 0 4px;
+}
+
+.indicator-mark {
+  font-size: 10px;
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+/* Spend Breakdown */
+.spend-breakdown {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.breakdown-label {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.breakdown-value {
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+/* Performance Visual */
+.performance-visual {
+  margin-top: 16px;
+}
+
+.performance-bar {
+  height: 8px;
+  background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
+  border-radius: 50px;
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.performance-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background: white;
+  border: 3px solid #0f172a;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transition: left 0.5s ease;
+}
+
+.performance-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Metric Glow Effect */
+.metric-glow {
+  position: absolute;
+  bottom: -50%;
+  right: -50%;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(circle, var(--card-color), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.metric-card:hover .metric-glow {
+  opacity: 0.08;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 1200px) {
+  .metric-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .chart-btn span {
+    display: inline;
+  }
+}
+
+@media (max-width: 768px) {
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+  
   .chart-section {
     padding: 20px;
   }
   
-  .metric-value {
-    font-size: 28px;
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
   
-  .grid-header { display: none; }
+  .chart-controls {
+    width: 100%;
+  }
   
-  .product-row {
+  .chart-btn {
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .chart-legend {
     grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 15px;
+  }
+  
+  .chart-container {
+    height: 280px;
+  }
+  
+  .metric-value {
+    font-size: 32px;
+  }
+  
+  .metric-icon {
+    font-size: 48px;
   }
 }
 </style>
@@ -661,57 +1206,183 @@ h2 {
   </div>
 </div>
 
-<!-- Performance Chart -->
+<!-- UPGRADED Performance Chart with Controls -->
 <div class="chart-section">
   <div class="chart-header">
-    <h3 class="chart-title">📈 Performance Overview</h3>
-  </div>
-  <canvas id="performanceChart"></canvas>
-</div>
-
-<!-- Metric Grid - 4 Columns -->
-<div class="metric-grid">
-  <!-- Revenue Card -->
-  <div class="metric-card">
-    <span class="metric-label">Total Revenue</span>
-    <div class="metric-value" id="totalEarned">$0</div>
-    <div class="metric-sub" id="earnedSub">Sales income</div>
-    <div id="earnedComparison"></div>
-  </div>
-
-  <!-- Profit Card with Margin Gauge -->
-  <div class="metric-card">
-    <span class="metric-label">Gross Profit</span>
-    <div class="metric-value" id="grossProfit">$0</div>
-    <div class="metric-sub">After cost deduction</div>
+    <div>
+      <h3 class="chart-title">📊 Performance Dashboard</h3>
+      <p class="chart-subtitle">See how your business is growing in simple visuals</p>
+    </div>
     
-    <div class="margin-gauge">
-      <div class="margin-label">
-        <span id="marginLabel">Profit Margin</span>
-        <span id="marginValue">0%</span>
+    <!-- Chart Type Switcher -->
+    <div class="chart-controls">
+      <button class="chart-btn active" onclick="switchChartType('bar')" id="barBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="3" y="8" width="4" height="13"/>
+          <rect x="10" y="3" width="4" height="18"/>
+          <rect x="17" y="11" width="4" height="10"/>
+        </svg>
+        <span>Bars</span>
+      </button>
+      <button class="chart-btn" onclick="switchChartType('line')" id="lineBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="3 17 9 11 13 15 21 7"/>
+        </svg>
+        <span>Line</span>
+      </button>
+      <button class="chart-btn" onclick="switchChartType('doughnut')" id="doughnutBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 2 L12 12 L20 12" stroke-width="2.5"/>
+        </svg>
+        <span>Pie</span>
+      </button>
+    </div>
+  </div>
+  
+  <!-- Simple Legend Explanation -->
+  <div class="chart-legend">
+    <div class="legend-item">
+      <div class="legend-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+        💰
       </div>
-      <div class="margin-bar">
-        <div class="margin-fill margin-profit" id="marginFill" style="width: 0%"></div>
+      <div class="legend-text">
+        <strong>Revenue</strong>
+        <span>Total money from sales</span>
+      </div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+        ✅
+      </div>
+      <div class="legend-text">
+        <strong>Profit</strong>
+        <span>Your real earnings (after costs)</span>
+      </div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+        💸
+      </div>
+      <div class="legend-text">
+        <strong>Cost</strong>
+        <span>Money spent on products</span>
       </div>
     </div>
   </div>
-
-  <!-- Spend Card -->
-  <div class="metric-card">
-    <span class="metric-label">Total Spend</span>
-    <div class="metric-value" id="totalSpend">$0</div>
-    <div class="metric-sub">Lifetime investment</div>
+  
+  <!-- Chart Canvas -->
+  <div class="chart-container">
+    <canvas id="performanceChart"></canvas>
   </div>
-
-  <!-- Comparison Card -->
-  <div class="metric-card">
-    <span class="metric-label">Performance</span>
-    <div class="metric-value" id="performanceIndicator">—</div>
-    <div class="metric-sub" id="performanceSub">Period comparison</div>
-    <div id="performanceComparison"></div>
+  
+  <!-- Simple Summary Box -->
+  <div class="chart-summary" id="chartSummary">
+    <div class="summary-icon">📈</div>
+    <div class="summary-content">
+      <div class="summary-title">Loading your data...</div>
+      <div class="summary-text">Please wait while we analyze your performance</div>
+    </div>
   </div>
 </div>
 
+<!-- UPGRADED Metric Grid - Enhanced 4-Column Cards -->
+<div class="metric-grid">
+  
+  <!-- Revenue Card - UPGRADED -->
+  <div class="metric-card revenue-card">
+    <div class="metric-icon-wrapper">
+      <div class="metric-icon">💵</div>
+    </div>
+    <div class="metric-content">
+      <span class="metric-label">Total Revenue</span>
+      <div class="metric-value" id="totalEarned">$0</div>
+      <div class="metric-sub" id="earnedSub">Money from all sales</div>
+      <div id="earnedComparison" class="comparison-container"></div>
+    </div>
+    <div class="metric-glow revenue-glow"></div>
+  </div>
+
+  <!-- Profit Card with Enhanced Margin Gauge -->
+  <div class="metric-card profit-card">
+    <div class="metric-icon-wrapper">
+      <div class="metric-icon">💎</div>
+    </div>
+    <div class="metric-content">
+      <span class="metric-label">Gross Profit</span>
+      <div class="metric-value" id="grossProfit">$0</div>
+      <div class="metric-sub">After removing costs</div>
+      
+      <!-- Enhanced Margin Gauge -->
+      <div class="margin-gauge">
+        <div class="margin-label">
+          <span id="marginLabel">Profit Margin</span>
+          <span id="marginValue" class="margin-percentage">0%</span>
+        </div>
+        <div class="margin-bar-wrapper">
+          <div class="margin-bar">
+            <div class="margin-fill margin-profit" id="marginFill" style="width: 0%">
+              <div class="margin-shine"></div>
+            </div>
+          </div>
+          <!-- Visual indicators -->
+          <div class="margin-indicators">
+            <span class="indicator-mark" style="left: 25%;">25%</span>
+            <span class="indicator-mark" style="left: 50%;">50%</span>
+            <span class="indicator-mark" style="left: 75%;">75%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="metric-glow profit-glow"></div>
+  </div>
+
+  <!-- Spend Card - UPGRADED -->
+  <div class="metric-card spend-card">
+    <div class="metric-icon-wrapper">
+      <div class="metric-icon">🏪</div>
+    </div>
+    <div class="metric-content">
+      <span class="metric-label">Total Investment</span>
+      <div class="metric-value" id="totalSpend">$0</div>
+      <div class="metric-sub">Money spent on inventory</div>
+      <div class="spend-breakdown" id="spendBreakdown">
+        <div class="breakdown-item">
+          <span class="breakdown-label">Products:</span>
+          <span class="breakdown-value" id="productCount">0</span>
+        </div>
+      </div>
+    </div>
+    <div class="metric-glow spend-glow"></div>
+  </div>
+
+  <!-- Performance Card - UPGRADED -->
+  <div class="metric-card performance-card">
+    <div class="metric-icon-wrapper">
+      <div class="metric-icon">📊</div>
+    </div>
+    <div class="metric-content">
+      <span class="metric-label">Business Status</span>
+      <div class="metric-value" id="performanceIndicator">—</div>
+      <div class="metric-sub" id="performanceSub">How you're doing</div>
+      <div id="performanceComparison" class="comparison-container"></div>
+      
+      <!-- Performance Visual Indicator -->
+      <div class="performance-visual">
+        <div class="performance-bar" id="performanceBar">
+          <div class="performance-dot"></div>
+        </div>
+        <div class="performance-labels">
+          <span>📉 Down</span>
+          <span>➡️ Stable</span>
+          <span>📈 Growing</span>
+        </div>
+      </div>
+    </div>
+    <div class="metric-glow performance-glow"></div>
+  </div>
+
+</div>
 <div class="products-wrapper">
  <div class="products-header" style="margin-bottom: 25px;">
   <h3 style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 0;">📦 Inventory Manager</h3>
@@ -921,7 +1592,21 @@ function calculateCostForPeriod(startTime, endTime) {
   });
   return cost;
 }
+// Global chart type tracker
+let currentChartType = 'bar';
 
+// Switch chart type function
+function switchChartType(type) {
+  currentChartType = type;
+  
+  // Update button states
+  document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById(type + 'Btn').classList.add('active');
+  
+  // Re-render chart
+  const filter = document.getElementById("timeFilter").value;
+  renderPerformanceChart(filter);
+}
 // CHART RENDERING
 function renderPerformanceChart(filter) {
   const ctx = document.getElementById('performanceChart');
@@ -932,13 +1617,15 @@ function renderPerformanceChart(filter) {
   }
   
   const ranges = getTimeRanges();
+  let labels, datasets, summaryHTML;
   
   if (filter === 'all') {
-    // Line chart for last 30 days
+    // Last 30 days data
     const days = 30;
-    const labels = [];
+    labels = [];
     const revenueData = [];
     const profitData = [];
+    const costData = [];
     
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
@@ -952,138 +1639,247 @@ function renderPerformanceChart(filter) {
       const dayCost = calculateCostForPeriod(startOfDay, endOfDay);
       
       revenueData.push(dayRevenue);
+      costData.push(dayCost);
       profitData.push(dayRevenue - dayCost);
     }
     
-    performanceChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [
-          {
-            label: 'Revenue',
-            data: revenueData,
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            fill: true,
-            tension: 0.4,
-            borderWidth: 2
-          },
-          {
-            label: 'Profit',
-            data: profitData,
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            fill: true,
-            tension: 0.4,
-            borderWidth: 2
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: {
-            position: 'top',
-          }
+    const totalRev = revenueData.reduce((a, b) => a + b, 0);
+    const totalCost = costData.reduce((a, b) => a + b, 0);
+    const totalProfit = profitData.reduce((a, b) => a + b, 0);
+    
+    if (currentChartType === 'doughnut') {
+      datasets = [{
+        data: [totalRev, totalCost, totalProfit],
+        backgroundColor: ['#3b82f6', '#f59e0b', '#10b981'],
+        borderWidth: 4,
+        borderColor: '#fff'
+      }];
+      labels = ['Revenue', 'Cost', 'Profit'];
+    } else {
+      datasets = [
+        {
+          label: 'Revenue',
+          data: revenueData,
+          borderColor: '#3b82f6',
+          backgroundColor: currentChartType === 'line' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.8)',
+          fill: currentChartType === 'line',
+          tension: 0.4,
+          borderWidth: 3,
+          pointRadius: 4,
+          pointHoverRadius: 6
         },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: {
-              color: '#f1f5f9'
-            }
-          },
-          x: {
-            grid: {
-              display: false
-            }
-          }
+        {
+          label: 'Profit',
+          data: profitData,
+          borderColor: '#10b981',
+          backgroundColor: currentChartType === 'line' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.8)',
+          fill: currentChartType === 'line',
+          tension: 0.4,
+          borderWidth: 3,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: 'Cost',
+          data: costData,
+          borderColor: '#f59e0b',
+          backgroundColor: currentChartType === 'line' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(245, 158, 11, 0.8)',
+          fill: currentChartType === 'line',
+          tension: 0.4,
+          borderWidth: 3,
+          pointRadius: 4,
+          pointHoverRadius: 6
         }
-      }
-    });
+      ];
+    }
+    
+    summaryHTML = `
+      <div class="summary-icon">${totalProfit > 0 ? '🎉' : '📊'}</div>
+      <div class="summary-content">
+        <div class="summary-title">Last 30 Days Summary</div>
+        <div class="summary-text">
+          You earned <span class="summary-highlight">${userCurrency} ${totalRev.toFixed(2)}</span> in revenue,
+          spent <span class="summary-highlight">${userCurrency} ${totalCost.toFixed(2)}</span> on costs, and
+          made <span class="summary-highlight">${userCurrency} ${Math.abs(totalProfit).toFixed(2)}</span> ${totalProfit >= 0 ? 'profit ✅' : 'loss ⚠️'}
+        </div>
+      </div>
+    `;
+    
   } else {
-    // Bar chart comparing current vs previous period
-    let currentPeriod, previousPeriod, periodLabel;
+    // Comparison view
+    let currentPeriod, previousPeriod, periodLabels;
     
     switch(filter) {
       case 'today':
         currentPeriod = ranges.today;
         previousPeriod = ranges.yesterday;
-        periodLabel = ['Yesterday', 'Today'];
+        periodLabels = ['Yesterday', 'Today'];
+        break;
+      case 'yesterday':
+        currentPeriod = ranges.yesterday;
+        previousPeriod = { start: ranges.yesterday.start - 86400000, end: ranges.yesterday.start };
+        periodLabels = ['Day Before', 'Yesterday'];
         break;
       case 'week':
         currentPeriod = ranges.thisWeek;
         previousPeriod = ranges.lastWeek;
-        periodLabel = ['Last Week', 'This Week'];
+        periodLabels = ['Last Week', 'This Week'];
+        break;
+      case 'lastWeek':
+        currentPeriod = ranges.lastWeek;
+        previousPeriod = { start: ranges.lastWeek.start - (7 * 86400000), end: ranges.lastWeek.start };
+        periodLabels = ['2 Weeks Ago', 'Last Week'];
         break;
       case 'month':
         currentPeriod = ranges.thisMonth;
         previousPeriod = ranges.lastMonth;
-        periodLabel = ['Last Month', 'This Month'];
+        periodLabels = ['Last Month', 'This Month'];
+        break;
+      case 'lastMonth':
+        currentPeriod = ranges.lastMonth;
+        previousPeriod = { start: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 1).getTime(), end: ranges.lastMonth.start };
+        periodLabels = ['2 Months Ago', 'Last Month'];
         break;
       case 'year':
         currentPeriod = ranges.thisYear;
         previousPeriod = ranges.lastYear;
-        periodLabel = ['Last Year', 'This Year'];
+        periodLabels = ['Last Year', 'This Year'];
         break;
       default:
         currentPeriod = ranges.today;
         previousPeriod = ranges.yesterday;
-        periodLabel = ['Previous', 'Current'];
+        periodLabels = ['Previous', 'Current'];
     }
     
-    const prevRevenue = calculateRevenueForPeriod(previousPeriod.start, previousPeriod.end);
-    const currRevenue = calculateRevenueForPeriod(currentPeriod.start, currentPeriod.end);
-    
+    const prevRev = calculateRevenueForPeriod(previousPeriod.start, previousPeriod.end);
+    const currRev = calculateRevenueForPeriod(currentPeriod.start, currentPeriod.end);
     const prevCost = calculateCostForPeriod(previousPeriod.start, previousPeriod.end);
     const currCost = calculateCostForPeriod(currentPeriod.start, currentPeriod.end);
+    const prevProfit = prevRev - prevCost;
+    const currProfit = currRev - currCost;
     
-    performanceChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: periodLabel,
-        datasets: [
-          {
-            label: 'Revenue',
-            data: [prevRevenue, currRevenue],
-            backgroundColor: '#3b82f6',
-            borderRadius: 8
-          },
-          {
-            label: 'Profit',
-            data: [prevRevenue - prevCost, currRevenue - currCost],
-            backgroundColor: '#10b981',
-            borderRadius: 8
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: {
-            position: 'top',
+    if (currentChartType === 'doughnut') {
+      datasets = [{
+        data: [currRev, currCost, currProfit > 0 ? currProfit : 0],
+        backgroundColor: ['#3b82f6', '#f59e0b', '#10b981'],
+        borderWidth: 4,
+        borderColor: '#fff'
+      }];
+      labels = ['Revenue', 'Cost', 'Profit'];
+    } else {
+      datasets = [
+        {
+          label: 'Revenue',
+          data: [prevRev, currRev],
+          backgroundColor: 'rgba(59, 130, 246, 0.8)',
+          borderColor: '#3b82f6',
+          borderWidth: 2,
+          borderRadius: 10
+        },
+        {
+          label: 'Profit',
+          data: [prevProfit, currProfit],
+          backgroundColor: 'rgba(16, 185, 129, 0.8)',
+          borderColor: '#10b981',
+          borderWidth: 2,
+          borderRadius: 10
+        },
+        {
+          label: 'Cost',
+          data: [prevCost, currCost],
+          backgroundColor: 'rgba(245, 158, 11, 0.8)',
+          borderColor: '#f59e0b',
+          borderWidth: 2,
+          borderRadius: 10
+        }
+      ];
+      labels = periodLabels;
+    }
+    
+    const change = prevRev > 0 ? ((currRev - prevRev) / prevRev * 100) : 0;
+    const direction = currRev > prevRev ? '📈 up' : currRev < prevRev ? '📉 down' : '➡️ same';
+    
+    summaryHTML = `
+      <div class="summary-icon">${currRev > prevRev ? '🚀' : currRev < prevRev ? '⚠️' : '📊'}</div>
+      <div class="summary-content">
+        <div class="summary-title">${periodLabels[1]} vs ${periodLabels[0]}</div>
+        <div class="summary-text">
+          Your revenue is ${direction} by <span class="summary-highlight">${Math.abs(change).toFixed(1)}%</span>
+          (${userCurrency} ${Math.abs(currRev - prevRev).toFixed(2)}).
+          You made <span class="summary-highlight">${userCurrency} ${Math.abs(currProfit).toFixed(2)}</span> ${currProfit >= 0 ? 'profit ✅' : 'loss ⚠️'}
+        </div>
+      </div>
+    `;
+  }
+  
+  // Create the chart
+  performanceChart = new Chart(ctx, {
+    type: currentChartType,
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { 
+          display: currentChartType !== 'doughnut',
+          position: 'top',
+          labels: { 
+            font: { size: 13, weight: 'bold' },
+            padding: 15,
+            usePointStyle: true,
+            pointStyle: 'circle'
           }
         },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: {
-              color: '#f1f5f9'
-            }
-          },
-x: {
-            grid: {
-              display: false
+        tooltip: {
+          backgroundColor: 'rgba(15, 23, 42, 0.95)',
+          padding: 14,
+          cornerRadius: 10,
+          titleFont: { size: 14, weight: 'bold' },
+          bodyFont: { size: 13 },
+          borderWidth: 1,
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          displayColors: true,
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              label += userCurrency + ' ' + context.parsed.y.toFixed(2);
+              return label;
             }
           }
-        } 
-      } 
-    }); 
-  } 
-} 
+        }
+      },
+      scales: currentChartType !== 'doughnut' ? {
+        y: {
+          beginAtZero: true,
+          grid: { 
+            color: '#f1f5f9',
+            drawBorder: false
+          },
+          ticks: { 
+            font: { weight: '600', size: 11 },
+            color: '#64748b',
+            callback: function(value) {
+              return userCurrency + ' ' + value;
+            }
+          }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { 
+            font: { weight: '600', size: 11 },
+            color: '#64748b'
+          }
+        }
+      } : {}
+    }
+  });
+  
+  // Update summary
+  document.getElementById('chartSummary').innerHTML = summaryHTML;
+}
 function calculateFinancials() {
     const filter = document.getElementById("timeFilter").value;
     const ranges = getTimeRanges();
