@@ -653,6 +653,667 @@ body {
         .loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 3000; }
         .loading-spinner { width: 60px; height: 60px; border: 4px solid rgba(0, 243, 255, 0.1); border-top-color: var(--neon-primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+/* ============================================
+   MEGA ALERT SYSTEM - FULL SCREEN WARNINGS
+   ============================================ */
+
+.mega-alert-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.97);
+    backdrop-filter: blur(20px);
+    z-index: 9999;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    animation: alertFadeIn 0.5s ease;
+}
+
+@keyframes alertFadeIn {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(20px);
+    }
+}
+
+/* Warning Stripe Background */
+.warning-stripes {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 50px,
+        rgba(245, 158, 11, 0.05) 50px,
+        rgba(245, 158, 11, 0.05) 100px
+    );
+    animation: stripeScroll 20s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes stripeScroll {
+    0% { background-position: 0 0; }
+    100% { background-position: 100px 100px; }
+}
+
+/* Main Alert Container */
+.mega-alert-container {
+    background: linear-gradient(135deg, 
+        rgba(239, 68, 68, 0.1) 0%, 
+        rgba(245, 158, 11, 0.1) 100%);
+    border: 3px solid var(--warning);
+    border-radius: 24px;
+    padding: 48px;
+    max-width: 700px;
+    width: 90%;
+    position: relative;
+    backdrop-filter: blur(40px);
+    box-shadow: 
+        0 0 100px rgba(245, 158, 11, 0.5),
+        0 20px 60px rgba(0, 0, 0, 0.8),
+        inset 0 0 60px rgba(245, 158, 11, 0.1);
+    animation: containerPulse 2s ease-in-out infinite;
+    text-align: center;
+}
+
+@keyframes containerPulse {
+    0%, 100% {
+        box-shadow: 
+            0 0 100px rgba(245, 158, 11, 0.5),
+            0 20px 60px rgba(0, 0, 0, 0.8);
+    }
+    50% {
+        box-shadow: 
+            0 0 140px rgba(245, 158, 11, 0.8),
+            0 20px 60px rgba(0, 0, 0, 0.8);
+    }
+}
+
+/* Warning Icon with Pulse Rings */
+.mega-alert-icon-wrapper {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 32px;
+}
+
+.mega-alert-icon {
+    font-size: 6rem;
+    color: var(--warning);
+    position: relative;
+    z-index: 2;
+    animation: iconShake 0.5s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.8));
+}
+
+@keyframes iconShake {
+    0%, 100% { transform: rotate(-8deg); }
+    50% { transform: rotate(8deg); }
+}
+
+.alert-pulse-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 140px;
+    height: 140px;
+    border: 4px solid var(--warning);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulseRing 1.5s ease-out infinite;
+    opacity: 0;
+}
+
+@keyframes pulseRing {
+    0% {
+        width: 140px;
+        height: 140px;
+        opacity: 1;
+    }
+    100% {
+        width: 280px;
+        height: 280px;
+        opacity: 0;
+    }
+}
+
+/* Alert Title */
+.mega-alert-title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--warning);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    animation: titleGlow 1.5s ease-in-out infinite;
+    text-shadow: 
+        0 0 20px rgba(245, 158, 11, 0.8),
+        0 0 40px rgba(245, 158, 11, 0.4);
+}
+
+@keyframes titleGlow {
+    0%, 100% {
+        text-shadow: 
+            0 0 20px rgba(245, 158, 11, 0.8),
+            0 0 40px rgba(245, 158, 11, 0.4);
+    }
+    50% {
+        text-shadow: 
+            0 0 30px rgba(245, 158, 11, 1),
+            0 0 60px rgba(245, 158, 11, 0.6);
+    }
+}
+
+.mega-alert-subtitle {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    font-weight: 500;
+}
+
+/* Deadline List Container */
+.deadline-list-container {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 32px;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 2px solid rgba(245, 158, 11, 0.3);
+}
+
+.deadline-item {
+    background: linear-gradient(135deg, 
+        rgba(239, 68, 68, 0.15) 0%, 
+        rgba(245, 158, 11, 0.15) 100%);
+    border-left: 4px solid var(--danger);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+    text-align: left;
+    animation: itemSlideIn 0.5s ease;
+    transition: all 0.3s ease;
+}
+
+.deadline-item:hover {
+    transform: translateX(8px);
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+}
+
+.deadline-item:last-child {
+    margin-bottom: 0;
+}
+
+@keyframes itemSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.deadline-item-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.deadline-item-icon {
+    font-size: 1.5rem;
+    color: var(--danger);
+}
+
+.deadline-item-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.deadline-item-desc {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    padding-left: 44px;
+}
+
+/* Countdown Timer */
+.mega-alert-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(239, 68, 68, 0.2);
+    padding: 16px 32px;
+    border-radius: 50px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--danger);
+    border: 2px solid var(--danger);
+    margin-bottom: 32px;
+    animation: timerPulse 1s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
+    }
+}
+
+#alert-countdown {
+    font-size: 2rem;
+    color: var(--warning);
+    font-weight: 900;
+    min-width: 60px;
+    text-align: center;
+}
+
+/* Action Buttons */
+.mega-alert-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.btn-mega-primary,
+.btn-mega-secondary {
+    padding: 18px 36px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-mega-primary {
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+}
+
+.btn-mega-primary:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 12px 32px rgba(16, 185, 129, 0.6);
+}
+
+.btn-mega-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-mega-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+/* Urgency Progress Bar */
+.urgency-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 50px;
+    overflow: hidden;
+    position: relative;
+}
+
+.urgency-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, 
+        var(--danger) 0%, 
+        var(--warning) 50%, 
+        var(--success) 100%);
+    border-radius: 50px;
+    width: 0%;
+    animation: urgencyFill 2s ease-in-out forwards;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+}
+
+@keyframes urgencyFill {
+    0% { width: 0%; }
+    100% { width: 100%; }
+}
+
+/* Scrollbar Styling */
+.deadline-list-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.deadline-list-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+.deadline-list-container::-webkit-scrollbar-thumb {
+    background: var(--warning);
+    border-radius: 10px;
+}
+
+.deadline-list-container::-webkit-scrollbar-thumb:hover {
+    background: var(--danger);
+}
+/* ============================================
+   MOBILE RESPONSIVE - OPTIMIZED FOR PHONES
+   ============================================ */
+
+@media (max-width: 768px) {
+    .container { 
+        padding: 16px; 
+    }
+    
+    .dashboard-grid { 
+        grid-template-columns: 1fr; 
+    }
+    
+    .top-bar { 
+        flex-direction: column; 
+        gap: 16px; 
+        align-items: stretch; 
+    }
+    
+    .modal { 
+        width: 95%; 
+        padding: 24px; 
+    }
+    
+    /* ===== MEGA ALERT MOBILE OPTIMIZATION ===== */
+    .mega-alert-container {
+        padding: 24px 16px;
+        max-width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .mega-alert-icon-wrapper {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 20px;
+    }
+    
+    .mega-alert-icon {
+        font-size: 4rem;
+    }
+    
+    .alert-pulse-ring {
+        width: 100px;
+        height: 100px;
+    }
+    
+    @keyframes pulseRing {
+        0% {
+            width: 100px;
+            height: 100px;
+            opacity: 1;
+        }
+        100% {
+            width: 200px;
+            height: 200px;
+            opacity: 0;
+        }
+    }
+    
+    .mega-alert-title {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+        letter-spacing: 1px;
+    }
+    
+    .mega-alert-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+    }
+    
+    .deadline-list-container {
+        padding: 16px;
+        margin-bottom: 20px;
+        max-height: 200px;
+    }
+    
+    .deadline-item {
+        padding: 12px 14px;
+        margin-bottom: 12px;
+    }
+    
+    .deadline-item-header {
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+    
+    .deadline-item-icon {
+        font-size: 1.2rem;
+    }
+    
+    .deadline-item-title {
+        font-size: 0.95rem;
+    }
+    
+    .deadline-item-desc {
+        font-size: 0.85rem;
+        padding-left: 36px;
+    }
+    
+    .mega-alert-timer {
+        padding: 12px 20px;
+        font-size: 1rem;
+        margin-bottom: 20px;
+        gap: 8px;
+    }
+    
+    #alert-countdown {
+        font-size: 1.5rem;
+        min-width: 40px;
+    }
+    
+    .mega-alert-actions {
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .btn-mega-primary,
+    .btn-mega-secondary {
+        width: 100%;
+        padding: 14px 24px;
+        font-size: 0.95rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .btn-mega-primary i,
+    .btn-mega-secondary i {
+        font-size: 1.1rem;
+    }
+    
+    /* Make container scrollable on small screens */
+    .mega-alert-container {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Reduce animation intensity on mobile */
+    @keyframes containerPulse {
+        0%, 100% {
+            box-shadow: 
+                0 0 60px rgba(245, 158, 11, 0.4),
+                0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+        50% {
+            box-shadow: 
+                0 0 80px rgba(245, 158, 11, 0.6),
+                0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+    }
+    
+    /* Adjust warning stripes for performance */
+    .warning-stripes {
+        background: repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 30px,
+            rgba(245, 158, 11, 0.03) 30px,
+            rgba(245, 158, 11, 0.03) 60px
+        );
+        animation: stripeScroll 30s linear infinite;
+    }
+}
+
+/* Extra small phones */
+@media (max-width: 380px) {
+    .mega-alert-container {
+        padding: 20px 12px;
+    }
+    
+    .mega-alert-title {
+        font-size: 1.2rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .mega-alert-icon {
+        font-size: 3rem;
+    }
+    
+    .mega-alert-icon-wrapper {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .btn-mega-primary,
+    .btn-mega-secondary {
+        padding: 12px 20px;
+        font-size: 0.85rem;
+    }
+    
+    .deadline-item-title {
+        font-size: 0.9rem;
+    }
+    
+    .deadline-item-desc {
+        font-size: 0.8rem;
+    }
+}
+
+/* Landscape mode optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+    .mega-alert-container {
+        max-height: 85vh;
+        padding: 16px;
+    }
+    
+    .mega-alert-icon-wrapper {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 12px;
+    }
+    
+    .mega-alert-icon {
+        font-size: 2.5rem;
+    }
+    
+    .mega-alert-title {
+        font-size: 1.3rem;
+        margin-bottom: 6px;
+    }
+    
+    .mega-alert-subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+    }
+    
+    .deadline-list-container {
+        max-height: 150px;
+        margin-bottom: 12px;
+    }
+    
+    .mega-alert-timer {
+        padding: 8px 16px;
+        margin-bottom: 12px;
+    }
+    
+    .mega-alert-actions {
+        flex-direction: row;
+        gap: 8px;
+    }
+}
+/* Touch Device Optimization */
+@media (hover: none) and (pointer: coarse) {
+    /* Larger touch targets */
+    .btn-mega-primary,
+    .btn-mega-secondary {
+        min-height: 48px;
+    }
+    
+    /* Disable hover effects on touch devices */
+    .btn-mega-primary:hover,
+    .btn-mega-secondary:hover {
+        transform: none;
+    }
+    
+    /* Active state for touch feedback */
+    .btn-mega-primary:active {
+        transform: scale(0.95);
+        opacity: 0.9;
+    }
+    
+    .btn-mega-secondary:active {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+    
+    /* Smoother scrolling */
+    .deadline-list-container {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+    }
+}
+
+/* Prevent zoom on double-tap (iOS) */
+@media (max-width: 768px) {
+    .mega-alert-overlay * {
+        touch-action: manipulation;
+    }
+}
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .mega-alert-container {
+        padding: 32px 24px;
+    }
+    
+    .mega-alert-title {
+        font-size: 1.8rem;
+    }
+    
+    .mega-alert-icon {
+        font-size: 4rem;
+    }
+    
+    .mega-alert-actions {
+        flex-direction: column;
+    }
+    
+    .btn-mega-primary,
+    .btn-mega-secondary {
+        width: 100%;
+    }
+}
+
 
         .status-indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #ff4444; margin-right: 8px; animation: statusPulse 2s infinite; }
         .status-indicator.connected { background: var(--neon-accent); }
@@ -660,6 +1321,59 @@ body {
     </style>
 </head>
 <body>
+<!-- MEGA ALERT OVERLAY - Full Screen Warning -->
+<div id="mega-alert-overlay" class="mega-alert-overlay">
+    <div class="mega-alert-container">
+        <!-- Animated Warning Icon -->
+        <div class="mega-alert-icon-wrapper">
+            <i class="fas fa-exclamation-triangle mega-alert-icon"></i>
+            <div class="alert-pulse-ring"></div>
+            <div class="alert-pulse-ring" style="animation-delay: 0.3s;"></div>
+            <div class="alert-pulse-ring" style="animation-delay: 0.6s;"></div>
+        </div>
+        
+        <!-- Alert Content -->
+        <div class="mega-alert-content">
+            <h1 class="mega-alert-title" id="mega-alert-title">⚠️ DEADLINE APPROACHING ⚠️</h1>
+            <div class="mega-alert-subtitle">Urgent items require your attention!</div>
+            
+            <!-- Deadline List -->
+            <div class="deadline-list-container" id="deadline-list-container">
+                <!-- Items will be dynamically added here -->
+            </div>
+            
+            <!-- Countdown Timer -->
+            <div class="mega-alert-timer">
+                <i class="fas fa-clock"></i>
+                <span id="alert-countdown">24</span> hours remaining
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="mega-alert-actions">
+            <button class="btn-mega-primary" onclick="dismissMegaAlert()">
+                <i class="fas fa-check-circle"></i> I UNDERSTAND
+            </button>
+            <button class="btn-mega-secondary" onclick="snoozeAlert()">
+                <i class="fas fa-clock"></i> Remind me in 1 hour
+            </button>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="urgency-bar">
+            <div class="urgency-bar-fill" id="urgency-bar-fill"></div>
+        </div>
+    </div>
+    
+    <!-- Background Warning Pattern -->
+    <div class="warning-stripes"></div>
+</div>
+
+<!-- Sound Effect (Hidden Audio) -->
+<audio id="alert-sound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUKng8LJeGAg4kNbwzXYnBSh+zPDglEILD1y46+mjUBELTKXh8bllHAU2jdXu0H0pBSl+yO/hlkwPDlqy6OyrWBUIRJzd8sFuIwUqgMzy2Ik2Bxto" type="audio/wav">
+</audio>
+
     <div class="loading" id="loading">
         <div class="loading-spinner"></div>
         <div style="color: var(--neon-primary); font-size: 18px;">Loading Digital Twin...</div>
@@ -1456,22 +2170,511 @@ const formattedPrice = `$${parseFloat(priceValue).toFixed(2)}`;
                 });
             });
         }
-        
-        // Initial render of floor
-       // Initial render of floor
-        renderFloors(1);
-
         // ============================================
+// MEGA ALERT SYSTEM - ENHANCED DEADLINE CHECKS
+// ============================================
+
+// Check for approaching and overdue deadlines
+function checkDeadlines() {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const todayStr = today.toISOString().split('T')[0];
+    
+    const baseRef = `BusinessOwners/${currentUserId}/BusinessItems`;
+    let urgentAlerts = []; // Tomorrow's deadlines
+    let criticalAlerts = []; // Today's deadlines
+
+    // Check Transactions
+    db.ref(`${baseRef}/transactions`).once('value', snapshot => {
+        snapshot.forEach(child => {
+            const t = child.val();
+            if (t.date === tomorrowStr) {
+                urgentAlerts.push({
+                    type: 'transaction',
+                    icon: 'fa-dollar-sign',
+                    title: `Payment: ${t.name}`,
+                    desc: `${currencySymbol}${t.amount} - ${t.type === 'owe' ? 'You owe them' : 'They owe you'}`
+                });
+            }
+            if (t.date === todayStr) {
+                criticalAlerts.push({
+                    type: 'transaction',
+                    icon: 'fa-dollar-sign',
+                    title: `URGENT: Payment ${t.name}`,
+                    desc: `${currencySymbol}${t.amount} - DUE TODAY!`
+                });
+            }
+        });
+        checkOrders();
+    });
+
+    function checkOrders() {
+        db.ref(`${baseRef}/pendingorders`).once('value', snapshot => {
+            snapshot.forEach(child => {
+                const o = child.val();
+                if (o.deadline === tomorrowStr) {
+                    urgentAlerts.push({
+                        type: 'order',
+                        icon: 'fa-box-open',
+                        title: `Order: ${o.category}`,
+                        desc: o.desc
+                    });
+                }
+                if (o.deadline === todayStr) {
+                    criticalAlerts.push({
+                        type: 'order',
+                        icon: 'fa-box-open',
+                        title: `URGENT ORDER: ${o.category}`,
+                        desc: o.desc + ' - DUE TODAY!'
+                    });
+                }
+            });
+            checkNotes();
+        });
+    }
+
+    function checkNotes() {
+        db.ref(`${baseRef}/notes`).once('value', snapshot => {
+            snapshot.forEach(child => {
+                const n = child.val();
+                if (n.date === tomorrowStr) {
+                    urgentAlerts.push({
+                        type: 'note',
+                        icon: 'fa-sticky-note',
+                        title: `Note: ${n.title}`,
+                        desc: n.content.substring(0, 60) + '...'
+                    });
+                }
+                if (n.date === todayStr) {
+                    criticalAlerts.push({
+                        type: 'note',
+                        icon: 'fa-sticky-note',
+                        title: `URGENT NOTE: ${n.title}`,
+                        desc: n.content.substring(0, 60) + '...'
+                    });
+                }
+            });
+            checkJobs();
+        });
+    }
+
+    function checkJobs() {
+        db.ref(`${baseRef}/teamandstaff`).once('value', snapshot => {
+            snapshot.forEach(memberSnapshot => {
+                const member = memberSnapshot.val();
+                if (member.jobs) {
+                    Object.values(member.jobs).forEach(job => {
+                        if (!job.completed) {
+                            if (job.deadline === tomorrowStr) {
+                                urgentAlerts.push({
+                                    type: 'task',
+                                    icon: 'fa-tasks',
+                                    title: `Task for ${member.name}`,
+                                    desc: job.desc
+                                });
+                            }
+                            if (job.deadline === todayStr) {
+                                criticalAlerts.push({
+                                    type: 'task',
+                                    icon: 'fa-tasks',
+                                    title: `URGENT: ${member.name}'s Task`,
+                                    desc: job.desc + ' - DUE TODAY!'
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // Show mega alert if any deadlines found
+            const allAlerts = [...criticalAlerts, ...urgentAlerts];
+            if (allAlerts.length > 0) {
+                showMegaAlert(allAlerts, criticalAlerts.length > 0);
+            }
+        });
+    }
+}
+
+// Display MEGA full-screen alert
+function showMegaAlert(alerts, isCritical) {
+    const overlay = document.getElementById('mega-alert-overlay');
+    const title = document.getElementById('mega-alert-title');
+    const container = document.getElementById('deadline-list-container');
+    const countdown = document.getElementById('alert-countdown');
+    
+    // Update title based on urgency
+    if (isCritical) {
+        title.innerHTML = '🔥 URGENT DEADLINES TODAY! 🔥';
+        title.style.color = 'var(--danger)';
+        countdown.textContent = '0';
+    } else {
+        title.innerHTML = '⚠️ DEADLINE APPROACHING ⚠️';
+        title.style.color = 'var(--warning)';
+        countdown.textContent = '24';
+    }
+    
+    // Build deadline list
+    container.innerHTML = '';
+    alerts.forEach((alert, index) => {
+        const item = document.createElement('div');
+        item.className = 'deadline-item';
+        item.style.animationDelay = `${index * 0.1}s`;
+        item.innerHTML = `
+            <div class="deadline-item-header">
+                <i class="fas ${alert.icon} deadline-item-icon"></i>
+                <div class="deadline-item-title">${alert.title}</div>
+            </div>
+            <div class="deadline-item-desc">${alert.desc}</div>
+        `;
+        container.appendChild(item);
+    });
+    
+    // Show overlay
+    overlay.style.display = 'flex';
+    
+    // Play alert sound
+    const sound = document.getElementById('alert-sound');
+    sound.play().catch(e => console.log('Audio play failed:', e));
+    
+    // Prevent closing by clicking outside (force user to acknowledge)
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            // Shake animation when trying to click outside
+            document.querySelector('.mega-alert-container').style.animation = 'shake 0.5s ease';
+            setTimeout(() => {
+                document.querySelector('.mega-alert-container').style.animation = 'containerPulse 2s ease-in-out infinite';
+            }, 500);
+        }
+    };
+}
+// Play alert sound using Web Audio API (more reliable)
+function playAlertSound() {
+    try {
+        // Try HTML5 Audio first
+        const sound = document.getElementById('alert-sound');
+        if (sound) {
+            sound.src = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'; // Emergency alert
+            sound.volume = 0.7;
+            sound.play().catch(() => {
+                // Fallback: Use Web Audio API to generate beep
+                playBeepSound();
+            });
+        } else {
+            playBeepSound();
+        }
+    } catch (e) {
+        console.log('Sound play failed:', e);
+        playBeepSound();
+    }
+}
+
+// Fallback: Generate beep sound using Web Audio API
+function playBeepSound() {
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Create three urgent beeps
+        for (let i = 0; i < 3; i++) {
+            setTimeout(() => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800; // High pitch for urgency
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            }, i * 300); // 300ms between beeps
+        }
+    } catch (e) {
+        console.log('Beep sound failed:', e);
+    }
+}
+// Dismiss mega alert
+function dismissMegaAlert() {
+    const overlay = document.getElementById('mega-alert-overlay');
+    overlay.style.animation = 'alertFadeOut 0.5s ease';
+    
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        overlay.style.animation = 'alertFadeIn 0.5s ease';
+    }, 500);
+}
+
+// Snooze alert for 1 hour
+function snoozeAlert() {
+    dismissMegaAlert();
+    
+    // Set timeout to show again in 1 hour
+    setTimeout(() => {
+        checkDeadlines();
+    }, 3600000); // 1 hour in milliseconds
+    
+    // Show confirmation
+    alert('⏰ Alert snoozed! You will be reminded in 1 hour.');
+}
+
+// Add shake animation to CSS
+const shakeKeyframes = `
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+`;
+
+// Inject shake animation
+const styleSheet = document.createElement('style');
+styleSheet.textContent = shakeKeyframes;
+document.head.appendChild(styleSheet);
+        // --- NAVIGATION ---
+        function navTo(viewId) {
+            document.querySelectorAll('.section-view, #dashboard-view').forEach(el => el.style.display = 'none');
+            document.getElementById(viewId).style.display = 'block';
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModals() {
+            document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
+        }
+
+        // --- FILE VALIDATION: Dynamic Accept Attribute ---
+        function updateFileAccept() {
+            const category = document.getElementById('legal-cat').value;
+            const fileInput = document.getElementById('legal-file');
+            
+            if (category === 'PDF') {
+                fileInput.accept = 'application/pdf';
+            } else if (category === 'Doc') {
+                fileInput.accept = '.doc,.docx,.txt';
+            } else if (category === 'Image') {
+                fileInput.accept = 'image/jpeg,image/png,image/webp';
+            }
+        }
+
+        // Initialize file accept on page load
+        updateFileAccept();
+
+        // --- HELPER FUNCTIONS ---
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function updateMeta(type) {
+            const dateStr = new Date().toISOString().split('T')[0];
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/meta/${type}lastdate`).set(dateStr);
+        }
+
+        function showScanAnimation() {
+            document.getElementById('scan-overlay').style.display = 'flex';
+        }
+
+        function hideScanAnimation() {
+            document.getElementById('scan-overlay').style.display = 'none';
+        }
+
+        // --- DELETE CONFIRMATION ---
+        function confirmDelete(callback) {
+            deleteCallback = callback;
+            openModal('confirm-modal');
+            
+            // Attach the delete action to the confirm button
+            document.getElementById('confirm-delete-btn').onclick = () => {
+                if (deleteCallback) deleteCallback();
+                closeModals();
+                deleteCallback = null;
+            };
+        }
+
+        // --- DATABASE LISTENERS ---
+        function initListeners() {
+            const baseRef = `BusinessOwners/${currentUserId}/BusinessItems`;
+
+            // Legal Documents Listener
+            db.ref(`${baseRef}/legaldocuments`).on('value', snapshot => {
+                const list = document.getElementById('legal-list');
+                list.innerHTML = '';
+                
+                snapshot.forEach(child => {
+                    const doc = child.val();
+                    const docKey = child.key;
+                    const div = document.createElement('div');
+                    div.className = 'doc-card glass';
+
+                    let thumb = doc.preview || doc.url || 'https://cdn-icons-png.flaticon.com/512/337/337948.png';
+
+                    div.innerHTML = `
+                        <button class="delete-doc-btn" onclick="event.stopPropagation(); confirmDelete(() => deleteLegal('${docKey}'))">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <img src="${thumb}" class="doc-thumb" style="cursor: pointer;" onclick="window.open('${doc.url}', '_blank')">
+                        <div style="font-weight:600; margin-top: 8px; color: var(--text-primary);">${doc.name}</div>
+                        <div style="font-size:0.85rem; color: var(--text-muted); margin-top: 4px;">${doc.category}</div>
+                    `;
+                    list.appendChild(div);
+                });
+
+                if(snapshot.exists()) {
+                    document.getElementById('meta-legal').innerText = "Last update: Today";
+                } else {
+                    document.getElementById('meta-legal').innerText = "No documents yet";
+                }
+            });
+
+            // Transactions Listener
+// --- Inside initListeners() for Transactions ---
+db.ref(`${baseRef}/transactions`).on('value', snapshot => {
+    const list = document.getElementById('trans-list');
+    list.innerHTML = '';
+    
+    snapshot.forEach(child => {
+        const t = child.val();
+        const transKey = child.key;
+        const colorClass = t.type === 'owe' ? 'badge-red' : 'badge-green';
+        const label = t.type === 'owe' ? 'I Owe' : 'Owed to Me';
+        
+        const div = document.createElement('div');
+        div.className = 'list-item glass';
+        div.innerHTML = `
+            <div class="list-item-content">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items: center;">
+                    <span style="font-weight:600; font-size:1.15rem;">${t.name}</span>
+                    <span class="badge ${colorClass}">${label}</span>
+                </div>
+                <div style="color: var(--text-secondary); font-size:0.95rem; margin-bottom: 4px;">${t.details}</div>
+                <div style="margin-top:10px; font-weight:600; font-size: 1.1rem; color: var(--text-primary);">
+    <span class="currency-symbol">${currencySymbol}</span>${t.amount} 
+    <span style="font-weight:400; color: var(--text-muted); font-size:0.85rem; margin-left:12px;">
+                        <i class="fas fa-calendar-alt"></i> ${t.date}
+                    </span>
+                </div>
+                ${t.url ? `<button class="btn btn-secondary" style="margin-top:12px; padding:8px 14px; font-size:0.8rem;" onclick="previewDoc('${t.url}')"><i class="fas fa-receipt"></i> View Receipt</button>` : ''}
+            </div>
+            <div class="item-actions">
+                <button class="btn btn-danger" onclick="confirmDelete(() => deleteTransaction('${transKey}'))">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+});
+
+            // Notes Listener
+            db.ref(`${baseRef}/notes`).on('value', snapshot => {
+                const list = document.getElementById('notes-list');
+                list.innerHTML = '';
+                
+                snapshot.forEach(child => {
+                    const n = child.val();
+                    const noteKey = child.key;
+                    const div = document.createElement('div');
+                    div.className = 'card glass';
+                    div.style.height = 'auto';
+                    div.style.cursor = 'default';
+                    div.innerHTML = `
+                        <div>
+                            <div class="card-title">${n.title}</div>
+                            <div style="color: var(--text-secondary); font-size:0.95rem; margin:12px 0; white-space: pre-wrap; line-height: 1.6;">${n.content}</div>
+                            <div class="card-meta"><i class="fas fa-calendar"></i> ${n.date || 'No date'}</div>
+                        </div>
+                        <button class="btn btn-danger" style="margin-top: 16px; width: 100%;" onclick="confirmDelete(() => deleteNote('${noteKey}'))">
+                            <i class="fas fa-trash"></i> Delete Note
+                        </button>
+                    `;
+                    list.appendChild(div);
+                });
+            });
+
+            // Pending Orders Listener
+            db.ref(`${baseRef}/pendingorders`).on('value', snapshot => {
+                const list = document.getElementById('orders-list');
+                list.innerHTML = '';
+                
+                snapshot.forEach(child => {
+                    const o = child.val();
+                    const orderKey = child.key;
+                    const div = document.createElement('div');
+                    div.className = 'list-item glass';
+                    div.innerHTML = `
+                        <div class="list-item-content">
+                            <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-weight:600; font-size: 1.1rem;">${o.category}</span>
+                                <span style="color:var(--danger); font-size:0.85rem; font-weight: 600;">
+                                    <i class="fas fa-clock"></i> Due: ${o.deadline}
+                                </span>
+                            </div>
+                            <div style="margin-top:8px; color: var(--text-secondary); font-size: 0.95rem;">${o.desc}</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn btn-danger" onclick="confirmDelete(() => deleteOrder('${orderKey}'))">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            });
+
+            // Team Listener
+            db.ref(`${baseRef}/teamandstaff`).on('value', snapshot => {
+                const list = document.getElementById('team-list');
+                list.innerHTML = '';
+                
+                snapshot.forEach(child => {
+                    const m = child.val();
+                    const key = child.key;
+                    const div = document.createElement('div');
+                    div.className = 'card glass';
+                    div.style.cursor = 'pointer';
+                    div.onclick = () => openMemberView(key, m.name);
+                    div.innerHTML = `
+                        <div>
+                            <i class="fas fa-user-circle card-icon"></i>
+                            <div>
+                                <div class="card-title">${m.name}</div>
+                                <div style="font-size:0.95rem; color:var(--primary); margin: 6px 0;">${m.role}</div>
+                                <div class="card-meta">${m.status}</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-danger" style="margin-top: 16px; width: 100%;" onclick="event.stopPropagation(); confirmDelete(() => deleteMember('${key}'))">
+                            <i class="fas fa-trash"></i> Remove
+                        </button>
+                    `;
+                    list.appendChild(div);
+                });
+            });
+        }
+       // ============================================
         // CORRECTED MEGA ALERT SYSTEM - FIREBASE V9+
         // ============================================
 
         // Check for approaching and overdue deadlines
         async function checkDeadlines() {
+            console.log('🔍 Checking deadlines...');
             const today = new Date();
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
             const tomorrowStr = tomorrow.toISOString().split('T')[0];
             const todayStr = today.toISOString().split('T')[0];
+            
+            console.log('Today:', todayStr, 'Tomorrow:', tomorrowStr);
             
             const baseRef = `BusinessOwners/${currentUserId}/BusinessItems`;
             let urgentAlerts = []; // Tomorrow's deadlines
@@ -1481,6 +2684,7 @@ const formattedPrice = `$${parseFloat(priceValue).toFixed(2)}`;
                 // Check Transactions
                 const transSnapshot = await get(ref(database, `${baseRef}/transactions`));
                 if (transSnapshot.exists()) {
+                    console.log('Found transactions');
                     transSnapshot.forEach(child => {
                         const t = child.val();
                         if (t.date === tomorrowStr) {
@@ -1505,6 +2709,7 @@ const formattedPrice = `$${parseFloat(priceValue).toFixed(2)}`;
                 // Check Orders
                 const ordersSnapshot = await get(ref(database, `${baseRef}/pendingorders`));
                 if (ordersSnapshot.exists()) {
+                    console.log('Found orders');
                     ordersSnapshot.forEach(child => {
                         const o = child.val();
                         if (o.deadline === tomorrowStr) {
@@ -1529,6 +2734,7 @@ const formattedPrice = `$${parseFloat(priceValue).toFixed(2)}`;
                 // Check Notes
                 const notesSnapshot = await get(ref(database, `${baseRef}/notes`));
                 if (notesSnapshot.exists()) {
+                    console.log('Found notes');
                     notesSnapshot.forEach(child => {
                         const n = child.val();
                         if (n.date === tomorrowStr) {
@@ -1553,6 +2759,7 @@ const formattedPrice = `$${parseFloat(priceValue).toFixed(2)}`;
                 // Check Jobs
                 const teamSnapshot = await get(ref(database, `${baseRef}/teamandstaff`));
                 if (teamSnapshot.exists()) {
+                    console.log('Found team members');
                     teamSnapshot.forEach(memberSnapshot => {
                         const member = memberSnapshot.val();
                         if (member.jobs) {
@@ -1582,16 +2789,20 @@ const formattedPrice = `$${parseFloat(priceValue).toFixed(2)}`;
                 
                 // Show mega alert if any deadlines found
                 const allAlerts = [...criticalAlerts, ...urgentAlerts];
+                console.log('Total alerts found:', allAlerts.length);
                 if (allAlerts.length > 0) {
                     showMegaAlert(allAlerts, criticalAlerts.length > 0);
+                } else {
+                    console.log('✅ No deadlines approaching');
                 }
             } catch (error) {
-                console.error('Error checking deadlines:', error);
+                console.error('❌ Error checking deadlines:', error);
             }
         }
 
         // Display MEGA full-screen alert
         function showMegaAlert(alerts, isCritical) {
+            console.log('🚨 SHOWING MEGA ALERT');
             const overlay = document.getElementById('mega-alert-overlay');
             const title = document.getElementById('mega-alert-title');
             const container = document.getElementById('deadline-list-container');
@@ -1600,11 +2811,11 @@ const formattedPrice = `$${parseFloat(priceValue).toFixed(2)}`;
             // Update title based on urgency
             if (isCritical) {
                 title.innerHTML = '🔥 URGENT DEADLINES TODAY! 🔥';
-                title.style.color = 'var(--danger)';
+                title.style.color = '#ff0040';
                 countdown.textContent = '0';
             } else {
                 title.innerHTML = '⚠️ DEADLINE APPROACHING ⚠️';
-                title.style.color = 'var(--warning)';
+                title.style.color = '#ffaa00';
                 countdown.textContent = '24';
             }
             
@@ -1629,16 +2840,6 @@ const formattedPrice = `$${parseFloat(priceValue).toFixed(2)}`;
             
             // Play alert sound
             playAlertSound();
-            
-            // Prevent closing by clicking outside
-            overlay.onclick = (e) => {
-                if (e.target === overlay) {
-                    document.querySelector('.mega-alert-container').style.animation = 'shake 0.5s ease';
-                    setTimeout(() => {
-                        document.querySelector('.mega-alert-container').style.animation = 'containerPulse 2s ease-in-out infinite';
-                    }, 500);
-                }
-            };
         }
 
         // Play alert sound
@@ -1680,12 +2881,9 @@ const formattedPrice = `$${parseFloat(priceValue).toFixed(2)}`;
 
         // Dismiss mega alert
         window.dismissMegaAlert = function() {
+            console.log('Dismissing alert');
             const overlay = document.getElementById('mega-alert-overlay');
-            overlay.style.animation = 'alertFadeOut 0.5s ease';
-            setTimeout(() => {
-                overlay.style.display = 'none';
-                overlay.style.animation = 'alertFadeIn 0.5s ease';
-            }, 500);
+            overlay.style.display = 'none';
         };
 
         // Snooze alert
@@ -1694,213 +2892,7 @@ const formattedPrice = `$${parseFloat(priceValue).toFixed(2)}`;
             setTimeout(() => checkDeadlines(), 3600000); // 1 hour
             showToast('⏰ Alert Snoozed', 'Will remind you in 1 hour');
         };
-
-        // --- DATABASE LISTENERS ---
-        function initListeners() {
-            const baseRef = `BusinessOwners/${currentUserId}/BusinessItems`;
-
-            // Legal Documents Listener
-            onValue(ref(database, `${baseRef}/legaldocuments`), snapshot => {
-                const list = document.getElementById('legal-list');
-                if (!list) return;
-                list.innerHTML = '';
-                
-                snapshot.forEach(child => {
-                    const doc = child.val();
-                    const docKey = child.key;
-                    const div = document.createElement('div');
-                    div.className = 'doc-card glass';
-                    let thumb = doc.preview || doc.url || 'https://cdn-icons-png.flaticon.com/512/337/337948.png';
-                    div.innerHTML = `
-                        <button class="delete-doc-btn" onclick="event.stopPropagation(); confirmDelete(() => deleteLegal('${docKey}'))">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        <img src="${thumb}" class="doc-thumb" style="cursor: pointer;" onclick="window.open('${doc.url}', '_blank')">
-                        <div style="font-weight:600; margin-top: 8px;">${doc.name}</div>
-                        <div style="font-size:0.85rem; color: #999; margin-top: 4px;">${doc.category}</div>
-                    `;
-                    list.appendChild(div);
-                });
-            });
-
-            // Transactions Listener
-            onValue(ref(database, `${baseRef}/transactions`), snapshot => {
-                const list = document.getElementById('trans-list');
-                if (!list) return;
-                list.innerHTML = '';
-                
-                snapshot.forEach(child => {
-                    const t = child.val();
-                    const transKey = child.key;
-                    const colorClass = t.type === 'owe' ? 'badge-red' : 'badge-green';
-                    const label = t.type === 'owe' ? 'I Owe' : 'Owed to Me';
-                    const div = document.createElement('div');
-                    div.className = 'list-item glass';
-                    div.innerHTML = `
-                        <div class="list-item-content">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                                <span style="font-weight:600;">${t.name}</span>
-                                <span class="badge ${colorClass}">${label}</span>
-                            </div>
-                            <div style="color: #999; margin-bottom: 4px;">${t.details}</div>
-                            <div style="margin-top:10px; font-weight:600;">
-                                $${t.amount} <span style="font-weight:400; color: #999; font-size:0.85rem; margin-left:12px;">📅 ${t.date}</span>
-                            </div>
-                        </div>
-                        <button class="btn btn-danger" onclick="confirmDelete(() => deleteTransaction('${transKey}'))">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    `;
-                    list.appendChild(div);
-                });
-                
-                // Check deadlines after transaction update
-                checkDeadlines();
-            });
-
-            // Notes Listener
-            onValue(ref(database, `${baseRef}/notes`), snapshot => {
-                const list = document.getElementById('notes-list');
-                if (!list) return;
-                list.innerHTML = '';
-                
-                snapshot.forEach(child => {
-                    const n = child.val();
-                    const noteKey = child.key;
-                    const div = document.createElement('div');
-                    div.className = 'card glass';
-                    div.innerHTML = `
-                        <div class="card-title">${n.title}</div>
-                        <div style="color: #999; margin:12px 0; white-space: pre-wrap;">${n.content}</div>
-                        <div class="card-meta">📅 ${n.date || 'No date'}</div>
-                        <button class="btn btn-danger" style="margin-top: 16px; width: 100%;" onclick="confirmDelete(() => deleteNote('${noteKey}'))">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    `;
-                    list.appendChild(div);
-                });
-                
-                // Check deadlines after notes update
-                checkDeadlines();
-            });
-
-            // Pending Orders Listener
-            onValue(ref(database, `${baseRef}/pendingorders`), snapshot => {
-                const list = document.getElementById('orders-list');
-                if (!list) return;
-                list.innerHTML = '';
-                
-                snapshot.forEach(child => {
-                    const o = child.val();
-                    const orderKey = child.key;
-                    const div = document.createElement('div');
-                    div.className = 'list-item glass';
-                    div.innerHTML = `
-                        <div class="list-item-content">
-                            <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
-                                <span style="font-weight:600;">${o.category}</span>
-                                <span style="color:red; font-size:0.85rem;">⏰ Due: ${o.deadline}</span>
-                            </div>
-                            <div style="margin-top:8px; color: #999;">${o.desc}</div>
-                        </div>
-                        <button class="btn btn-danger" onclick="confirmDelete(() => deleteOrder('${orderKey}'))">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    `;
-                    list.appendChild(div);
-                });
-                
-                // Check deadlines after orders update
-                checkDeadlines();
-            });
-
-            // Team Listener
-            onValue(ref(database, `${baseRef}/teamandstaff`), snapshot => {
-                const list = document.getElementById('team-list');
-                if (!list) return;
-                list.innerHTML = '';
-                
-                snapshot.forEach(child => {
-                    const m = child.val();
-                    const key = child.key;
-                    const div = document.createElement('div');
-                    div.className = 'card glass';
-                    div.innerHTML = `
-                        <div class="card-title">${m.name}</div>
-                        <div style="font-size:0.95rem; margin: 6px 0;">${m.role}</div>
-                        <div class="card-meta">${m.status}</div>
-                        <button class="btn btn-danger" style="margin-top: 16px; width: 100%;" onclick="event.stopPropagation(); confirmDelete(() => deleteMember('${key}'))">
-                            <i class="fas fa-trash"></i> Remove
-                        </button>
-                    `;
-                    list.appendChild(div);
-                });
-                
-                // Check deadlines after team update
-                checkDeadlines();
-            });
-
-            // INITIAL DEADLINE CHECK ON LOAD
-            setTimeout(() => checkDeadlines(), 2000);
-            
-            // PERIODIC CHECK EVERY 30 MINUTES
-            setInterval(() => checkDeadlines(), 1800000);
-        }
-
-        // Call initListeners when user is authenticated
-        if (!window.firebaseListenerActive) {
-            window.firebaseListenerActive = true;
-            
-            onAuthStateChanged(auth, (user) => {
-                currentUserId = user ? user.uid : "demo-user";
-                const businessRef = ref(database, `Businesses/${currentUserId}`);
-                
-                onValue(businessRef, (snapshot) => {
-                    const business = snapshot.val();
-                    let newProducts = [];
-                    const inventory = business?.inventory || {};
-                    const priceList = business?.prices || {};
-
-                    if (inventory) {
-                        Object.keys(inventory).forEach((key, index) => {
-                            const inv = inventory[key];
-                            const priceData = priceList[key];
-                            const priceValue = priceData?.sellPrice || 0; 
-                            const formattedPrice = `$${parseFloat(priceValue).toFixed(2)}`;
-                            
-                            newProducts.push({
-                                id: key,
-                                name: inv.name || key,
-                                icon: iconMap[key.toLowerCase()] || '📦',
-                                price: formattedPrice, 
-                                stock: parseInt(inv.quantity || 0),
-                                sales: parseInt(inv.sold || 0),
-                                x: parseInt(inv.x !== undefined ? inv.x : index % 10),
-                                y: parseInt(inv.y !== undefined ? inv.y : Math.floor(index / 10) % 10),
-                                floor: Math.floor(index / 100) 
-                            });
-                        });
-                    } else {
-                        newProducts = [
-                            {id: 'p1', name: 'Organic Apple', price: '$2.50', stock: 50, sales: 60, x: 2, y: 2, icon: '🍎', floor: 0},
-                            {id: 'p2', name: 'Fresh Bread', price: '$4.00', stock: 10, sales: 20, x: 3, y: 3, icon: '🍞', floor: 0},
-                        ];
-                    }
-                    
-                    productsData = newProducts;
-                    renderShop(productsData);
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('statusIndicator').classList.add('connected');
-                    
-                    // Initialize other listeners
-                    initListeners();
-                });
-            });
-        }
-
-    </script>
-</body>
-</html>
+        renderFloors(1);
 
     </script>
 </body>
