@@ -490,39 +490,50 @@ body {
     overflow-y: auto;
 }
 
-/* 🔥 MOBILE FIX - COMPACT TOP-LEFT VERSION */
 @media (max-width: 768px) {
     .controls {
-        /* Position Fix: Top Left */
-        top: 15px;      
-        left: 15px;     
-        bottom: auto;   /* Removes the bottom alignment */
-        transform: none; /* Removes the centering transform */
+        /* Position: Top Left with safe breathing room */
+        top: 10px;      
+        left: 10px;     
+        bottom: auto;
+        transform: none;
 
-        /* Size Fix: Compact & Adaptive */
-        width: auto;
-        min-width: 140px; /* Smallest usable width */
-        max-width: 200px; /* Prevents it from covering the screen */
+        /* Size: Scale based on screen width rather than hard pixels */
+        width: 60vw;       /* Takes up 60% of screen width max */
+        min-width: 160px; 
+        max-width: 240px; 
         
-        /* Aesthetic Fix */
-        padding: 10px;
-        border-width: 1.5px; /* Thinner border for small screens */
-        border-radius: 10px;
-        background: rgba(15, 15, 35, 0.95); /* Slightly more solid for readability */
-
-        /* Content Scaling */
-        max-height: 60vh; 
-        font-size: 12px;  /* Smaller text for a "mini" feel */
+        /* Aesthetic: Keeps your desktop "Neon" vibe */
+        padding: 12px;
+        border-width: 2px; /* Keeping it visible but scaled */
+        border-radius: 12px;
+        background: rgba(15, 15, 35, 0.92);
+        
+        /* Scrolling and Scaling */
+        max-height: 70vh; 
+        font-size: 13px;   /* Slightly larger than before for legibility */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Adds depth */
     }
 
-    /* Scaling down buttons or inputs inside the controls if they exist */
-    .controls button, 
-    .controls input {
-        padding: 6px 8px;
-        font-size: 11px;
-        margin-bottom: 5px;
+    /* Fix for "Pressed" Buttons */
+    .controls button {
+        width: 100%;       /* Ensure buttons fill the mini-container */
+        padding: 10px;     /* More "tap-friendly" height */
+        margin-top: 8px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;          /* Space between icon and text */
     }
-    
+
+    /* Small Trash Icon Button adjustment */
+    .controls .btn-danger {
+        width: auto !important; /* Overrides the 100% for the delete icon */
+        aspect-ratio: 1 / 1;    /* Makes it a perfect square */
+        padding: 8px;
+    }
+}    
     .controls h3 {
         font-size: 13px;
         margin-bottom: 8px;
