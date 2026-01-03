@@ -581,17 +581,27 @@ function renderPerformanceChart(filter) {
 
 // REASONING MODAL
 function showReasoning() {
+  console.log("showReasoning() called!"); // DEBUG
+  
   const filter = document.getElementById("timeFilter").value;
   const modal = document.getElementById("reasoningModal");
   const body = document.getElementById("reasoningBody");
   const title = document.getElementById("reasoningTitle");
   const emoji = document.getElementById("reasoningEmoji");
   
+  console.log("Filter:", filter); // DEBUG
+  console.log("Modal element:", modal); // DEBUG
+  
+  if (!modal) {
+    console.error("Modal not found!");
+    return;
+  }
+  
   let content = "";
   
   switch(filter) {
     case "today":
-     emoji.textContent = "☀️";
+      emoji.textContent = ☀️";
       title.textContent = "Today's Performance";
       content = `
         <div class="reasoning-section">
@@ -740,8 +750,8 @@ function showReasoning() {
   
   body.innerHTML = content;
   modal.style.display = "flex";
+  console.log("Modal display set to flex"); // DEBUG
 }
-
 function closeReasoning() {
   document.getElementById("reasoningModal").style.display = "none";
 }
