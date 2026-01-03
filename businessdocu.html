@@ -1346,60 +1346,89 @@
     const scanImg = document.getElementById('scan-preview-content');
     const pctText = document.getElementById('upload-pct');
     const progressBar = document.getElementById('manual-progress');
+    let thumbBlob = null;
 
-    // Show preview in scan box
-    if (file.type.startsWith("image/")) {
+    // --- GENERATE PREVIEW IMMEDIATELY ---
+    if (file.type === "application/pdf") {
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            const page = await pdf.getPage(1);
+            const viewport = page.getViewport({ scale: 0.5 });
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            await page.render({ canvasContext: context, viewport: viewport }).promise;
+            
+            const dataUrl = canvas.toDataURL('image/jpeg');
+            scanImg.src = dataUrl; // Show first page in scan box
+            thumbBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+        } catch (e) {
+            console.error("PDF Preview Error:", e);
+            scanImg.src = "https://cdn-icons-png.flaticon.com/512/337/337948.png";
+        }
+    } else if (file.type.startsWith("image/")) {
         scanImg.src = URL.createObjectURL(file);
     } else {
         scanImg.src = "https://cdn-icons-png.flaticon.com/512/337/337948.png";
     }
+
     scanImg.style.display = 'block';
     showScanAnimation();
 
+    // --- UPLOAD LOGIC ---
     const fileId = Date.now();
     const storagePath = `BusinessOwners/${currentUserId}/LegalDocs/${fileId}_${file.name}`;
-    const fileRef = storage.ref(storagePath);
-    const uploadTask = fileRef.put(file);
+    const thumbPath = `BusinessOwners/${currentUserId}/LegalDocs/thumbs/${fileId}_thumb.jpg`;
+    
+    try {
+        // 1. Upload Main File
+        const uploadTask = storage.ref(storagePath).put(file);
 
-    // Track Progress
-    uploadTask.on('state_changed', 
-        (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            const rounded = Math.round(progress);
-            pctText.innerText = rounded + "%";
-            progressBar.style.width = rounded + "%";
-            progressBar.style.animation = 'none'; // Switch from auto-animation to real progress
-        }, 
-        (error) => {
-            hideScanAnimation();
-            alert("Upload failed: " + error.message);
-        }, 
-        async () => {
-            const mainUrl = await uploadTask.snapshot.ref.getDownloadURL();
-            
-            // Logic for thumbnails remains same
-            let thumbUrl = file.type.startsWith("image/") ? mainUrl : "https://cdn-icons-png.flaticon.com/512/337/337948.png";
+        uploadTask.on('state_changed', 
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                const rounded = Math.round(progress);
+                pctText.innerText = rounded + "%";
+                progressBar.style.width = rounded + "%";
+                progressBar.style.animation = 'none';
+            }, 
+            (error) => { alert(error.message); hideScanAnimation(); }, 
+            async () => {
+                const mainUrl = await uploadTask.snapshot.ref.getDownloadURL();
+                let finalThumbUrl = mainUrl;
 
-            await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/legaldocuments`).push({
-                name: name,
-                category: cat,
-                url: mainUrl,
-                preview: thumbUrl,
-                timestamp: fileId
-            });
+                // 2. Upload Thumbnail if PDF
+                if (thumbBlob) {
+                    const thumbRef = storage.ref(thumbPath);
+                    await thumbRef.put(thumbBlob);
+                    finalThumbUrl = await thumbRef.getDownloadURL();
+                }
 
-            updateMeta('legal');
-            
-            // Short delay to let user see 100%
-            setTimeout(() => {
-                hideScanAnimation();
-                scanImg.style.display = 'none';
-                progressBar.style.animation = ''; // Reset animation
-                closeModals();
-                alert("Document saved!");
-            }, 800);
-        }
-    );
+                // 3. Save to DB
+                await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/legaldocuments`).push({
+                    name: name,
+                    category: cat,
+                    url: mainUrl,
+                    preview: finalThumbUrl, // Saved as actual photo
+                    timestamp: fileId
+                });
+
+                updateMeta('legal');
+                
+                setTimeout(() => {
+                    hideScanAnimation();
+                    scanImg.style.display = 'none';
+                    closeModals();
+                    alert("Document & Preview Saved!");
+                }, 800);
+            }
+        );
+    } catch (e) {
+        hideScanAnimation();
+        alert("Error: " + e.message);
+    }
 }
 
         function saveNote() {
