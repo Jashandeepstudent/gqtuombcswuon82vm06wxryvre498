@@ -745,14 +745,13 @@ let content = "";
   }
   
   body.innerHTML = content;
-  modal.style.display = "flex";
+modal.style.display = "flex";
+modal.style.visibility = "visible";
+modal.style.opacity = "1";
+
   
   // Add backdrop click handler
-  modal.onclick = function(e) {
-    if (e.target === modal) {
-      closeReasoning();
-    }
-  };
+
 }
 
 function closeReasoning() {
@@ -762,7 +761,8 @@ function closeReasoning() {
 }
 // FINANCIAL CALCULATIONS
 function calculateFinancials() {
-  const filter = document.getElementById("timeFilter").value;
+const filter = document.getElementById("timeFilter")?.value || "all";
+
   const ranges = getTimeRanges();
   
   let startTime = 0, endTime = Infinity;
@@ -774,11 +774,11 @@ function calculateFinancials() {
       comparisonPeriod = ranges.yesterday;
       periodName = "vs Yesterday";
       break;
-    case "yesterday":
-      startTime = ranges.yesterday.start;
-      endTime = ranges.yesterday.end;
-      periodName = "vs Day Before";
-      break;
+case "yesterday":
+  emoji.textContent = "⏪";
+  title.textContent = "Yesterday's Performance";
+  content = `<p>Yesterday vs day before analysis.</p>`;
+  break;
     case "week":
       startTime = ranges.thisWeek.start;
       comparisonPeriod = ranges.lastWeek;
@@ -789,11 +789,11 @@ function calculateFinancials() {
       comparisonPeriod = ranges.lastMonth;
       periodName = "vs Last Month";
       break;
-    case "year":
-      startTime = ranges.thisYear.start;
-      comparisonPeriod = ranges.lastYear;
-      periodName = "vs Last Year";
-      break;
+case "year":
+  emoji.textContent = "📆";
+  title.textContent = "Yearly Performance";
+  content = `<p>Year-to-date business performance.</p>`;
+  break;
   }
 
   // Calculate total spend
