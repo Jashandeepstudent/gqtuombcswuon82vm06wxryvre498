@@ -2084,16 +2084,7 @@ function showMegaAlert(alerts, isCritical) {
     const title = document.getElementById('mega-alert-title');
     const container = document.getElementById('deadline-list-container');
     const countdown = document.getElementById('alert-countdown');
-    // ADD THIS LINE to check the browser's memory
-const isDismissed = localStorage.getItem('megaAlertDismissed');
-
-// ONLY show the alert if it has NOT been dismissed yet (isDismissed !== 'true')
-if (urgentItems.length > 0 && isDismissed !== 'true') { 
-    document.getElementById('mega-alert-overlay').style.display = 'flex';
-    if(alertSound) alertSound.play();
-} else {
-    document.getElementById('mega-alert-overlay').style.display = 'none';
-}
+    
     // Update title based on urgency
     if (isCritical) {
         title.innerHTML = '🔥 URGENT DEADLINES TODAY! 🔥';
@@ -2191,13 +2182,12 @@ function playBeepSound() {
 // Dismiss mega alert
 function dismissMegaAlert() {
     const overlay = document.getElementById('mega-alert-overlay');
-    overlay.style.display = 'none';
+    overlay.style.animation = 'alertFadeOut 0.5s ease';
     
-    // ADD THIS LINE: This saves the fact that you understood
-    localStorage.setItem('megaAlertDismissed', 'true');
-    
-    const alertSound = document.getElementById('alert-sound');
-    if(alertSound) alertSound.pause();
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        overlay.style.animation = 'alertFadeIn 0.5s ease';
+    }, 500);
 }
 
 // Snooze alert for 1 hour
