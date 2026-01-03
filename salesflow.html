@@ -808,8 +808,8 @@ h2 {
     </div>
 
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeSettingsModal()">Close</button>
-      <button class="btn-save" onclick="updateCurrency()">Update Currency</button>
+<button class="btn-cancel" onclick="closeSettings()">Close</button>
+      <button class="btn-save" onclick="updateCurrencyFromSettings()">Update Currency</button>
     </div>
   </div>
 </div>
@@ -1477,13 +1477,23 @@ function savePrices() {
         closePriceModal();
     });
 }
-function saveCurrency() {
+async function saveCurrency() {
     const code = document.getElementById("currencyInput").value.trim().toUpperCase();
-    if (code.length < 2) return alert("Enter valid code");
-    db.ref(`BusinessOwners/${auth.currentUser.uid}/National Currency`).set({
-        currency: code,
-        updatedAt: firebase.database.ServerValue.TIMESTAMP
-    });
+    if (code.length < 2) return alert("Please enter a valid 3-letter currency code.");
+    
+    try {
+        const uid = auth.currentUser.uid;
+        await db.ref(`BusinessOwners/${uid}/National Currency`).set({
+            currency: code,
+            updatedAt: firebase.database.ServerValue.TIMESTAMP
+        });
+        
+        // Hide modal - the listener in auth.onAuthStateChanged will handle the rest
+        document.getElementById("currencyModal").style.display = "none";
+        showSuccess(`Currency set to ${code}`);
+    } catch (error) {
+        alert("Error saving currency: " + error.message);
+    }
 }
 
 function showSuccess(msg) {
