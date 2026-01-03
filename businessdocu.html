@@ -526,7 +526,15 @@
             opacity: 0.5; 
             text-decoration: line-through;
         }
+#understand-btn {
+    cursor: pointer;
+    pointer-events: auto; /* Ensures it is always clickable */
+    transition: transform 0.1s;
+}
 
+#understand-btn:active {
+    transform: scale(0.95);
+}
         .check-box { 
             min-width: 22px;
             height: 22px; 
@@ -740,24 +748,14 @@
 
 /* Main Alert Container */
 .mega-alert-container {
-    background: linear-gradient(135deg, 
-        rgba(239, 68, 68, 0.1) 0%, 
-        rgba(245, 158, 11, 0.1) 100%);
-    border: 3px solid var(--warning);
-    border-radius: 24px;
-    padding: 48px;
-    max-width: 700px;
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    max-width: 500px;
     width: 90%;
-    position: relative;
-    backdrop-filter: blur(40px);
-    box-shadow: 
-        0 0 100px rgba(245, 158, 11, 0.5),
-        0 20px 60px rgba(0, 0, 0, 0.8),
-        inset 0 0 60px rgba(245, 158, 11, 0.1);
-    animation: containerPulse 2s ease-in-out infinite;
-    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    z-index: 10001;
 }
-
 @keyframes containerPulse {
     0%, 100% {
         box-shadow: 
@@ -865,18 +863,12 @@
 }
 
 .deadline-item {
-    background: linear-gradient(135deg, 
-        rgba(239, 68, 68, 0.15) 0%, 
-        rgba(245, 158, 11, 0.15) 100%);
-    border-left: 4px solid var(--danger);
-    padding: 16px 20px;
-    margin-bottom: 16px;
-    border-radius: 12px;
-    text-align: left;
-    animation: itemSlideIn 0.5s ease;
-    transition: all 0.3s ease;
+    background: #f8f9fa;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid var(--primary);
+    
 }
-
 .deadline-item:hover {
     transform: translateX(8px);
     box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
@@ -1864,7 +1856,15 @@ auth.onAuthStateChanged((user) => {
         console.log("User verified:", user.uid);
         currentUserId = user.uid;
         document.getElementById('loading').style.display = 'none';
-        
+        function checkAlertStatus() {
+    const lastDismissed = localStorage.getItem('megaAlertDismissedDate');
+    const today = new Date().toDateString();
+    
+    if (lastDismissed === today) {
+        alertDismissedThisSession = true;
+    }
+}
+checkAlertStatus();
         // NEW: Fetch currency and check deadlines
         fetchUserCurrency();
         checkDeadlines();
@@ -2043,115 +2043,138 @@ function checkDeadlines() {
 }
 
 // Display MEGA full-screen alert
+// 1. Global tracker to prevent re-triggering during the same session
+let alertDismissedToday = localStorage.getItem('megaAlertDismissedDate') === new Date().toDateString();
+
 function showMegaAlert(alerts, isCritical) {
+    // STOP REFRESH ISSUE: If already dismissed today, don't show it at all
+    if (alertDismissedToday) return;
+
     const overlay = document.getElementById('mega-alert-overlay');
     const title = document.getElementById('mega-alert-title');
     const container = document.getElementById('deadline-list-container');
     const countdown = document.getElementById('alert-countdown');
     
-    // Update title based on urgency
+    // Performance: Use textContent for simple updates to prevent lag
     if (isCritical) {
-        title.innerHTML = '🔥 URGENT DEADLINES TODAY! 🔥';
+        title.textContent = '🔥 URGENT DEADLINES TODAY! 🔥';
         title.style.color = 'var(--danger)';
-        countdown.textContent = '0';
+        if(countdown) countdown.textContent = '0';
     } else {
-        title.innerHTML = '⚠️ DEADLINE APPROACHING ⚠️';
+        title.textContent = '⚠️ DEADLINE APPROACHING ⚠️';
         title.style.color = 'var(--warning)';
-        countdown.textContent = '24';
+        if(countdown) countdown.textContent = '24';
     }
     
-    // Build deadline list
-    container.innerHTML = '';
-    alerts.forEach((alert, index) => {
-        const item = document.createElement('div');
-        item.className = 'deadline-item';
-        item.style.animationDelay = `${index * 0.1}s`;
-        item.innerHTML = `
-            <div class="deadline-item-header">
-                <i class="fas ${alert.icon} deadline-item-icon"></i>
-                <div class="deadline-item-title">${alert.title}</div>
+    // Build list (Removed index-based animation delays to prevent rendering lag)
+    let listHTML = '';
+    alerts.forEach((alert) => {
+        listHTML += `
+            <div class="deadline-item" style="animation: none; border-left: 5px solid red; margin-bottom: 10px; padding: 10px; background: #fff5f5;">
+                <div class="deadline-item-header" style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas ${alert.icon} deadline-item-icon"></i>
+                    <strong class="deadline-item-title">${alert.title}</strong>
+                </div>
+                <div class="deadline-item-desc" style="font-size: 0.9em; margin-top: 5px;">${alert.desc}</div>
             </div>
-            <div class="deadline-item-desc">${alert.desc}</div>
         `;
-        container.appendChild(item);
     });
+    container.innerHTML = listHTML;
     
-    // Show overlay
+    // Show overlay instantly
     overlay.style.display = 'flex';
     
-    // Play alert sound
-    const sound = document.getElementById('alert-sound');
-    sound.play().catch(e => console.log('Audio play failed:', e));
+    // Play sound
+    playAlertSound();
     
-    // Prevent closing by clicking outside (force user to acknowledge)
+    // FIX: Simplified click-outside logic (No more heavy shake animation lag)
     overlay.onclick = (e) => {
         if (e.target === overlay) {
-            // Shake animation when trying to click outside
-            document.querySelector('.mega-alert-container').style.animation = 'shake 0.5s ease';
-            setTimeout(() => {
-                document.querySelector('.mega-alert-container').style.animation = 'containerPulse 2s ease-in-out infinite';
-            }, 500);
+            console.log("Please click 'I Understand' to acknowledge.");
         }
     };
 }
-// Play alert sound using Web Audio API (more reliable)
+
+// FIX: This function now handles the dismissal properly
+function dismissMegaAlert() {
+    const overlay = document.getElementById('mega-alert-overlay');
+    
+    // 1. Instant UI response
+    overlay.style.display = 'none';
+    
+    // 2. Stop the audio immediately
+    const sound = document.getElementById('alert-sound');
+    if (sound) {
+        sound.pause();
+        sound.currentTime = 0;
+    }
+
+    // 3. PERSISTENCE FIX: Save date to localStorage so refresh doesn't bring it back
+    const today = new Date().toDateString();
+    localStorage.setItem('megaAlertDismissedDate', today);
+    alertDismissedToday = true;
+    
+    console.log("Alert dismissed and saved for today.");
+}
+
 function playAlertSound() {
     try {
-        // Try HTML5 Audio first
         const sound = document.getElementById('alert-sound');
         if (sound) {
-            sound.src = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'; // Emergency alert
-            sound.volume = 0.7;
-            sound.play().catch(() => {
-                // Fallback: Use Web Audio API to generate beep
-                playBeepSound();
-            });
+            sound.src = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
+            sound.volume = 0.5;
+            sound.play().catch(() => playBeepSound());
         } else {
             playBeepSound();
         }
     } catch (e) {
-        console.log('Sound play failed:', e);
         playBeepSound();
     }
 }
 
-// Fallback: Generate beep sound using Web Audio API
 function playBeepSound() {
     try {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // Create three urgent beeps
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 2; i++) { // Reduced to 2 beeps to save resources
             setTimeout(() => {
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
-                
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.value = 800; // High pitch for urgency
-                oscillator.type = 'sine';
-                
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                oscillator.frequency.value = 600;
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-                
                 oscillator.start(audioContext.currentTime);
                 oscillator.stop(audioContext.currentTime + 0.2);
-            }, i * 300); // 300ms between beeps
+            }, i * 400);
         }
     } catch (e) {
-        console.log('Beep sound failed:', e);
+        console.log('Beep failed');
     }
 }
 // Dismiss mega alert
 function dismissMegaAlert() {
     const overlay = document.getElementById('mega-alert-overlay');
-    overlay.style.animation = 'alertFadeOut 0.5s ease';
     
-    setTimeout(() => {
-        overlay.style.display = 'none';
-        overlay.style.animation = 'alertFadeIn 0.5s ease';
-    }, 500);
+    // 1. Immediately hide the UI to stop lag
+    overlay.style.display = 'none';
+    
+    // 2. Stop the alert sound
+    const sound = document.getElementById('alert-sound');
+    if (sound) {
+        sound.pause();
+        sound.currentTime = 0;
+    }
+
+    // 3. Save to Firebase so it stays hidden after refresh
+    if (currentUserId) {
+        const today = new Date().toISOString().split('T')[0];
+        db.ref(`BusinessOwners/${currentUserId}/BusinessItems/meta/lastAlertDismissed`).set(today)
+            .then(() => {
+                console.log("Alert dismissal saved.");
+            })
+            .catch(err => console.error("Error saving dismissal:", err));
+    }
 }
 
 // Snooze alert for 1 hour
@@ -2339,7 +2362,7 @@ db.ref(`${baseRef}/transactions`).on('value', snapshot => {
                             <div style="color: var(--text-secondary); font-size:0.95rem; margin:12px 0; white-space: pre-wrap; line-height: 1.6;">${n.content}</div>
                             <div class="card-meta"><i class="fas fa-calendar"></i> ${n.date || 'No date'}</div>
                         </div>
-                        <button class="btn btn-danger" style="margin-top: 16px; width: 10%;" onclick="confirmDelete(() => deleteNote('${noteKey}'))">
+                        <button class="btn btn-danger" style="margin-top: 16px; width: 15%;" onclick="confirmDelete(() => deleteNote('${noteKey}'))">
                             <i class="fas fa-trash"></i> Delete Note
                         </button>
                     `;
