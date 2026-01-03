@@ -346,84 +346,7 @@ h2 {
   gap: 16px;
   align-items: center;
 }
-/* --- REPLACE FROM LINE 315 TO 328 WITH THIS --- */
-@media (max-width: 768px) {
-  .metric-grid { grid-template-columns: 1fr; }
-  .chart-section { padding: 15px; border-radius: 16px; }
-  
-  /* Hide the old table headers on mobile */
-  .grid-header { display: none; }
 
-  .grid-body {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 5px;
-  }
-
-  /* Transform product row into a clean card */
-  .product-row {
-    display: flex !important;
-    flex-direction: column !important;
-    background: white;
-    border-radius: 16px;
-    padding: 16px !important;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    gap: 8px;
-  }
-
-  .product-name {
-    font-size: 18px;
-    font-weight: 800;
-    color: #1e293b;
-  }
-
-  .product-qty {
-    font-size: 13px;
-    color: #64748b;
-    background: #f1f5f9;
-    padding: 4px 10px;
-    border-radius: 8px;
-    width: fit-content;
-    margin-bottom: 5px;
-  }
-
-  /* Horizontal layout for prices */
-  .product-data-container {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-top: 1px solid #f1f5f9;
-    margin-top: 5px;
-  }
-
-  .price-col {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .price-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    color: #94a3b8;
-    font-weight: 700;
-  }
-
-  .price-val {
-    font-size: 15px;
-    font-weight: 700;
-    color: #0f172a;
-  }
-
-  .set-btn {
-    width: 100%;
-    margin-top: 10px;
-    height: 44px;
-    font-size: 14px;
-  }
-}
 /* Base style for the big modern buttons */
 .btn-modern {
   display: inline-flex;
@@ -1038,140 +961,167 @@ function calculateCostForPeriod(startTime, endTime) {
 
 // CHART RENDERING
 function renderPerformanceChart(filter) {
-    const ctx = document.getElementById('performanceChart').getContext('2d');
-    if (!ctx) return;
+  const ctx = document.getElementById('performanceChart');
+  if (!ctx) return;
+  
+  if (performanceChart) {
+    performanceChart.destroy();
+  }
+  
+  const ranges = getTimeRanges();
+  
+  if (filter === 'all') {
+    // Line chart for last 30 days
+    const days = 30;
+    const labels = [];
+    const revenueData = [];
+    const profitData = [];
     
-    // Destroy previous instance to prevent overlapping
-    if (window.performanceChart instanceof Chart) {
-        window.performanceChart.destroy();
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+      const endOfDay = startOfDay + 86400000;
+      
+      labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+      
+      const dayRevenue = calculateRevenueForPeriod(startOfDay, endOfDay);
+      const dayCost = calculateCostForPeriod(startOfDay, endOfDay);
+      
+      revenueData.push(dayRevenue);
+      profitData.push(dayRevenue - dayCost);
     }
     
-    const ranges = getTimeRanges();
-    let labels = [];
-    let dataSet1 = []; // Primary (Revenue)
-    let dataSet2 = []; // Secondary (Cost/Comparison)
-    let label1 = "Revenue";
-    let label2 = "Total Cost";
-
-    // 1. DATA LOGIC BASED ON FILTER
-    if (filter === 'today') {
-        // Hourly View for Today vs Yesterday
-        labels = Array.from({length: 24}, (_, i) => `${i}:00`);
-        label1 = "Today";
-        label2 = "Yesterday";
-        
-        for (let i = 0; i < 24; i++) {
-            const startH = ranges.today.start + (i * 3600000);
-            const prevH = ranges.yesterday.start + (i * 3600000);
-            dataSet1.push(calculateRevenueForPeriod(startH, startH + 3600000));
-            dataSet2.push(calculateRevenueForPeriod(prevH, prevH + 3600000));
-        }
-    } else {
-        // Daily View for Week/Month/All Time
-        const days = (filter === 'all' || filter === 'month') ? 30 : 7;
-        for (let i = days - 1; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-            
-            const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-            const endOfDay = startOfDay + 86400000;
-            
-            dataSet1.push(calculateRevenueForPeriod(startOfDay, endOfDay));
-            dataSet2.push(calculateCostForPeriod(startOfDay, endOfDay));
-        }
-    }
-
-    // 2. YOUTUBE STYLE GRADIENTS
-    const revGradient = ctx.createLinearGradient(0, 0, 0, 400);
-    revGradient.addColorStop(0, 'rgba(16, 185, 129, 0.4)'); // Emerald
-    revGradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
-
-    const costGradient = ctx.createLinearGradient(0, 0, 0, 400);
-    costGradient.addColorStop(0, 'rgba(100, 116, 139, 0.2)'); // Slate
-    costGradient.addColorStop(1, 'rgba(100, 116, 139, 0)');
-
-    // 3. CHART CONFIGURATION
-    window.performanceChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: label1,
-                    data: dataSet1,
-                    borderColor: '#10b981', // Emerald Green
-                    backgroundColor: revGradient,
-                    fill: true,
-                    tension: 0.4, // Smooth curves
-                    borderWidth: 3,
-                    pointRadius: 0,
-                    pointHoverRadius: 6,
-                    pointBackgroundColor: '#10b981',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2
-                },
-                {
-                    label: label2,
-                    data: dataSet2,
-                    borderColor: '#64748b', // Slate Grey
-                    backgroundColor: costGradient,
-                    fill: true,
-                    tension: 0.4,
-                    borderWidth: 2,
-                    borderDash: filter === 'today' ? [5, 5] : [], // Dashed line for comparison
-                    pointRadius: 0,
-                    pointHoverRadius: 4
-                }
-            ]
+    performanceChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Revenue',
+            data: revenueData,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2
+          },
+          {
+            label: 'Profit',
+            data: profitData,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          }
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false, // Allows hovering anywhere on the vertical line
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    align: 'end',
-                    labels: {
-                        usePointStyle: true,
-                        boxWidth: 6,
-                        font: { size: 12, weight: '600', family: 'Inter' }
-                    }
-                },
-                tooltip: {
-                    backgroundColor: '#1e293b',
-                    padding: 12,
-                    titleFont: { size: 14, weight: 'bold' },
-                    bodyFont: { size: 13 },
-                    cornerRadius: 8,
-                    displayColors: true
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: '#f1f5f9', drawBorder: false },
-                    ticks: {
-                        callback: value => userCurrency + ' ' + value.toLocaleString(),
-                        font: { size: 11, color: '#94a3b8' }
-                    }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { size: 11, color: '#94a3b8' } }
-                }
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: '#f1f5f9'
             }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
         }
+      }
     });
-}
+  } else {
+    // Bar chart comparing current vs previous period
+    let currentPeriod, previousPeriod, periodLabel;
+    
+    switch(filter) {
+      case 'today':
+        currentPeriod = ranges.today;
+        previousPeriod = ranges.yesterday;
+        periodLabel = ['Yesterday', 'Today'];
+        break;
+      case 'week':
+        currentPeriod = ranges.thisWeek;
+        previousPeriod = ranges.lastWeek;
+        periodLabel = ['Last Week', 'This Week'];
+        break;
+      case 'month':
+        currentPeriod = ranges.thisMonth;
+        previousPeriod = ranges.lastMonth;
+        periodLabel = ['Last Month', 'This Month'];
+        break;
+      case 'year':
+        currentPeriod = ranges.thisYear;
+        previousPeriod = ranges.lastYear;
+        periodLabel = ['Last Year', 'This Year'];
+        break;
+      default:
+        currentPeriod = ranges.today;
+        previousPeriod = ranges.yesterday;
+        periodLabel = ['Previous', 'Current'];
+    }
+    
+    const prevRevenue = calculateRevenueForPeriod(previousPeriod.start, previousPeriod.end);
+    const currRevenue = calculateRevenueForPeriod(currentPeriod.start, currentPeriod.end);
+    
+    const prevCost = calculateCostForPeriod(previousPeriod.start, previousPeriod.end);
+    const currCost = calculateCostForPeriod(currentPeriod.start, currentPeriod.end);
+    
+    performanceChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: periodLabel,
+        datasets: [
+          {
+            label: 'Revenue',
+            data: [prevRevenue, currRevenue],
+            backgroundColor: '#3b82f6',
+            borderRadius: 8
+          },
+          {
+            label: 'Profit',
+            data: [prevRevenue - prevCost, currRevenue - currCost],
+            backgroundColor: '#10b981',
+            borderRadius: 8
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: '#f1f5f9'
+            }
+          },
+x: {
+            grid: {
+              display: false
+            }
+          }
+        } 
+      } 
+    }); 
+  } 
+} 
 function calculateFinancials() {
-const savedPeriod = localStorage.getItem('salesflow_period') || 'all';
-document.getElementById('timeFilter').value = savedPeriod;
     const filter = document.getElementById("timeFilter").value;
     const ranges = getTimeRanges();
     
@@ -1353,7 +1303,6 @@ auth.onAuthStateChanged(user => {
 });
 
 // UI RENDERING
-/* --- REPLACE THE ENTIRE render() FUNCTION WITH THIS --- */
 function render() {
     const grid = document.getElementById("productsGrid");
     if(!grid) return;
@@ -1361,28 +1310,16 @@ function render() {
 
     Object.entries(inventory).forEach(([id, product]) => {
         const priceData = prices[id] || {};
-        const costVal = priceData.costPrice ? (typeof priceData.costPrice === 'object' ? priceData.costPrice.numericValue : extractNumericValue(priceData.costPrice)) : 0;
-        const sellVal = priceData.sellPrice ? (typeof priceData.sellPrice === 'object' ? priceData.sellPrice.numericValue : extractNumericValue(priceData.sellPrice)) : 0;
+        const costDisp = priceData.costPrice ? (typeof priceData.costPrice === 'object' ? priceData.costPrice.displayString : priceData.costPrice) : "Not set";
+        const sellDisp = priceData.sellPrice ? (typeof priceData.sellPrice === 'object' ? priceData.sellPrice.displayString : priceData.sellPrice) : "Not set";
 
         grid.innerHTML += `
             <div class="product-row">
                 <div class="product-name">${product.name}</div>
                 <div class="product-qty">${product.quantity} ${product.unit || 'pcs'}</div>
-                
-                <div class="product-data-container">
-                    <div class="price-col">
-                        <span class="price-label">Cost Price</span>
-                        <span class="price-val">${userCurrency} ${costVal.toLocaleString()}</span>
-                    </div>
-                    <div class="price-col">
-                        <span class="price-label">Selling Price</span>
-                        <span class="price-val">${userCurrency} ${sellVal.toLocaleString()}</span>
-                    </div>
-                </div>
-
-                <div>
-                    <button class="set-btn" onclick="openPriceModal('${id}', '${product.name}')">Edit Price</button>
-                </div>
+                <div class="product-cost">${userCurrency} ${costDisp}</div>
+                <div class="product-sell">${userCurrency} ${sellDisp}</div>
+                <div><button class="set-btn" onclick="openPriceModal('${id}', '${product.name}')">Edit</button></div>
             </div>
         `;
     });
