@@ -1049,7 +1049,285 @@
 .deadline-list-container::-webkit-scrollbar-thumb:hover {
     background: var(--danger);
 }
+/* ============================================
+   MOBILE RESPONSIVE - OPTIMIZED FOR PHONES
+   ============================================ */
 
+@media (max-width: 768px) {
+    .container { 
+        padding: 16px; 
+    }
+    
+    .dashboard-grid { 
+        grid-template-columns: 1fr; 
+    }
+    
+    .top-bar { 
+        flex-direction: column; 
+        gap: 16px; 
+        align-items: stretch; 
+    }
+    
+    .modal { 
+        width: 95%; 
+        padding: 24px; 
+    }
+    
+    /* ===== MEGA ALERT MOBILE OPTIMIZATION ===== */
+    .mega-alert-container {
+        padding: 24px 16px;
+        max-width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .mega-alert-icon-wrapper {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 20px;
+    }
+    
+    .mega-alert-icon {
+        font-size: 4rem;
+    }
+    
+    .alert-pulse-ring {
+        width: 100px;
+        height: 100px;
+    }
+    
+    @keyframes pulseRing {
+        0% {
+            width: 100px;
+            height: 100px;
+            opacity: 1;
+        }
+        100% {
+            width: 200px;
+            height: 200px;
+            opacity: 0;
+        }
+    }
+    
+    .mega-alert-title {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+        letter-spacing: 1px;
+    }
+    
+    .mega-alert-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+    }
+    
+    .deadline-list-container {
+        padding: 16px;
+        margin-bottom: 20px;
+        max-height: 200px;
+    }
+    
+    .deadline-item {
+        padding: 12px 14px;
+        margin-bottom: 12px;
+    }
+    
+    .deadline-item-header {
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+    
+    .deadline-item-icon {
+        font-size: 1.2rem;
+    }
+    
+    .deadline-item-title {
+        font-size: 0.95rem;
+    }
+    
+    .deadline-item-desc {
+        font-size: 0.85rem;
+        padding-left: 36px;
+    }
+    
+    .mega-alert-timer {
+        padding: 12px 20px;
+        font-size: 1rem;
+        margin-bottom: 20px;
+        gap: 8px;
+    }
+    
+    #alert-countdown {
+        font-size: 1.5rem;
+        min-width: 40px;
+    }
+    
+    .mega-alert-actions {
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .btn-mega-primary,
+    .btn-mega-secondary {
+        width: 100%;
+        padding: 14px 24px;
+        font-size: 0.95rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .btn-mega-primary i,
+    .btn-mega-secondary i {
+        font-size: 1.1rem;
+    }
+    
+    /* Make container scrollable on small screens */
+    .mega-alert-container {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Reduce animation intensity on mobile */
+    @keyframes containerPulse {
+        0%, 100% {
+            box-shadow: 
+                0 0 60px rgba(245, 158, 11, 0.4),
+                0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+        50% {
+            box-shadow: 
+                0 0 80px rgba(245, 158, 11, 0.6),
+                0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+    }
+    
+    /* Adjust warning stripes for performance */
+    .warning-stripes {
+        background: repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 30px,
+            rgba(245, 158, 11, 0.03) 30px,
+            rgba(245, 158, 11, 0.03) 60px
+        );
+        animation: stripeScroll 30s linear infinite;
+    }
+}
+
+/* Extra small phones */
+@media (max-width: 380px) {
+    .mega-alert-container {
+        padding: 20px 12px;
+    }
+    
+    .mega-alert-title {
+        font-size: 1.2rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .mega-alert-icon {
+        font-size: 3rem;
+    }
+    
+    .mega-alert-icon-wrapper {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .btn-mega-primary,
+    .btn-mega-secondary {
+        padding: 12px 20px;
+        font-size: 0.85rem;
+    }
+    
+    .deadline-item-title {
+        font-size: 0.9rem;
+    }
+    
+    .deadline-item-desc {
+        font-size: 0.8rem;
+    }
+}
+
+/* Landscape mode optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+    .mega-alert-container {
+        max-height: 85vh;
+        padding: 16px;
+    }
+    
+    .mega-alert-icon-wrapper {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 12px;
+    }
+    
+    .mega-alert-icon {
+        font-size: 2.5rem;
+    }
+    
+    .mega-alert-title {
+        font-size: 1.3rem;
+        margin-bottom: 6px;
+    }
+    
+    .mega-alert-subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+    }
+    
+    .deadline-list-container {
+        max-height: 150px;
+        margin-bottom: 12px;
+    }
+    
+    .mega-alert-timer {
+        padding: 8px 16px;
+        margin-bottom: 12px;
+    }
+    
+    .mega-alert-actions {
+        flex-direction: row;
+        gap: 8px;
+    }
+}
+/* Touch Device Optimization */
+@media (hover: none) and (pointer: coarse) {
+    /* Larger touch targets */
+    .btn-mega-primary,
+    .btn-mega-secondary {
+        min-height: 48px;
+    }
+    
+    /* Disable hover effects on touch devices */
+    .btn-mega-primary:hover,
+    .btn-mega-secondary:hover {
+        transform: none;
+    }
+    
+    /* Active state for touch feedback */
+    .btn-mega-primary:active {
+        transform: scale(0.95);
+        opacity: 0.9;
+    }
+    
+    .btn-mega-secondary:active {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+    
+    /* Smoother scrolling */
+    .deadline-list-container {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+    }
+}
+
+/* Prevent zoom on double-tap (iOS) */
+@media (max-width: 768px) {
+    .mega-alert-overlay * {
+        touch-action: manipulation;
+    }
+}
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .mega-alert-container {
@@ -1602,7 +1880,31 @@ auth.onAuthStateChanged((user) => {
         window.location.href = "login.html"; 
     }
 });
+// Request audio permission on first user interaction
+let audioPermissionGranted = false;
 
+document.addEventListener('click', function enableAudio() {
+    if (!audioPermissionGranted) {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        audioPermissionGranted = true;
+        document.removeEventListener('click', enableAudio);
+    }
+}, { once: true });
+
+// Also try on touch for mobile
+document.addEventListener('touchstart', function enableAudioTouch() {
+    if (!audioPermissionGranted) {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        audioPermissionGranted = true;
+        document.removeEventListener('touchstart', enableAudioTouch);
+    }
+}, { once: true });
         function logout() {
             auth.signOut().then(() => {
                 window.location.href = "login.html";
@@ -1797,7 +2099,55 @@ function showMegaAlert(alerts, isCritical) {
         }
     };
 }
+// Play alert sound using Web Audio API (more reliable)
+function playAlertSound() {
+    try {
+        // Try HTML5 Audio first
+        const sound = document.getElementById('alert-sound');
+        if (sound) {
+            sound.src = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'; // Emergency alert
+            sound.volume = 0.7;
+            sound.play().catch(() => {
+                // Fallback: Use Web Audio API to generate beep
+                playBeepSound();
+            });
+        } else {
+            playBeepSound();
+        }
+    } catch (e) {
+        console.log('Sound play failed:', e);
+        playBeepSound();
+    }
+}
 
+// Fallback: Generate beep sound using Web Audio API
+function playBeepSound() {
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Create three urgent beeps
+        for (let i = 0; i < 3; i++) {
+            setTimeout(() => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800; // High pitch for urgency
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            }, i * 300); // 300ms between beeps
+        }
+    } catch (e) {
+        console.log('Beep sound failed:', e);
+    }
+}
 // Dismiss mega alert
 function dismissMegaAlert() {
     const overlay = document.getElementById('mega-alert-overlay');
