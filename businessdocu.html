@@ -662,7 +662,86 @@
             border-radius: 2px;
             overflow: hidden;
         }
+/* Alert Banner */
+.alert-banner {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+    padding: 16px 24px;
+    max-width: 600px;
+    width: 90%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: slideDown 0.4s ease;
+    box-shadow: var(--shadow-lg), 0 0 0 1px var(--warning);
+    border-left: 4px solid var(--warning);
+}
 
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -30px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+.alert-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.alert-icon {
+    font-size: 1.5rem;
+    color: var(--warning);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.alert-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.alert-text strong {
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.alert-text span {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.alert-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 8px;
+    transition: all 0.2s ease;
+    margin-left: 12px;
+}
+
+.alert-close:hover {
+    color: var(--danger);
+    transform: rotate(90deg);
+}
+
+/* Currency Display */
+.currency-symbol {
+    font-weight: 600;
+    color: var(--primary);
+    margin-right: 2px;
+}
         .scan-progress-bar {
             height: 100%;
             background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
@@ -707,7 +786,19 @@
     </style>
 </head>
 <body>
-
+<!-- Alert Banner for Upcoming Deadlines -->
+<div id="alert-banner" class="alert-banner glass" style="display: none;">
+    <div class="alert-content">
+        <i class="fas fa-exclamation-circle alert-icon"></i>
+        <div class="alert-text">
+            <strong id="alert-title">Deadline Approaching!</strong>
+            <span id="alert-message"></span>
+        </div>
+    </div>
+    <button class="alert-close" onclick="closeAlert()">
+        <i class="fas fa-times"></i>
+    </button>
+</div>
     <!-- Loading Screen -->
     <div id="loading">
         <div class="spinner"></div>
@@ -750,181 +841,165 @@
                     </div>
                 </div>
 
-                <div class="card glass" onclick="navTo('trans-view')">
-                    <i class="fas fa-exchange-alt card-icon"></i>
+                <div class="card glass" onclick="navTo('transactions-view')">
+                    <i class="fas fa-chart-line card-icon"></i>
                     <div>
                         <div class="card-title">Transactions</div>
-                        <div class="card-meta" id="meta-trans">No updates</div>
+                        <div class="card-meta" id="meta-trans">Pending approvals</div>
                     </div>
                 </div>
 
                 <div class="card glass" onclick="navTo('orders-view')">
-                    <i class="fas fa-shopping-cart card-icon"></i>
+                    <i class="fas fa-box-open card-icon"></i>
                     <div>
                         <div class="card-title">Pending Orders</div>
-                        <div class="card-meta" id="meta-orders">No updates</div>
+                        <div class="card-meta" id="meta-orders">Check deadlines</div>
                     </div>
                 </div>
 
                 <div class="card glass" onclick="navTo('notes-view')">
                     <i class="fas fa-sticky-note card-icon"></i>
                     <div>
-                        <div class="card-title">Personal Notes</div>
-                        <div class="card-meta" id="meta-notes">No updates</div>
+                        <div class="card-title">Notes</div>
+                        <div class="card-meta" id="meta-notes">Quick thoughts</div>
                     </div>
                 </div>
 
                 <div class="card glass" onclick="navTo('team-view')">
                     <i class="fas fa-users card-icon"></i>
                     <div>
-                        <div class="card-title">Team & Staff</div>
-                        <div class="card-meta" id="meta-team">No updates</div>
+                        <div class="card-title">Team & Staffing</div>
+                        <div class="card-meta" id="meta-team">Manage assignments</div>
                     </div>
                 </div>
+
             </div>
         </div>
 
-        <!-- Section Views -->
-        <!-- Legal View -->
+        <!-- Legal Documents -->
         <div id="legal-view" class="section-view">
             <div class="top-bar glass">
-                <button class="btn btn-secondary" onclick="navTo('dashboard-view')">
-                    <i class="fas fa-arrow-left"></i> Back
-                </button>
-                <button class="btn btn-primary" onclick="openModal('legal-modal')">
-                    <i class="fas fa-plus"></i> Add Document
-                </button>
+                <h2>Legal Documents</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('legal-modal')">
+                        <i class="fas fa-plus"></i> Add New
+                    </button>
+                </div>
             </div>
-            <h2>Legal Documents</h2>
             <div class="doc-grid" id="legal-list"></div>
         </div>
 
-        <!-- Transactions View -->
-        <div id="trans-view" class="section-view">
+        <!-- Transactions -->
+        <div id="transactions-view" class="section-view">
             <div class="top-bar glass">
-                <button class="btn btn-secondary" onclick="navTo('dashboard-view')">
-                    <i class="fas fa-arrow-left"></i> Back
-                </button>
-                <button class="btn btn-primary" onclick="openModal('trans-modal')">
-                    <i class="fas fa-plus"></i> Add Transaction
-                </button>
+                <h2>Business Transactions</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('trans-modal')">
+                        <i class="fas fa-plus"></i> Add Transaction
+                    </button>
+                </div>
             </div>
-            <h2>Transaction Records</h2>
             <div class="item-list" id="trans-list"></div>
         </div>
 
-        <!-- Orders View -->
+        <!-- Orders -->
         <div id="orders-view" class="section-view">
             <div class="top-bar glass">
-                <button class="btn btn-secondary" onclick="navTo('dashboard-view')">
-                    <i class="fas fa-arrow-left"></i> Back
-                </button>
-                <button class="btn btn-primary" onclick="openModal('order-modal')">
-                    <i class="fas fa-plus"></i> Add Order
-                </button>
+                <h2>Pending Orders</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('order-modal')">
+                        <i class="fas fa-plus"></i> Add Order
+                    </button>
+                </div>
             </div>
-            <h2>Pending Orders</h2>
             <div class="item-list" id="orders-list"></div>
         </div>
 
-        <!-- Notes View -->
+        <!-- Notes -->
         <div id="notes-view" class="section-view">
             <div class="top-bar glass">
-                <button class="btn btn-secondary" onclick="navTo('dashboard-view')">
-                    <i class="fas fa-arrow-left"></i> Back
-                </button>
-                <button class="btn btn-primary" onclick="openModal('note-modal')">
-                    <i class="fas fa-plus"></i> Add Note
-                </button>
+                <h2>Notes</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('note-modal')">
+                        <i class="fas fa-plus"></i> New Note
+                    </button>
+                </div>
             </div>
-            <h2>Personal Notes</h2>
             <div class="dashboard-grid" id="notes-list"></div>
         </div>
 
-        <!-- Team View -->
+        <!-- Team -->
         <div id="team-view" class="section-view">
             <div class="top-bar glass">
-                <button class="btn btn-secondary" onclick="navTo('dashboard-view')">
-                    <i class="fas fa-arrow-left"></i> Back
-                </button>
-                <button class="btn btn-primary" onclick="openModal('team-modal')">
-                    <i class="fas fa-user-plus"></i> Add Member
-                </button>
+                <h2>Team & Staffing</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('team-modal')">
+                        <i class="fas fa-plus"></i> Add Member
+                    </button>
+                </div>
             </div>
-            <h2>Team & Staff</h2>
             <div class="dashboard-grid" id="team-list"></div>
         </div>
 
-        <!-- Member Jobs View (Sub-view of Team) -->
-        <div id="member-jobs-view" class="section-view">
+        <!-- Member Detail -->
+        <div id="member-detail-view" class="section-view">
             <div class="top-bar glass">
-                <button class="btn btn-secondary" onclick="navTo('team-view')">
-                    <i class="fas fa-arrow-left"></i> Back to Team
-                </button>
-                <button class="btn btn-primary" onclick="openModal('job-modal')">
-                    <i class="fas fa-tasks"></i> Assign Job
-                </button>
+                <h2 id="member-name-header">Member Details</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="navTo('team-view')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="openJobModal()">
+                        <i class="fas fa-tasks"></i> Assign Job
+                    </button>
+                </div>
             </div>
-            <h2 id="active-member-name">Staff Member</h2>
-            <div id="job-list"></div>
+            <div class="glass" style="padding: 28px; margin-bottom: 20px;">
+                <h3 style="margin-bottom:20px; color: var(--text-secondary); font-weight: 600;">Assigned Jobs</h3>
+                <div class="item-list" id="member-jobs-list"></div>
+            </div>
         </div>
+
     </div>
 
     <!-- Modals -->
-    <!-- Legal Modal -->
+    
+    <!-- Legal Document Modal -->
     <div id="legal-modal" class="modal-overlay">
         <div class="modal glass">
             <i class="fas fa-times close-modal" onclick="closeModals()"></i>
             <h2 style="margin-bottom: 24px;">Add Document</h2>
             
-            <label>Category</label>
+            <label>Document Type</label>
             <select id="legal-cat" onchange="updateFileAccept()">
-                <option value="Photo">Photo/Image</option>
-                <option value="PDF">PDF Document</option>
-                <option value="Doc">Word/Text File</option>
+                <option value="Image">Image</option>
+                <option value="PDF">PDF</option>
+                <option value="Doc">Document</option>
             </select>
             
             <label>Document Name</label>
             <input type="text" id="legal-name" placeholder="Enter document name">
             
-            <label>Select File</label>
-            <input type="file" id="legal-file">
+            <label>Choose File</label>
+            <input type="file" id="legal-file" accept="image/jpeg,image/png,image/webp">
             
             <button class="btn btn-primary" style="width:100%; margin-top: 8px;" onclick="saveLegal()">
-                <i class="fas fa-upload"></i> Upload & Scan
-            </button>
-        </div>
-    </div>
-
-    <!-- Transaction Modal -->
-    <div id="trans-modal" class="modal-overlay">
-        <div class="modal glass">
-            <i class="fas fa-times close-modal" onclick="closeModals()"></i>
-            <h2 style="margin-bottom: 24px;">Add Transaction</h2>
-            
-            <label>Type</label>
-            <select id="trans-type">
-                <option value="owe">I Owe Money</option>
-                <option value="owed">Money Owed to Me</option>
-            </select>
-            
-            <label>Name / Party</label>
-            <input type="text" id="trans-name" placeholder="Who is this with?">
-            
-            <label>Amount</label>
-            <input type="number" id="trans-amount" placeholder="0.00">
-            
-            <label>Transaction Date</label>
-            <input type="date" id="trans-date">
-
-            <label>Details / Notes</label>
-            <textarea id="trans-details" placeholder="What is this for?"></textarea>
-            
-            <label>Attach Receipt (Optional)</label>
-            <input type="file" id="trans-file" accept="image/*,application/pdf">
-            
-            <button class="btn btn-primary" style="width:100%; margin-top: 8px;" onclick="saveTransaction()">
-                <i class="fas fa-save"></i> Save Transaction
+                <i class="fas fa-save"></i> Save Document
             </button>
         </div>
     </div>
@@ -933,19 +1008,52 @@
     <div id="note-modal" class="modal-overlay">
         <div class="modal glass">
             <i class="fas fa-times close-modal" onclick="closeModals()"></i>
-            <h2 style="margin-bottom: 24px;">Add Note</h2>
+            <h2 style="margin-bottom: 24px;">New Note</h2>
             
             <label>Title</label>
             <input type="text" id="note-title" placeholder="Enter note title">
             
             <label>Content</label>
-            <textarea id="note-content" placeholder="Write your note here..." style="height:150px;"></textarea>
+            <textarea id="note-content" rows="5" placeholder="Write your note here..."></textarea>
             
-            <label>Deadline / Date</label>
+            <label>Date (Optional)</label>
             <input type="date" id="note-date">
-
+            
             <button class="btn btn-primary" style="width:100%; margin-top: 8px;" onclick="saveNote()">
                 <i class="fas fa-save"></i> Save Note
+            </button>
+        </div>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div id="trans-modal" class="modal-overlay">
+        <div class="modal glass">
+            <i class="fas fa-times close-modal" onclick="closeModals()"></i>
+            <h2 style="margin-bottom: 24px;">New Transaction</h2>
+            
+            <label>Transaction Type</label>
+            <select id="trans-type">
+                <option value="owe">I Owe Them </option>
+                <option value="owed">They Owe Me </option>
+            </select>
+            
+            <label>Entity Name</label>
+            <input type="text" id="trans-name" placeholder="Company or person name">
+            
+            <label>Amount</label>
+            <input type="number" id="trans-amount" placeholder="0.00" step="0.01">
+            
+            <label>Details</label>
+            <input type="text" id="trans-details" placeholder="Description or reference">
+            
+            <label>Date</label>
+            <input type="date" id="trans-date">
+            
+            <label>Upload Receipt (Optional)</label>
+            <input type="file" id="trans-file" accept="image/*,application/pdf">
+            
+            <button class="btn btn-primary" style="width:100%; margin-top: 8px;" onclick="saveTransaction()">
+                <i class="fas fa-save"></i> Save Transaction
             </button>
         </div>
     </div>
@@ -954,7 +1062,7 @@
     <div id="order-modal" class="modal-overlay">
         <div class="modal glass">
             <i class="fas fa-times close-modal" onclick="closeModals()"></i>
-            <h2 style="margin-bottom: 24px;">Add Order</h2>
+            <h2 style="margin-bottom: 24px;">New Order</h2>
             
             <label>Category</label>
             <select id="order-cat">
@@ -1073,118 +1181,158 @@
         
         let currentUserId = null;
         let activeMemberId = null;
-        let deleteCallback = null;
-        let userCurrency = "$"; // Default currency
+        let deleteCallback = null; // Holds the delete function for confirmation modal
+        let userCurrency = 'USD'; // Default currency
+let currencySymbol = '$'; // Default symbol
 
+// Currency symbol mapping
+const currencySymbols = {
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'INR': '₹',
+    'JPY': '¥',
+    'AUD': 'A$',
+    'CAD': 'C$',
+    'CNY': '¥',
+    'CHF': 'Fr',
+    'SEK': 'kr',
+    'NZD': 'NZ$',
+    'KRW': '₩',
+    'SGD': 'S$',
+    'HKD': 'HK$',
+    'NOK': 'kr',
+    'MXN': '$',
+    'BRL': 'R$',
+    'ZAR': 'R',
+    'RUB': '₽',
+    'TRY': '₺'
+};
         // --- AUTHENTICATION & REDIRECT ---
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                console.log("User verified:", user.uid);
-                currentUserId = user.uid;
-                document.getElementById('loading').style.display = 'none';
-                fetchUserCurrency();
-                initListeners();
-                checkDeadlines();
-            } else {
-                console.log("No user found. Redirecting to login...");
-                window.location.href = "login.html"; 
-            }
-        });
-
-        async function fetchUserCurrency() {
-            try {
-                // Fetching from the user-specified path
-                const snapshot = await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/National Currency/currency`).once('value');
-                if (snapshot.exists()) {
-                    const currencyCode = snapshot.val();
-                    const currencyMap = {
-                        "INR": "₹",
-                        "USD": "$",
-                        "EUR": "€",
-                        "GBP": "£"
-                    };
-                    userCurrency = currencyMap[currencyCode] || currencyCode + " ";
-                    console.log("Currency updated to:", userCurrency);
-                    
-                    // Update any already rendered currency symbols
-                    document.querySelectorAll('.user-currency').forEach(el => {
-                        el.innerText = userCurrency;
-                    });
-                }
-            } catch (error) {
-                console.error("Error fetching currency:", error);
-            }
-        }
-
-        async function checkDeadlines() {
-            const baseRef = `BusinessOwners/${currentUserId}/BusinessItems`;
-            const alertList = [];
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-
-            const checkItem = (item, typeName, dateField) => {
-                if (item[dateField]) {
-                    const itemDate = new Date(item[dateField]);
-                    itemDate.setHours(0, 0, 0, 0);
-                    if (itemDate.getTime() === tomorrow.getTime()) {
-                        alertList.push(`Alert: ${typeName} '${item.name || item.title || item.category || item.desc || 'Unnamed'}' is coming close!!!!`);
-                    }
-                }
-            };
-
-            try {
-                const [transSnap, ordersSnap, jobsSnap, notesSnap] = await Promise.all([
-                    db.ref(`${baseRef}/transactions`).once('value'),
-                    db.ref(`${baseRef}/pendingorders`).once('value'),
-                    db.ref(`${baseRef}/teamandstaff`).once('value'),
-                    db.ref(`${baseRef}/notes`).once('value')
-                ]);
-
-                transSnap.forEach(c => checkItem(c.val(), 'Transaction', 'date'));
-                ordersSnap.forEach(c => checkItem(c.val(), 'Order', 'deadline'));
-                notesSnap.forEach(c => checkItem(c.val(), 'Note', 'date'));
-                
-                jobsSnap.forEach(memberSnap => {
-                    const member = memberSnap.val();
-                    if (member.jobs) {
-                        Object.values(member.jobs).forEach(job => checkItem(job, 'Staff Task', 'deadline'));
-                    }
-                });
-
-                if (alertList.length > 0) {
-                    const alertContainer = document.createElement('div');
-                    alertContainer.style.cssText = 'position:fixed; top:20px; right:20px; z-index:1000; width:320px;';
-                    alertList.forEach(msg => {
-                        const alertDiv = document.createElement('div');
-                        alertDiv.className = 'glass';
-                        alertDiv.style.cssText = 'background:var(--danger); color:white; padding:15px; margin-bottom:10px; border-radius:8px; box-shadow:var(--shadow-lg); border:1px solid rgba(255,255,255,0.2); animation: fadeSlideIn 0.5s ease; position:relative;';
-                        alertDiv.innerHTML = `
-                            <div style="display:flex; align-items:flex-start; gap:12px;">
-                                <i class="fas fa-bell" style="margin-top:4px;"></i>
-                                <div style="font-size:0.9rem; font-weight:500; line-height:1.4;">${msg}</div>
-                            </div>
-                        `;
-                        alertContainer.appendChild(alertDiv);
-                        setTimeout(() => {
-                            alertDiv.style.opacity = '0';
-                            alertDiv.style.transform = 'translateX(20px)';
-                            alertDiv.style.transition = 'all 0.5s ease';
-                            setTimeout(() => alertDiv.remove(), 500);
-                        }, 10000);
-                    });
-                    document.body.appendChild(alertContainer);
-                }
-            } catch (e) { console.error("Deadline check error:", e); }
-        }
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        console.log("User verified:", user.uid);
+        currentUserId = user.uid;
+        document.getElementById('loading').style.display = 'none';
+        
+        // NEW: Fetch currency and check deadlines
+        fetchUserCurrency();
+        checkDeadlines();
+        
+        initListeners();
+    } else {
+        console.log("No user found. Redirecting to login...");
+        window.location.href = "login.html"; 
+    }
+});
 
         function logout() {
             auth.signOut().then(() => {
                 window.location.href = "login.html";
             });
         }
+// Fetch user's currency from Firebase
+function fetchUserCurrency() {
+    db.ref(`BusinessOwners/${currentUserId}/BusinessItems/National Currency/currency`).once('value', snapshot => {
+        if (snapshot.exists()) {
+            userCurrency = snapshot.val();
+            currencySymbol = currencySymbols[userCurrency] || userCurrency + ' ';
+            console.log('User currency loaded:', userCurrency, currencySymbol);
+        }
+    });
+}
+// Check for upcoming deadlines (1 day before)
+function checkDeadlines() {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    
+    const baseRef = `BusinessOwners/${currentUserId}/BusinessItems`;
+    let alerts = [];
 
+    // Check Transactions
+    db.ref(`${baseRef}/transactions`).once('value', snapshot => {
+        snapshot.forEach(child => {
+            const t = child.val();
+            if (t.date === tomorrowStr) {
+                alerts.push(`Transaction: ${t.name} - ${currencySymbol}${t.amount}`);
+            }
+        });
+        checkOrders();
+    });
+
+    function checkOrders() {
+        // Check Pending Orders
+        db.ref(`${baseRef}/pendingorders`).once('value', snapshot => {
+            snapshot.forEach(child => {
+                const o = child.val();
+                if (o.deadline === tomorrowStr) {
+                    alerts.push(`Order: ${o.desc}`);
+                }
+            });
+            checkNotes();
+        });
+    }
+
+    function checkNotes() {
+        // Check Notes
+        db.ref(`${baseRef}/notes`).once('value', snapshot => {
+            snapshot.forEach(child => {
+                const n = child.val();
+                if (n.date === tomorrowStr) {
+                    alerts.push(`Note: ${n.title}`);
+                }
+            });
+            checkJobs();
+        });
+    }
+
+    function checkJobs() {
+        // Check Team Jobs
+        db.ref(`${baseRef}/teamandstaff`).once('value', snapshot => {
+            snapshot.forEach(memberSnapshot => {
+                const member = memberSnapshot.val();
+                if (member.jobs) {
+                    Object.values(member.jobs).forEach(job => {
+                        if (job.deadline === tomorrowStr && !job.completed) {
+                            alerts.push(`Task for ${member.name}: ${job.desc}`);
+                        }
+                    });
+                }
+            });
+            
+            // Show alerts if any
+            if (alerts.length > 0) {
+                showDeadlineAlert(alerts);
+            }
+        });
+    }
+}
+
+// Display deadline alerts
+function showDeadlineAlert(alerts) {
+    const banner = document.getElementById('alert-banner');
+    const message = document.getElementById('alert-message');
+    
+    if (alerts.length === 1) {
+        message.textContent = alerts[0] + ' is due tomorrow!';
+    } else {
+        message.textContent = `${alerts.length} deadlines are approaching tomorrow!`;
+    }
+    
+    banner.style.display = 'flex';
+    
+    // Auto-hide after 10 seconds
+    setTimeout(() => {
+        banner.style.display = 'none';
+    }, 10000);
+}
+
+// Close alert manually
+function closeAlert() {
+    document.getElementById('alert-banner').style.display = 'none';
+}
         // --- NAVIGATION ---
         function navTo(viewId) {
             document.querySelectorAll('.section-view, #dashboard-view').forEach(el => el.style.display = 'none');
@@ -1288,6 +1436,7 @@
             });
 
             // Transactions Listener
+// --- Inside initListeners() for Transactions ---
 db.ref(`${baseRef}/transactions`).on('value', snapshot => {
     const list = document.getElementById('trans-list');
     list.innerHTML = '';
@@ -1308,8 +1457,8 @@ db.ref(`${baseRef}/transactions`).on('value', snapshot => {
                 </div>
                 <div style="color: var(--text-secondary); font-size:0.95rem; margin-bottom: 4px;">${t.details}</div>
                 <div style="margin-top:10px; font-weight:600; font-size: 1.1rem; color: var(--text-primary);">
-                    <span class="user-currency">${userCurrency}</span>${t.amount} 
-                    <span style="font-weight:400; color: var(--text-muted); font-size:0.85rem; margin-left:12px;">
+    <span class="currency-symbol">${currencySymbol}</span>${t.amount} 
+    <span style="font-weight:400; color: var(--text-muted); font-size:0.85rem; margin-left:12px;">
                         <i class="fas fa-calendar-alt"></i> ${t.date}
                     </span>
                 </div>
@@ -1577,27 +1726,41 @@ async function saveTransaction() {
 
             // Real-time Progress
             uploadTask.on('state_changed', (snap) => {
-                const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-                document.getElementById('upload-pct').innerText = pct + "%";
-                document.getElementById('manual-progress').style.width = pct + "%";
-            });
+                const progress = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+                pctText.innerText = progress + "%";
+                document.getElementById('manual-progress').style.width = progress + "%";
+            }, null, async () => {
+                mainUrl = await uploadTask.snapshot.ref.getDownloadURL();
+                finalThumbUrl = mainUrl;
 
-            await uploadTask;
-            mainUrl = await fileRef.getDownloadURL();
+                if (thumbBlob) {
+                    const tRef = storage.ref(`BusinessOwners/${currentUserId}/Receipts/thumbs/${fileId}.jpg`);
+                    await tRef.put(thumbBlob);
+                    finalThumbUrl = await tRef.getDownloadURL();
+                }
+                saveToTransDB();
+            });
+        } else {
+            saveToTransDB();
         }
 
-        await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/transactions`).push({
-            type, name, amount, details, date, url: mainUrl, timestamp: fileId
-        });
-
-        updateMeta('trans');
-        setTimeout(() => {
-            hideScanAnimation();
-            closeModals();
-        }, 800);
-
+        async function saveToTransDB() {
+await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/transactions`).push({
+    type, name, amount, details, date,
+    url: mainUrl, 
+    preview: finalThumbUrl || "",
+    currency: userCurrency, // NEW: Store currency
+    timestamp: fileId
+});
+            updateMeta('trans');
+            setTimeout(() => {
+                hideScanAnimation();
+                closeModals();
+                alert("Transaction Saved!");
+            }, 800);
+        }
     } catch (e) {
-        alert(e.message);
+        console.error(e);
         hideScanAnimation();
     }
 }
@@ -1607,14 +1770,18 @@ async function saveTransaction() {
             const desc = document.getElementById('order-desc').value;
             const deadline = document.getElementById('order-deadline').value;
 
-            if(!desc || !deadline) return alert("Description and Deadline required");
+            if(!desc) return alert("Description required");
 
             db.ref(`BusinessOwners/${currentUserId}/BusinessItems/pendingorders`).push({
                 category: cat, desc, deadline, timestamp: Date.now()
             });
             
-            updateMeta('orders');
+            updateMeta('pendingorders');
             closeModals();
+            
+            // Clear form
+            document.getElementById('order-desc').value = '';
+            document.getElementById('order-deadline').value = '';
         }
 
         function saveMember() {
@@ -1631,80 +1798,131 @@ async function saveTransaction() {
             
             updateMeta('team');
             closeModals();
+            
+            // Clear form
+            document.getElementById('team-name').value = '';
+            document.getElementById('team-role').value = '';
+            document.getElementById('team-email').value = '';
         }
 
-        // --- SUB-VIEW: MEMBER JOBS ---
+        // --- TEAM MEMBER & JOB LOGIC ---
+
         function openMemberView(id, name) {
             activeMemberId = id;
-            document.getElementById('active-member-name').innerText = name + "'s Assigned Jobs";
-            navTo('member-jobs-view');
+            document.getElementById('member-name-header').innerText = name;
             
-            // Listen to this specific member's jobs
             db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${id}/jobs`).on('value', snapshot => {
-                const list = document.getElementById('job-list');
+                const list = document.getElementById('member-jobs-list');
                 list.innerHTML = '';
+                
+                if(!snapshot.exists()) {
+                    list.innerHTML = '<div style="color: var(--text-muted); font-style:italic; text-align: center; padding: 20px;">No jobs assigned yet.</div>';
+                    return;
+                }
                 
                 snapshot.forEach(child => {
                     const job = child.val();
-                    const jobKey = child.key;
+                    const jobId = child.key;
+                    const isCompleted = job.completed === true;
+                    
                     const div = document.createElement('div');
-                    div.className = `job-item ${job.completed ? 'job-completed' : ''}`;
+                    div.className = `job-item ${isCompleted ? 'job-completed' : ''}`;
                     div.innerHTML = `
-                        <div class="check-box ${job.completed ? 'checked' : ''}" onclick="toggleJob('${jobKey}', ${job.completed})">
-                            ${job.completed ? '<i class="fas fa-check" style="color:white; font-size:0.7rem;"></i>' : ''}
+                        <div class="check-box ${isCompleted ? 'checked' : ''}" onclick="toggleJob('${jobId}', ${!isCompleted})">
+                            ${isCompleted ? '<i class="fas fa-check" style="font-size:12px; color:white;"></i>' : ''}
                         </div>
                         <div style="flex:1;">
-                            <div style="font-weight:500;">${job.desc}</div>
-                            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">Deadline: ${job.deadline}</div>
+                            <div style="font-weight: 500;">${job.desc}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                                <i class="fas fa-calendar"></i> Deadline: ${job.deadline}
+                            </div>
                         </div>
-                        <button class="btn btn-danger" style="padding:6px 12px;" onclick="confirmDelete(() => deleteJob('${jobKey}'))">
+                        <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.75rem;" onclick="event.stopPropagation(); confirmDelete(() => deleteJob('${jobId}'))">
                             <i class="fas fa-trash"></i>
                         </button>
                     `;
                     list.appendChild(div);
                 });
             });
+
+            navTo('member-detail-view');
+        }
+
+        function openJobModal() {
+            openModal('job-modal');
         }
 
         function saveJob() {
             const desc = document.getElementById('job-desc').value;
             const deadline = document.getElementById('job-deadline').value;
 
-            if(!desc || !deadline) return alert("Details and Deadline required");
+            if (!desc || !deadline) return alert("Description and Deadline are required");
 
             db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${activeMemberId}/jobs`).push({
-                desc, deadline, completed: false, timestamp: Date.now()
+                desc: desc,
+                deadline: deadline,
+                completed: false,
+                timestamp: Date.now()
             });
-            
+
+            const dateStr = new Date().toISOString().split('T')[0];
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/meta/teamlastdate`).set(dateStr);
+
             closeModals();
+            document.getElementById('job-desc').value = '';
+            document.getElementById('job-deadline').value = '';
         }
 
-        function toggleJob(jobKey, currentStatus) {
-            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${activeMemberId}/jobs/${jobKey}`).update({
-                completed: !currentStatus
+        function toggleJob(jobId, status) {
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${activeMemberId}/jobs/${jobId}`).update({
+                completed: status
             });
         }
 
-        // --- DELETE LOGIC ---
-        function deleteLegal(key) { db.ref(`BusinessOwners/${currentUserId}/BusinessItems/legaldocuments/${key}`).remove(); }
-        function deleteTransaction(key) { db.ref(`BusinessOwners/${currentUserId}/BusinessItems/transactions/${key}`).remove(); }
-        function deleteNote(key) { db.ref(`BusinessOwners/${currentUserId}/BusinessItems/notes/${key}`).remove(); }
-        function deleteOrder(key) { db.ref(`BusinessOwners/${currentUserId}/BusinessItems/pendingorders/${key}`).remove(); }
-        function deleteMember(key) { db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${key}`).remove(); }
-        function deleteJob(key) { db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${activeMemberId}/jobs/${key}`).remove(); }
+        // --- DELETE FUNCTIONS ---
 
-        // --- PREVIEW LOGIC ---
-        function previewDoc(url) {
-            const area = document.getElementById('preview-content-area');
-            area.innerHTML = '';
-            
-            if (url.toLowerCase().includes('.pdf')) {
-                area.innerHTML = `<iframe src="${url}" style="width:100%; height:100%; border:none;"></iframe>`;
-            } else {
-                area.innerHTML = `<img src="${url}" style="max-width:100%; max-height:100%; object-fit:contain;">`;
-            }
-            openModal('preview-modal');
+        function deleteLegal(docKey) {
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/legaldocuments/${docKey}`).remove();
         }
+
+        function deleteTransaction(transKey) {
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/transactions/${transKey}`).remove();
+        }
+
+        function deleteNote(noteKey) {
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/notes/${noteKey}`).remove();
+        }
+
+        function deleteOrder(orderKey) {
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/pendingorders/${orderKey}`).remove();
+        }
+
+        function deleteMember(memberKey) {
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${memberKey}`).remove();
+        }
+
+        function deleteJob(jobId) {
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${activeMemberId}/jobs/${jobId}`).remove();
+        }
+
+        // --- PREVIEW FUNCTION ---
+
+function previewDoc(url) {
+    if(!url) return;
+    const contentArea = document.getElementById('preview-content-area');
+    
+    // Clear previous content
+    contentArea.innerHTML = '';
+
+    // Check if it's likely a PDF (Firebase URLs often contain the file extension or metadata)
+    if (url.toLowerCase().includes('.pdf') || url.includes('application%2Fpdf')) {
+        contentArea.innerHTML = `<iframe src="${url}" style="width:100%; height:100%; border:none; border-radius:8px;"></iframe>`;
+    } else {
+        contentArea.innerHTML = `<img src="${url}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">`;
+    }
+    
+    document.getElementById('preview-modal').style.display = 'flex';
+}
 
     </script>
 </body>
