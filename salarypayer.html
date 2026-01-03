@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digial Command Centre</title>
+    <title>Digital Command Centre</title>
     <style>
         * {
             margin: 0;
@@ -648,8 +648,8 @@ body {
     <button onclick="closeQtyPopup()" style="background:none; border:none; color:#888; margin-top:10px; cursor:pointer;">Cancel</button>
 </div>
         <div class="control-group">
-            <label>Rotate View (X-Axis): <span id="rotateX-value">60°</span></label>
-            <input type="range" id="rotateX" min="0" max="90" value="60" oninput="updateRotation()">
+            <label>Rotate View (X-Axis): <span id="rotateX-value">41°</span></label>
+            <input type="range" id="rotateX" min="0" max="90" value="41" oninput="updateRotation()">
         </div>
 
         <div class="control-group">
@@ -1237,7 +1237,7 @@ node.style.transform = `translateZ(${floorZ}px)`;
             <div class="story-section" style="border-left-color: var(--neon-accent); background: rgba(127, 255, 0, 0.05);">
                 <h3>💰 Price Value</h3>
                 <p style="font-size: 24px; color: var(--neon-accent); font-weight: bold; text-shadow: 0 0 10px var(--neon-accent);">
-                    ${product.price}
+                    {product.price}
                 </p>
             </div>
 
