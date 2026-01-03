@@ -2108,18 +2108,12 @@ function showMegaAlert(alerts, isCritical) {
         countdown.textContent = '24';
     }
     
-    // Build deadline list (LIMIT ANIMATIONS FOR PERFORMANCE)
+    // Build deadline list
     container.innerHTML = '';
     alerts.forEach((alert, index) => {
         const item = document.createElement('div');
         item.className = 'deadline-item';
-        // Only animate first 5 items to reduce lag
-        if (index < 5) {
-            item.style.animationDelay = `${index * 0.1}s`;
-        } else {
-            item.style.animation = 'none'; // No animation for items beyond 5
-        }
-        
+        item.style.animationDelay = `${index * 0.1}s`;
         item.innerHTML = `
             <div class="deadline-item-header">
                 <i class="fas ${alert.icon} deadline-item-icon"></i>
@@ -2133,24 +2127,17 @@ function showMegaAlert(alerts, isCritical) {
     // Show overlay
     overlay.style.display = 'flex';
     
-    // Play alert sound (safe version)
-    try {
-        const sound = document.getElementById('alert-sound');
-        if (sound && audioPermissionGranted) {
-            sound.play().catch(e => console.log('Audio play failed:', e));
-        }
-    } catch (e) {
-        console.log('Sound error:', e);
-    }
+    // Play alert sound
+    const sound = document.getElementById('alert-sound');
+    sound.play().catch(e => console.log('Audio play failed:', e));
     
-    // Prevent closing by clicking outside
+    // Prevent closing by clicking outside (force user to acknowledge)
     overlay.onclick = (e) => {
         if (e.target === overlay) {
-            // Gentle shake instead of heavy animation
-            const container = document.querySelector('.mega-alert-container');
-            container.classList.add('shake-alert');
+            // Shake animation when trying to click outside
+            document.querySelector('.mega-alert-container').style.animation = 'shake 0.5s ease';
             setTimeout(() => {
-                container.classList.remove('shake-alert');
+                document.querySelector('.mega-alert-container').style.animation = 'containerPulse 2s ease-in-out infinite';
             }, 500);
         }
     };
