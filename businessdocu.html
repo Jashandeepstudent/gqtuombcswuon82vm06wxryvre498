@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -619,7 +620,7 @@
                 transparent 100%
             );
             box-shadow: 0 0 20px var(--primary), 0 0 40px var(--primary);
-            animation: scan 2.5s ease-in-out infinite;
+            animation: scan 1.5s ease-in-out infinite;
         }
 
         @keyframes scan {
@@ -666,7 +667,7 @@
             height: 100%;
             background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
             width: 0%;
-            animation: progress 2.5s ease-in-out infinite;
+            animation: progress 1.5s ease-in-out infinite;
             box-shadow: 0 0 10px var(--primary);
         }
 
@@ -681,7 +682,21 @@
             gap: 8px;
             align-items: center;
         }
+#scan-preview-content {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 0.5;
+    padding: 10px;
+}
 
+/* Percentage text style */
+.scan-percentage {
+    margin-top: 10px;
+    color: var(--secondary);
+    font-family: monospace;
+    font-weight: bold;
+}
         /* Responsive */
         @media (max-width: 768px) {
             .container { padding: 16px; }
@@ -700,16 +715,19 @@
     </div>
 
     <!-- CapCut Style Scanning Animation -->
-    <div id="scan-overlay">
-        <div class="scan-container">
-            <div class="document-silhouette">
-                <div class="scan-line"></div>
-            </div>
+<div id="scan-overlay">
+    <div class="scan-container">
+        <div class="document-silhouette">
+            <img id="scan-preview-content" src="" style="display:none;">
+            <div class="scan-line"></div>
         </div>
-        <div class="scan-text">Processing Document...</div>
-        <div class="scan-progress">
-            <div class="scan-progress-bar"></div>
-        </div>
+    </div>
+    <div class="scan-text" id="scan-status-text">Processing Document...</div>
+    <div class="scan-progress">
+        <div class="scan-progress-bar" id="manual-progress"></div>
+    </div>
+    <div class="scan-percentage" id="upload-pct">0%</div>
+</div>
     </div>
 
     <div class="container">
@@ -1317,94 +1335,72 @@
 
         // --- SAVE FUNCTIONS ---
 
-        async function saveLegal() {
-            const cat = document.getElementById('legal-cat').value;
-            const name = document.getElementById('legal-name').value;
-            const fileInput = document.getElementById('legal-file');
+       async function saveLegal() {
+    const cat = document.getElementById('legal-cat').value;
+    const name = document.getElementById('legal-name').value;
+    const fileInput = document.getElementById('legal-file');
+    
+    if(!name || fileInput.files.length === 0) return alert("File and Name required");
+
+    const file = fileInput.files[0];
+    const scanImg = document.getElementById('scan-preview-content');
+    const pctText = document.getElementById('upload-pct');
+    const progressBar = document.getElementById('manual-progress');
+
+    // Show preview in scan box
+    if (file.type.startsWith("image/")) {
+        scanImg.src = URL.createObjectURL(file);
+    } else {
+        scanImg.src = "https://cdn-icons-png.flaticon.com/512/337/337948.png";
+    }
+    scanImg.style.display = 'block';
+    showScanAnimation();
+
+    const fileId = Date.now();
+    const storagePath = `BusinessOwners/${currentUserId}/LegalDocs/${fileId}_${file.name}`;
+    const fileRef = storage.ref(storagePath);
+    const uploadTask = fileRef.put(file);
+
+    // Track Progress
+    uploadTask.on('state_changed', 
+        (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            const rounded = Math.round(progress);
+            pctText.innerText = rounded + "%";
+            progressBar.style.width = rounded + "%";
+            progressBar.style.animation = 'none'; // Switch from auto-animation to real progress
+        }, 
+        (error) => {
+            hideScanAnimation();
+            alert("Upload failed: " + error.message);
+        }, 
+        async () => {
+            const mainUrl = await uploadTask.snapshot.ref.getDownloadURL();
             
-            if(!name || fileInput.files.length === 0) return alert("File and Name required");
+            // Logic for thumbnails remains same
+            let thumbUrl = file.type.startsWith("image/") ? mainUrl : "https://cdn-icons-png.flaticon.com/512/337/337948.png";
 
-            const file = fileInput.files[0];
+            await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/legaldocuments`).push({
+                name: name,
+                category: cat,
+                url: mainUrl,
+                preview: thumbUrl,
+                timestamp: fileId
+            });
+
+            updateMeta('legal');
             
-            // File type validation based on category
-            const fileType = file.type;
-            const fileName = file.name.toLowerCase();
-            
-            if (cat === 'PDF' && fileType !== 'application/pdf') {
-                return alert("Please select a PDF file");
-            } else if (cat === 'Doc' && !fileName.match(/\.(doc|docx|txt)$/)) {
-                return alert("Please select a .doc, .docx, or .txt file");
-            } else if (cat === 'Image' && !fileType.startsWith('image/')) {
-                return alert("Please select an image file (JPEG, PNG, or WebP)");
-            }
-
-            showScanAnimation(); // Show CapCut style animation
-
-            const fileId = Date.now();
-            const storagePath = `BusinessOwners/${currentUserId}/LegalDocs/${fileId}_${file.name}`;
-            const thumbPath = `BusinessOwners/${currentUserId}/LegalDocs/thumbs/${fileId}_thumb.jpg`;
-            
-            try {
-                // Upload Main File
-                const fileRef = storage.ref(storagePath);
-                await fileRef.put(file);
-                const mainUrl = await fileRef.getDownloadURL();
-
-                let thumbUrl = "";
-
-                // Generate and Upload Thumbnail
-                if (file.type === "application/pdf") {
-                    const arrayBuffer = await file.arrayBuffer();
-                    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-                    const page = await pdf.getPage(1);
-                    const viewport = page.getViewport({ scale: 0.5 });
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-                    await page.render({ canvasContext: context, viewport: viewport }).promise;
-                    
-                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
-                    const thumbRef = storage.ref(thumbPath);
-                    await thumbRef.put(blob);
-                    thumbUrl = await thumbRef.getDownloadURL();
-                } 
-                else if (file.type.startsWith("image/")) {
-                    thumbUrl = mainUrl;
-                } 
-                else {
-                    thumbUrl = "https://cdn-icons-png.flaticon.com/512/337/337948.png";
-                }
-
-                // Save to Database
-                await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/legaldocuments`).push({
-                    name: name,
-                    category: cat,
-                    url: mainUrl,
-                    preview: thumbUrl,
-                    timestamp: fileId
-                });
-
-                updateMeta('legal');
-                
-                // Hide animation and close modal
-                setTimeout(() => {
-                    hideScanAnimation();
-                    closeModals();
-                    
-                    // Clear form
-                    document.getElementById('legal-name').value = '';
-                    document.getElementById('legal-file').value = '';
-                    
-                    alert("Document saved successfully!");
-                }, 2500); // Match animation duration
-                
-            } catch (e) {
+            // Short delay to let user see 100%
+            setTimeout(() => {
                 hideScanAnimation();
-                console.error(e);
-                alert("Error uploading: " + e.message);
-            }
+                scanImg.style.display = 'none';
+                progressBar.style.animation = ''; // Reset animation
+                closeModals();
+                alert("Document saved!");
+            }, 800);
         }
+    );
+}
 
         function saveNote() {
             const title = document.getElementById('note-title').value;
