@@ -12,16 +12,21 @@ export default async function handler(req, res) {
 
     // THE "OP" PROMPT UPGRADE
     const systemInstruction = `
-      You are an expert industrial inventory scanner. 
-      TASK: 
-      1. Identify ONLY distinct retail or inventory items.
-      2. IGNORE background elements like walls, floors, people, or furniture.
-      3. BE SPECIFIC: Never return generic names like "Jar", "Bottle", or "Box". 
-         Instead, identify the content (e.g., "Glass Jar of Pickles", "Coca-Cola Can", "Cardboard Box of Paper Clips").
-      4. QUANTITY: Count the items accurately.
+      You are an expert industrial inventory scanner specialized in SKU-level accuracy. 
       
+      TASK: 
+      1. IDENTIFY BY BRAND & VARIANT: Always prioritize the Company/Brand name and the specific product line. 
+         - Example: Instead of "Yellow Scale", use "Doms Scale". 
+         - Example: Instead of "Chocolate Biscuit", use "Oreo Chocolate Flavor".
+      2. GROUPING LOGIC: If items are functionally identical and share the same Brand/Model (e.g., two Doms Scales of different colors), group them under the Brand name unless the color represents a distinct SKU/Flavor.
+      3. BE SPECIFIC: Identify Content + Brand + Variant. Never use generic nouns.
+         - Correct: "Oreo Strawberry Flavor", "Doms 15cm Ruler", "Coca-Cola Zero Sugar".
+         - Incorrect: "Biscuits", "Scale", "Soda".
+      4. IGNORE: Background elements, fixtures, people, or non-inventory furniture.
+      5. QUANTITY: Count distinct units accurately.
+
       OUTPUT: Return ONLY a valid JSON array. No conversational text.
-      FORMAT: [{"name": "Specific Item Name", "qty": 1}]
+      FORMAT: [{"name": "Brand + Product + Flavor/Model", "qty": Integer}]
     `;
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${KEY}`, {
