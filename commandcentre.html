@@ -869,8 +869,8 @@ box-sizing: border-box;
 
         .stock-badge { position: absolute; top: 8px; right: 8px; background: #ff4444; color: #fff; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; transform: translateZ(25px); }
 
-        .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-        .overlay.active { opacity: 1; pointer-events: all; }
+.overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+.overlay.active { opacity: 1; pointer-events: all; }
 
         .toast { position: fixed; bottom: 30px; right: 30px; background: rgba(15, 15, 35, 0.95); backdrop-filter: blur(10px); border: 2px solid var(--neon-accent); border-radius: 10px; padding: 15px 20px; z-index: 2000; transform: translateY(150%); transition: transform 0.3s ease; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); min-width: 250px; }
         .toast.show { transform: translateY(0); }
@@ -2102,7 +2102,7 @@ document.querySelectorAll('.grid-cell').forEach(cell => {
         }
     }
 }
-
+}
             });
         }
 
@@ -2121,10 +2121,14 @@ window.toggleHeatmap = function() {
         overlay.classList.add('active');
         popup.classList.add('active');
         
+        // Allow clicking overlay to close
+        overlay.onclick = function() {
+            closeHeatmapLegend();
+        };
+        
         // Auto-close after 3 seconds
         setTimeout(() => {
-            popup.classList.remove('active');
-            overlay.classList.remove('active');
+            closeHeatmapLegend();
         }, 3000);
         
         showToast('🔥 Heatmap On', 'Color coding active');
@@ -2133,8 +2137,10 @@ window.toggleHeatmap = function() {
     }
 };
 window.closeHeatmapLegend = function() {
-    document.getElementById('heatmap-legend-popup').classList.remove('active');
-    document.getElementById('overlay').classList.remove('active');
+    const popup = document.getElementById('heatmap-legend-popup');
+    const overlay = document.getElementById('overlay');
+    if (popup) popup.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
 };
 function showHeatmapLegend() {
     const legendHTML = `
