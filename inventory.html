@@ -7,6 +7,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 *{box-sizing:border-box;font-family:Inter}
@@ -466,7 +467,100 @@ input:focus, select:focus, textarea:focus {
     border-color: #2563eb !important;
     box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
 }
+.report-modal-content {
+    background: white;
+    padding: 40px;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+}
 
+.report-modal-content h2 {
+    margin: 0 0 10px 0;
+    font-size: 26px;
+    font-weight: 800;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.report-modal-content p {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 25px;
+}
+
+.report-input-group {
+    margin-bottom: 20px;
+}
+
+.report-input-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    color: #475569;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.report-input-group input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 15px;
+    transition: all 0.2s;
+}
+
+.report-input-group input:focus {
+    border-color: #059669;
+    box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
+}
+
+.report-input-group input:disabled {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.report-actions {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 12px;
+    margin-top: 30px;
+}
+
+.btn-generate-report {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: 0.3s;
+}
+
+.btn-generate-report:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(5, 150, 105, 0.3);
+}
+
+.btn-cancel-report {
+    background: #f1f5f9;
+    color: #64748b;
+    border: none;
+    padding: 15px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
 /* BUTTON STYLES */
 .btn-save, .btn-import { 
     background: #000 !important; 
@@ -805,6 +899,12 @@ input:focus, select:focus, textarea:focus {
   </div>
 
   <div class="actions">
+    <button style="background:#059669" onclick="openReportModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block; vertical-align:middle; margin-right:5px">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        </svg>
+        Product Report
+    </button>
     <button style="background:#8b5cf6" onclick="window.location.href='picture.html'">📸 PIC (AI Scan)</button>
     <button onclick="openScanner()">📷 Scanner</button>
     <div style="position:relative; display:inline-block;">
@@ -984,6 +1084,44 @@ input:focus, select:focus, textarea:focus {
                 Save Expiry Dates
             </button>
             <button class="btn-close" onclick="closeBulkExpiryModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- PRODUCT REPORT MODAL -->
+<div id="reportModal" class="custom-modal">
+    <div class="report-modal-content">
+        <h2>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            </svg>
+            Generate Product Report
+        </h2>
+        <p>Fill in the details below to create a professional PDF report</p>
+        
+        <div class="report-input-group">
+            <label>Business Name</label>
+            <input type="text" id="reportBusinessName" placeholder="Enter your business name">
+        </div>
+        
+        <div class="report-input-group">
+            <label>Full Name</label>
+            <input type="text" id="reportFullName" placeholder="Enter your full name">
+        </div>
+        
+        <div class="report-input-group">
+            <label>Report Date</label>
+            <input type="date" id="reportDate" disabled>
+        </div>
+        
+        <div class="report-actions">
+            <button class="btn-cancel-report" onclick="closeReportModal()">Cancel</button>
+            <button class="btn-generate-report" onclick="generatePDF()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Generate PDF Report
+            </button>
         </div>
     </div>
 </div>
@@ -1410,7 +1548,7 @@ function render() {
 
     const hasExpiry = p.expiryDate ? "set" : "";
 
-    productsDiv.innerHTML += `
+    const rowHTML = `
 <div class="row">
   <div class="col-main">
       <div style="font-weight:700; color: #1e293b;">
@@ -1456,13 +1594,16 @@ function render() {
       </div>
   </div>
 </div>`;
+    
+    productsDiv.innerHTML += rowHTML;
   });
 
   document.getElementById("total").textContent = Object.keys(inventory).length;
   document.getElementById("low").textContent = lowC;
   document.getElementById("out").textContent = outC;
   document.getElementById("expiring").textContent = expiringC;
-}// --- MANUAL ADD LOGIC ---
+}
+// --- MANUAL ADD LOGIC ---
 function toggleAddMenu() {
     const menu = document.getElementById("addMenu");
     menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
@@ -2026,6 +2167,189 @@ function stopScanner() {
         });
     }
 }
+// --- PDF REPORT FUNCTIONS ---
+let reportCounter = 1;
+let businessNameGlobal = "";
+
+function openReportModal() {
+    // Load business name from Firebase
+    db.ref(`BusinessOwners/${currentUserId}/businessName`).once("value", s => {
+        if (s.exists()) {
+            businessNameGlobal = s.val();
+            document.getElementById("reportBusinessName").value = businessNameGlobal;
+        }
+    });
+    
+    // Set today's date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("reportDate").value = today;
+    
+    document.getElementById("reportModal").style.display = "flex";
+    setTimeout(() => document.getElementById("reportBusinessName").focus(), 100);
+}
+
+function closeReportModal() {
+    document.getElementById("reportModal").style.display = "none";
+}
+
+async function generatePDF() {
+    const businessName = document.getElementById("reportBusinessName").value.trim();
+    const fullName = document.getElementById("reportFullName").value.trim();
+    const reportDate = document.getElementById("reportDate").value;
+    
+    if (!businessName || !fullName) {
+        alert("Please fill in all required fields");
+        return;
+    }
+    
+    // Show loading state
+    const btn = document.querySelector(".btn-generate-report");
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10"/></svg> Generating...';
+    btn.disabled = true;
+    
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Blue Banner with Business Name
+        doc.setFillColor(37, 99, 235); // Blue color
+        doc.rect(0, 0, 210, 45, 'F');
+        
+        // Business Name in Calligraphy Style
+        doc.setFont("times", "italic");
+        doc.setFontSize(28);
+        doc.setTextColor(255, 255, 255);
+        const businessNameClean = businessName.replace(/\s+/g, '');
+        doc.text(`${businessNameClean}`, 105, 25, { align: 'center' });
+        
+        doc.setFontSize(16);
+        doc.text("Product Report", 105, 35, { align: 'center' });
+        
+        // Owner Name and Date
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.setTextColor(60, 60, 60);
+        doc.text(`Name: ${fullName}`, 20, 55);
+        
+        const formattedDate = new Date(reportDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        doc.text(`Date: ${formattedDate}`, 20, 62);
+        
+        // Table Header
+        doc.setFillColor(248, 250, 252);
+        doc.rect(15, 72, 180, 10, 'F');
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(71, 85, 105);
+        doc.text("Product Name", 20, 78);
+        doc.text("Quantity", 100, 78);
+        doc.text("Expiry Date", 130, 78);
+        doc.text("Status", 170, 78);
+        
+        // Table Content
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        
+        let yPosition = 88;
+        const products = Object.values(inventory);
+        
+        products.forEach((product, index) => {
+            // Alternate row colors
+            if (index % 2 === 0) {
+                doc.setFillColor(249, 250, 251);
+                doc.rect(15, yPosition - 5, 180, 8, 'F');
+            }
+            
+            doc.setTextColor(30, 41, 59);
+            doc.text(product.name.substring(0, 30), 20, yPosition);
+            doc.text(`${product.quantity} ${product.unit}`, 100, yPosition);
+            
+            // Expiry Date
+            if (product.expiryDate) {
+                const expiryFormatted = new Date(product.expiryDate).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                doc.text(expiryFormatted, 130, yPosition);
+            } else {
+                doc.setTextColor(156, 163, 175);
+                doc.text("Not Set", 130, yPosition);
+                doc.setTextColor(30, 41, 59);
+            }
+            
+            // Status
+            let status = "OK";
+            let statusColor = [16, 185, 129]; // Green
+            
+            if (product.quantity === 0) {
+                status = "Out";
+                statusColor = [239, 68, 68]; // Red
+            } else if (product.quantity < 10) {
+                status = "Low";
+                statusColor = [217, 119, 6]; // Orange
+            } else if (product.expiryDate && product.quantity >= 1) {
+                const daysLeft = getDaysUntilExpiry(product.expiryDate);
+                if (daysLeft < 0) {
+                    status = "Expired";
+                    statusColor = [220, 38, 38]; // Dark Red
+                } else if (daysLeft >= 0 && daysLeft <= notificationDays) {
+                    status = "Expiring";
+                    statusColor = [245, 158, 11]; // Amber
+                }
+            }
+            
+            doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+            doc.text(status, 170, yPosition);
+            doc.setTextColor(30, 41, 59);
+            
+            yPosition += 8;
+            
+            // Add new page if needed
+            if (yPosition > 270) {
+                doc.addPage();
+                yPosition = 20;
+            }
+        });
+        
+        // Footer
+        doc.setFontSize(8);
+        doc.setTextColor(156, 163, 175);
+        doc.text(`Generated on ${new Date().toLocaleString()}`, 105, 285, { align: 'center' });
+        doc.text(`Total Products: ${products.length}`, 105, 290, { align: 'center' });
+        
+        // Save with incremental naming
+        const fileName = `${businessNameClean}ProductReport${reportCounter}.pdf`;
+        doc.save(fileName);
+        
+        reportCounter++;
+        
+        closeReportModal();
+        triggerSuccess(`✓ Report downloaded: ${fileName}`);
+        
+    } catch (error) {
+        console.error("PDF Generation Error:", error);
+        alert("Error generating PDF. Please try again.");
+    } finally {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+    }
+}
+
+// Add spin animation for loading
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
 
 </script>
 
