@@ -1861,23 +1861,21 @@ if (product) {
 // --- REPLACE RENDER LOGIC INSIDE renderShop loop ---
 const node = document.createElement('div');
 node.className = 'product-node';
+node.dataset.productId = product.id;
 
-// FIX: Direct mapping ensures glow and card share the same origin
-node.style.left = `calc(${product.x} * var(--grid-size))`;
-node.style.top = `calc(${product.y} * var(--grid-size))`;
-node.style.width = 'var(--grid-size)';
-node.style.height = 'var(--grid-size)';
-                
-                // Normal Mode Colors (4)
-                updateNodeVisuals(node, product);
+// Normal Mode Colors
+updateNodeVisuals(node, product);
 
 const gridSize = 80; 
 const floorZ = (product.floor || 0) * 250; 
 
-// This math aligns the product node exactly with the grid cells
-node.style.left = `calc(50% - 400px + ${product.x * gridSize}px)`;
-node.style.top = `calc(50% - 400px + ${product.y * gridSize}px)`;
-node.style.transform = `translateZ(${floorZ}px)`;
+// FIXED: Properly center product node over grid cell
+node.style.position = 'absolute';
+node.style.left = `${400 + (product.x * gridSize) + (gridSize / 2)}px`;
+node.style.top = `${400 + (product.y * gridSize) + (gridSize / 2)}px`;
+node.style.transform = `translate(-50%, -50%) translateZ(${floorZ}px)`;
+node.style.width = '160px';
+node.style.height = '160px';
 
                 const expiryStatus = getExpiryStatus(product, isTimeTravelMode ? new Date(Date.now() + timeTravelDaysOffset * 86400000) : null);
                 const daysLeft = product.expiryDate ? getDaysUntilExpiry(product.expiryDate, isTimeTravelMode ? new Date(Date.now() + timeTravelDaysOffset * 86400000) : null) : null;
