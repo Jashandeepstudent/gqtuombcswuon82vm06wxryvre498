@@ -2121,14 +2121,10 @@ window.toggleHeatmap = function() {
         overlay.classList.add('active');
         popup.classList.add('active');
         
-        // Allow clicking overlay to close
-        overlay.onclick = function() {
-            closeHeatmapLegend();
-        };
-        
         // Auto-close after 3 seconds
         setTimeout(() => {
-            closeHeatmapLegend();
+            popup.classList.remove('active');
+            overlay.classList.remove('active');
         }, 3000);
         
         showToast('🔥 Heatmap On', 'Color coding active');
@@ -2137,10 +2133,8 @@ window.toggleHeatmap = function() {
     }
 };
 window.closeHeatmapLegend = function() {
-    const popup = document.getElementById('heatmap-legend-popup');
-    const overlay = document.getElementById('overlay');
-    if (popup) popup.classList.remove('active');
-    if (overlay) overlay.classList.remove('active');
+    document.getElementById('heatmap-legend-popup').classList.remove('active');
+    document.getElementById('overlay').classList.remove('active');
 };
 function showHeatmapLegend() {
     const legendHTML = `
