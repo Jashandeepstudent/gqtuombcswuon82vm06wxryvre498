@@ -2230,7 +2230,7 @@ const daysLeft = product.expiryDate ? getDaysUntilExpiry(product.expiryDate) : n
 
 // Show small expiry notification toast
 if (expiryStatus === 'expiring-soon') {
-    showToast(⚠️ Expiring Soon', `${product.name} expires in ${daysLeft} days`, 3000);
+    showToast('⚠️ Expiring Soon', `${product.name} expires in ${daysLeft} days`, 3000);
 } else if (expiryStatus === 'expired') {
     showToast('❌ Expired', `${product.name} has expired - remove from inventory`, 4000);
 }
