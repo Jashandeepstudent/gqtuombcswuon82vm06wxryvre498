@@ -2039,13 +2039,6 @@ const floorZ = (product.floor || 0) * 250;
 const xPosition = -(floorWidth / 2) + (product.x * cellSize);
 const yPosition = -(floorWidth / 2) + (product.y * cellSize);
 
-// Calculate position: floor starts at -400, each cell is 80px
-// FIXED: Calculate position WITHOUT centering offset
-// Floor grid is 800px (10 cells × 80px), centered at origin
-// Cell (0,0) should be at top-left corner of grid at (-400, -400)
-const xPosition = -400 + (product.x * cellSize);
-const yPosition = -400 + (product.y * cellSize);
-
 node.style.position = 'absolute';
 node.style.left = '50%';
 node.style.top = '50%';
