@@ -345,6 +345,119 @@ body{margin:0;background:#f6f7fb;padding:30px}
 .choice-card i { font-size: 32px; display: block; margin-bottom: 10px; }
 .choice-card span { font-weight: 700; color: #333; }
 
+/* EXPIRY DATE STYLES */
+.expiry-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    border: 1px solid #fef3c7;
+    background: #fffbeb;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+.expiry-btn:hover {
+    background: #fbbf24;
+    border-color: #f59e0b;
+    transform: translateY(-2px);
+}
+
+.expiry-tag {
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    background: #fef3c7;
+    color: #b45309;
+    margin-top: 5px;
+    display: inline-block;
+}
+
+.expiry-modal-box {
+    width: 100%;
+    max-width: 400px;
+    background: #fff;
+    padding: 30px;
+    border-radius: 24px;
+    position: relative;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+}
+
+.expiry-modal-box input[type="date"] {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.expiry-modal-box input[type="number"] {
+    width: 100%;
+    padding: 14px;
+    text-align: center;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.bulk-expiry-table {
+    width: 100%;
+    margin: 20px 0;
+    max-height: 400px;
+    overflow-y: auto;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+}
+
+.bulk-expiry-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.bulk-expiry-table th {
+    background: #f8fafc;
+    padding: 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    position: sticky;
+    top: 0;
+}
+
+.bulk-expiry-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.bulk-expiry-table input[type="date"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .bulk-expiry-table {
+        max-height: 300px;
+    }
+    
+    .bulk-expiry-table th,
+    .bulk-expiry-table td {
+        padding: 8px;
+        font-size: 12px;
+    }
+}
+
+
 /* BEAUTIFIED FORM INPUTS */
 input, select, textarea {
     background: #f9fafb !important;
@@ -533,6 +646,13 @@ input:focus, select:focus, textarea:focus {
     <button onclick="openScanner()">📷 Scanner</button>
     <div style="position:relative; display:inline-block;">
         <button onclick="toggleAddMenu()">➕ Add Product</button>
+<button style="background:#f59e0b; color:#fff;" onclick="openBulkExpiryModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block; vertical-align:middle; margin-right:5px;">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Add Expiry Dates
+    </button>
         <div id="addMenu" class="choice-menu">
             <button onclick="openManualAdd()">📝 Manual Add</button>
             <button onclick="openBulkAdd()">📦 Bulk Add</button>
@@ -573,6 +693,19 @@ input:focus, select:focus, textarea:focus {
     <div class="stat-icon out-bg">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
     </div>
+
+<div class="stat-card">
+    <div class="stat-icon" style="background: #fff7ed; color: #ea580c;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <div class="stat-details">
+      <span class="stat-label">Expiring Soon</span>
+      <h3 id="expiring" class="text-warning">0</h3>
+      <span class="stat-sub">Need Action</span>
+    </div>
+  </div>
+
+
     <div class="stat-details">
       <span class="stat-label">Out of Stock</span>
       <h3 id="out" class="text-danger">0</h3>
@@ -660,7 +793,62 @@ input:focus, select:focus, textarea:focus {
   </div>
 </div>
 
+<!-- EXPIRY DATE MODAL -->
+<div id="expiryModal" class="modal">
+  <div class="expiry-modal-box">
+    <h2 style="margin-top:0">Set Expiry Date</h2>
+    <p id="expiryProductName" style="color:#64748b; font-weight:600;"></p>
+    
+    <label style="font-weight:600; font-size:14px; color:#475569; display:block; margin-top:15px;">Expiry Date</label>
+    <input type="date" id="expiry_date" />
+    
+    <div class="modal-actions">
+        <button class="btn-save" onclick="saveExpiryDate()">Save Date</button>
+        <button class="btn-close" onclick="closeExpiryModal()">Cancel</button>
+    </div>
+  </div>
+</div>
 
+<!-- NOTIFICATION PREFERENCE MODAL -->
+<div id="notificationModal" class="modal">
+  <div class="expiry-modal-box">
+    <h2 style="margin-top:0">Set Notification</h2>
+    <p style="color:#64748b; font-size:14px;">How many days before expiry should we notify you?</p>
+    
+    <input type="number" id="notification_days" placeholder="5" min="1" max="365" value="5" />
+    <p style="font-size:12px; color:#94a3b8; margin-top:10px;">We'll alert you when products are about to expire</p>
+    
+    <div class="modal-actions">
+        <button class="btn-save" onclick="saveNotificationPreference()">Save Preference</button>
+    </div>
+  </div>
+</div>
+
+<!-- BULK EXPIRY MODAL -->
+<div id="bulkExpiryModal" class="modal">
+  <div class="manual-modal-box" style="max-width: 700px;">
+    <h2 style="margin-top:0">Set Expiry Dates in Bulk</h2>
+    <p style="font-size:13px; color:#666;">Products without expiry dates:</p>
+    
+    <div class="bulk-expiry-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>Expiry Date</th>
+          </tr>
+        </thead>
+        <tbody id="bulkExpiryBody">
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn-save" onclick="saveBulkExpiry()">💾 Save All Dates</button>
+      <button class="btn-close" onclick="closeBulkExpiryModal()">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -980,9 +1168,10 @@ function render() {
 
 productsDiv.innerHTML += `
 <div class="row">
-  <div class="col-main">
+<div class="col-main">
       <div style="font-weight:700; color: #1e293b;">${p.name}</div>
-  </div>
+      ${p.expiryDate ? `<div class="expiry-tag">Expires: ${new Date(p.expiryDate).toLocaleDateString()}</div>` : ''}
+  </div>>
   <div class="col-stat" style="font-weight: 600;">
       ${p.quantity} <span style="font-size: 12px; color: #94a3b8; font-weight: 400;">${p.unit}</span>
   </div>
@@ -994,6 +1183,12 @@ productsDiv.innerHTML += `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
     <button class="step-btn" onclick="askQuantity('${id}', 1)">
+<button class="expiry-btn" onclick="openExpiryModal('${id}', '${p.name}')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+        </svg>
+    </button>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
     <button class="remove-btn" onclick="handleManualDelete('${id}', '${p.name}')">
@@ -1003,9 +1198,148 @@ productsDiv.innerHTML += `
 </div>`;
   });
 
-  document.getElementById("total").textContent = Object.keys(inventory).length;
+document.getElementById("total").textContent = Object.keys(inventory).length;
   document.getElementById("low").textContent = lowC;
   document.getElementById("out").textContent = outC;
+  
+  // Calculate expiring products
+  let expiringCount = 0;
+  const userId = auth.currentUser?.uid;
+  if (userId) {
+    db.ref(`BusinessOwners/${userId}/expiryDateNotification`).once('value', s => {
+      const notifyDays = s.val() || 5;
+      const today = new Date();
+      
+      Object.values(inventory).forEach(p => {
+        if (p.expiryDate) {
+          const expiryDate = new Date(p.expiryDate);
+          const diffTime = expiryDate - today;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          if (diffDays >= 0 && diffDays <= notifyDays) {
+            expiringCount++;
+          }
+        }
+      });
+      
+      document.getElementById("expiring").textContent = expiringCount;
+    });
+  }
+
+// EXPIRY DATE MANAGEMENT
+let currentExpiryProductId = null;
+let expiryDates = {};
+
+// Load expiry dates on auth
+auth.onAuthStateChanged(u => {
+  if (!u) return;
+  
+  // Existing refs...
+  
+  // Load expiry notification preference
+  db.ref(`BusinessOwners/${u.uid}/expiryDateNotification`).once('value', s => {
+    const days = s.val();
+    if (!days) {
+      // First time user - ask for preference
+      setTimeout(() => {
+        document.getElementById('notificationModal').style.display = 'flex';
+      }, 2000);
+    }
+  });
+});
+
+function openExpiryModal(id, name) {
+  currentExpiryProductId = id;
+  document.getElementById('expiryProductName').textContent = name;
+  document.getElementById('expiry_date').value = '';
+  document.getElementById('expiryModal').style.display = 'flex';
+}
+
+function closeExpiryModal() {
+  document.getElementById('expiryModal').style.display = 'none';
+  currentExpiryProductId = null;
+}
+
+function saveExpiryDate() {
+  const date = document.getElementById('expiry_date').value;
+  if (!date) return alert('Please select a date');
+  
+  const userId = auth.currentUser.uid;
+  
+  // Save to inventory node
+  db.ref(`Businesses/${userId}/inventory/${currentExpiryProductId}`).update({
+    expiryDate: date
+  }).then(() => {
+    triggerSuccess('Expiry date saved!');
+    closeExpiryModal();
+  });
+}
+
+function saveNotificationPreference() {
+  const days = document.getElementById('notification_days').value;
+  if (!days || days < 1) return alert('Please enter valid days');
+  
+  const userId = auth.currentUser.uid;
+  
+  db.ref(`BusinessOwners/${userId}/expiryDateNotification`).set(parseInt(days))
+    .then(() => {
+      triggerSuccess(`You'll be notified ${days} days before expiry`);
+      document.getElementById('notificationModal').style.display = 'none';
+    });
+}
+
+function openBulkExpiryModal() {
+  const tbody = document.getElementById('bulkExpiryBody');
+  tbody.innerHTML = '';
+  
+  const productsWithoutExpiry = Object.entries(inventory).filter(([id, p]) => !p.expiryDate);
+  
+  if (productsWithoutExpiry.length === 0) {
+    alert('All products already have expiry dates set!');
+    return;
+  }
+  
+  productsWithoutExpiry.forEach(([id, p]) => {
+    tbody.innerHTML += `
+      <tr>
+        <td style="font-weight:600;">${p.name}</td>
+        <td>
+          <input type="date" id="bulk_expiry_${id}" data-product-id="${id}">
+        </td>
+      </tr>
+    `;
+  });
+  
+  document.getElementById('bulkExpiryModal').style.display = 'flex';
+}
+
+function closeBulkExpiryModal() {
+  document.getElementById('bulkExpiryModal').style.display = 'none';
+}
+
+function saveBulkExpiry() {
+  const userId = auth.currentUser.uid;
+  const inputs = document.querySelectorAll('[id^="bulk_expiry_"]');
+  let savedCount = 0;
+  
+  inputs.forEach(input => {
+    const productId = input.dataset.productId;
+    const date = input.value;
+    
+    if (date) {
+      db.ref(`Businesses/${userId}/inventory/${productId}`).update({
+        expiryDate: date
+      });
+      savedCount++;
+    }
+  });
+  
+  if (savedCount > 0) {
+    triggerSuccess(`${savedCount} expiry dates saved!`);
+    closeBulkExpiryModal();
+  } else {
+    alert('No dates were entered');
+  }
 }
 
 let currentUpdateId = null;
