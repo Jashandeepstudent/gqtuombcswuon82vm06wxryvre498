@@ -2067,23 +2067,27 @@ window.toggleHeatmap = function() {
     const toggle = document.getElementById('heatmapToggle');
     toggle.classList.toggle('active');
     
+    // FIRST: Apply the heatmap colors
+    updateHeatmap();
+    
+    // THEN: Show the popup (if turning ON)
     if (heatmapEnabled) {
-        // Show legend popup for 3 seconds
         const popup = document.getElementById('heatmap-legend-popup');
         const overlay = document.getElementById('overlay');
         overlay.classList.add('active');
         popup.classList.add('active');
         
+        // Auto-close after 3 seconds
         setTimeout(() => {
             popup.classList.remove('active');
             overlay.classList.remove('active');
         }, 3000);
+        
+        showToast('🔥 Heatmap On', 'Color coding active');
+    } else {
+        showToast('❄️ Heatmap Off', 'Normal view restored');
     }
-    
-    updateHeatmap();
-    showToast(heatmapEnabled ? '🔥 Heatmap On' : '❄️ Heatmap Off', 'Color coding active');
 };
-
 window.closeHeatmapLegend = function() {
     document.getElementById('heatmap-legend-popup').classList.remove('active');
     document.getElementById('overlay').classList.remove('active');
