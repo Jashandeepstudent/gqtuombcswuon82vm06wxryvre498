@@ -1960,6 +1960,7 @@ const currencySymbols = {
     'TRY': '₺'
 };
         // --- AUTHENTICATION & REDIRECT ---
+// --- AUTHENTICATION & REDIRECT ---
 auth.onAuthStateChanged((user) => {
     if (user) {
         console.log("User verified:", user.uid);
@@ -1971,22 +1972,15 @@ auth.onAuthStateChanged((user) => {
         checkDeadlines();
         
         initListeners();
-
-initListeners();
         
         // Restore page view from URL on refresh
         const urlParams = new URLSearchParams(window.location.search);
         const viewParam = urlParams.get('view');
         if (viewParam) {
             setTimeout(() => navTo(viewParam), 100);
+        }
         
-
-    } else {
-        console.log("No user found. Redirecting to login...");
-        window.location.href = "login.html"; 
-    }
-};
-// Handle browser back/forward buttons
+        // Handle browser back/forward buttons
         window.addEventListener('popstate', (event) => {
             if (event.state && event.state.view) {
                 const viewId = event.state.view === 'dashboard' ? 'dashboard-view' : event.state.view;
@@ -1994,6 +1988,13 @@ initListeners();
                 document.getElementById(viewId).style.display = 'block';
             }
         });
+        
+    } else {
+        console.log("No user found. Redirecting to login...");
+        window.location.href = "login.html"; 
+    }
+}); // THIS CLOSING IS CRITICAL - YOU WERE MISSING IT!
+
 // Request audio permission on first user interaction
 let audioPermissionGranted = false;
 
