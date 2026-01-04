@@ -1416,7 +1416,138 @@ auth.onAuthStateChanged(u => {
       notificationDays = s.val();
     }
   });
+  // 4. INITIALIZE ANALYTICS NODES
+  const analyticsRef = db.ref(`Businesses/${u.uid}/analytics`);
+  analyticsRef.once("value", s => {
+    if (!s.exists()) {
+      analyticsRef.set({
+        mostSelling: {},
+        leastSelling: {},
+        trendingSelling: {}
+      });
+    }
+  });
+  
+  // 5. AUTO-UPDATE TRENDING (Remove products older than 7 days)
+  setInterval(() => updateTrendingProducts(), 3600000); // Every hour
 });
+
+
+// PRODUCT ANALYTICS SYSTEM
+function updateProductAnalytics(productId, productName, quantitySold) {
+    const analyticsRef = db.ref(`Businesses/${currentUserId}/analytics`);
+    const timestamp = Date.now();
+    
+    // 1. UPDATE MOST SELLING
+    analyticsRef.child('mostSelling').child(productId).once('value', s => {
+        const current = s.val() || { name: productName, totalSold: 0, lastUpdated: timestamp };
+        analyticsRef.child('mostSelling').child(productId).set({
+            name: productName,
+            totalSold: current.totalSold + quantitySold,
+            lastUpdated: timestamp
+        });
+    });
+    
+    // 2. UPDATE LEAST SELLING
+    analyticsRef.child('leastSelling').child(productId).once('value', s => {
+        const current = s.val() || { name: productName, totalSold: 0, lastUpdated: timestamp };
+        analyticsRef.child('leastSelling').child(productId).set({
+            name: productName,
+            totalSold: current.totalSold + quantitySold,
+            lastUpdated: timestamp
+        });
+    });
+    
+    // 3. UPDATE TRENDING (Recent sales within 7 days)
+    analyticsRef.child('trendingSelling').child(productId).once('value', s => {
+        const current = s.val() || { name: productName, recentSold: 0, firstSaleDate: timestamp };
+        
+        const weekAgo = timestamp - (7 * 24 * 60 * 60 * 1000);
+        
+        // If first sale was more than 7 days ago, reset
+        if (current.firstSaleDate < weekAgo) {
+            analyticsRef.child('trendingSelling').child(productId).set({
+                name: productName,
+                recentSold: quantitySold,
+                firstSaleDate: timestamp,
+                lastUpdated: timestamp
+            });
+        } else {
+            analyticsRef.child('trendingSelling').child(productId).set({
+                name: productName,
+                recentSold: current.recentSold + quantitySold,
+                firstSaleDate: current.firstSaleDate,
+                lastUpdated: timestamp
+            });
+        }
+    });
+    
+    // 4. SORT AND CLEANUP
+    setTimeout(() => sortAnalytics(), 2000);
+}
+
+function sortAnalytics() {
+    const analyticsRef = db.ref(`Businesses/${currentUserId}/analytics`);
+    
+    // SORT MOST SELLING (Top 10)
+    analyticsRef.child('mostSelling').once('value', s => {
+        const products = s.val() || {};
+        const sorted = Object.entries(products)
+            .sort((a, b) => b[1].totalSold - a[1].totalSold)
+            .slice(0, 10);
+        
+        const topSelling = {};
+        sorted.forEach(([id, data]) => {
+            topSelling[id] = data;
+        });
+        
+        analyticsRef.child('mostSelling').set(topSelling);
+    });
+    
+    // SORT LEAST SELLING (Bottom 10)
+    analyticsRef.child('leastSelling').once('value', s => {
+        const products = s.val() || {};
+        const sorted = Object.entries(products)
+            .sort((a, b) => a[1].totalSold - b[1].totalSold)
+            .slice(0, 10);
+        
+        const leastSelling = {};
+        sorted.forEach(([id, data]) => {
+            leastSelling[id] = data;
+        });
+        
+        analyticsRef.child('leastSelling').set(leastSelling);
+    });
+}
+
+function updateTrendingProducts() {
+    const analyticsRef = db.ref(`Businesses/${currentUserId}/analytics/trendingSelling`);
+    const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    
+    analyticsRef.once('value', s => {
+        const products = s.val() || {};
+        const validTrending = {};
+        
+        Object.entries(products).forEach(([id, data]) => {
+            // Keep only products with sales in last 7 days
+            if (data.firstSaleDate >= weekAgo) {
+                validTrending[id] = data;
+            }
+        });
+        
+        // Sort by recent sales and keep top 10
+        const sorted = Object.entries(validTrending)
+            .sort((a, b) => b[1].recentSold - a[1].recentSold)
+            .slice(0, 10);
+        
+        const topTrending = {};
+        sorted.forEach(([id, data]) => {
+            topTrending[id] = data;
+        });
+        
+        analyticsRef.set(topTrending);
+    });
+}
 
 // --- EXPIRY DATE FUNCTIONS ---
 function openExpiryModal(productId, productName) {
@@ -1824,6 +1955,17 @@ function saveManualProduct() {
         return;
     }
 
+    // CHECK IF PRODUCT EXISTS
+    const existingEntry = Object.entries(inventory).find(([_, p]) => 
+        p.name.toLowerCase() === name.toLowerCase()
+    );
+
+    if (existingEntry && existingEntry[1].expiryDate) {
+        closeManualAdd();
+        askExpiryForRestock(existingEntry[0], existingEntry[1], qty);
+        return;
+    }
+
     const btn = document.querySelector(".btn-save");
     const originalText = btn.textContent;
     btn.textContent = "Saving...";
@@ -2059,6 +2201,101 @@ function askQuantity(id, direction) {
     document.getElementById("qtyModal").style.display = "flex";
     setTimeout(() => document.getElementById("qtyInput").focus(), 100);
 }
+// EXPIRY DATE BATCH CHECKING
+function askExpiryForRestock(productId, product, amount) {
+    return new Promise((resolve) => {
+        const expiryDate = product.expiryDate;
+        const formattedDate = new Date(expiryDate).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+        
+        const modal = document.createElement('div');
+        modal.className = 'custom-modal';
+        modal.style.display = 'flex';
+        modal.style.zIndex = '4000';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 450px;">
+                <h3>📦 New Stock Batch</h3>
+                <p style="color: #64748b; margin-bottom: 20px;">
+                    Current batch expires on: <strong style="color: #3b82f6;">${formattedDate}</strong>
+                </p>
+                <p style="font-weight: 600; margin-bottom: 20px;">
+                    Does the new stock have the same expiry date?
+                </p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <button id="sameBatchBtn" style="padding: 15px; border: none; border-radius: 12px; background: #10b981; color: white; font-weight: 700; cursor: pointer;">
+                        ✅ Same Date
+                    </button>
+                    <button id="newBatchBtn" style="padding: 15px; border: none; border-radius: 12px; background: #f59e0b; color: white; font-weight: 700; cursor: pointer;">
+                        📅 Different Date
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        document.getElementById('sameBatchBtn').onclick = () => {
+            // ADD TO EXISTING BATCH
+            const newQty = product.quantity + amount;
+            invRef.child(productId).update({ quantity: newQty }).then(() => {
+                triggerSuccess(`Added ${amount} to existing batch`);
+            });
+            document.body.removeChild(modal);
+            resolve();
+        };
+        
+        document.getElementById('newBatchBtn').onclick = () => {
+            document.body.removeChild(modal);
+            
+            // ASK FOR NEW EXPIRY DATE
+            const dateModal = document.createElement('div');
+            dateModal.className = 'custom-modal';
+            dateModal.style.display = 'flex';
+            dateModal.style.zIndex = '4000';
+            dateModal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px;">
+                    <h3>📅 New Batch Expiry Date</h3>
+                    <p style="color: #64748b; margin-bottom: 15px;">
+                        Product: <strong>${product.name}</strong><br>
+                        Quantity: <strong>${amount} ${product.unit}</strong>
+                    </p>
+                    <input type="date" id="newBatchExpiry" style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 16px; margin-bottom: 15px;">
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
+                        <button onclick="this.closest('.custom-modal').remove()" style="padding: 12px; border: none; border-radius: 12px; background: #f1f5f9; color: #64748b; font-weight: 600; cursor: pointer;">Cancel</button>
+                        <button id="saveNewBatchBtn" style="padding: 12px; border: none; border-radius: 12px; background: #7c3aed; color: white; font-weight: 600; cursor: pointer;">Create New Batch</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(dateModal);
+            
+            document.getElementById('saveNewBatchBtn').onclick = () => {
+                const newExpiry = document.getElementById('newBatchExpiry').value;
+                
+                if (!newExpiry) {
+                    alert("Please select an expiry date");
+                    return;
+                }
+                
+                // CREATE NEW BATCH ENTRY
+                invRef.push({
+                    name: product.name,
+                    quantity: amount,
+                    unit: product.unit,
+                    expiryDate: newExpiry,
+                    barcode: product.barcode || null,
+                    batchCreatedAt: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => {
+                    triggerSuccess(`✅ New batch created with ${amount} ${product.unit}`);
+                    document.body.removeChild(dateModal);
+                });
+            };
+            
+            resolve();
+        };
+    });
+}
 
 function closeQtyModal() {
     document.getElementById("qtyModal").style.display = "none";
@@ -2070,19 +2307,34 @@ document.getElementById("confirmQtyBtn").onclick = () => {
 
     const amount = Math.abs(parseFloat(val));
     const p = inventory[currentUpdateId];
-    const priceData = prices[currentUpdateId] || {};
-    const costPrice = (typeof priceData.costPrice === 'object') ? priceData.costPrice.numericValue : parseFloat(priceData.costPrice) || 0;
-    const sellPrice = (typeof priceData.sellPrice === 'object') ? priceData.sellPrice.numericValue : parseFloat(priceData.sellPrice) || 0;
-
+    
     if (currentDirection > 0) {
+        // RESTOCKING - CHECK EXPIRY
+        if (p.expiryDate) {
+            closeQtyModal();
+            askExpiryForRestock(currentUpdateId, p, amount);
+            return;
+        }
+        
+        // NO EXPIRY DATE - ADD NORMALLY
         db.ref(`Businesses/${auth.currentUser.uid}/purchases`).push({
             productId: currentUpdateId,
             productName: p.name,
             quantity: amount,
-            totalCost: costPrice * amount,
+            totalCost: (priceData.costPrice || 0) * amount,
             timestamp: firebase.database.ServerValue.TIMESTAMP
         });
+        
+        const newQty = p.quantity + amount;
+        invRef.child(currentUpdateId).update({ quantity: newQty }).then(() => {
+            closeQtyModal();
+            triggerSuccess(`Added ${amount}`);
+        });
     } else {
+        // DECREASING STOCK (SELLING)
+        const priceData = prices[currentUpdateId] || {};
+        const sellPrice = (typeof priceData.sellPrice === 'object') ? priceData.sellPrice.numericValue : parseFloat(priceData.sellPrice) || 0;
+        
         db.ref(`Businesses/${auth.currentUser.uid}/sales`).push({
             productId: currentUpdateId,
             productName: p.name,
@@ -2090,15 +2342,17 @@ document.getElementById("confirmQtyBtn").onclick = () => {
             revenue: sellPrice * amount,
             timestamp: firebase.database.ServerValue.TIMESTAMP
         });
+        
+        const newQty = Math.max(0, p.quantity - amount);
+        invRef.child(currentUpdateId).update({ quantity: newQty }).then(() => {
+            closeQtyModal();
+            triggerSuccess(`Sold ${amount}`);
+            
+            // UPDATE ANALYTICS
+            updateProductAnalytics(currentUpdateId, p.name, amount);
+        });
     }
-
-    const newQty = currentDirection > 0 ? p.quantity + amount : Math.max(0, p.quantity - amount);
-    invRef.child(currentUpdateId).update({ quantity: newQty }).then(() => {
-        closeQtyModal();
-        triggerSuccess(currentDirection > 0 ? `Added ${amount}` : `Sold ${amount}`);
-    });
 };
-
 window.onclick = (event) => {
     const modal = document.getElementById("qtyModal");
     if (event.target == modal) closeQtyModal();
@@ -2124,17 +2378,21 @@ async function openScanner() {
         scannerModal.innerHTML = `
             <div class="manual-modal-box" style="padding:20px; max-width: 500px; text-align:center; border: 4px solid #000; background:#fff;">
                 <h3 style="margin-top:0">Smart Scanner Pro</h3>
-                <p style="font-size:12px; color:#666; margin-bottom:10px;">Hold phone further back; auto-zoom is active</p>
+                <p style="font-size:12px; color:#666; margin-bottom:10px;">Ultra-precision scanning enabled</p>
                 <div id="reader" style="border-radius:15px; overflow:hidden; background:#000;"></div>
                 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin: 15px 0;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin: 15px 0;">
                     <button id="torch-btn" onclick="toggleTorch()" 
                             style="background:#fbbf24; color:#000; display:none; padding:15px; border-radius:12px; border:none; font-weight:700; cursor:pointer; align-items:center; justify-content:center;">
-                        🔦 Flashlight
+                        🔦 Flash
                     </button>
                     <button onclick="openTypeModal()" 
                             style="background:#f0f2f5; color:#333; padding:15px; border-radius:12px; border:none; font-weight:700; cursor:pointer;">
-                        ⌨️ Type Barcode
+                        ⌨️ Type Code
+                    </button>
+                    <button onclick="connectBarcodeGun()" 
+                            style="background:#10b981; color:#fff; padding:15px; border-radius:12px; border:none; font-weight:700; cursor:pointer;">
+                        🔫 Gun Mode
                     </button>
                 </div>
 
@@ -2147,18 +2405,28 @@ async function openScanner() {
     scannerModal.style.display = "flex";
     html5QrCode = new Html5Qrcode("reader");
     
+    // ENHANCED CONFIG FOR SMALL BARCODES
     const config = { 
-        fps: 30, 
-        qrbox: { width: 300, height: 150 }, 
-        aspectRatio: 1.0,
-        experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+        fps: 60, // Increased from 30
+        qrbox: { width: 400, height: 200 }, // Larger scan area
+        aspectRatio: 2.0, // Better for wide barcodes
+        disableFlip: false,
+        experimentalFeatures: { 
+            useBarCodeDetectorIfSupported: true 
+        }
     };
 
+    // ALL BARCODE FORMATS
     const formats = [
         Html5QrcodeSupportedFormats.EAN_13,
         Html5QrcodeSupportedFormats.EAN_8,
         Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.CODE_128
+        Html5QrcodeSupportedFormats.UPC_E,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.CODE_93,
+        Html5QrcodeSupportedFormats.ITF,
+        Html5QrcodeSupportedFormats.CODABAR
     ];
 
     try {
@@ -2168,6 +2436,7 @@ async function openScanner() {
             (text) => handleScanSuccess(text)
         );
 
+        // ENHANCED CAMERA SETTINGS
         setTimeout(async () => {
             try {
                 const track = html5QrCode.getRunningTrack();
@@ -2177,21 +2446,89 @@ async function openScanner() {
                     document.getElementById('torch-btn').style.display = "flex";
                 }
 
+                // MAXIMUM ZOOM & AUTO-FOCUS
+                const constraints = { advanced: [] };
+                
                 if (caps.zoom) {
-                    await track.applyConstraints({
-                        advanced: [{ zoom: 4.0 }, { focusMode: "continuous" }]
-                    });
+                    const maxZoom = caps.zoom.max;
+                    const optimalZoom = Math.min(maxZoom, 3.5); // Optimal for barcodes
+                    constraints.advanced.push({ zoom: optimalZoom });
                 }
+                
+                if (caps.focusMode && caps.focusMode.includes('continuous')) {
+                    constraints.advanced.push({ focusMode: "continuous" });
+                }
+                
+                if (caps.focusDistance) {
+                    constraints.advanced.push({ focusDistance: caps.focusDistance.min });
+                }
+                
+                if (caps.whiteBalanceMode && caps.whiteBalanceMode.includes('continuous')) {
+                    constraints.advanced.push({ whiteBalanceMode: "continuous" });
+                }
+                
+                await track.applyConstraints(constraints);
+                console.log("✅ Enhanced camera settings applied");
             } catch (hwErr) {
-                console.warn("Hardware constraints failed", hwErr);
+                console.warn("Some camera features unavailable", hwErr);
             }
-        }, 1200);
+        }, 1000);
 
     } catch (err) {
         console.error("Scanner fail:", err);
+        alert("Camera access failed. Please allow camera permissions.");
     }
 }
+// BARCODE GUN CONNECTION
+let barcodeGunConnected = false;
+let barcodeGunBuffer = "";
 
+function connectBarcodeGun() {
+    if (barcodeGunConnected) {
+        barcodeGunConnected = false;
+        document.removeEventListener('keypress', handleBarcodeGunInput);
+        triggerSuccess("Barcode Gun Disconnected");
+        return;
+    }
+    
+    barcodeGunConnected = true;
+    barcodeGunBuffer = "";
+    
+    // Create hidden input for gun scanning
+    let gunInput = document.getElementById('gunHiddenInput');
+    if (!gunInput) {
+        gunInput = document.createElement('input');
+        gunInput.id = 'gunHiddenInput';
+        gunInput.type = 'text';
+        gunInput.style.position = 'absolute';
+        gunInput.style.left = '-9999px';
+        document.body.appendChild(gunInput);
+    }
+    
+    document.addEventListener('keypress', handleBarcodeGunInput);
+    gunInput.focus();
+    
+    triggerSuccess("✅ Barcode Gun Connected - Scan products now!");
+    speakWithAI("Barcode gun connected. Ready to scan.");
+}
+
+function handleBarcodeGunInput(e) {
+    if (!barcodeGunConnected) return;
+    
+    // Barcode guns send Enter key after scanning
+    if (e.key === 'Enter' && barcodeGunBuffer.length > 0) {
+        processScannedBarcode(barcodeGunBuffer.trim());
+        barcodeGunBuffer = "";
+        
+        // Refocus hidden input
+        setTimeout(() => {
+            const gunInput = document.getElementById('gunHiddenInput');
+            if (gunInput) gunInput.focus();
+        }, 100);
+    } else if (e.key !== 'Enter') {
+        barcodeGunBuffer += e.key;
+    }
+}
 function handleScanSuccess(decodedText) {
     const now = Date.now();
     if (decodedText === lastScannedBarcode && (now - lastScannedTime) < 5000) return; 
@@ -2255,43 +2592,67 @@ async function processScannedBarcode(code) {
 
     if (existingEntry) {
         const [id, product] = existingEntry;
-        const newQty = (product.quantity || 0) + 1;
-        invRef.child(id).update({ quantity: newQty }).then(() => {
-            triggerSuccess(`In: ${product.name} (+1)`);
-            speakWithAI(`${product.name} updated.`);
-        });
+        
+        // CHECK EXPIRY DATE BEFORE RESTOCKING
+        if (product.expiryDate) {
+            await askExpiryForRestock(id, product, 1);
+        } else {
+            const newQty = (product.quantity || 0) + 1;
+            invRef.child(id).update({ quantity: newQty }).then(() => {
+                triggerSuccess(`In: ${product.name} (+1)`);
+                speakWithAI(`${product.name} updated.`);
+            });
+        }
         return;
     }
 
-    speakWithAI("Searching...");
+    speakWithAI("Searching product database...");
 
+    // TRY API 1: Open Food Facts
     try {
-        const offRes = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json?fields=product_name,brands`);
+        const offRes = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json?fields=product_name,brands,generic_name`);
         const offData = await offRes.json();
         
-        if (offData.status === 1 && (offData.product.product_name || offData.product.brands)) {
-            let finalName = offData.product.brands 
-                ? `${offData.product.brands} ${offData.product.product_name || ""}` 
-                : offData.product.product_name;
-            saveNewProduct(code, finalName.trim());
-            return;
+        if (offData.status === 1) {
+            const productName = offData.product.product_name || offData.product.generic_name;
+            const brandName = offData.product.brands;
+            
+            if (productName && productName.trim().length > 2) {
+                let finalName = brandName ? `${brandName} ${productName}` : productName;
+                
+                // CONFIRM WITH USER BEFORE SAVING
+                if (confirm(`Found: "${finalName}"\n\nIs this correct?`)) {
+                    saveNewProduct(code, finalName.trim());
+                    return;
+                }
+            }
         }
-    } catch (e) { console.warn("OFF API failed, trying backup..."); }
+    } catch (e) { 
+        console.warn("Open Food Facts API failed"); 
+    }
 
+    // TRY API 2: UPCitemDB
     try {
         const upcRes = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${code}`);
         const upcData = await upcRes.json();
 
         if (upcData.items && upcData.items.length > 0) {
             const item = upcData.items[0];
-            saveNewProduct(code, item.title);
-            return;
+            
+            // CONFIRM WITH USER
+            if (confirm(`Found: "${item.title}"\n\nIs this correct?`)) {
+                saveNewProduct(code, item.title);
+                return;
+            }
         }
-    } catch (e) { console.warn("UPCitemdb failed"); }
+    } catch (e) { 
+        console.warn("UPCitemDB API failed"); 
+    }
 
+    // IF BOTH APIS FAIL OR USER REJECTS
+    speakWithAI("Product not found. Please enter the name manually.");
     openNamePrompt(code);
 }
-
 function openNamePrompt(code) {
     let pModal = document.getElementById('namePromptModal');
     if (!pModal) {
