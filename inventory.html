@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -97,29 +96,55 @@ body{margin:0;background:#f6f7fb;padding:30px}
 }
 
 .remove-btn:hover svg {
-    stroke: white; /* Trash icon turns white on hover */
+    stroke: white;
 }
+
+.expiry-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    border: 1px solid #dbeafe;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+.expiry-btn:hover {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+}
+
+.expiry-btn.set {
+    background: #dbeafe;
+    border-color: #3b82f6;
+}
+
 /* STATS */
 .stats-container {
-    display: flex; /* Use flex instead of grid for easier side-by-side control */
+    display: flex;
     justify-content: space-between;
-    gap: 8px; /* Tighter gap so they don't hit the screen edges */
+    gap: 8px;
     margin-bottom: 30px;
     width: 100%;
 }
 
 .stat-card {
     background: white;
-    padding: 12px 10px; /* Reduced padding slightly so icons fit next to text */
-    border-radius: 20px; /* Same luxury curves */
+    padding: 12px 10px;
+    border-radius: 20px;
     display: flex;
     align-items: center;
-    gap: 8px; /* Space between icon and text */
+    gap: 8px;
     border: 1px solid #f1f5f9;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-    flex: 1; /* This forces all 3 cards to be equal width */
-    min-width: 0; /* Prevents cards from "leaking" off screen */
+    flex: 1;
+    min-width: 0;
     transition: transform 0.3s ease;
+    cursor: pointer;
 }
 
 .stat-card:hover {
@@ -127,13 +152,13 @@ body{margin:0;background:#f6f7fb;padding:30px}
 }
 
 .stat-icon {
-    width: 35px; /* Scaled down slightly for mobile to keep them side-by-side */
+    width: 35px;
     height: 35px;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0; /* Prevents the icon from getting crushed */
+    flex-shrink: 0;
 }
 
 .stat-icon svg {
@@ -145,15 +170,16 @@ body{margin:0;background:#f6f7fb;padding:30px}
 .total-bg { background: #f5f3ff; color: #7c3aed; }
 .low-bg { background: #fffbeb; color: #d97706; }
 .out-bg { background: #fef2f2; color: #ef4444; }
+.expiry-bg { background: #fef3c7; color: #f59e0b; }
 
 .stat-details {
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Safety for long numbers */
+    overflow: hidden;
 }
 
 .stat-label {
-    font-size: 9px; /* Shrunk for mobile side-by-side */
+    font-size: 9px;
     font-weight: 600;
     color: #64748b;
     text-transform: uppercase;
@@ -163,17 +189,16 @@ body{margin:0;background:#f6f7fb;padding:30px}
 
 .stat-details h3 {
     margin: 0;
-    font-size: 16px; /* High-end bold number */
+    font-size: 16px;
     font-weight: 700;
     color: #1e293b;
 }
 
-/* Hide the sub-text only on very small screens to save space */
 .stat-sub {
     display: none;
 }
 
-/* DESKTOP UPGRADE: Makes them bigger when there is room */
+/* DESKTOP UPGRADE */
 @media (min-width: 768px) {
     .stats-container { gap: 20px; }
     .stat-card { padding: 24px; gap: 16px; }
@@ -183,12 +208,13 @@ body{margin:0;background:#f6f7fb;padding:30px}
     .stat-details h3 { font-size: 24px; }
     .stat-sub { display: block; font-size: 11px; color: #94a3b8; font-weight: 500; }
 }
+
 .inventory-grid-wrapper {
     background: white;
     border-radius: 24px;
     border: 1px solid #f1f5f9;
     box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-    overflow: hidden; /* Clips the corners of the inner rows */
+    overflow: hidden;
     margin-top: 20px;
 }
 
@@ -206,7 +232,7 @@ body{margin:0;background:#f6f7fb;padding:30px}
 }
 
 .grid-body {
-    max-height: 60vh; /* Scrollable body */
+    max-height: 60vh;
     overflow-y: auto;
 }
 
@@ -221,7 +247,7 @@ body{margin:0;background:#f6f7fb;padding:30px}
 }
 
 .row:hover {
-    background-color: #f5f3ff; /* Very soft purple tint */
+    background-color: #f5f3ff;
     transform: scale(1.005);
 }
 
@@ -240,17 +266,31 @@ body{margin:0;background:#f6f7fb;padding:30px}
 .status.ok { background: #ecfdf5; color: #10b981; }
 .status.low { background: #fffbeb; color: #d97706; }
 .status.out { background: #fef2f2; color: #ef4444; }
+.status.expiring { background: #fef3c7; color: #f59e0b; }
 
-/* Action Button Container */
-.action-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
+.expiry-tag {
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-left: 8px;
+    display: inline-block;
+}
+
+.expiry-tag.warning { 
+    background: #fff4ed; 
+    color: #f97316;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
 }
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
-    .grid-header { display: none; } /* Hide header on small screens */
+    .grid-header { display: none; }
     .row {
         grid-template-columns: 1fr 1fr;
         gap: 15px;
@@ -258,16 +298,13 @@ body{margin:0;background:#f6f7fb;padding:30px}
     }
     .col-actions { grid-column: span 2; justify-content: flex-start; }
 }
+
 /* TABLE */
 .table{background:#fff;border-radius:22px;box-shadow:0 15px 35px rgba(0,0,0,.08);overflow:hidden}
 .head,.row{display:grid;grid-template-columns:2fr 1fr 1fr 2fr;padding:16px 22px;align-items:center}
 .head{background:#f1f3f7;font-weight:600}
 .row:not(:last-child){border-bottom:1px solid #eee}
 
-/* STATUS */
-.status.ok{color:#16a34a}
-.status.low{color:#d97706}
-.status.out{color:#dc2626}
 /* ADD PRODUCT MODAL & CHOICES */
 .choice-menu {
   position: absolute;
@@ -313,6 +350,7 @@ body{margin:0;background:#f6f7fb;padding:30px}
 }
 .btn-save { background: #16a34a !important; flex: 2; }
 .btn-close { background: #666 !important; flex: 1; }
+
 /* MODERN MODAL UPDATES */
 .modal-box, .manual-modal-box {
     background: #fff;
@@ -344,119 +382,6 @@ body{margin:0;background:#f6f7fb;padding:30px}
 }
 .choice-card i { font-size: 32px; display: block; margin-bottom: 10px; }
 .choice-card span { font-weight: 700; color: #333; }
-
-/* EXPIRY DATE STYLES */
-.expiry-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    border: 1px solid #fef3c7;
-    background: #fffbeb;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: 0.2s;
-}
-
-.expiry-btn:hover {
-    background: #fbbf24;
-    border-color: #f59e0b;
-    transform: translateY(-2px);
-}
-
-.expiry-tag {
-    padding: 4px 10px;
-    border-radius: 100px;
-    font-size: 10px;
-    font-weight: 700;
-    background: #fef3c7;
-    color: #b45309;
-    margin-top: 5px;
-    display: inline-block;
-}
-
-.expiry-modal-box {
-    width: 100%;
-    max-width: 400px;
-    background: #fff;
-    padding: 30px;
-    border-radius: 24px;
-    position: relative;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
-}
-
-.expiry-modal-box input[type="date"] {
-    width: 100%;
-    padding: 14px;
-    margin: 10px 0;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.expiry-modal-box input[type="number"] {
-    width: 100%;
-    padding: 14px;
-    text-align: center;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    font-size: 20px;
-    font-weight: 700;
-}
-
-.bulk-expiry-table {
-    width: 100%;
-    margin: 20px 0;
-    max-height: 400px;
-    overflow-y: auto;
-    border-radius: 16px;
-    border: 1px solid #e5e7eb;
-}
-
-.bulk-expiry-table table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.bulk-expiry-table th {
-    background: #f8fafc;
-    padding: 12px;
-    text-align: left;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #64748b;
-    position: sticky;
-    top: 0;
-}
-
-.bulk-expiry-table td {
-    padding: 12px;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.bulk-expiry-table input[type="date"] {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 14px;
-}
-
-@media (max-width: 768px) {
-    .bulk-expiry-table {
-        max-height: 300px;
-    }
-    
-    .bulk-expiry-table th,
-    .bulk-expiry-table td {
-        padding: 8px;
-        font-size: 12px;
-    }
-}
-
 
 /* BEAUTIFIED FORM INPUTS */
 input, select, textarea {
@@ -518,6 +443,7 @@ input:focus, select:focus, textarea:focus {
   outline: 2px solid #2563eb;
   border-color: transparent;
 }
+
 /* VOICE MODAL & ANIMATION */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(8px)}
 .modal-box{width:400px;background:#fff;padding:30px;border-radius:30px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.3)}
@@ -542,13 +468,13 @@ input:focus, select:focus, textarea:focus {
 .bar:nth-child(4) { animation-delay: 0.3s; background: #2563eb; }
 .bar:nth-child(5) { animation-delay: 0.4s; background: #3b82f6; }
 
-/* Visual cue for confirmation mode */
 .confirm-mode .bar { background: #ef4444 !important; animation-duration: 0.4s; }
 
 @keyframes bounce {
   0%, 100% { height: 10px; }
   50% { height: 50px; }
 }
+
 .back-nav-btn {
     display: flex;
     align-items: center;
@@ -568,7 +494,7 @@ input:focus, select:focus, textarea:focus {
     background: #f5f3ff;
     border-color: #7c3aed;
     color: #7c3aed;
-    transform: translateX(-3px); /* Subtle nudge to the left */
+    transform: translateX(-3px);
 }
 
 .top h2 {
@@ -577,10 +503,11 @@ input:focus, select:focus, textarea:focus {
     font-weight: 800;
     color: #1e293b;
 }
-/* Matching the other buttons to the elite theme */
+
 .btn-pic { background: #8b5cf6; color: white; border: none; padding: 10px 18px; border-radius: 12px; font-weight: 600; cursor: pointer; }
 .btn-primary { background: #1e293b; color: white; border: none; padding: 10px 18px; border-radius: 12px; font-weight: 600; cursor: pointer; }
 .btn-standard { background: white; border: 1px solid #e2e8f0; padding: 10px 18px; border-radius: 12px; font-weight: 600; cursor: pointer; }
+
 .custom-modal {
     position: fixed; inset: 0;
     background: rgba(15, 23, 42, 0.4);
@@ -603,6 +530,7 @@ input:focus, select:focus, textarea:focus {
 .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
 .btn-cancel { padding: 12px; border: none; border-radius: 12px; background: #f1f5f9; color: #64748b; font-weight: 600; cursor: pointer; }
 .btn-confirm { padding: 12px; border: none; border-radius: 12px; background: #7c3aed; color: white; font-weight: 600; cursor: pointer; }
+
 /* SUCCESS POPUP */
 .success-popup {
   position: fixed;
@@ -621,9 +549,66 @@ input:focus, select:focus, textarea:focus {
 }
 @keyframes slideUp { from { bottom: -50px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
 
+/* BULK EXPIRY TABLE */
+.bulk-expiry-table {
+    width: 100%;
+    max-height: 400px;
+    overflow-y: auto;
+    margin: 20px 0;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.bulk-expiry-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.bulk-expiry-table th {
+    background: #f8fafc;
+    padding: 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.bulk-expiry-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.bulk-expiry-table input[type="date"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
 #scanner{position:relative;width:100%;height:240px;background:#000;border-radius:14px;overflow:hidden}
 .flash{position:fixed;inset:0;background:rgba(34,197,94,.25);pointer-events:none;z-index:3000;opacity:0;transition:.15s}
 .flash.show{opacity:1}
+
+@media (max-width: 768px) {
+    .manual-modal-box {
+        padding: 25px;
+        max-width: 95% !important;
+    }
+    
+    .bulk-expiry-table {
+        font-size: 12px;
+    }
+    
+    .bulk-expiry-table th,
+    .bulk-expiry-table td {
+        padding: 8px;
+    }
+}
 </style>
 </head>
 
@@ -646,18 +631,17 @@ input:focus, select:focus, textarea:focus {
     <button onclick="openScanner()">📷 Scanner</button>
     <div style="position:relative; display:inline-block;">
         <button onclick="toggleAddMenu()">➕ Add Product</button>
-<button style="background:#f59e0b; color:#fff;" onclick="openBulkExpiryModal()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block; vertical-align:middle; margin-right:5px;">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-        </svg>
-        Add Expiry Dates
-    </button>
         <div id="addMenu" class="choice-menu">
             <button onclick="openManualAdd()">📝 Manual Add</button>
             <button onclick="openBulkAdd()">📦 Bulk Add</button>
         </div>
     </div>
+    <button style="background:#f59e0b" onclick="openBulkExpiryModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block; vertical-align:middle; margin-right:5px">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Add Expiry Dates
+    </button>
     <button style="background:#2563eb" onclick="startVoiceAssistant()">🎙️ AI Voice</button>
   </div>
 </div>
@@ -693,26 +677,27 @@ input:focus, select:focus, textarea:focus {
     <div class="stat-icon out-bg">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
     </div>
-
-<div class="stat-card">
-    <div class="stat-icon" style="background: #fff7ed; color: #ea580c;">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    </div>
-    <div class="stat-details">
-      <span class="stat-label">Expiring Soon</span>
-      <h3 id="expiring" class="text-warning">0</h3>
-      <span class="stat-sub">Need Action</span>
-    </div>
-  </div>
-
-
     <div class="stat-details">
       <span class="stat-label">Out of Stock</span>
       <h3 id="out" class="text-danger">0</h3>
       <span class="stat-sub">Need Restock</span>
     </div>
   </div>
+
+  <div class="stat-card">
+    <div class="stat-icon expiry-bg">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+    </div>
+    <div class="stat-details">
+      <span class="stat-label">About to Expire</span>
+      <h3 id="expiring" class="text-warning">0</h3>
+      <span class="stat-sub">Urgent Action</span>
+    </div>
+  </div>
 </div>
+
 <div id="qtyModal" class="custom-modal">
     <div class="modal-content">
         <h3 id="qtyTitle">Adjust Stock</h3>
@@ -724,6 +709,80 @@ input:focus, select:focus, textarea:focus {
         </div>
     </div>
 </div>
+
+<!-- EXPIRY DATE MODAL -->
+<div id="expiryModal" class="custom-modal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" style="display: inline-block;">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+        </div>
+        <h3 id="expiryTitle">Set Expiry Date</h3>
+        <p id="expirySubtitle" style="margin-bottom: 20px;">Product: <strong id="expiryProductName"></strong></p>
+        <input type="date" id="expiryDateInput" style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 16px; margin-bottom: 15px;">
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeExpiryModal()">Cancel</button>
+            <button class="btn-confirm" onclick="saveExpiryDate()">Save Date</button>
+        </div>
+    </div>
+</div>
+
+<!-- NOTIFICATION PREFERENCE MODAL -->
+<div id="notificationModal" class="custom-modal">
+    <div class="modal-content" style="max-width: 450px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" style="display: inline-block;">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+        </div>
+        <h3>Expiry Notification Settings</h3>
+        <p style="margin-bottom: 20px;">How many days before expiry would you like to be notified?</p>
+        <input type="number" id="notificationDaysInput" placeholder="Enter days (e.g., 3)" min="1" max="30" style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 18px; text-align: center; margin-bottom: 15px;">
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeNotificationModal()">Cancel</button>
+            <button class="btn-confirm" onclick="saveNotificationPreference()">Save Settings</button>
+        </div>
+    </div>
+</div>
+
+<!-- BULK EXPIRY DATES MODAL -->
+<div id="bulkExpiryModal" class="modal">
+    <div class="manual-modal-box" style="max-width: 700px;">
+        <h2 style="margin-top:0; display: flex; align-items: center; gap: 10px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Bulk Add Expiry Dates
+        </h2>
+        <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Set expiry dates for products that don't have one yet</p>
+        
+        <div class="bulk-expiry-table" id="bulkExpiryTableContainer">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Current Stock</th>
+                        <th>Expiry Date</th>
+                    </tr>
+                </thead>
+                <tbody id="bulkExpiryTableBody">
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="modal-actions" style="margin-top: 20px;">
+            <button class="btn-save" onclick="saveBulkExpiryDates()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block; vertical-align:middle; margin-right:5px">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Save All Dates
+            </button>
+            <button class="btn-close" onclick="closeBulkExpiryModal()">Close</button>
+        </div>
+    </div>
+</div>
+
 <div class="inventory-grid-wrapper">
     <div class="grid-header">
         <div class="col-main">Product Identity</div>
@@ -731,9 +790,9 @@ input:focus, select:focus, textarea:focus {
         <div class="col-status">Status</div>
         <div class="col-actions">Control</div>
     </div>
-    <div id="products" class="grid-body">
-        </div>
+    <div id="products" class="grid-body"></div>
 </div>
+
 <div id="bulkModal" class="modal">
   <div class="manual-modal-box" style="max-width: 700px;"> <h2 style="margin-top:0">Bulk Add Products</h2>
     <p style="font-size: 13px; color: #666;">Separate items with commas. Ensure the number of names matches the number of quantities.</p>
@@ -755,6 +814,7 @@ input:focus, select:focus, textarea:focus {
     </div>
   </div>
 </div>
+
 <div id="voiceModal" class="modal">
   <div class="modal-box">
     <h2 style="margin-top:0">AI Voice Assistant</h2>
@@ -769,9 +829,6 @@ input:focus, select:focus, textarea:focus {
     <button onclick="stopVoiceAssistant()" style="background:#ef4444">Close Assistant</button>
   </div>
 </div>
-
-
-
 
 <div id="manualModal" class="modal">
   <div class="manual-modal-box">
@@ -793,63 +850,6 @@ input:focus, select:focus, textarea:focus {
   </div>
 </div>
 
-<!-- EXPIRY DATE MODAL -->
-<div id="expiryModal" class="modal">
-  <div class="expiry-modal-box">
-    <h2 style="margin-top:0">Set Expiry Date</h2>
-    <p id="expiryProductName" style="color:#64748b; font-weight:600;"></p>
-    
-    <label style="font-weight:600; font-size:14px; color:#475569; display:block; margin-top:15px;">Expiry Date</label>
-    <input type="date" id="expiry_date" />
-    
-    <div class="modal-actions">
-        <button class="btn-save" onclick="saveExpiryDate()">Save Date</button>
-        <button class="btn-close" onclick="closeExpiryModal()">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- NOTIFICATION PREFERENCE MODAL -->
-<div id="notificationModal" class="modal">
-  <div class="expiry-modal-box">
-    <h2 style="margin-top:0">Set Notification</h2>
-    <p style="color:#64748b; font-size:14px;">How many days before expiry should we notify you?</p>
-    
-    <input type="number" id="notification_days" placeholder="5" min="1" max="365" value="5" />
-    <p style="font-size:12px; color:#94a3b8; margin-top:10px;">We'll alert you when products are about to expire</p>
-    
-    <div class="modal-actions">
-        <button class="btn-save" onclick="saveNotificationPreference()">Save Preference</button>
-    </div>
-  </div>
-</div>
-
-<!-- BULK EXPIRY MODAL -->
-<div id="bulkExpiryModal" class="modal">
-  <div class="manual-modal-box" style="max-width: 700px;">
-    <h2 style="margin-top:0">Set Expiry Dates in Bulk</h2>
-    <p style="font-size:13px; color:#666;">Products without expiry dates:</p>
-    
-    <div class="bulk-expiry-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Product Name</th>
-            <th>Expiry Date</th>
-          </tr>
-        </thead>
-        <tbody id="bulkExpiryBody">
-        </tbody>
-      </table>
-    </div>
-    
-    <div class="modal-actions">
-      <button class="btn-save" onclick="saveBulkExpiry()">💾 Save All Dates</button>
-      <button class="btn-close" onclick="closeBulkExpiryModal()">Cancel</button>
-    </div>
-  </div>
-</div>
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -864,10 +864,15 @@ firebase.initializeApp({
 
 const auth = firebase.auth(), db = firebase.database();
 let inventory = {}, prices = {}, invRef = null, recognition, isAssistantActive = false;
-let pendingAction = null; 
+let pendingAction = null;
+let currentUserId = null;
+let notificationDays = 5; // Default notification days
+let currentExpiryProductId = null;
 
 auth.onAuthStateChanged(u => {
   if (!u) { console.log("User not logged in"); return; }
+  
+  currentUserId = u.uid;
   
   // 1. Inventory Reference
   invRef = db.ref(`Businesses/${u.uid}/inventory`);
@@ -876,15 +881,257 @@ auth.onAuthStateChanged(u => {
     render(); 
   });
 
-  // 2. Prices Reference (NEW: Needed for revenue calculation)
+  // 2. Prices Reference
   db.ref(`Businesses/${u.uid}/prices`).on("value", s => {
     prices = s.val() || {};
-    console.log("Prices loaded:", prices);
+  });
+
+  // 3. Load notification preference
+  db.ref(`BusinessOwners/${u.uid}/expiryDateNotification`).once("value", s => {
+    if (s.exists()) {
+      notificationDays = s.val();
+    }
   });
 });
 
-// --- MANUAL ADD LOGIC ---
+// --- EXPIRY DATE FUNCTIONS ---
+function openExpiryModal(productId, productName) {
+    currentExpiryProductId = productId;
+    document.getElementById("expiryProductName").textContent = productName;
+    
+    // Check if expiry date already exists
+    const product = inventory[productId];
+    if (product && product.expiryDate) {
+        document.getElementById("expiryDateInput").value = product.expiryDate;
+    } else {
+        document.getElementById("expiryDateInput").value = "";
+    }
+    
+    document.getElementById("expiryModal").style.display = "flex";
+    setTimeout(() => document.getElementById("expiryDateInput").focus(), 100);
+}
 
+function closeExpiryModal() {
+    document.getElementById("expiryModal").style.display = "none";
+    currentExpiryProductId = null;
+}
+
+function saveExpiryDate() {
+    const expiryDate = document.getElementById("expiryDateInput").value;
+    
+    if (!expiryDate) {
+        alert("Please select an expiry date");
+        return;
+    }
+    
+    const product = inventory[currentExpiryProductId];
+    
+    // Save expiry date to inventory
+    invRef.child(currentExpiryProductId).update({
+        expiryDate: expiryDate
+    }).then(() => {
+        closeExpiryModal();
+        
+        // Check if this is the first expiry date being set
+        checkAndPromptNotificationSettings();
+        
+        triggerSuccess(`Expiry date set for ${product.name}`);
+    }).catch(err => {
+        alert("Error saving expiry date: " + err.message);
+    });
+}
+
+function checkAndPromptNotificationSettings() {
+    // Check if notification preference already exists
+    db.ref(`BusinessOwners/${currentUserId}/expiryDateNotification`).once("value", s => {
+        if (!s.exists()) {
+            // First time setting expiry date, prompt for notification preference
+            setTimeout(() => {
+                document.getElementById("notificationModal").style.display = "flex";
+                document.getElementById("notificationDaysInput").value = "5";
+            }, 500);
+        }
+    });
+}
+
+function closeNotificationModal() {
+    document.getElementById("notificationModal").style.display = "none";
+}
+
+function saveNotificationPreference() {
+    const days = parseInt(document.getElementById("notificationDaysInput").value);
+    
+    if (!days || days < 1 || days > 30) {
+        alert("Please enter a valid number of days (1-30)");
+        return;
+    }
+    
+    db.ref(`BusinessOwners/${currentUserId}/expiryDateNotification`).set(days).then(() => {
+        notificationDays = days;
+        closeNotificationModal();
+        triggerSuccess(`Notification set for ${days} days before expiry`);
+        render(); // Re-render to update expiring count
+    }).catch(err => {
+        alert("Error saving notification preference: " + err.message);
+    });
+}
+
+// --- BULK EXPIRY DATES ---
+function openBulkExpiryModal() {
+    const tbody = document.getElementById("bulkExpiryTableBody");
+    tbody.innerHTML = "";
+    
+    // Get products without expiry dates
+    const productsWithoutExpiry = Object.entries(inventory).filter(([_, p]) => !p.expiryDate);
+    
+    if (productsWithoutExpiry.length === 0) {
+        alert("All products already have expiry dates set!");
+        return;
+    }
+    
+    productsWithoutExpiry.forEach(([id, product]) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td style="font-weight: 600;">${product.name}</td>
+            <td style="color: #64748b;">${product.quantity} ${product.unit}</td>
+            <td>
+                <input type="date" class="bulk-expiry-input" data-product-id="${id}" />
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    document.getElementById("bulkExpiryModal").style.display = "flex";
+}
+
+function closeBulkExpiryModal() {
+    document.getElementById("bulkExpiryModal").style.display = "none";
+}
+
+function saveBulkExpiryDates() {
+    const inputs = document.querySelectorAll(".bulk-expiry-input");
+    let updateCount = 0;
+    let updates = {};
+    
+    inputs.forEach(input => {
+        const productId = input.getAttribute("data-product-id");
+        const expiryDate = input.value;
+        
+        if (expiryDate) {
+            updates[productId] = { expiryDate: expiryDate };
+            updateCount++;
+        }
+    });
+    
+    if (updateCount === 0) {
+        alert("Please set at least one expiry date");
+        return;
+    }
+    
+    // Batch update
+    const updatePromises = Object.entries(updates).map(([id, data]) => {
+        return invRef.child(id).update(data);
+    });
+    
+    Promise.all(updatePromises).then(() => {
+        closeBulkExpiryModal();
+        triggerSuccess(`Updated ${updateCount} expiry dates`);
+        checkAndPromptNotificationSettings();
+    }).catch(err => {
+        alert("Error saving expiry dates: " + err.message);
+    });
+}
+
+// --- CALCULATE DAYS UNTIL EXPIRY ---
+function getDaysUntilExpiry(expiryDate) {
+    if (!expiryDate) return null;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const expiry = new Date(expiryDate);
+    expiry.setHours(0, 0, 0, 0);
+    
+    const diffTime = expiry - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+}
+
+function isAboutToExpire(expiryDate) {
+    const daysUntil = getDaysUntilExpiry(expiryDate);
+    return daysUntil !== null && daysUntil >= 0 && daysUntil <= notificationDays;
+}
+
+function render() {
+  const productsDiv = document.getElementById("products");
+  const query = document.getElementById("searchInput").value.toLowerCase();
+  productsDiv.innerHTML = "";
+  let lowC = 0, outC = 0, expiringC = 0;
+
+  Object.entries(inventory).forEach(([id, p]) => {
+    if (query && !p.name.toLowerCase().includes(query)) return;
+
+    let s = "OK", c = "ok";
+    let expiryWarning = "";
+    
+    // Check expiry status
+    if (p.expiryDate && isAboutToExpire(p.expiryDate)) {
+        const daysLeft = getDaysUntilExpiry(p.expiryDate);
+        expiryWarning = `<span class="expiry-tag warning">⏰ ${daysLeft}d left</span>`;
+        expiringC++;
+        if (daysLeft === 0) {
+            s = "Expires Today!";
+            c = "expiring";
+        }
+    }
+    
+    // Check stock status
+    if (p.quantity === 0) { s = "Out"; c = "out"; outC++; }
+    else if (p.quantity < 10) { s = "Low"; c = "low"; lowC++; }
+
+    const hasExpiry = p.expiryDate ? "set" : "";
+
+productsDiv.innerHTML += `
+<div class="row">
+  <div class="col-main">
+      <div style="font-weight:700; color: #1e293b;">
+          ${p.name}
+          ${expiryWarning}
+      </div>
+  </div>
+  <div class="col-stat" style="font-weight: 600;">
+      ${p.quantity} <span style="font-size: 12px; color: #94a3b8; font-weight: 400;">${p.unit}</span>
+  </div>
+  <div class="col-status">
+      <div class="status ${c}">${s}</div>
+  </div>
+  <div class="action-buttons">
+    <button class="expiry-btn ${hasExpiry}" onclick="openExpiryModal('${id}', '${p.name}')" title="${p.expiryDate ? 'Expiry: ' + p.expiryDate : 'Set expiry date'}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${hasExpiry ? '#3b82f6' : '#94a3b8'}" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+    </button>
+    <button class="step-btn" onclick="askQuantity('${id}', -1)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="step-btn" onclick="askQuantity('${id}', 1)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="remove-btn" onclick="handleManualDelete('${id}', '${p.name}')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+    </button>
+  </div>
+</div>`;
+  });
+
+  document.getElementById("total").textContent = Object.keys(inventory).length;
+  document.getElementById("low").textContent = lowC;
+  document.getElementById("out").textContent = outC;
+  document.getElementById("expiring").textContent = expiringC;
+}
+
+// --- MANUAL ADD LOGIC ---
 function toggleAddMenu() {
     const menu = document.getElementById("addMenu");
     menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
@@ -918,13 +1165,11 @@ function saveManualProduct() {
 
     const qty = parseFloat(qtyInput);
 
-    // CRITICAL: Check if invRef is ready
     if (!invRef) {
         alert("System still loading or you are not logged in. Please wait a second.");
         return;
     }
 
-    // Visual feedback
     const btn = document.querySelector(".btn-save");
     const originalText = btn.textContent;
     btn.textContent = "Saving...";
@@ -939,7 +1184,6 @@ function saveManualProduct() {
         clearManualInputs();
         document.getElementById("m_name").focus();
         
-        // Reset button
         btn.textContent = originalText;
         btn.disabled = false;
     }).catch(err => {
@@ -949,14 +1193,14 @@ function saveManualProduct() {
     });
 }
 
-// FIXED: Close menu logic to prevent blocking modal clicks
 window.onclick = function(event) {
     const menu = document.getElementById("addMenu");
-    // Only close the menu if clicking outside the menu button area
     if (!event.target.closest('.actions') && menu.style.display === "flex") {
         menu.style.display = "none";
     }
 }
+
+// --- BULK ADD ---
 function openBulkAdd() {
     document.getElementById("addMenu").style.display = "none";
     document.getElementById("bulkModal").style.display = "flex";
@@ -974,7 +1218,6 @@ function saveBulkProducts() {
 
     if (!namesStr || !qtysStr) return alert("Please fill both boxes");
 
-    // Split by comma and clean up whitespace
     const nameList = namesStr.split(',').map(n => n.trim()).filter(n => n !== "");
     const qtyList = qtysStr.split(',').map(q => q.trim()).filter(q => q !== "");
 
@@ -991,11 +1234,9 @@ function saveBulkProducts() {
     nameList.forEach((name, index) => {
         const rawQty = qtyList[index];
         
-        // Logic to separate number from unit (e.g., "10kg" -> 10 and "kg")
         const numMatch = rawQty.match(/(\d+(\.\d+)?)/);
         const qty = numMatch ? parseFloat(numMatch[0]) : 0;
         
-        // Remove the number to find the unit, default to 'pcs' if empty
         let unit = rawQty.replace(/(\d+(\.\d+)?)/, '').trim() || "pcs";
 
         invRef.push({
@@ -1010,6 +1251,7 @@ function saveBulkProducts() {
     btn.textContent = "🚀 Import All";
     btn.disabled = false;
 }
+
 // --- AI VOICE LOGIC ---
 function startVoiceAssistant() {
   if (!('webkitSpeechRecognition' in window)) return alert("Voice not supported");
@@ -1059,9 +1301,7 @@ async function processSmartAI(transcript) {
   output.textContent = "Processing...";
 
   try {
-    // REPLACE the URL below with your actual Vercel deployment URL
-    // Example: https://your-project-name.vercel.app/api/voice
-  const VERCEL_API_URL = 'https://ai-inventory-pro-sigma.vercel.app/api/voice';
+    const VERCEL_API_URL = 'https://ai-inventory-pro-sigma.vercel.app/api/voice';
 
     const res = await fetch(VERCEL_API_URL, {
       method: 'POST',
@@ -1074,7 +1314,6 @@ async function processSmartAI(transcript) {
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
-    // 1. AI Logic Execution
     const pName = data.item.toLowerCase();
     const existingEntry = Object.entries(inventory).find(([_, p]) => p.name.toLowerCase() === pName);
 
@@ -1082,11 +1321,10 @@ async function processSmartAI(transcript) {
         pendingAction = { type: 'delete', id: existingEntry[0], name: pName };
         document.getElementById("viz").classList.add("confirm-mode");
     } 
-else if (data.action === 'decrease' && existingEntry) {
+    else if (data.action === 'decrease' && existingEntry) {
         const [id, product] = existingEntry;
         const amount = data.qty;
 
-        // Record the sale first
         recordSale(id, product.name, amount);
 
         const newVal = Math.max(0, product.quantity - amount);
@@ -1102,7 +1340,6 @@ else if (data.action === 'decrease' && existingEntry) {
         triggerSuccess(`Updated ${pName}`);
     }
 
-    // 2. The "Real Person" Voice Response from your Vercel handler
     speakWithAI(data.reply);
     output.textContent = `"${transcript}"`;
 
@@ -1111,10 +1348,11 @@ else if (data.action === 'decrease' && existingEntry) {
     speakWithAI("Sorry, I had a brain freeze connecting to the server.");
     output.textContent = "Error: " + err.message;
   }
-}// --- TEXT TO SPEECH ENGINE ---
+}
+
 function speakWithAI(text) {
   if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel(); // Stop current speech
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     const voices = window.speechSynthesis.getVoices();
     const googleVoice = voices.find(v => v.name.includes('Google') && v.lang.includes('en'));
@@ -1126,7 +1364,6 @@ function speakWithAI(text) {
   }
 }
 
-// --- UI HELPERS ---
 function triggerSuccess(msg) {
   const popup = document.getElementById("successPopup");
   popup.textContent = msg;
@@ -1137,6 +1374,7 @@ function triggerSuccess(msg) {
     document.getElementById("flash").classList.remove("show");
   }, 2000);
 }
+
 function recordSale(productId, productName, qty) {
     const priceData = prices[productId];
     if (!priceData || !priceData.sellPrice) return;
@@ -1153,194 +1391,6 @@ function recordSale(productId, productName, qty) {
         timestamp: firebase.database.ServerValue.TIMESTAMP
     });
 }
-function render() {
-  const productsDiv = document.getElementById("products");
-  const query = document.getElementById("searchInput").value.toLowerCase();
-  productsDiv.innerHTML = "";
-  let lowC = 0, outC = 0;
-
-  Object.entries(inventory).forEach(([id, p]) => {
-    if (query && !p.name.toLowerCase().includes(query)) return;
-
-    let s = "OK", c = "ok";
-    if (p.quantity === 0) { s = "Out"; c = "out"; outC++; }
-    else if (p.quantity < 10) { s = "Low"; c = "low"; lowC++; }
-
-productsDiv.innerHTML += `
-<div class="row">
-<div class="col-main">
-      <div style="font-weight:700; color: #1e293b;">${p.name}</div>
-      ${p.expiryDate ? `<div class="expiry-tag">Expires: ${new Date(p.expiryDate).toLocaleDateString()}</div>` : ''}
-  </div>>
-  <div class="col-stat" style="font-weight: 600;">
-      ${p.quantity} <span style="font-size: 12px; color: #94a3b8; font-weight: 400;">${p.unit}</span>
-  </div>
-  <div class="col-status">
-      <div class="status ${c}">${s}</div>
-  </div>
-  <div class="action-buttons">
-    <button class="step-btn" onclick="askQuantity('${id}', -1)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    </button>
-    <button class="step-btn" onclick="askQuantity('${id}', 1)">
-<button class="expiry-btn" onclick="openExpiryModal('${id}', '${p.name}')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-        </svg>
-    </button>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    </button>
-    <button class="remove-btn" onclick="handleManualDelete('${id}', '${p.name}')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-    </button>
-  </div>
-</div>`;
-  });
-
-document.getElementById("total").textContent = Object.keys(inventory).length;
-  document.getElementById("low").textContent = lowC;
-  document.getElementById("out").textContent = outC;
-  
-  // Calculate expiring products
-  let expiringCount = 0;
-  const userId = auth.currentUser?.uid;
-  if (userId) {
-    db.ref(`BusinessOwners/${userId}/expiryDateNotification`).once('value', s => {
-      const notifyDays = s.val() || 5;
-      const today = new Date();
-      
-      Object.values(inventory).forEach(p => {
-        if (p.expiryDate) {
-          const expiryDate = new Date(p.expiryDate);
-          const diffTime = expiryDate - today;
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          
-          if (diffDays >= 0 && diffDays <= notifyDays) {
-            expiringCount++;
-          }
-        }
-      });
-      
-      document.getElementById("expiring").textContent = expiringCount;
-    });
-  }
-
-// EXPIRY DATE MANAGEMENT
-let currentExpiryProductId = null;
-let expiryDates = {};
-
-// Load expiry dates on auth
-auth.onAuthStateChanged(u => {
-  if (!u) return;
-  
-  // Existing refs...
-  
-  // Load expiry notification preference
-  db.ref(`BusinessOwners/${u.uid}/expiryDateNotification`).once('value', s => {
-    const days = s.val();
-    if (!days) {
-      // First time user - ask for preference
-      setTimeout(() => {
-        document.getElementById('notificationModal').style.display = 'flex';
-      }, 2000);
-    }
-  });
-});
-
-function openExpiryModal(id, name) {
-  currentExpiryProductId = id;
-  document.getElementById('expiryProductName').textContent = name;
-  document.getElementById('expiry_date').value = '';
-  document.getElementById('expiryModal').style.display = 'flex';
-}
-
-function closeExpiryModal() {
-  document.getElementById('expiryModal').style.display = 'none';
-  currentExpiryProductId = null;
-}
-
-function saveExpiryDate() {
-  const date = document.getElementById('expiry_date').value;
-  if (!date) return alert('Please select a date');
-  
-  const userId = auth.currentUser.uid;
-  
-  // Save to inventory node
-  db.ref(`Businesses/${userId}/inventory/${currentExpiryProductId}`).update({
-    expiryDate: date
-  }).then(() => {
-    triggerSuccess('Expiry date saved!');
-    closeExpiryModal();
-  });
-}
-
-function saveNotificationPreference() {
-  const days = document.getElementById('notification_days').value;
-  if (!days || days < 1) return alert('Please enter valid days');
-  
-  const userId = auth.currentUser.uid;
-  
-  db.ref(`BusinessOwners/${userId}/expiryDateNotification`).set(parseInt(days))
-    .then(() => {
-      triggerSuccess(`You'll be notified ${days} days before expiry`);
-      document.getElementById('notificationModal').style.display = 'none';
-    });
-}
-
-function openBulkExpiryModal() {
-  const tbody = document.getElementById('bulkExpiryBody');
-  tbody.innerHTML = '';
-  
-  const productsWithoutExpiry = Object.entries(inventory).filter(([id, p]) => !p.expiryDate);
-  
-  if (productsWithoutExpiry.length === 0) {
-    alert('All products already have expiry dates set!');
-    return;
-  }
-  
-  productsWithoutExpiry.forEach(([id, p]) => {
-    tbody.innerHTML += `
-      <tr>
-        <td style="font-weight:600;">${p.name}</td>
-        <td>
-          <input type="date" id="bulk_expiry_${id}" data-product-id="${id}">
-        </td>
-      </tr>
-    `;
-  });
-  
-  document.getElementById('bulkExpiryModal').style.display = 'flex';
-}
-
-function closeBulkExpiryModal() {
-  document.getElementById('bulkExpiryModal').style.display = 'none';
-}
-
-function saveBulkExpiry() {
-  const userId = auth.currentUser.uid;
-  const inputs = document.querySelectorAll('[id^="bulk_expiry_"]');
-  let savedCount = 0;
-  
-  inputs.forEach(input => {
-    const productId = input.dataset.productId;
-    const date = input.value;
-    
-    if (date) {
-      db.ref(`Businesses/${userId}/inventory/${productId}`).update({
-        expiryDate: date
-      });
-      savedCount++;
-    }
-  });
-  
-  if (savedCount > 0) {
-    triggerSuccess(`${savedCount} expiry dates saved!`);
-    closeBulkExpiryModal();
-  } else {
-    alert('No dates were entered');
-  }
-}
 
 let currentUpdateId = null;
 let currentDirection = 0;
@@ -1351,7 +1401,7 @@ function askQuantity(id, direction) {
     const p = inventory[id];
     
     document.getElementById("qtyTitle").textContent = direction > 0 ? `Add to ${p.name}` : `Remove from ${p.name}`;
-    document.getElementById("qtyInput").value = ""; // Clear previous
+    document.getElementById("qtyInput").value = "";
     document.getElementById("qtyModal").style.display = "flex";
     setTimeout(() => document.getElementById("qtyInput").focus(), 100);
 }
@@ -1371,7 +1421,6 @@ document.getElementById("confirmQtyBtn").onclick = () => {
     const sellPrice = (typeof priceData.sellPrice === 'object') ? priceData.sellPrice.numericValue : parseFloat(priceData.sellPrice) || 0;
 
     if (currentDirection > 0) {
-        // INCREASING STOCK: Record a Purchase (Increases Total Spend)
         db.ref(`Businesses/${auth.currentUser.uid}/purchases`).push({
             productId: currentUpdateId,
             productName: p.name,
@@ -1380,7 +1429,6 @@ document.getElementById("confirmQtyBtn").onclick = () => {
             timestamp: firebase.database.ServerValue.TIMESTAMP
         });
     } else {
-        // DECREASING STOCK: Record a Sale (Increases Total Revenue)
         db.ref(`Businesses/${auth.currentUser.uid}/sales`).push({
             productId: currentUpdateId,
             productName: p.name,
@@ -1390,7 +1438,6 @@ document.getElementById("confirmQtyBtn").onclick = () => {
         });
     }
 
-    // Update the actual inventory count
     const newQty = currentDirection > 0 ? p.quantity + amount : Math.max(0, p.quantity - amount);
     invRef.child(currentUpdateId).update({ quantity: newQty }).then(() => {
         closeQtyModal();
@@ -1398,34 +1445,22 @@ document.getElementById("confirmQtyBtn").onclick = () => {
     });
 };
 
-// Close modal if user clicks outside
 window.onclick = (event) => {
     const modal = document.getElementById("qtyModal");
     if (event.target == modal) closeQtyModal();
-}
-function handleManualDelete(id, name) {
-    if(confirm(`Are you sure you want to permanently delete ${name}?`)) {
-        invRef.child(id).remove();
-    }
 }
 
 function handleManualDelete(id, name) {
     if(confirm(`Delete ${name}?`)) invRef.child(id).remove();
 }
 
-function manualChange(id, dir) {
-  const p = inventory[id];
-  invRef.child(id).update({ quantity: Math.max(0, p.quantity + dir) });
-}
-// SCANNER PART
-
+// --- SCANNER FUNCTIONS ---
 let html5QrCode;
 let isScanning = false; 
 let lastScannedBarcode = null;
 let lastScannedTime = 0;
 let torchOn = false;
 
-// --- 1. PRO SCANNER: ZOOMED & OPTIMIZED ---
 async function openScanner() {
     let scannerModal = document.getElementById('scannerModal');
     if (!scannerModal) {
@@ -1503,7 +1538,6 @@ async function openScanner() {
     }
 }
 
-// --- 2. HAPTIC & AUTO-LOOKUP LOGIC ---
 function handleScanSuccess(decodedText) {
     const now = Date.now();
     if (decodedText === lastScannedBarcode && (now - lastScannedTime) < 5000) return; 
@@ -1516,7 +1550,6 @@ function handleScanSuccess(decodedText) {
     processScannedBarcode(decodedText);
 }
 
-// --- 3. REWRITTEN FLASHLIGHT ---
 async function toggleTorch() {
     try {
         const track = html5QrCode.getRunningTrack();
@@ -1529,7 +1562,6 @@ async function toggleTorch() {
     } catch (e) { console.error("Torch error", e); }
 }
 
-// --- 4. MANUAL ENTRY ---
 function openTypeModal() {
     let tModal = document.getElementById('typeModal');
     if (!tModal) {
@@ -1563,12 +1595,10 @@ function submitManualCode() {
     }
 }
 
-// --- 5. SMART MULTI-API PROCESSING (FIXED) ---
 async function processScannedBarcode(code) {
     const entries = Object.entries(inventory || {});
     const existingEntry = entries.find(([_, p]) => p.barcode === code);
 
-    // STEP 1: Check Local Inventory
     if (existingEntry) {
         const [id, product] = existingEntry;
         const newQty = (product.quantity || 0) + 1;
@@ -1581,7 +1611,6 @@ async function processScannedBarcode(code) {
 
     speakWithAI("Searching...");
 
-    // STEP 2: Try Open Food Facts (API 1)
     try {
         const offRes = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json?fields=product_name,brands`);
         const offData = await offRes.json();
@@ -1595,7 +1624,6 @@ async function processScannedBarcode(code) {
         }
     } catch (e) { console.warn("OFF API failed, trying backup..."); }
 
-    // STEP 3: Try UPCitemdb (API 2 - High accuracy for retail)
     try {
         const upcRes = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${code}`);
         const upcData = await upcRes.json();
@@ -1607,7 +1635,6 @@ async function processScannedBarcode(code) {
         }
     } catch (e) { console.warn("UPCitemdb failed"); }
 
-    // STEP 4: Fallback to Manual Prompt
     openNamePrompt(code);
 }
 
