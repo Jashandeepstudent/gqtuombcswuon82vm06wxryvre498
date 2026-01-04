@@ -2248,7 +2248,7 @@ content.innerHTML = `
     <div class="story-section" style="border-left-color: ${expiryStatus === 'expired' ? '#404040' : expiryStatus === 'expiring-soon' ? '#8B4513' : 'var(--neon-primary)'};">
         <h3>📅 Expiry Information</h3>
         <div style="font-size: 18px; color: ${expiryStatus === 'expired' ? '#404040' : expiryStatus === 'expiring-soon' ? '#8B4513' : 'var(--neon-accent)'}; font-weight: bold;">
-            ${expiryStatus === 'expired' ? '❌ EXPIRED' : expiryStatus === 'expiring-soon' ? ⚠️ EXPIRES IN ${daysLeft} DAYS` : `✅ EXPIRES: ${product.expiryDate}`}
+            ${expiryStatus === 'expired' ? '❌ EXPIRED' : expiryStatus === 'expiring-soon' ? `⚠️ EXPIRES IN ${daysLeft} DAYS` : `✅ EXPIRES: ${product.expiryDate}`}
         </div>
         ${expiryStatus === 'expiring-soon' ? '<p style="color: #ff8800; margin-top: 8px;">⚡ Action Required Soon!</p>' : ''}
         ${expiryStatus === 'expired' ? '<p style="color: #ff4444; margin-top: 8px;">🚫 Product has expired - Remove from inventory</p>' : ''}
