@@ -2523,51 +2523,61 @@ async function checkDeadlines(isSimulated = false) {
     };
 
     try {
-        // 1. Check Transactions
+       // 1. Check Transactions (skip if completed)
         const transSnapshot = await get(ref(database, `${baseRef}/transactions`));
         if (transSnapshot.exists()) {
             transSnapshot.forEach(child => {
                 const t = child.val();
-                const uid = `trans_${child.key}_${t.date}`; // Unique ID combining key and date
+                // Skip if completed
+                if (t.completed === true) return;
+                
+                const uid = `trans_${child.key}_${t.date}`;
                 const data = { type: 'transaction', icon: 'fa-dollar-sign', title: `Payment: ${t.name}`, desc: `$${t.amount}` };
                 processItem(uid, data, t.date === tomorrowStr, t.date === todayStr);
             });
         }
 
-        // 2. Check Orders
+        // 2. Check Orders (skip if completed)
         const ordersSnapshot = await get(ref(database, `${baseRef}/pendingorders`));
         if (ordersSnapshot.exists()) {
             ordersSnapshot.forEach(child => {
                 const o = child.val();
+                // Skip if completed
+                if (o.completed === true) return;
+                
                 const uid = `order_${child.key}_${o.deadline}`;
                 const data = { type: 'order', icon: 'fa-box-open', title: `Order: ${o.category}`, desc: o.desc };
                 processItem(uid, data, o.deadline === tomorrowStr, o.deadline === todayStr);
             });
         }
 
-        // 3. Check Notes
+        // 3. Check Notes (skip if completed)
         const notesSnapshot = await get(ref(database, `${baseRef}/notes`));
         if (notesSnapshot.exists()) {
             notesSnapshot.forEach(child => {
                 const n = child.val();
+                // Skip if completed
+                if (n.completed === true) return;
+                
                 const uid = `note_${child.key}_${n.date}`;
                 const data = { type: 'note', icon: 'fa-sticky-note', title: `Note: ${n.title}`, desc: n.content.substring(0, 60) };
                 processItem(uid, data, n.date === tomorrowStr, n.date === todayStr);
             });
         }
 
-        // 4. Check Jobs/Tasks
+        // 4. Check Jobs/Tasks (skip if completed)
         const teamSnapshot = await get(ref(database, `${baseRef}/teamandstaff`));
         if (teamSnapshot.exists()) {
             teamSnapshot.forEach(memberSnap => {
                 const member = memberSnap.val();
                 if (member.jobs) {
                     Object.entries(member.jobs).forEach(([jobId, job]) => {
-                        if (!job.completed) {
-                            const uid = `job_${jobId}_${job.deadline}`;
-                            const data = { type: 'task', icon: 'fa-tasks', title: `Task for ${member.name}`, desc: job.desc };
-                            processItem(uid, data, job.deadline === tomorrowStr, job.deadline === todayStr);
-                        }
+                        // Skip if already completed
+                        if (job.completed === true) return;
+                        
+                        const uid = `job_${jobId}_${job.deadline}`;
+                        const data = { type: 'task', icon: 'fa-tasks', title: `Task for ${member.name}`, desc: job.desc };
+                        processItem(uid, data, job.deadline === tomorrowStr, job.deadline === todayStr);
                     });
                 }
             });
