@@ -2824,8 +2824,8 @@ doc.autoTable({
     }
 });
         
-        // ============================================
-        // LAST PAGE: SUMMARY & INSIGHTS
+// ============================================
+        // LAST PAGE: SUMMARY & INSIGHTS (ENCODING FIXED)
         // ============================================
         doc.addPage();
         
@@ -2844,25 +2844,29 @@ doc.autoTable({
         
         let summaryY = 40;
         
-        // Key Insights Section
+        // --- KEY INSIGHTS SECTION ---
         doc.setFillColor(248, 250, 252);
         doc.roundedRect(15, summaryY, pageWidth - 30, 50, 3, 3, 'F');
+        
+        // Draw a small blue square instead of a Chart Emoji
+        doc.setFillColor(37, 99, 235);
+        doc.rect(20, summaryY + 6, 4, 4, 'F'); 
         
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
         doc.setTextColor(30, 41, 59);
-        doc.text("📊 KEY INSIGHTS", 20, summaryY + 10);
+        doc.text("KEY INSIGHTS", 27, summaryY + 10);
         
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.setTextColor(71, 85, 105);
         
         const insights = [
-            `• Total inventory value across ${totalProducts} unique products`,
-            `• ${totalStock} total units currently in stock`,
-            `• ${((products.filter(p => p.quantity > 0).length / totalProducts) * 100).toFixed(1)}% of products are in stock`,
-            `• ${outOfStockCount} products require immediate restocking`,
-            `• ${expiringCount} products are expiring within ${notificationDays} days`
+            `- Total inventory value across ${totalProducts} unique products`,
+            `- ${totalStock} total units currently in stock`,
+            `- ${((products.filter(p => p.quantity > 0).length / totalProducts) * 100).toFixed(1)}% of products are in stock`,
+            `- ${outOfStockCount} products require immediate restocking`,
+            `- ${expiringCount} products are expiring within ${notificationDays} days`
         ];
         
         insights.forEach((insight, idx) => {
@@ -2871,36 +2875,34 @@ doc.autoTable({
         
         summaryY += 60;
         
-        // Critical Actions Section
+        // --- CRITICAL ACTIONS SECTION ---
         doc.setFillColor(254, 242, 242);
         doc.roundedRect(15, summaryY, pageWidth - 30, 40, 3, 3, 'F');
         doc.setDrawColor(239, 68, 68);
         doc.setLineWidth(0.5);
         doc.roundedRect(15, summaryY, pageWidth - 30, 40, 3, 3, 'S');
         
+        // Draw a small red triangle instead of a Warning Emoji
+        doc.setFillColor(220, 38, 38);
+        doc.triangle(20, summaryY + 10, 22, summaryY + 6, 24, summaryY + 10, 'F');
+        
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
         doc.setTextColor(220, 38, 38);
-        doc.text("⚠️ CRITICAL ACTIONS REQUIRED", 20, summaryY + 10);
+        doc.text("CRITICAL ACTIONS REQUIRED", 27, summaryY + 10);
         
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.setTextColor(127, 29, 29);
         
         const criticalActions = [];
-        if (outOfStockCount > 0) {
-            criticalActions.push(`• Restock ${outOfStockCount} out-of-stock products immediately`);
-        }
-        if (expiringCount > 0) {
-            criticalActions.push(`• Review ${expiringCount} products expiring soon`);
-        }
-        if (lowStockCount > 0) {
-            criticalActions.push(`• Plan reorder for ${lowStockCount} low-stock items`);
-        }
+        if (outOfStockCount > 0) criticalActions.push(`- Restock ${outOfStockCount} out-of-stock products immediately`);
+        if (expiringCount > 0) criticalActions.push(`- Review ${expiringCount} products expiring soon`);
+        if (lowStockCount > 0) criticalActions.push(`- Plan reorder for ${lowStockCount} low-stock items`);
         
         if (criticalActions.length === 0) {
             doc.setTextColor(16, 185, 129);
-            doc.text("✓ No critical actions required. Inventory is healthy!", 20, summaryY + 20);
+            doc.text("Summary: Inventory is healthy! No critical actions required.", 20, summaryY + 20);
         } else {
             criticalActions.forEach((action, idx) => {
                 doc.text(action, 20, summaryY + 20 + (idx * 6));
@@ -2909,43 +2911,45 @@ doc.autoTable({
         
         summaryY += 50;
         
-        // Recommendations Section
+        // --- RECOMMENDATIONS SECTION ---
         doc.setFillColor(236, 253, 245);
         doc.roundedRect(15, summaryY, pageWidth - 30, 50, 3, 3, 'F');
         doc.setDrawColor(16, 185, 129);
         doc.setLineWidth(0.5);
         doc.roundedRect(15, summaryY, pageWidth - 30, 50, 3, 3, 'S');
         
+        // Draw a small green circle instead of a Lightbulb Emoji
+        doc.setFillColor(16, 185, 129);
+        doc.circle(22, summaryY + 8, 2, 'F');
+        
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
         doc.setTextColor(6, 95, 70);
-        doc.text("💡 RECOMMENDATIONS", 20, summaryY + 10);
+        doc.text("RECOMMENDATIONS", 27, summaryY + 10);
         
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.setTextColor(6, 78, 59);
         
         const recommendations = [
-            "• Set expiry dates for all products to enable better tracking",
-            "• Maintain minimum stock levels of 10 units per product",
-            "• Review inventory weekly to prevent stockouts",
-            "• Consider automated reordering for fast-moving items",
-            "• Implement FIFO (First In, First Out) for perishable goods"
+            "- Set expiry dates for all products to enable better tracking",
+            "- Maintain minimum stock levels of 10 units per product",
+            "- Review inventory weekly to prevent stockouts",
+            "- Consider automated reordering for fast-moving items",
+            "- Implement FIFO (First In, First Out) for perishable goods"
         ];
         
         recommendations.forEach((rec, idx) => {
             doc.text(rec, 20, summaryY + 20 + (idx * 6));
         });
-        
+
+        // --- SIGNATURE & FOOTER ---
         summaryY += 60;
-        
-        // Report Signature Section
         doc.setDrawColor(226, 232, 240);
         doc.setLineWidth(0.5);
         doc.line(15, summaryY, pageWidth - 15, summaryY);
         
         summaryY += 10;
-        
         doc.setFont("helvetica", "italic");
         doc.setFontSize(9);
         doc.setTextColor(100, 116, 139);
@@ -2961,7 +2965,6 @@ doc.autoTable({
         doc.setTextColor(148, 163, 184);
         doc.text(`Authorized Signatory - ${businessNameClean}`, 20, summaryY + 13);
         
-        // Final Footer
         doc.setDrawColor(37, 99, 235);
         doc.setLineWidth(1);
         doc.line(15, pageHeight - 30, pageWidth - 15, pageHeight - 30);
@@ -2975,16 +2978,13 @@ doc.autoTable({
         doc.setFontSize(7);
         doc.setTextColor(148, 163, 184);
         doc.text("Powered by ScaleVest", pageWidth / 2, pageHeight - 17, { align: 'center' });
-        doc.text("This is a ScaleVest-generated document and does not require a signature", pageWidth / 2, pageHeight - 13, { align: 'center' });
-        
-        // Save with incremental naming
-        const fileName = `${businessNameClean}ProductReport${reportCounter}.pdf`;
+        doc.text("This document is generated by ScaleVest AI and is legally valid without signature", pageWidth / 2, pageHeight - 13, { align: 'center' });
+
+        const fileName = `${businessNameClean}_Inventory_Report.pdf`;
         doc.save(fileName);
         
-        reportCounter++;
-        
         closeReportModal();
-        triggerSuccess(`✓ Premium Report Downloaded: ${fileName}`);
+        if (typeof triggerSuccess === "function") triggerSuccess(`Premium Report Downloaded: ${fileName}`);
         
     } catch (error) {
         console.error("PDF Generation Error:", error);
