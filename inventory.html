@@ -8,7 +8,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *{box-sizing:border-box;font-family:Inter}
 body{margin:0;background:#f6f7fb;padding:30px}
@@ -302,6 +304,16 @@ body{margin:0;background:#f6f7fb;padding:30px}
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
+    gap: 15px;
+}
+
+.grid-header > div:nth-child(2),
+.grid-header > div:nth-child(3) {
+    text-align: center;
+}
+
+.grid-header > div:nth-child(4) {
+    text-align: right;
 }
 
 .grid-body {
@@ -374,7 +386,39 @@ body{margin:0;background:#f6f7fb;padding:30px}
 
 /* TABLE */
 .table{background:#fff;border-radius:22px;box-shadow:0 15px 35px rgba(0,0,0,.08);overflow:hidden}
-.head,.row{display:grid;grid-template-columns:2fr 1fr 1fr 2fr;padding:16px 22px;align-items:center}
+.head,/* Individual Row Styling */
+.row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    align-items: center;
+    padding: 18px 24px;
+    border-bottom: 1px solid #f8fafc;
+    transition: all 0.2s ease;
+    gap: 15px;
+}
+
+.row > * {
+    display: flex;
+    align-items: center;
+}
+
+.col-main {
+    justify-content: flex-start;
+}
+
+.col-stat {
+    justify-content: center;
+    text-align: center;
+}
+
+.col-status {
+    justify-content: center;
+    text-align: center;
+}
+
+.col-actions {
+    justify-content: flex-end;
+}
 .head{background:#f1f3f7;font-weight:600}
 .row:not(:last-child){border-bottom:1px solid #eee}
 
@@ -2167,7 +2211,7 @@ function stopScanner() {
         });
     }
 }
-// --- PDF REPORT FUNCTIONS ---
+// --- ULTIMATE PDF REPORT FUNCTIONS ---
 let reportCounter = 1;
 let businessNameGlobal = "";
 
@@ -2205,123 +2249,491 @@ async function generatePDF() {
     // Show loading state
     const btn = document.querySelector(".btn-generate-report");
     const originalHTML = btn.innerHTML;
-    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10"/></svg> Generating...';
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10"/></svg> Generating Premium Report...';
     btn.disabled = true;
     
     try {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
         
-        // Blue Banner with Business Name
-        doc.setFillColor(37, 99, 235); // Blue color
-        doc.rect(0, 0, 210, 45, 'F');
+        // ============================================
+        // PAGE 1: COVER PAGE
+        // ============================================
         
-        // Business Name in Calligraphy Style
-        doc.setFont("times", "italic");
-        doc.setFontSize(28);
-        doc.setTextColor(255, 255, 255);
-        const businessNameClean = businessName.replace(/\s+/g, '');
-        doc.text(`${businessNameClean}`, 105, 25, { align: 'center' });
+        // Gradient Background Effect (simulated with rectangles)
+        const gradientSteps = 50;
+        for (let i = 0; i < gradientSteps; i++) {
+            const r = 37 + (i * (59 - 37) / gradientSteps);
+            const g = 99 + (i * (130 - 99) / gradientSteps);
+            const b = 235 + (i * (253 - 235) / gradientSteps);
+            doc.setFillColor(r, g, b);
+            doc.rect(0, i * (pageHeight / gradientSteps), pageWidth, pageHeight / gradientSteps, 'F');
+        }
         
-        doc.setFontSize(16);
-        doc.text("Product Report", 105, 35, { align: 'center' });
+        // Decorative Corner Elements
+        doc.setFillColor(255, 255, 255, 0.1);
+        doc.circle(10, 10, 30, 'F');
+        doc.circle(pageWidth - 10, pageHeight - 10, 40, 'F');
         
-        // Owner Name and Date
+        // Main Title Area - White Box
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(20, 60, pageWidth - 40, 80, 5, 5, 'F');
+        
+        // Shadow effect for title box
+        doc.setDrawColor(37, 99, 235);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(20, 60, pageWidth - 40, 80, 5, 5, 'S');
+        
+        // Business Name - Elegant Typography
+        doc.setFont("times", "bold");
+        doc.setFontSize(38);
+        doc.setTextColor(30, 41, 59);
+        const businessNameClean = businessName.replace(/\s+/g, ' ');
+        doc.text(businessNameClean, pageWidth / 2, 95, { align: 'center' });
+        
+        // Decorative Line under business name
+        doc.setDrawColor(37, 99, 235);
+        doc.setLineWidth(1);
+        doc.line(60, 102, pageWidth - 60, 102);
+        
+        // Report Title
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(11);
-        doc.setTextColor(60, 60, 60);
-        doc.text(`Name: ${fullName}`, 20, 55);
+        doc.setFontSize(20);
+        doc.setTextColor(71, 85, 105);
+        doc.text("INVENTORY PRODUCT REPORT", pageWidth / 2, 115, { align: 'center' });
         
+        // Report Details Card
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(30, 160, pageWidth - 60, 50, 3, 3, 'F');
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(51, 65, 85);
+        doc.text("REPORT DETAILS", 40, 172);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(71, 85, 105);
+        
+        // Report Information
+        doc.text("Prepared By:", 40, 182);
+        doc.setFont("helvetica", "bold");
+        doc.text(fullName, 75, 182);
+        
+        doc.setFont("helvetica", "normal");
+        doc.text("Report Date:", 40, 192);
+        doc.setFont("helvetica", "bold");
         const formattedDate = new Date(reportDate).toLocaleDateString('en-US', {
+            weekday: 'long',
             year: 'numeric',
             month: 'long',
             day: 'numeric'
         });
-        doc.text(`Date: ${formattedDate}`, 20, 62);
+        doc.text(formattedDate, 75, 192);
         
-        // Table Header
-        doc.setFillColor(248, 250, 252);
-        doc.rect(15, 72, 180, 10, 'F');
+        doc.setFont("helvetica", "normal");
+        doc.text("Report ID:", 40, 202);
+        doc.setFont("helvetica", "bold");
+        const reportId = `${businessNameClean.substring(0, 3).toUpperCase()}-${Date.now().toString().slice(-6)}`;
+        doc.text(reportId, 75, 202);
+        
+        // Statistics Overview Card
+        const products = Object.values(inventory);
+        const totalProducts = products.length;
+        const totalStock = products.reduce((sum, p) => sum + p.quantity, 0);
+        const lowStockCount = products.filter(p => p.quantity > 0 && p.quantity < 10).length;
+        const outOfStockCount = products.filter(p => p.quantity === 0).length;
+        const expiringCount = products.filter(p => {
+            if (p.quantity >= 1 && p.expiryDate) {
+                const daysLeft = getDaysUntilExpiry(p.expiryDate);
+                return daysLeft >= 0 && daysLeft <= notificationDays;
+            }
+            return false;
+        }).length;
+        
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(30, 225, pageWidth - 60, 45, 3, 3, 'F');
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(30, 225, pageWidth - 60, 45, 3, 3, 'S');
         
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.setTextColor(71, 85, 105);
-        doc.text("Product Name", 20, 78);
-        doc.text("Quantity", 100, 78);
-        doc.text("Expiry Date", 130, 78);
-        doc.text("Status", 170, 78);
+        doc.setFontSize(11);
+        doc.setTextColor(51, 65, 85);
+        doc.text("INVENTORY STATISTICS", 40, 237);
         
-        // Table Content
+        // Stats Grid
+        const statsY = 248;
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
+        doc.setTextColor(100, 116, 139);
         
-        let yPosition = 88;
-        const products = Object.values(inventory);
+        // Row 1
+        doc.text("Total Products:", 40, statsY);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(37, 99, 235);
+        doc.text(totalProducts.toString(), 80, statsY);
         
-        products.forEach((product, index) => {
-            // Alternate row colors
-            if (index % 2 === 0) {
-                doc.setFillColor(249, 250, 251);
-                doc.rect(15, yPosition - 5, 180, 8, 'F');
-            }
-            
-            doc.setTextColor(30, 41, 59);
-            doc.text(product.name.substring(0, 30), 20, yPosition);
-            doc.text(`${product.quantity} ${product.unit}`, 100, yPosition);
-            
-            // Expiry Date
-            if (product.expiryDate) {
-                const expiryFormatted = new Date(product.expiryDate).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                });
-                doc.text(expiryFormatted, 130, yPosition);
-            } else {
-                doc.setTextColor(156, 163, 175);
-                doc.text("Not Set", 130, yPosition);
-                doc.setTextColor(30, 41, 59);
-            }
-            
-            // Status
-            let status = "OK";
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100, 116, 139);
+        doc.text("Total Stock Units:", 110, statsY);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(37, 99, 235);
+        doc.text(totalStock.toString(), 155, statsY);
+        
+        // Row 2
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100, 116, 139);
+        doc.text("Low Stock:", 40, statsY + 8);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(217, 119, 6);
+        doc.text(lowStockCount.toString(), 80, statsY + 8);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100, 116, 139);
+        doc.text("Out of Stock:", 110, statsY + 8);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(239, 68, 68);
+        doc.text(outOfStockCount.toString(), 155, statsY + 8);
+        
+        // Row 3
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100, 116, 139);
+        doc.text("Expiring Soon:", 40, statsY + 16);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(245, 158, 11);
+        doc.text(expiringCount.toString(), 80, statsY + 16);
+        
+        // Footer on cover page
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text("This report is generated automatically by AI Inventory Pro", pageWidth / 2, pageHeight - 15, { align: 'center' });
+        doc.text("Confidential - For Internal Use Only", pageWidth / 2, pageHeight - 10, { align: 'center' });
+        
+        // ============================================
+        // PAGE 2+: DETAILED PRODUCT TABLE
+        // ============================================
+        doc.addPage();
+        
+        // Page Header
+        doc.setFillColor(37, 99, 235);
+        doc.rect(0, 0, pageWidth, 25, 'F');
+        
+        doc.setFont("times", "bold");
+        doc.setFontSize(18);
+        doc.setTextColor(255, 255, 255);
+        doc.text(businessNameClean, 15, 12);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text("Detailed Product Inventory", 15, 19);
+        
+        // Report ID in header
+        doc.setFontSize(8);
+        doc.text(`Report ID: ${reportId}`, pageWidth - 15, 12, { align: 'right' });
+        doc.text(`Page 2 of ${Math.ceil(products.length / 15) + 1}`, pageWidth - 15, 17, { align: 'right' });
+        
+        // Prepare table data with enhanced information
+        const tableData = products.map((product, index) => {
+            let status = "In Stock";
             let statusColor = [16, 185, 129]; // Green
             
             if (product.quantity === 0) {
-                status = "Out";
-                statusColor = [239, 68, 68]; // Red
+                status = "Out of Stock";
+                statusColor = [239, 68, 68];
             } else if (product.quantity < 10) {
-                status = "Low";
-                statusColor = [217, 119, 6]; // Orange
-            } else if (product.expiryDate && product.quantity >= 1) {
+                status = "Low Stock";
+                statusColor = [217, 119, 6];
+            }
+            
+            // Check expiry
+            let expiryStatus = "-";
+            let expiryColor = [100, 116, 139];
+            if (product.expiryDate && product.quantity >= 1) {
                 const daysLeft = getDaysUntilExpiry(product.expiryDate);
                 if (daysLeft < 0) {
-                    status = "Expired";
-                    statusColor = [220, 38, 38]; // Dark Red
-                } else if (daysLeft >= 0 && daysLeft <= notificationDays) {
-                    status = "Expiring";
-                    statusColor = [245, 158, 11]; // Amber
+                    expiryStatus = `EXPIRED (${Math.abs(daysLeft)}d ago)`;
+                    expiryColor = [220, 38, 38];
+                } else if (daysLeft === 0) {
+                    expiryStatus = "Expires Today!";
+                    expiryColor = [220, 38, 38];
+                } else if (daysLeft <= notificationDays) {
+                    expiryStatus = `${daysLeft} days left`;
+                    expiryColor = [245, 158, 11];
+                } else {
+                    expiryStatus = `${daysLeft} days left`;
+                    expiryColor = [16, 185, 129];
                 }
             }
             
-            doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-            doc.text(status, 170, yPosition);
-            doc.setTextColor(30, 41, 59);
+            const expiryDateFormatted = product.expiryDate 
+                ? new Date(product.expiryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : "Not Set";
             
-            yPosition += 8;
-            
-            // Add new page if needed
-            if (yPosition > 270) {
-                doc.addPage();
-                yPosition = 20;
+            return [
+                (index + 1).toString(),
+                product.name,
+                `${product.quantity} ${product.unit}`,
+                expiryDateFormatted,
+                expiryStatus,
+                status
+            ];
+        });
+        
+        // Generate Advanced Table with autoTable
+        doc.autoTable({
+            startY: 32,
+            head: [['#', 'Product Name', 'Quantity', 'Expiry Date', 'Expiry Status', 'Stock Status']],
+            body: tableData,
+            theme: 'grid',
+            styles: {
+                fontSize: 9,
+                cellPadding: 4,
+                lineColor: [226, 232, 240],
+                lineWidth: 0.5,
+            },
+            headStyles: {
+                fillColor: [248, 250, 252],
+                textColor: [51, 65, 85],
+                fontStyle: 'bold',
+                halign: 'center',
+                fontSize: 9,
+                cellPadding: 5,
+            },
+            columnStyles: {
+                0: { cellWidth: 12, halign: 'center', fillColor: [249, 250, 251] },
+                1: { cellWidth: 50, fontStyle: 'bold' },
+                2: { cellWidth: 25, halign: 'center' },
+                3: { cellWidth: 30, halign: 'center' },
+                4: { cellWidth: 32, halign: 'center' },
+                5: { cellWidth: 28, halign: 'center' },
+            },
+            alternateRowStyles: {
+                fillColor: [249, 250, 251]
+            },
+            didParseCell: function(data) {
+                // Color code the Stock Status column
+                if (data.column.index === 5 && data.section === 'body') {
+                    const status = data.cell.raw;
+                    if (status === "Out of Stock") {
+                        data.cell.styles.textColor = [239, 68, 68];
+                        data.cell.styles.fontStyle = 'bold';
+                    } else if (status === "Low Stock") {
+                        data.cell.styles.textColor = [217, 119, 6];
+                        data.cell.styles.fontStyle = 'bold';
+                    } else {
+                        data.cell.styles.textColor = [16, 185, 129];
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                }
+                
+                // Color code the Expiry Status column
+                if (data.column.index === 4 && data.section === 'body') {
+                    const status = data.cell.raw;
+                    if (status.includes("EXPIRED") || status.includes("Today")) {
+                        data.cell.styles.textColor = [220, 38, 38];
+                        data.cell.styles.fontStyle = 'bold';
+                    } else if (status.includes("days left") && !status.includes("-")) {
+                        const days = parseInt(status);
+                        if (days <= notificationDays) {
+                            data.cell.styles.textColor = [245, 158, 11];
+                            data.cell.styles.fontStyle = 'bold';
+                        } else {
+                            data.cell.styles.textColor = [16, 185, 129];
+                        }
+                    }
+                }
+            },
+            didDrawPage: function(data) {
+                // Page footer
+                const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
+                const totalPages = doc.internal.getNumberOfPages();
+                
+                doc.setFontSize(8);
+                doc.setTextColor(148, 163, 184);
+                doc.setFont("helvetica", "italic");
+                
+                doc.text(
+                    `Generated on ${new Date().toLocaleString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}`,
+                    15,
+                    pageHeight - 10
+                );
+                
+                doc.text(
+                    `Page ${pageNumber} of ${totalPages}`,
+                    pageWidth - 15,
+                    pageHeight - 10,
+                    { align: 'right' }
+                );
+                
+                // Page border
+                doc.setDrawColor(226, 232, 240);
+                doc.setLineWidth(0.5);
+                doc.rect(10, 10, pageWidth - 20, pageHeight - 20, 'S');
             }
         });
         
-        // Footer
+        // ============================================
+        // LAST PAGE: SUMMARY & INSIGHTS
+        // ============================================
+        doc.addPage();
+        
+        // Page Header
+        doc.setFillColor(37, 99, 235);
+        doc.rect(0, 0, pageWidth, 25, 'F');
+        
+        doc.setFont("times", "bold");
+        doc.setFontSize(18);
+        doc.setTextColor(255, 255, 255);
+        doc.text(businessNameClean, 15, 12);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text("Report Summary & Recommendations", 15, 19);
+        
+        let summaryY = 40;
+        
+        // Key Insights Section
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(15, summaryY, pageWidth - 30, 50, 3, 3, 'F');
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(30, 41, 59);
+        doc.text("📊 KEY INSIGHTS", 20, summaryY + 10);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(71, 85, 105);
+        
+        const insights = [
+            `• Total inventory value across ${totalProducts} unique products`,
+            `• ${totalStock} total units currently in stock`,
+            `• ${((products.filter(p => p.quantity > 0).length / totalProducts) * 100).toFixed(1)}% of products are in stock`,
+            `• ${outOfStockCount} products require immediate restocking`,
+            `• ${expiringCount} products are expiring within ${notificationDays} days`
+        ];
+        
+        insights.forEach((insight, idx) => {
+            doc.text(insight, 20, summaryY + 20 + (idx * 6));
+        });
+        
+        summaryY += 60;
+        
+        // Critical Actions Section
+        doc.setFillColor(254, 242, 242);
+        doc.roundedRect(15, summaryY, pageWidth - 30, 40, 3, 3, 'F');
+        doc.setDrawColor(239, 68, 68);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(15, summaryY, pageWidth - 30, 40, 3, 3, 'S');
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(220, 38, 38);
+        doc.text("⚠️ CRITICAL ACTIONS REQUIRED", 20, summaryY + 10);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(127, 29, 29);
+        
+        const criticalActions = [];
+        if (outOfStockCount > 0) {
+            criticalActions.push(`• Restock ${outOfStockCount} out-of-stock products immediately`);
+        }
+        if (expiringCount > 0) {
+            criticalActions.push(`• Review ${expiringCount} products expiring soon`);
+        }
+        if (lowStockCount > 0) {
+            criticalActions.push(`• Plan reorder for ${lowStockCount} low-stock items`);
+        }
+        
+        if (criticalActions.length === 0) {
+            doc.setTextColor(16, 185, 129);
+            doc.text("✓ No critical actions required. Inventory is healthy!", 20, summaryY + 20);
+        } else {
+            criticalActions.forEach((action, idx) => {
+                doc.text(action, 20, summaryY + 20 + (idx * 6));
+            });
+        }
+        
+        summaryY += 50;
+        
+        // Recommendations Section
+        doc.setFillColor(236, 253, 245);
+        doc.roundedRect(15, summaryY, pageWidth - 30, 50, 3, 3, 'F');
+        doc.setDrawColor(16, 185, 129);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(15, summaryY, pageWidth - 30, 50, 3, 3, 'S');
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(6, 95, 70);
+        doc.text("💡 RECOMMENDATIONS", 20, summaryY + 10);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(6, 78, 59);
+        
+        const recommendations = [
+            "• Set expiry dates for all products to enable better tracking",
+            "• Maintain minimum stock levels of 10 units per product",
+            "• Review inventory weekly to prevent stockouts",
+            "• Consider automated reordering for fast-moving items",
+            "• Implement FIFO (First In, First Out) for perishable goods"
+        ];
+        
+        recommendations.forEach((rec, idx) => {
+            doc.text(rec, 20, summaryY + 20 + (idx * 6));
+        });
+        
+        summaryY += 60;
+        
+        // Report Signature Section
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.5);
+        doc.line(15, summaryY, pageWidth - 15, summaryY);
+        
+        summaryY += 10;
+        
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(9);
+        doc.setTextColor(100, 116, 139);
+        doc.text("Report prepared by:", 20, summaryY);
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(30, 41, 59);
+        doc.text(fullName, 20, summaryY + 7);
+        
+        doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
-        doc.setTextColor(156, 163, 175);
-        doc.text(`Generated on ${new Date().toLocaleString()}`, 105, 285, { align: 'center' });
-        doc.text(`Total Products: ${products.length}`, 105, 290, { align: 'center' });
+        doc.setTextColor(148, 163, 184);
+        doc.text(`Authorized Signatory - ${businessNameClean}`, 20, summaryY + 13);
+        
+        // Final Footer
+        doc.setDrawColor(37, 99, 235);
+        doc.setLineWidth(1);
+        doc.line(15, pageHeight - 30, pageWidth - 15, pageHeight - 30);
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(37, 99, 235);
+        doc.text("AI INVENTORY PRO", pageWidth / 2, pageHeight - 22, { align: 'center' });
+        
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(7);
+        doc.setTextColor(148, 163, 184);
+        doc.text("Powered by Advanced AI Technology • www.aiinventorypro.com", pageWidth / 2, pageHeight - 17, { align: 'center' });
+        doc.text("This is a computer-generated document and does not require a signature", pageWidth / 2, pageHeight - 13, { align: 'center' });
         
         // Save with incremental naming
         const fileName = `${businessNameClean}ProductReport${reportCounter}.pdf`;
@@ -2330,27 +2742,26 @@ async function generatePDF() {
         reportCounter++;
         
         closeReportModal();
-        triggerSuccess(`✓ Report downloaded: ${fileName}`);
+        triggerSuccess(`✓ Premium Report Downloaded: ${fileName}`);
         
     } catch (error) {
         console.error("PDF Generation Error:", error);
-        alert("Error generating PDF. Please try again.");
+        alert("Error generating PDF: " + error.message);
     } finally {
         btn.innerHTML = originalHTML;
         btn.disabled = false;
     }
 }
 
-// Add spin animation for loading
-const style = document.createElement('style');
-style.textContent = `
+// Add spin animation
+const styleElement = document.createElement('style');
+styleElement.textContent = `
     @keyframes spin {
         from { transform: rotate(0deg); }
         to { transform: rotate(360deg); }
     }
 `;
-document.head.appendChild(style);
-
+document.head.appendChild(styleElement);
 </script>
 
 </body>
