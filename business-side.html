@@ -720,41 +720,67 @@ if (localStorage.getItem("businessProfileCreated") === "true") {
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+  import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
     authDomain: "scalevest-163a0.firebaseapp.com",
     projectId: "scalevest-163a0",
-    databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com", // Ensure this is correct
+    databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
     storageBucket: "scalevest-163a0.firebasestorage.app",
     messagingSenderId: "938358950124",
     appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
   };
 
-  // Initialize
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const database = getDatabase(app);
 
-  // ==========================================
-  // AUTH GUARD: Redirect if not logged in
-  // ==========================================
+  // Auth Guard
   onAuthStateChanged(auth, (user) => {
     if (!user) {
-      // Not logged in? Save current URL to return later and redirect
-      console.log("No user found. Redirecting to login...");
       window.location.href = "login.html";
-    } else {
-      console.log("User authenticated:", user.email);
-      // Check if they already have a profile
-      if (localStorage.getItem("businessProfileCreated") === "true") {
-        window.location.replace("mainbusinesshub.html");
-      }
+    } else if (localStorage.getItem("businessProfileCreated") === "true") {
+      window.location.replace("mainbusinesshub.html");
     }
   });
 
-  // Export functions to window so the HTML buttons can see them
+  // --- Animation Logic ---
+  const images = ["load1.jpg", "load2.jpg", "load3.jpg", "load4.jpg", "load5.jpg", "load6.jpg"];
+  let currentSlide = 0;
+  let progress = 0;
+
+  function updateSlide() {
+    const imgEl = document.getElementById("loadingImg");
+    if(imgEl) imgEl.src = images[currentSlide];
+    document.querySelectorAll(".dot").forEach((dot, i) => {
+      dot.classList.toggle("active", i === currentSlide);
+    });
+  }
+
+  function runLoadingAnimation() {
+    const progressFill = document.getElementById('progressFill');
+    
+    // Auto slide images every 3 seconds
+    const autoSlideInterval = setInterval(() => {
+      currentSlide = (currentSlide + 1) % images.length;
+      updateSlide();
+    }, 3000);
+
+    // Progress bar loader
+    const progressInterval = setInterval(() => {
+      progress += 1;
+      if (progressFill) progressFill.style.width = progress + "%";
+
+      if (progress >= 100) {
+        clearInterval(progressInterval);
+        clearInterval(autoSlideInterval);
+        window.location.href = "mainbusinesshub.html";
+      }
+    }, 50); 
+  }
+
+  // --- Main Start Function ---
   window.startLoading = async function() {
     const name = document.getElementById("name").value.trim();
     const age = document.getElementById("age").value.trim();
@@ -767,13 +793,17 @@ if (localStorage.getItem("businessProfileCreated") === "true") {
     }
 
     const user = auth.currentUser;
-    if (!user) return; // Safety check
+    if (!user) {
+        alert("User session not found. Please login again.");
+        return;
+    }
 
-    closeModal();
+    // UI Feedback
+    if(typeof closeModal === "function") closeModal();
     document.getElementById('loadingScreen').style.display = 'flex';
 
     try {
-      // Save data under the user's specific UID
+      // 1. Save to Firebase under user UID
       const businessRef = ref(database, `BusinessOwners/${user.uid}`);
       await set(businessRef, {
         uid: user.uid,
@@ -784,17 +814,32 @@ if (localStorage.getItem("businessProfileCreated") === "true") {
         createdAt: new Date().toISOString()
       });
 
+      // 2. Set LocalStorage to prevent redirect loops
       localStorage.setItem("businessProfileCreated", "true");
-      runLoadingAnimation(); // Start the 5-image slide show
+
+      // 3. Start the defined animation
+      runLoadingAnimation();
+
     } catch (err) {
-      alert("Error saving data: " + err.message);
+      console.error(err);
+      alert("Failed to save: " + err.message);
+      document.getElementById('loadingScreen').style.display = 'none';
     }
+  };
+
+  // Allow dots to be clickable
+  window.setSlide = function(index) {
+    currentSlide = index;
+    updateSlide();
   };
 </script>
 
 <script>
-function openModal(){document.getElementById('modal').style.display='flex'}
-function closeModal(){document.getElementById('modal').style.display='none'}
+  // Keep these simple UI helpers outside the module
+  function openModal(){ document.getElementById('modal').style.display='flex'; }
+  function closeModal(){ document.getElementById('modal').style.display='none'; }
+</script>
+
 
 function toggleFAQ(el){
   const a = el.querySelector('.faq-a');
