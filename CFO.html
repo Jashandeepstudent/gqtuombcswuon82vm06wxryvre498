@@ -1618,7 +1618,495 @@ function launchFlashSale() {
     alert("Flash Sale feature coming soon! This will allow you to create instant discount campaigns.");
     // You can build this feature later to create automatic discounts
 }
+// Global variables for popups
+let selectedExpiringProducts = [];
+let selectedLowStockProducts = [];
 
+// === FLASH SALE FUNCTIONS ===
+async function openFlashSale() {
+    const popup = document.getElementById('flash-sale-popup');
+    const list = document.getElementById('expiring-products-list');
+    
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    const dbRef = ref(getDatabase());
+    const inventorySnapshot = await get(child(dbRef, `Businesses/${user.uid}/inventory`));
+    
+    if (!inventorySnapshot.exists()) {
+        list.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5);">No products found</p>';
+        popup.style.display = 'block';
+        return;
+    }
+    
+    const inventory = inventorySnapshot.val();
+    const now = new Date();
+    const expiringProducts = [];
+    
+    for (const [productId, productData] of Object.entries(inventory)) {
+        if (productData.expiryDate) {
+            const expiryDate = new Date(productData.expiryDate);
+            const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+            
+            if (daysUntilExpiry <= 7 && daysUntilExpiry >= 0) {
+                expiringProducts.push({
+                    id: productId,
+                    name: productData.name,
+                    daysUntilExpiry,
+                    quantity: productData.quantity,
+                    unit: productData.unit
+                });
+            }
+        }
+    }
+    
+    if (expiringProducts.length === 0) {
+        list.innerHTML = '<p style="text-align: center; color: rgba(74, 222, 128, 0.8);">✓ No products expiring soon!</p>';
+        popup.style.display = 'block';
+        return;
+    }
+    
+    let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+    expiringProducts.forEach(product => {
+        const urgency = product.daysUntilExpiry === 0 ? 'CRITICAL' :
+                        product.daysUntilExpiry === 1 ? 'URGENT' :
+                        product.daysUntilExpiry <= 3 ? 'HIGH' : 'MEDIUM';
+        const color = urgency === 'CRITICAL' ? '#f87171' :
+                      urgency === 'URGENT' ? '#fb923c' :
+                      urgency === 'HIGH' ? '#fbbf24' : '#3b82f6';
+        
+        html += `
+            <div style="padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 15px;">
+                <input type="checkbox" id="product-${product.id}" value="${product.id}" style="width: 20px; height: 20px; cursor: pointer;" onchange="toggleProductSelection('${product.id}')">
+                <div style="flex: 1;">
+                    <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">${product.name}</div>
+                    <div style="font-size: 13px; color: rgba(255,255,255,0.6);">${product.quantity} ${product.unit} in stock</div>
+                </div>
+                <div style="padding: 6px 12px; background: ${color}20; border: 1px solid ${color}; border-radius: 8px; color: ${color}; font-size: 11px; font-weight: 700;">
+                    ${urgency} - ${product.daysUntilExpiry === 0 ? 'TODAY' : product.daysUntilExpiry + ' DAYS'}
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    html += '<button onclick="proceedToDiscount()" class="launch-btn" style="margin-top: 20px; width: 100%;">Continue to Discount →</button>';
+    
+    list.innerHTML = html;
+    popup.style.display = 'block';
+}
+
+function toggleProductSelection(productId) {
+    const checkbox = document.getElementById(`product-${productId}`);
+    if (checkbox.checked) {
+        if (!selectedExpiringProducts.includes(productId)) {
+            selectedExpiringProducts.push(productId);
+        }
+    } else {
+        selectedExpiringProducts = selectedExpiringProducts.filter(id => id !== productId);
+    }
+}
+
+async function proceedToDiscount() {
+    if (selectedExpiringProducts.length === 0) {
+        alert('Please select at least one product');
+        return;
+    }
+    
+    const user = auth.currentUser;
+    const dbRef = ref(getDatabase());
+    const inventorySnapshot = await get(child(dbRef, `Businesses/${user.uid}/inventory`));
+    const inventory = inventorySnapshot.val();
+    
+    // Find the most urgent product
+    let minDays = 999;
+    for (const productId of selectedExpiringProducts) {
+        const product = inventory[productId];
+        if (product.expiryDate) {
+            const expiryDate = new Date(product.expiryDate);
+            const daysUntilExpiry = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+            if (daysUntilExpiry < minDays) minDays = daysUntilExpiry;
+        }
+    }
+    
+    // Suggest discount based on urgency
+    let suggestedDiscount = 0;
+    if (minDays === 0) suggestedDiscount = 50;
+    else if (minDays === 1) suggestedDiscount = 40;
+    else if (minDays <= 3) suggestedDiscount = 30;
+    else suggestedDiscount = 20;
+    
+    document.getElementById('suggested-discount').innerText = `💡 Suggested: ${suggestedDiscount}% off (based on ${minDays} days until expiry)`;
+    document.getElementById('discount-input').value = suggestedDiscount;
+    document.getElementById('discount-section').style.display = 'block';
+    document.getElementById('expiring-products-list').style.display = 'none';
+}
+
+async function applySaleDiscount() {
+    const discountPercent = parseFloat(document.getElementById('discount-input').value);
+    
+    if (!discountPercent || discountPercent <= 0 || discountPercent > 100) {
+        alert('Please enter a valid discount percentage (1-100)');
+        return;
+    }
+    
+    const user = auth.currentUser;
+    const dbRef = ref(getDatabase());
+    const { set } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+    
+    for (const productId of selectedExpiringProducts) {
+        const priceSnapshot = await get(child(dbRef, `Businesses/${user.uid}/prices/${productId}`));
+        if (priceSnapshot.exists()) {
+            const priceData = priceSnapshot.val();
+            const originalPrice = parseFloat(priceData.sellPrice);
+            const newPrice = originalPrice * (1 - discountPercent / 100);
+            
+            await set(ref(db, `Businesses/${user.uid}/prices/${productId}/sellPrice`), newPrice.toFixed(2));
+        }
+    }
+    
+    alert(`✅ Flash sale applied! ${discountPercent}% discount on ${selectedExpiringProducts.length} product(s)`);
+    closeFlashSale();
+    location.reload();
+}
+
+function closeFlashSale() {
+    document.getElementById('flash-sale-popup').style.display = 'none';
+    document.getElementById('discount-section').style.display = 'none';
+    document.getElementById('expiring-products-list').style.display = 'block';
+    selectedExpiringProducts = [];
+}
+
+// === ORDER RECEIPT FUNCTIONS ===
+async function openOrderReceipt() {
+    const popup = document.getElementById('order-receipt-popup');
+    const list = document.getElementById('low-stock-products-list');
+    
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    const dbRef = ref(getDatabase());
+    const inventorySnapshot = await get(child(dbRef, `Businesses/${user.uid}/inventory`));
+    
+    if (!inventorySnapshot.exists()) {
+        list.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5);">No products found</p>';
+        popup.style.display = 'block';
+        return;
+    }
+    
+    const inventory = inventorySnapshot.val();
+    const lowStockProducts = [];
+    
+    for (const [productId, productData] of Object.entries(inventory)) {
+        const currentStock = parseInt(productData.quantity) || 0;
+        if (currentStock <= 15) {
+            lowStockProducts.push({
+                id: productId,
+                name: productData.name,
+                currentStock,
+                unit: productData.unit
+            });
+        }
+    }
+    
+    if (lowStockProducts.length === 0) {
+        list.innerHTML = '<p style="text-align: center; color: rgba(74, 222, 128, 0.8);">✓ All products have healthy stock levels!</p>';
+        popup.style.display = 'block';
+        return;
+    }
+    
+    let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+    lowStockProducts.forEach(product => {
+        const severity = product.currentStock === 0 ? 'OUT OF STOCK' :
+                         product.currentStock <= 5 ? 'CRITICAL' :
+                         product.currentStock <= 10 ? 'LOW' : 'WARNING';
+        const color = severity === 'OUT OF STOCK' ? '#ef4444' :
+                      severity === 'CRITICAL' ? '#f87171' :
+                      severity === 'LOW' ? '#fb923c' : '#fbbf24';
+        
+        html += `
+            <div style="padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 15px;">
+                <input type="checkbox" id="stock-${product.id}" value="${product.id}" style="width: 20px; height: 20px; cursor: pointer;" onchange="toggleStockSelection('${product.id}')">
+                <div style="flex: 1;">
+                    <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">${product.name}</div>
+                    <div style="font-size: 13px; color: rgba(255,255,255,0.6);">Current: ${product.currentStock} ${product.unit}</div>
+                </div>
+                <div style="padding: 6px 12px; background: ${color}20; border: 1px solid ${color}; border-radius: 8px; color: ${color}; font-size: 11px; font-weight: 700;">
+                    ${severity}
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    html += '<button onclick="proceedToQuantity()" class="launch-btn" style="margin-top: 20px; width: 100%;">Continue to Order →</button>';
+    
+    list.innerHTML = html;
+    popup.style.display = 'block';
+}
+
+function toggleStockSelection(productId) {
+    const checkbox = document.getElementById(`stock-${productId}`);
+    if (checkbox.checked) {
+        if (!selectedLowStockProducts.includes(productId)) {
+            selectedLowStockProducts.push(productId);
+        }
+    } else {
+        selectedLowStockProducts = selectedLowStockProducts.filter(id => id !== productId);
+    }
+}
+
+async function proceedToQuantity() {
+    if (selectedLowStockProducts.length === 0) {
+        alert('Please select at least one product');
+        return;
+    }
+    
+    const user = auth.currentUser;
+    const dbRef = ref(getDatabase());
+    const inventorySnapshot = await get(child(dbRef, `Businesses/${user.uid}/inventory`));
+    const inventory = inventorySnapshot.val();
+    
+    let html = '<div style="display: flex; flex-direction: column; gap: 15px;">';
+    html += '<h3 style="margin-bottom: 15px;">Enter Order Quantities</h3>';
+    
+    for (const productId of selectedLowStockProducts) {
+        const product = inventory[productId];
+        const suggestedQty = Math.max(50, Math.ceil((15 - product.quantity) * 1.5));
+        
+        html += `
+            <div style="padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">${product.name}</div>
+                <div style="font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 12px;">Current: ${product.quantity} ${product.unit}</div>
+                <input type="number" id="qty-${productId}" placeholder="Order quantity" value="${suggestedQty}" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white;">
+                <div style="margin-top: 8px; font-size: 12px; color: #3b82f6;">💡 Suggested: ${suggestedQty} ${product.unit}</div>
+            </div>
+        `;
+    }
+    html += '</div>';
+    
+    document.getElementById('quantity-section').innerHTML = html;
+    document.getElementById('quantity-section').style.display = 'block';
+    document.getElementById('low-stock-products-list').style.display = 'none';
+    document.getElementById('generate-pdf-btn').style.display = 'block';
+}
+
+async function generateOrderPDF() {
+    const user = auth.currentUser;
+    const dbRef = ref(getDatabase());
+    const inventorySnapshot = await get(child(dbRef, `Businesses/${user.uid}/inventory`));
+    const inventory = inventorySnapshot.val();
+    
+    const orderList = [];
+    
+    for (const productId of selectedLowStockProducts) {
+        const qty = document.getElementById(`qty-${productId}`).value;
+        if (qty && parseInt(qty) > 0) {
+            const product = inventory[productId];
+            orderList.push({
+                name: product.name,
+                quantity: qty,
+                unit: product.unit
+            });
+        }
+    }
+    
+    if (orderList.length === 0) {
+        alert('Please enter quantities for at least one product');
+        return;
+    }
+    
+    // Generate order ID
+    const orderId = `ORD-${Date.now()}`;
+    const orderDate = new Date().toLocaleDateString();
+    
+    // Create PDF content
+    let pdfContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 40px; background: white; color: black; }
+                .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #3b82f6; padding-bottom: 20px; }
+                .order-id { font-size: 24px; font-weight: bold; color: #3b82f6; margin-bottom: 10px; }
+                .date { font-size: 14px; color: #666; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th { background: #3b82f6; color: white; padding: 12px; text-align: left; }
+                td { padding: 12px; border-bottom: 1px solid #ddd; }
+                tr:hover { background: #f5f5f5; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="order-id">ORDER ID: ${orderId}</div>
+                <div class="date">Date: ${orderDate}</div>
+            </div>
+            
+            <h2>Product Order List</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Product Name</th>
+                        <th>Quantity</th>
+                        <th>Unit</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    orderList.forEach((item, index) => {
+        pdfContent += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.name}</td>
+                <td>${item.quantity}</td>
+                <td>${item.unit}</td>
+            </tr>
+        `;
+    });
+    
+    pdfContent += `
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `;
+    
+    // Open in new window for printing/PDF
+    const newWindow = window.open('', '_blank');
+    newWindow.document.write(pdfContent);
+    newWindow.document.close();
+    newWindow.print();
+    
+    alert('✅ Order receipt generated! Print dialog opened.');
+    closeOrderReceipt();
+}
+
+function closeOrderReceipt() {
+    document.getElementById('order-receipt-popup').style.display = 'none';
+    document.getElementById('quantity-section').style.display = 'none';
+    document.getElementById('low-stock-products-list').style.display = 'block';
+    document.getElementById('generate-pdf-btn').style.display = 'none';
+    selectedLowStockProducts = [];
+}
+
+// === SYNC OPERATIONS FUNCTIONS ===
+async function openSyncOperations() {
+    const popup = document.getElementById('sync-operations-popup');
+    const list = document.getElementById('pending-tasks-list');
+    
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    // Combine all alerts from CFO advice
+    const expiringProducts = window.expiringProducts || [];
+    const pricingIssues = window.pricingIssues || [];
+    const lowStockAlerts = window.lowStockAlerts || [];
+    
+    const allTasks = [];
+    
+    // Add expiry tasks
+    expiringProducts.forEach(product => {
+        allTasks.push({
+            type: 'expiry',
+            priority: product.daysUntilExpiry === 0 ? 1 : product.daysUntilExpiry === 1 ? 2 : 3,
+            title: `${product.name} - Expiry Alert`,
+            description: `Expires in ${product.daysUntilExpiry === 0 ? 'TODAY' : product.daysUntilExpiry + ' days'}`,
+            action: 'Launch Flash Sale',
+            color: product.daysUntilExpiry === 0 ? '#f87171' : '#fb923c'
+        });
+    });
+    
+    // Add pricing tasks
+    pricingIssues.filter(p => p.type === 'loss').forEach(product => {
+        allTasks.push({
+            type: 'pricing',
+            priority: 1,
+            title: `${product.productName} - Pricing Loss`,
+            description: `Losing $${product.loss.toFixed(2)} per unit`,
+            action: 'Fix Pricing',
+            color: '#f87171'
+        });
+    });
+    
+    // Add stock tasks
+    lowStockAlerts.filter(p => p.severity === 'critical').forEach(product => {
+        allTasks.push({
+            type: 'stock',
+            priority: 2,
+            title: `${product.name} - Critical Stock`,
+            description: `Only ${product.currentStock} ${product.unit} left`,
+            action: 'Order Stock',
+            color: '#fb923c'
+        });
+    });
+    
+    // Sort by priority
+    allTasks.sort((a, b) => a.priority - b.priority);
+    
+    if (allTasks.length === 0) {
+        list.innerHTML = '<p style="text-align: center; color: rgba(74, 222, 128, 0.8); font-size: 18px; padding: 40px;">✓ All operations in sync! No pending tasks.</p>';
+        popup.style.display = 'block';
+        return;
+    }
+    
+    let html = `<div style="margin-bottom: 20px; padding: 15px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
+        <div style="font-size: 14px; color: rgba(255,255,255,0.8);">📊 Total Pending Tasks: <strong>${allTasks.length}</strong></div>
+    </div>`;
+    
+    html += '<div style="display: flex; flex-direction: column; gap: 12px;">';
+    allTasks.forEach((task, index) => {
+        html += `
+            <div style="padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; border-left: 4px solid ${task.color};">
+                <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 8px;">
+                    <div>
+                        <div style="font-size: 16px; font-weight: 600; color: ${task.color}; margin-bottom: 4px;">${task.title}</div>
+                        <div style="font-size: 13px; color: rgba(255,255,255,0.6);">${task.description}</div>
+                    </div>
+                    <div style="padding: 4px 10px; background: ${task.color}20; border-radius: 6px; color: ${task.color}; font-size: 11px; font-weight: 700; white-space: nowrap;">
+                        PRIORITY ${task.priority}
+                    </div>
+                </div>
+                <button onclick="executeTask('${task.type}', ${index})" style="margin-top: 10px; padding: 8px 16px; background: ${task.color}; border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 12px; font-weight: 600;">
+                    ${task.action} →
+                </button>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    list.innerHTML = html;
+    document.getElementById('prioritize-btn').style.display = 'block';
+    popup.style.display = 'block';
+}
+
+function executeTask(type, index) {
+    if (type === 'expiry') {
+        closeSyncOperations();
+        openFlashSale();
+    } else if (type === 'pricing') {
+        alert('💡 Navigate to Sales Flow to update product pricing');
+    } else if (type === 'stock') {
+        closeSyncOperations();
+        openOrderReceipt();
+    }
+}
+
+function startPrioritize() {
+    const prioritized = document.getElementById('prioritized-tasks');
+    prioritized.innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+            <div style="font-size: 48px; margin-bottom: 20px;">🎯</div>
+            <div style="font-size: 20px; font-weight: 600; margin-bottom: 10px;">Priority Analysis Complete</div>
+            <div style="font-size: 14px; color: rgba(255,255,255,0.6);">Tasks are already sorted by urgency. Start with Priority 1 tasks.</div>
+        </div>
+    `;
+    prioritized.style.display = 'block';
+}
+
+function closeSyncOperations() {
+    document.getElementById('sync-operations-popup').style.display = 'none';
+    document.getElementById('prioritized-tasks').style.display = 'none';
+}
 
 async function askCFO(userInput) {
     const adviceTextEl = document.querySelector('.advice-text');
@@ -2426,7 +2914,7 @@ function closeSyncOperations() {
         </button>
         
         <div style="text-align: center; margin-bottom: 40px;">
-            <h1 style="font-size: 42px; font-weight: 700; background: linear-gradient(135deg, #fff 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;">Product Analysis</h1>
+            <h1 style="font-size: 42px; font-weight: 700; background: linear-gradient(135deg, #fff 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;">ProductAnalysis</h1>
             <p style="color: rgba(255,255,255,0.6); font-size: 16px;">Comprehensive performance metrics for all your products</p>
         </div>
         
