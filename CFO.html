@@ -1204,16 +1204,6 @@ function updateExpiryAlertCard(expiringProducts) {
     alertCard.style.animation = "alertPulse 3s infinite";
 }
 
-function updateCFOAdviceForExpiry(expiringProducts) {
-    const adviceCard = document.querySelector('.advice-card .advice-text');
-    
-    if (expiringProducts.length === 0) {
-        // Don't override if pricing advice is already there
-        if (!adviceCard.innerHTML.includes("Pricing Alerts")) {
-            adviceCard.innerHTML = "💡 <strong>Tip:</strong> Always set your selling and cost prices in Sales Flow to help ScaleVest CFO track your financial reports and provide better insights.";
-        }
-        return;
-    }
     
     // Expiry takes priority over pricing
     const urgent = expiringProducts[0];
@@ -1421,7 +1411,11 @@ function updateCFOAdviceForPricing(pricingIssues) {
     updateMasterCFOAdvice();
 }
 
-
+function updateCFOAdviceForExpiry(expiringProducts) {
+    // Store expiry issues globally
+    window.expiringProducts = expiringProducts;
+    updateMasterCFOAdvice();
+}
 
 function updateCFOAdviceForStock(lowStockProducts) {
     // Store stock issues globally
