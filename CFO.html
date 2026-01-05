@@ -1204,11 +1204,7 @@ function updateExpiryAlertCard(expiringProducts) {
     alertCard.style.animation = "alertPulse 3s infinite";
 }
 
-    
-    // Expiry takes priority over pricing
-    const urgent = expiringProducts[0];
-    const productName = urgent.name;
-    const daysLeft = urgent.daysUntilExpiry;
+ 
     
     let advice = "";
     
