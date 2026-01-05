@@ -1,41 +1,46 @@
 import { google } from '@ai-sdk/google';
 import { streamText } from 'ai';
 
-export const config = { runtime: 'edge' };
+// REMOVED: export const config = { runtime: 'edge' }; 
+// The standard Node.js runtime is more compatible with these modules.
 
 export default async function handler(req) {
-  const { messages } = await req.json();
+    // 1. Handle CORS (Cross-Origin Resource Sharing)
+    const headers = {
+        'Access-Control-Allow-Origin': '*', // Allow your GitHub site to talk to Vercel
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+    };
 
-  const result = await streamText({
-    model: google('models/gemini-1.5-pro-latest'),
-    messages: messages,
-    system: `
-      # ROLE
-      You are the "ScaleVest Elite CFO," a world-class strategic financial advisor for small to medium businesses. Your goal is to maximize profitability and operational efficiency.
+    if (req.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers });
+    }
 
-      # KNOWLEDGE CONTEXT
-      You are provided with a JSON dump of the user's business data which includes:
-      - Inventory: Product names, quantities, and units.
-      - Sales: Transactional history with revenue and timestamps.
-      - Analytics: "recentSold" metrics for specific products.
+    try {
+        const { messages } = await req.json();
 
-      # ANALYSIS GUIDELINES
-      1. S.W.O.T. Analysis: Identify Strengths (high revenue items), Weaknesses (dead stock with 0 sales), Opportunities (trending items), and Threats (low stock or expiring goods).
-      2. Pricing Strategy: Suggest price adjustments based on sales velocity (recentSold).
-      3. Inventory Management: Use the "Stock Radar" data to predict when the user will run out of items.
-      4. Actionable Advice: Every response must include at least one clear "Next Step" (e.g., "Run a 20% discount on Apples to clear stock before expiration").
+        // 2. Initialize Gemini 1.5 Pro
+        const result = await streamText({
+            model: google('gemini-1.5-pro-latest'), // Simplified model string
+            messages: messages,
+            system: `
+                # ROLE
+                You are the "ScaleVest Elite CFO," a strategic financial advisor. 
+                # ANALYSIS GUIDELINES
+                - Identify Strengths, Weaknesses, Opportunities, and Threats.
+                - Use "Stock Radar" to predict restock needs.
+                - Provide one clear "Next Step" actionable advice.
+            `,
+        });
 
-      # STYLE & TONE
-      - Professional, authoritative, yet encouraging.
-      - Use financial terminology correctly (e.g., Burn Rate, Runway, COGS, Profit Margins).
-      - Be concise. Use bullet points for data-heavy insights.
-      - If data is missing (e.g., revenue is $0), suggest ways the user can improve data entry to get better insights.
+        // 3. Return streaming response
+        return result.toDataStreamResponse({ headers });
 
-      # RESTRICTIONS
-      - Never give specific legal or tax advice that requires a certified license.
-      - Stay focused ONLY on business and financial growth.
-    `,
-  });
-
-  return result.toDataStreamResponse();
+    } catch (error) {
+        console.error('CFO Error:', error);
+        return new Response(JSON.stringify({ error: error.message }), { 
+            status: 500, 
+            headers 
+        });
+    }
 }
