@@ -694,13 +694,14 @@
         // Gemini AI Integration via ScaleVest CFO API
         async function getGeminiAnalysis(prompt) {
             try {
-                const response = await fetch('/api/cfoscalevest', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        messages: [{ role: 'user', content: prompt }]
-                    })
-                });
+               // Around line 538 in your code:
+const response = await fetch('https://ai-inventory-pro-sigma.vercel.app/api/gemini', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+        messages: [{ role: 'user', content: `Analyze this data: ${JSON.stringify(businessData)}` }] 
+    })
+});
 
                 if (response.ok) {
                     console.log("SCALEVEST CFO LIVE");
@@ -830,4 +831,5 @@ const response = await fetch('https://ai-inventory-pro-sigma.vercel.app/api/gemi
     </script>
 </body>
 </html>
+
 
