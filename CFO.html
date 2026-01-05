@@ -1234,12 +1234,6 @@ function updateExpiryAlertCard(expiringProducts) {
     adviceCard.innerHTML = advice;
 
 
-function launchFlashSale() {
-    alert("Flash Sale feature coming soon! This will allow you to create instant discount campaigns.");
-    // You can build this feature later to create automatic discounts
-}
-
-
 // Fetch and analyze pricing
 async function fetchPricingAnalysis(userId) {
     const dbRef = ref(getDatabase());
@@ -1631,6 +1625,10 @@ function updateStockRadarCard(lowStockProducts) {
     stockText.innerHTML = statusText;
 }
 
+function launchFlashSale() {
+    alert("Flash Sale feature coming soon! This will allow you to create instant discount campaigns.");
+    // You can build this feature later to create automatic discounts
+}
 
 
 async function askCFO(userInput) {
