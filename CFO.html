@@ -665,48 +665,88 @@ async function fetchRevenuePulse(userId) {
 }
 
 function updateCFOUI(current, previous, daily) {
-    document.getElementById('total-revenue').innerText = `$${current.toLocaleString()}`;
-    
-    // 1. Calculate Percentage
+    const totalRevEl = document.getElementById('total-revenue');
+    const badgeEl = document.getElementById('trend-badge');
+    const arrowEl = document.getElementById('trend-arrow');
+    const percentEl = document.getElementById('trend-percent');
+    const statusEl = document.getElementById('pnl-status');
+
+    totalRevEl.innerText = `$${current.toLocaleString()}`;
+
+    // 1. Stock Market Trend Logic
     const diff = current - previous;
     const percent = previous > 0 ? (diff / previous) * 100 : 100;
-    const statusEl = document.getElementById('pnl-status');
-    
+
     if (diff >= 0) {
-        statusEl.innerHTML = `<span style="color: #4ade80;">▲ Profit is up ${percent.toFixed(1)}%</span>`;
+        // BULLISH (UP)
+        badgeEl.style.backgroundColor = "rgba(74, 222, 128, 0.2)"; // Soft Green
+        badgeEl.style.color = "#4ade80";
+        arrowEl.innerText = "▲";
+        percentEl.innerText = `${percent.toFixed(1)}%`;
+        statusEl.innerText = `Market Outperformance: +$${diff.toLocaleString()} vs last week`;
     } else {
-        statusEl.innerHTML = `<span style="color: #f87171;">▼ Loss of ${Math.abs(percent).toFixed(1)}%</span>`;
+        // BEARISH (DOWN)
+        badgeEl.style.backgroundColor = "rgba(248, 113, 113, 0.2)"; // Soft Red
+        badgeEl.style.color = "#f87171";
+        arrowEl.innerText = "▼";
+        percentEl.innerText = `${Math.abs(percent).toFixed(1)}%`;
+        statusEl.innerText = `Market Correction: -$${Math.abs(diff).toLocaleString()} gap noticed`;
     }
 
-    // 2. Daily Velocity Breakdown
+    // 2. Weekly Daily Breakdown
     const breakdownEl = document.getElementById('daily-breakdown');
-    let breakdownHTML = "";
-    for (const [day, amount] of Object.entries(daily)) {
-        breakdownHTML += `${day}: $${amount.toFixed(0)} • `;
-    }
-    breakdownEl.innerText = breakdownHTML.slice(0, -3); // Remove last bullet
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    let html = "";
+    
+    // Show only days that have sales
+    days.forEach(day => {
+        if(daily[day]) {
+            html += `<div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span>${day}</span>
+                        <span style="color:white;">$${daily[day].toFixed(0)}</span>
+                     </div>`;
+        }
+    });
+    breakdownEl.innerHTML = html || "No trading activity this week.";
 
-    // 3. Simple Velocity (Average per active day)
-    const activeDays = Object.keys(daily).length || 1;
-    document.getElementById('burn-rate').innerText = `Velocity: ~$${(current / activeDays).toFixed(0)}/avg day`;
-
-    // 4. Update Bars (Visual Growth)
-    updateChartBars(daily);
+    // 3. Dynamic Stock-style Bars
+    updateStockChart(daily, diff >= 0);
 }
 
-function updateChartBars(daily) {
+function updateStockChart(daily, isPositive) {
     const chart = document.getElementById('revenue-chart');
-    chart.innerHTML = ''; // Clear old bars
+    chart.innerHTML = ''; 
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     
-    const maxVal = Math.max(...Object.values(daily), 100);
-    
-    // Create 7 bars
-    Object.values(daily).forEach(val => {
+    const values = Object.values(daily);
+    const maxVal = values.length > 0 ? Math.max(...values) : 100;
+
+    days.forEach(day => {
+        const val = daily[day] || 0;
         const height = (val / maxVal) * 100;
+        
+        const barContainer = document.createElement('div');
+        barContainer.style.textAlign = 'center';
+        barContainer.style.flex = '1';
+
         const bar = document.createElement('div');
-        bar.className = 'bar';
-        bar.style.height = `${Math.max(height, 10)}%`; // Min 10% height
-        chart.appendChild(bar);
+        bar.style.height = `${Math.max(height, 5)}%`;
+        bar.style.width = '12px';
+        bar.style.margin = '0 auto';
+        bar.style.borderRadius = '3px';
+        // Green bars if week is up, Red if week is down
+        bar.style.backgroundColor = isPositive ? "#4ade80" : "#f87171";
+        bar.style.transition = "height 1s ease-in-out";
+        
+        const label = document.createElement('div');
+        label.innerText = day.charAt(0);
+        label.style.fontSize = '10px';
+        label.style.marginTop = '5px';
+        label.style.color = '#94a3b8';
+
+        barContainer.appendChild(bar);
+        barContainer.appendChild(label);
+        chart.appendChild(barContainer);
     });
 }
 async function fetchAnalytics(userId) {
@@ -936,15 +976,23 @@ async function askCFO(userInput) {
         <div class="dashboard">
 <div class="card profit-card">
     <div class="card-title">GLOBAL P&L PULSE</div>
-    <div id="total-revenue" class="big-number">$0</div>
-    <div id="pnl-status" class="profit-text">Calculating...</div>
+    <div style="display: flex; align-items: baseline; gap: 10px;">
+        <div id="total-revenue" class="big-number">$0</div>
+        <div id="trend-badge" style="padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 4px;">
+            <span id="trend-arrow"></span>
+            <span id="trend-percent">0%</span>
+        </div>
+    </div>
     
-    <div id="daily-breakdown" style="font-size: 0.8rem; color: #94a3b8; margin: 10px 0; line-height: 1.5;">
-        </div>
+    <div id="pnl-status" class="profit-text" style="margin-top: 5px; font-size: 0.85rem; opacity: 0.8;">Analyzing market data...</div>
+    
+    <div id="daily-breakdown" style="font-size: 0.8rem; color: #94a3b8; margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+    </div>
 
-    <div id="burn-rate" class="burn-rate">Velocity: Loading...</div>
-    <div class="chart" id="revenue-chart">
+    <div class="chart" id="revenue-chart" style="display: flex; align-items: flex-end; justify-content: space-between; height: 100px; padding: 10px 0;">
         </div>
+    
+    <div id="burn-rate" class="burn-rate" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">Velocity: Loading...</div>
 </div>
 
            <div class="card products-card">
