@@ -32,33 +32,6 @@ export default async function handler(req, res) {
         return await callGemini(predictionPrompt, apiKey, res);
     }
 
-    if (task === "cfo_advice") {
-    const cfoPrompt = `
-        # ROLE
-        You are the "ScaleVest Virtual CFO," a high-level financial strategist for a retail business.
-        
-        # CONTEXT
-        Current Inventory & Sales Data: ${JSON.stringify(salesData)}
-        
-        # ANALYSIS STEPS
-        1. **Cash Flow & Profitability**: Identify which products are "Cash Cows" (high sales, stable stock) and which are "Dead Stock" (0 sales, high quantity).
-        2. **Risk Assessment**: Flag items at risk of stockouts based on sales velocity.
-        3. **Pricing Strategy**: Suggest price increases for high-demand/low-stock items or discounts for stagnant inventory.
-        4. **Actionable Next Step**: Provide one specific, high-impact business move for the owner to take TODAY.
-
-        # OUTPUT FORMAT
-        Return ONLY raw JSON in this structure:
-        {
-          "executiveSummary": "A 2-sentence overview of financial health.",
-          "alerts": [{"type": "URGENT", "message": "Reason"}],
-          "recommendations": [{"action": "Discount Apples by 20%", "reason": "Moving slowly"}],
-          "nextStep": "Contact supplier for X product immediately."
-        }
-    `;
-
-    return await callGemini(cfoPrompt, apiKey, res);
-}
-
     return res.status(400).json({ error: "No task provided" });
 }
 
