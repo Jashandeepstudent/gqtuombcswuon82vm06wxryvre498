@@ -168,7 +168,6 @@
     height: 120px; /* Give the chart a specific height */
     padding: 10px 0;
     margin: 20px 0;
-   padding-bottom: 30px;
     gap: 5px;
 }
 
@@ -194,16 +193,7 @@
     margin-top: 8px;
     font-weight: bold;
 }
-.bar-day-label {
-    font-size: 9px; /* Slightly smaller font */
-    color: #94a3b8;
-    margin-top: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    /* This rotation prevents long names from overlapping */
-    transform: rotate(-45deg); 
-    white-space: nowrap;
-}
+
         .card:hover {
             transform: translateY(-8px);
             border-color: rgba(59, 130, 246, 0.4);
@@ -754,8 +744,8 @@ function updateCFOUI(current, previous, daily) {
     // 3. Dynamic Stock-style Bars
     updateStockChart(daily, diff >= 0);
 const activeDays = Object.keys(daily).length || 1;
-const avgVelocity = current / activeDays;
-document.getElementById('burn-rate').innerText = `Velocity: $${avgVelocity.toFixed(0)} / active day`;
+document.getElementById('burn-rate').innerText = `Velocity: $${(current / activeDays).toFixed(0)} / active day`;
+}
 
 function updateStockChart(daily, isPositive) {
     const chart = document.getElementById('revenue-chart');
