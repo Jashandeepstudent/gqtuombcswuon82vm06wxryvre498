@@ -776,71 +776,73 @@ async function getGeminiAnalysis(prompt) {
             document.getElementById('inventoryModal').style.display = 'none';
         };
 
-        // Chat with CFO - Streaming Response
-        window.sendMessage = async function() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            
-            if (!message) return;
-            
-            const chatMessages = document.getElementById('chatMessages');
-            chatMessages.innerHTML += `<div class="message user-message">${message}</div>`;
-            input.value = '';
-            
-            // Add loading message
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'message cfo-message';
-            loadingDiv.innerHTML = '<div class="spinner" style="width:20px;height:20px;"></div>';
-            chatMessages.appendChild(loadingDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            
-            try {
-                const context = `You are a CFO AI assistant for ScaleVest. Current business data: ${JSON.stringify(firebaseData, null, 2)}. User question: ${message}. Provide actionable financial advice.`;
-                
-// Around line 538 in your code:
-const response = await fetch('https://ai-inventory-pro-sigma.vercel.app/api/gemini', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ 
-    messages: [
-        { 
-            role: 'system', 
-            content: `You are the ScaleVest AI CFO. Use this business data for context if needed: ${JSON.stringify(firebaseData)}` 
-        },
-        { 
-            role: 'user', 
-            content: prompt // This is the "Hi" or "Hello" you typed
-        }
-    ] 
-})
+        // CFO.html - Starting around line 770
+window.sendMessage = async function() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.innerHTML += `<div class="message user-message">${message}</div>`;
+    input.value = '';
+    
+    // Add loading message
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'message cfo-message';
+    loadingDiv.innerHTML = '<div class="spinner" style="width:20px;height:20px;"></div>';
+    chatMessages.appendChild(loadingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    try {
+        // Updated Vercel URL
+        const VERCEL_URL = 'https://ai-inventory-pro-sigma.vercel.app/api/gemini';
 
-                if (response.ok) {
-                    console.log("SCALEVEST CFO LIVE");
-                    
-                    // Remove loading spinner and prepare for streaming
-                    loadingDiv.innerHTML = '';
-                    
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        
-                        const chunk = decoder.decode(value, { stream: true });
-                        const cleanChunk = chunk.replace(/0:\"/g, '').replace(/\"/g, '');
-                        loadingDiv.innerText += cleanChunk;
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
+        const response = await fetch(VERCEL_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                messages: [
+                    { 
+                        role: 'system', 
+                        content: `You are a helpful CFO assistant for ScaleVest. Current business data for context: ${JSON.stringify(firebaseData)}` 
+                    },
+                    { 
+                        role: 'user', 
+                        content: message 
                     }
-                } else {
-                    console.error("Connection failed:", response.statusText);
-                    loadingDiv.innerText = "CFO is currently offline. Please try again.";
-                }
-            } catch (error) {
-                console.error("Network Error:", error);
-                loadingDiv.innerText = "Error connecting to ScaleVest CFO.";
+                ] 
+            })
+        });
+
+        if (response.ok) {
+            console.log("SCALEVEST CFO LIVE");
+            
+            // Remove loading spinner and prepare for streaming
+            loadingDiv.innerHTML = '';
+            
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                // Cleans the Vercel AI SDK stream prefix (e.g., 0:"text")
+                const cleanChunk = chunk.replace(/0:\"/g, '').replace(/\"/g, '').replace(/\\n/g, '\n');
+                loadingDiv.innerText += cleanChunk;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
             }
-        };
+        } else {
+            console.error("Connection failed:", response.statusText);
+            loadingDiv.innerText = "CFO is currently offline. Please try again.";
+        }
+    } catch (error) {
+        console.error("Network Error:", error);
+        loadingDiv.innerText = "Error connecting to ScaleVest CFO.";
+    }
+};
 
         // Initialize
         fetchAllData();
