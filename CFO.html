@@ -627,7 +627,76 @@ const firebaseConfig = {
   const auth = getAuth(app);
   const db = getDatabase(app);
 
+async function fetchRevenuePulse(userId) {
+    const dbRef = ref(getDatabase());
+    const salesSnapshot = await get(child(dbRef, `Businesses/${userId}/sales`));
+    
+    if (!salesSnapshot.exists()) return;
 
+    const salesData = salesSnapshot.val();
+    const now = Date.now();
+    const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+
+    let thisWeekRevenue = 0;
+    let lastWeekRevenue = 0;
+
+    // Process all sales
+    Object.values(salesData).forEach(sale => {
+        const saleTime = sale.timestamp;
+        const revenue = parseFloat(sale.revenue) || 0;
+
+        if (saleTime > (now - oneWeekMs)) {
+            // Sale happened in the last 7 days
+            thisWeekRevenue += revenue;
+        } else if (saleTime > (now - (oneWeekMs * 2))) {
+            // Sale happened between 7 and 14 days ago
+            lastWeekRevenue += revenue;
+        }
+    });
+
+    calculatePnL(thisWeekRevenue, lastWeekRevenue);
+}
+
+function calculatePnL(current, previous) {
+    const totalRevEl = document.getElementById('total-revenue');
+    const statusEl = document.getElementById('pnl-status');
+    const burnEl = document.getElementById('burn-rate');
+
+    totalRevEl.innerText = `$${current.toLocaleString()}`;
+
+    // Calculate Percentage Change
+    let percentChange = 0;
+    if (previous > 0) {
+        percentChange = ((current - previous) / previous) * 100;
+    } else if (current > 0) {
+        percentChange = 100; // First week of sales
+    }
+
+    // CFO Performance Messaging
+    if (current >= previous) {
+        statusEl.style.color = "#4ade80"; // Green
+        statusEl.innerText = `Profit is up ${percentChange.toFixed(1)}% this week`;
+    } else {
+        statusEl.style.color = "#f87171"; // Red
+        statusEl.innerText = `Loss/Dip: down ${Math.abs(percentChange).toFixed(1)}% vs last week`;
+    }
+
+    // Dynamic Burn Rate (Example: Total Rev / 7 days)
+    const dailyRate = current / 7;
+    burnEl.innerText = `Velocity: ~$${dailyRate.toFixed(0)}/day`;
+
+    // Update the Bars visually based on revenue
+    updateBars(current, previous);
+}
+
+function updateBars(current, previous) {
+    const bars = document.querySelectorAll('.bar');
+    // Simple visual logic: set the last bar to current performance
+    if(bars.length > 0) {
+        bars[bars.length - 1].style.height = "95%"; 
+        bars[bars.length - 2].style.height = (previous > 0) ? `${(previous/current) * 95}%` : "20%";
+    }
+}
 async function fetchAnalytics(userId) {
     const dbRef = ref(getDatabase());
     try {
@@ -682,6 +751,7 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         runOnboarding(user.uid);
         fetchAnalytics(user.uid); 
+        fetchRevenuePulse(user.uid);
     } else {
         window.location.href = "login.html";
     }
@@ -852,20 +922,14 @@ async function askCFO(userInput) {
         </div>
 
         <div class="dashboard">
-            <div class="card profit-card">
-                <div class="card-title">GLOBAL P&L PULSE</div>
-                <div class="big-number">$1,450</div>
-                <div class="profit-text">Profit is up 12% this week</div>
-                <div class="burn-rate">Burn Rate: ~$520/day</div>
-                <div class="chart">
-                    <div class="bar" style="height: 35%"></div>
-                    <div class="bar" style="height: 42%"></div>
-                    <div class="bar" style="height: 52%"></div>
-                    <div class="bar" style="height: 65%"></div>
-                    <div class="bar" style="height: 78%"></div>
-                    <div class="bar" style="height: 95%"></div>
-                </div>
-            </div>
+<div class="card profit-card">
+    <div class="card-title">GLOBAL P&L PULSE</div>
+    <div id="total-revenue" class="big-number">$0</div>
+    <div id="pnl-status" class="profit-text">Calculating...</div>
+    <div id="burn-rate" class="burn-rate">Burn Rate: Loading...</div>
+    <div class="chart" id="revenue-chart">
+        </div>
+</div>
 
            <div class="card products-card">
     <div class="card-title" style="margin-top: 30px;">PRODUCTS</div>
