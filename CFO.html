@@ -782,10 +782,12 @@ async function getGeminiAnalysis(prompt) {
     
     if (!message) return;
     
+    // 1. Update UI locally
     const chatMessages = document.getElementById('chatMessages');
     chatMessages.innerHTML += `<div class="message user-message">${message}</div>`;
     input.value = '';
     
+    // 2. Add loading indicator
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'message cfo-message';
     loadingDiv.innerHTML = '<div class="spinner" style="width:20px;height:20px;"></div>';
@@ -793,18 +795,18 @@ async function getGeminiAnalysis(prompt) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
     
     try {
-        // Ensure this URL matches your Vercel deployment exactly
+        // Change this URL if your Vercel endpoint is different (e.g., /api/cfoscalevest)
         const VERCEL_URL = 'https://ai-inventory-pro-sigma.vercel.app/api/gemini';
 
         const response = await fetch(VERCEL_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                // The AI SDK expects an array called 'messages'
+                // CRITICAL: Vercel AI SDK expects an array called 'messages'
                 messages: [
                     { 
                         role: 'system', 
-                        content: `You are a helpful CFO assistant. Context: ${JSON.stringify(firebaseData)}` 
+                        content: `You are a helpful CFO assistant for ScaleVest. Use this data for context: ${JSON.stringify(firebaseData)}` 
                     },
                     { 
                         role: 'user', 
@@ -815,7 +817,7 @@ async function getGeminiAnalysis(prompt) {
         });
 
         if (response.ok) {
-            loadingDiv.innerHTML = '';
+            loadingDiv.innerHTML = ''; // Clear spinner
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             
@@ -824,14 +826,14 @@ async function getGeminiAnalysis(prompt) {
                 if (done) break;
                 
                 const chunk = decoder.decode(value, { stream: true });
-                // Cleans Vercel AI SDK prefixes (0:"text")
+                // Cleans Vercel stream prefixes (e.g., 0:"text")
                 const cleanChunk = chunk.replace(/[0-9]:"/g, '').replace(/"/g, '').replace(/\\n/g, '\n');
                 loadingDiv.innerText += cleanChunk;
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
         } else {
-            const errorData = await response.json();
-            console.error("Server Error:", errorData);
+            const errorText = await response.text();
+            console.error("400 Error Details:", errorText);
             loadingDiv.innerText = "CFO is currently offline (400 Bad Request).";
         }
     } catch (error) {
