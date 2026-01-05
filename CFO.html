@@ -776,8 +776,7 @@ async function getGeminiAnalysis(prompt) {
             document.getElementById('inventoryModal').style.display = 'none';
         };
 
-        // CFO.html - Starting around line 770
-window.sendMessage = async function() {
+        window.sendMessage = async function() {
     const input = document.getElementById('chatInput');
     const message = input.value.trim();
     
@@ -787,7 +786,6 @@ window.sendMessage = async function() {
     chatMessages.innerHTML += `<div class="message user-message">${message}</div>`;
     input.value = '';
     
-    // Add loading message
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'message cfo-message';
     loadingDiv.innerHTML = '<div class="spinner" style="width:20px;height:20px;"></div>';
@@ -795,17 +793,18 @@ window.sendMessage = async function() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
     
     try {
-        // Updated Vercel URL
+        // Ensure this URL matches your Vercel deployment exactly
         const VERCEL_URL = 'https://ai-inventory-pro-sigma.vercel.app/api/gemini';
 
         const response = await fetch(VERCEL_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
+                // The AI SDK expects an array called 'messages'
                 messages: [
                     { 
                         role: 'system', 
-                        content: `You are a helpful CFO assistant for ScaleVest. Current business data for context: ${JSON.stringify(firebaseData)}` 
+                        content: `You are a helpful CFO assistant. Context: ${JSON.stringify(firebaseData)}` 
                     },
                     { 
                         role: 'user', 
@@ -816,11 +815,7 @@ window.sendMessage = async function() {
         });
 
         if (response.ok) {
-            console.log("SCALEVEST CFO LIVE");
-            
-            // Remove loading spinner and prepare for streaming
             loadingDiv.innerHTML = '';
-            
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             
@@ -829,14 +824,15 @@ window.sendMessage = async function() {
                 if (done) break;
                 
                 const chunk = decoder.decode(value, { stream: true });
-                // Cleans the Vercel AI SDK stream prefix (e.g., 0:"text")
-                const cleanChunk = chunk.replace(/0:\"/g, '').replace(/\"/g, '').replace(/\\n/g, '\n');
+                // Cleans Vercel AI SDK prefixes (0:"text")
+                const cleanChunk = chunk.replace(/[0-9]:"/g, '').replace(/"/g, '').replace(/\\n/g, '\n');
                 loadingDiv.innerText += cleanChunk;
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
         } else {
-            console.error("Connection failed:", response.statusText);
-            loadingDiv.innerText = "CFO is currently offline. Please try again.";
+            const errorData = await response.json();
+            console.error("Server Error:", errorData);
+            loadingDiv.innerText = "CFO is currently offline (400 Bad Request).";
         }
     } catch (error) {
         console.error("Network Error:", error);
