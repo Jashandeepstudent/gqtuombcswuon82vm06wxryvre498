@@ -1,4 +1,6 @@
 {
+  "name": "scalevest-backend",
+  "version": "1.0.0",
   "type": "module",
   "dependencies": {
     "@ai-sdk/google": "^1.0.0",
