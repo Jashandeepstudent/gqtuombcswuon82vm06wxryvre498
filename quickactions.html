@@ -585,7 +585,7 @@ async function loadSyncOperations(userId) {
     const dbRef = ref(getDatabase());
     
     try {
-        const userSnapshot = await get(child(dbRef, userId));
+        const userSnapshot = await get(child(dbRef, `BusinessOwners/${userId}`));
         
         if (!userSnapshot.exists()) {
             document.getElementById('pending-operations-list').innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">No data found</div>';
