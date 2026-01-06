@@ -132,8 +132,8 @@ const action = urlParams.get('action');
 
 // Global user data storage
 let userData = {
-    Businesses: null,
-    BusinessOwners: null
+    businesses: null,
+    businessOwners: null
 };
 
 auth.onAuthStateChanged(async (user) => {
@@ -656,11 +656,10 @@ async function loadSyncOperations(userId) {
                 (daysUntil < 0 ? '#f87171' : daysUntil <= 3 ? '#fb923c' : '#4ade80') : 
                 '#94a3b8';
             
-            // Extra info for transactions
-            const extraInfo = task.type === 'transaction' && task.amount ? 
-                `<div style="font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px;">
-                    ${task.amount} ${task.transactionType ? `• ${task.transactionType.toUpperCase()}` : ''}
-                </div>` : '';
+            let extraInfo = '';
+            if (task.type === 'transaction' && task.amount) {
+                extraInfo = `<div style="font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px;">${task.amount}${task.transactionType ? ' • ' + task.transactionType.toUpperCase() : ''}</div>`;
+            }
             
             return `
                 <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border-left: 4px solid ${typeColors[task.type]}; position: relative; margin-bottom: 15px;">
