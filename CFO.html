@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScaleVest Dashboard</title>
+    <title>ScaleVeEEEst Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -2003,6 +2003,268 @@ function closeOrderReceipt() {
     selectedOrderProducts = [];
     document.getElementById('quantity-section').style.display = 'none';
 }
+
+// ============ SYNC OPERATIONS FUNCTIONS ============
+async function openSyncOperations() {
+    const popup = document.getElementById('sync-operations-popup');
+    const listEl = document.getElementById('pending-operations-list');
+    
+    popup.style.display = 'block';
+    listEl.innerHTML = '<div style="text-align: center; padding: 40px;">Loading pending operations...</div>';
+    
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    const dbRef = ref(getDatabase());
+    
+    try {
+        const businessItemsSnapshot = await get(child(dbRef, `BusinessOwners/${user.uid}/businessItems`));
+        
+        if (!businessItemsSnapshot.exists()) {
+            listEl.innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">No business items found</div>';
+            return;
+        }
+        
+        const businessItems = businessItemsSnapshot.val();
+        const pendingTasks = [];
+        
+        if (businessItems.notes) {
+            for (const [noteId, noteData] of Object.entries(businessItems.notes)) {
+                if (noteData.completed === false) {
+                    pendingTasks.push({
+                        type: 'note',
+                        id: noteId,
+                        title: noteData.title || 'Untitled Note',
+                        deadline: noteData.lastDate || businessItems.meta?.noteslastdate || 'No deadline',
+                        completed: false
+                    });
+                }
+            }
+        }
+        
+        if (businessItems.pendingorder) {
+            for (const [orderId, orderData] of Object.entries(businessItems.pendingorder)) {
+                if (orderData.completed === false) {
+                    pendingTasks.push({
+                        type: 'order',
+                        id: orderId,
+                        title: orderData.category || 'Pending Order',
+                        deadline: orderData.lastDate || businessItems.meta?.pendingorderslastdate || 'No deadline',
+                        completed: false
+                    });
+                }
+            }
+        }
+        
+        if (businessItems.transactions) {
+            for (const [transId, transData] of Object.entries(businessItems.transactions)) {
+                if (transData.completed === false) {
+                    pendingTasks.push({
+                        type: 'transaction',
+                        id: transId,
+                        title: transData.name || 'Transaction',
+                        deadline: transData.lastDate || businessItems.meta?.translastdate || 'No deadline',
+                        completed: false
+                    });
+                }
+            }
+        }
+        
+        if (businessItems.teamandstaff) {
+            for (const [staffId, staffData] of Object.entries(businessItems.teamandstaff)) {
+                if (staffData.jobs) {
+                    for (const [jobId, jobData] of Object.entries(staffData.jobs)) {
+                        if (jobData.completed === false) {
+                            pendingTasks.push({
+                                type: 'job',
+                                id: jobId,
+                                title: jobData.desc || 'Job Task',
+                                deadline: jobData.lastDate || businessItems.meta?.teamlastdate || 'No deadline',
+                                completed: false
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (pendingTasks.length === 0) {
+            listEl.innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">All tasks completed ✓</div>';
+            document.getElementById('prioritize-btn').style.display = 'none';
+            return;
+        }
+        
+        pendingTasks.sort((a, b) => {
+            if (a.deadline === 'No deadline') return 1;
+            if (b.deadline === 'No deadline') return -1;
+            return new Date(a.deadline) - new Date(b.deadline);
+        });
+        
+        const typeIcons = {
+            note: '📝',
+            order: '📦',
+            transaction: '💰',
+            job: '👷'
+        };
+        
+        const typeColors = {
+            note: '#3b82f6',
+            order: '#fb923c',
+            transaction: '#4ade80',
+            job: '#a855f7'
+        };
+        
+        listEl.innerHTML = pendingTasks.map((task, index) => {
+            const daysUntil = task.deadline !== 'No deadline' ? 
+                Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+            
+            const urgency = daysUntil !== null ? 
+                (daysUntil < 0 ? 'OVERDUE' : daysUntil === 0 ? 'TODAY' : daysUntil <= 3 ? 'URGENT' : `${daysUntil}d`) : 
+                'No deadline';
+            
+            const urgencyColor = daysUntil !== null ? 
+                (daysUntil < 0 ? '#f87171' : daysUntil <= 3 ? '#fb923c' : '#4ade80') : 
+                '#94a3b8';
+            
+            return `
+                <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border-left: 4px solid ${typeColors[task.type]}; position: relative;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; gap: 15px;">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <span style="font-size: 24px;">${typeIcons[task.type]}</span>
+                                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: ${typeColors[task.type]}; font-weight: 600;">${task.type}</span>
+                            </div>
+                            <div style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">${task.title}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.6);">
+                                Deadline: ${task.deadline}
+                            </div>
+                        </div>
+                        <div style="background: ${urgencyColor}20; color: ${urgencyColor}; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; white-space: nowrap;">
+                            ${urgency}
+                        </div>
+                    </div>
+                    <div style="position: absolute; top: 15px; right: 15px; font-size: 32px; font-weight: 700; color: rgba(255,255,255,0.05);">#${index + 1}</div>
+                </div>
+            `;
+        }).join('');
+        
+        document.getElementById('prioritize-btn').style.display = 'block';
+        window.pendingTasksData = pendingTasks;
+        
+    } catch (error) {
+        console.error("Error loading pending operations:", error);
+        listEl.innerHTML = '<div style="text-align: center; padding: 40px; color: #f87171;">Error loading operations</div>';
+    }
+}
+
+function prioritizeTasks() {
+    if (!window.pendingTasksData || window.pendingTasksData.length === 0) return;
+    
+    const tasks = [...window.pendingTasksData];
+    
+    tasks.forEach(task => {
+        let score = 0;
+        
+        if (task.deadline !== 'No deadline') {
+            const daysUntil = Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24));
+            if (daysUntil < 0) score += 100;
+            else if (daysUntil === 0) score += 90;
+            else if (daysUntil <= 3) score += 70;
+            else if (daysUntil <= 7) score += 50;
+            else score += 30;
+        } else {
+            score += 10;
+        }
+        
+        if (task.type === 'transaction') score += 40;
+        else if (task.type === 'job') score += 35;
+        else if (task.type === 'order') score += 30;
+        else if (task.type === 'note') score += 20;
+        
+        task.priorityScore = score;
+    });
+    
+    tasks.sort((a, b) => b.priorityScore - a.priorityScore);
+    
+    const resultsEl = document.getElementById('prioritized-results');
+    resultsEl.style.display = 'block';
+    
+    const typeIcons = {
+        note: '📝',
+        order: '📦',
+        transaction: '💰',
+        job: '👷'
+    };
+    
+    const typeColors = {
+        note: '#3b82f6',
+        order: '#fb923c',
+        transaction: '#4ade80',
+        job: '#a855f7'
+    };
+    
+    resultsEl.innerHTML = `
+        <div style="background: rgba(74, 222, 128, 0.1); border: 2px solid #4ade80; border-radius: 16px; padding: 25px; margin-bottom: 20px;">
+            <h3 style="color: #4ade80; margin-bottom: 15px;">🎯 AI-Prioritized Task List</h3>
+            <p style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 20px;">Based on urgency, deadlines, and business impact</p>
+            
+            ${tasks.map((task, index) => {
+                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                const daysUntil = task.deadline !== 'No deadline' ? 
+                    Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+                
+                return `
+                    <div style="background: rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; margin-bottom: 12px; border-left: 4px solid ${typeColors[task.type]};">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px;">
+                            <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                                <span style="font-size: 24px;">${medal}</span>
+                                <div>
+                                    <div style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">${task.title}</div>
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.6);">
+                                        ${typeIcons[task.type]} ${task.type.toUpperCase()} • ${task.deadline}
+                                        ${daysUntil !== null && daysUntil < 0 ? ' • <span style="color: #f87171; font-weight: 600;">OVERDUE</span>' : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 6px 14px; background: rgba(74, 222, 128, 0.2); border-radius: 8px; font-size: 11px; font-weight: 700; color: #4ade80;">
+                                Score: ${task.priorityScore}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+        
+<div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 16px; padding: 20px; margin-top: 10px;">
+            <h4 style="color: #3b82f6; margin-bottom: 10px;">💡 Prioritization Logic</h4>
+            <div style="font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.6;">
+                <strong>Scoring System:</strong><br>
+                • Urgency: Overdue (+100), Today (+90), 1-3 days (+70)<br>
+                • Type Weight: Transaction (+40), Job (+35), Order (+30), Note (+20)<br>
+                <br>
+                Tasks are ranked by combined score to maximize business impact.
+            </div>
+        </div>
+    `;
+}
+
+function closeSyncOperations() {
+    document.getElementById('sync-operations-popup').style.display = 'none';
+    document.getElementById('prioritized-results').style.display = 'none';
+}
+
+// Make functions globally available
+window.openFlashSale = openFlashSale;
+window.toggleFlashProduct = toggleFlashProduct;
+window.applyFlashSale = applyFlashSale;
+window.closeFlashSale = closeFlashSale;
+window.openOrderReceipt = openOrderReceipt;
+window.toggleOrderProduct = toggleOrderProduct;
+window.generateOrderPDF = generateOrderPDF;
+window.closeOrderReceipt = closeOrderReceipt;
+window.openSyncOperations = openSyncOperations;
+window.prioritizeTasks = prioritizeTasks;
+window.closeSyncOperations = closeSyncOperations;
 
 
 
