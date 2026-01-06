@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScaleVeEEst Dashboard</title>
+    <title>ScaleVest Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -2534,43 +2534,40 @@ window.closeSyncOperations = closeSyncOperations;
 document.addEventListener("DOMContentLoaded", () => {
     const termsCheck = document.getElementById("terms-check");
     const startBtn = document.getElementById("start-cfo-btn");
-    const onboardingOverlay = document.getElementById("onboarding-container"); // Change this to your actual popup ID
-
-    // Toggle button state based on checkbox
+    
+    // Existing checkbox logic
     termsCheck.addEventListener("change", () => {
         if (termsCheck.checked) {
             startBtn.style.opacity = "1";
             startBtn.style.cursor = "pointer";
             startBtn.disabled = false;
-            startBtn.classList.add("active");
         } else {
             startBtn.style.opacity = "0.5";
             startBtn.style.cursor = "not-allowed";
             startBtn.disabled = true;
-            startBtn.classList.remove("active");
         }
     });
 
-    // START APP LOGIC
-    startBtn.addEventListener("click", () => {
-        if (!startBtn.disabled) {
-            console.log("Starting App...");
-            
-            // 1. Hide the popup
-            if (onboardingOverlay) {
-                onboardingOverlay.style.display = "none";
-            }
-
-            // 2. Fetch User Data (Assuming you are logged in)
-            const user = auth.currentUser;
-            if (user) {
-                fetchAnalytics(user.uid);
-                fetchRevenuePulse(user.uid);
-            }
-        }
-    });
+    // Attach Quick Action button handlers
+    const orderBtn = document.querySelector('.action-btn[onclick*="openOrderReceipt"]');
+    const flashBtn = document.querySelector('.action-btn[onclick*="openFlashSale"]');
+    const syncBtn = document.querySelector('.action-btn[onclick*="openSyncOperations"]');
+    
+    if (orderBtn) {
+        orderBtn.removeAttribute('onclick');
+        orderBtn.addEventListener('click', () => window.openOrderReceipt());
+    }
+    
+    if (flashBtn) {
+        flashBtn.removeAttribute('onclick');
+        flashBtn.addEventListener('click', () => window.openFlashSale());
+    }
+    
+    if (syncBtn) {
+        syncBtn.removeAttribute('onclick');
+        syncBtn.addEventListener('click', () => window.openSyncOperations());
+    }
 });
-
 </script>
 <!-- Product Analysis Page -->
 <div id="product-analysis-page" style="display: none; position: fixed; inset: 0; background: #0a0e27; z-index: 10000; overflow-y: auto; padding: 30px;">
