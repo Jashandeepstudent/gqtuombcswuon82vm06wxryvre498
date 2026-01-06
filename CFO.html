@@ -1455,34 +1455,61 @@ function generateExecutiveSummary(data) {
         if (data.profitMargin >= 20) {
             summary += `This is an excellent margin indicating strong pricing power and cost control.`;
         } else if (data.profitMargin >= 10) {
-summary += This is a healthy margin, though there may be room for optimization.;
-} else {
-summary += While profitable, the margin is thin. Consider reviewing pricing strategy or reducing costs.;
-}
-} else {
-summary += Your business is currently operating at a loss of <span style="color: #f87171; font-weight: 600;">$${Math.abs(data.netProfit).toLocaleString()}</span>. ;
-summary += Immediate action recommended: Review cost structure, optimize pricing, and focus on high-margin products.;
-}summary += `</p><p style="margin-bottom: 15px;"><strong>Revenue Trend:</strong> `;if (data.weeklyGrowth >= 10) {
-    summary += `Weekly revenue shows strong growth of <span style="color: #4ade80; font-weight: 600;">${data.weeklyGrowth}%</span>. Momentum is positive - maintain current strategies.`;
-} else if (data.weeklyGrowth > 0) {
-    summary += `Weekly revenue grew by <span style="color: #4ade80; font-weight: 600;">${data.weeklyGrowth}%</span>. Steady growth - consider scaling successful initiatives.`;
-} else if (data.weeklyGrowth < -10) {
-    summary += `Weekly revenue declined by <span style="color: #f87171; font-weight: 600;">${Math.abs(data.weeklyGrowth)}%</span>. Requires immediate attention and corrective action.`;
-} else {
-    summary += `Weekly revenue declined by <span style="color: #fb923c; font-weight: 600;">${Math.abs(data.weeklyGrowth)}%</span>. Monitor closely and adjust strategies as needed.`;
-}summary += `</p><p><strong>Strategic Recommendation:</strong> `;if (data.netProfit >= 0 && data.profitMargin >= 15) {
-    summary += `Your business is in a strong position. Focus on scaling operations, exploring new markets, and maintaining quality standards. Consider reinvesting profits into growth initiatives.`;
-} else if (data.netProfit >= 0) {
-    summary += `While profitable, margins could be improved. Analyze top-performing products, negotiate better supplier terms, and consider premium pricing for high-value offerings.`;
-} else {
-    summary += `Priority actions: (1) Identify and eliminate loss-making products, (2) Renegotiate supplier contracts, (3) Implement cost control measures, (4) Review and adjust pricing strategy. Weekly monitoring essential.`;
-}summary += `</p>`;summaryEl.innerHTML = summary;
+            // FIXED: Added backticks/quotes below
+            summary += `This is a healthy margin, though there may be room for optimization.`;
+        } else {
+            // FIXED: Added backticks/quotes below
+            summary += `While profitable, the margin is thin. Consider reviewing pricing strategy or reducing costs.`;
+        }
+    } else {
+        summary += `Your business is currently operating at a loss of <span style="color: #f87171; font-weight: 600;">$${Math.abs(data.netProfit).toLocaleString()}</span>. `;
+        summary += `Immediate action recommended: Review cost structure, optimize pricing, and focus on high-margin products.`;
+    }
+
+    summary += `</p><p style="margin-bottom: 15px;"><strong>Revenue Trend:</strong> `;
+
+    if (data.weeklyGrowth >= 10) {
+        summary += `Weekly revenue shows strong growth of <span style="color: #4ade80; font-weight: 600;">${data.weeklyGrowth}%</span>. Momentum is positive - maintain current strategies.`;
+    } else if (data.weeklyGrowth > 0) {
+        summary += `Weekly revenue grew by <span style="color: #4ade80; font-weight: 600;">${data.weeklyGrowth}%</span>. Steady growth - consider scaling successful initiatives.`;
+    } else if (data.weeklyGrowth < -10) {
+        summary += `Weekly revenue declined by <span style="color: #f87171; font-weight: 600;">${Math.abs(data.weeklyGrowth)}%</span>. Requires immediate attention and corrective action.`;
+    } else {
+        summary += `Weekly revenue declined by <span style="color: #fb923c; font-weight: 600;">${Math.abs(data.weeklyGrowth)}%</span>. Monitor closely and adjust strategies as needed.`;
+    }
+
+    summary += `</p><p><strong>Strategic Recommendation:</strong> `;
+
+    if (data.netProfit >= 0 && data.profitMargin >= 15) {
+        summary += `Your business is in a strong position. Focus on scaling operations, exploring new markets, and maintaining quality standards. Consider reinvesting profits into growth initiatives.`;
+    } else if (data.netProfit >= 0) {
+        summary += `While profitable, margins could be improved. Analyze top-performing products, negotiate better supplier terms, and consider premium pricing for high-value offerings.`;
+    } else {
+        summary += `Priority actions: (1) Identify and eliminate loss-making products, (2) Renegotiate supplier contracts, (3) Implement cost control measures, (4) Review and adjust pricing strategy. Weekly monitoring essential.`;
+    }
+
+    summary += `</p>`;
+    summaryEl.innerHTML = summary;
 }function generateFinancePDF(reportName) {
-const data = window.financeData;
-if (!data) {
-alert('No financial data available. Please wait for data to load.');
-return;
-}// Create PDF content
+    const data = window.financeData;
+    if (!data) {
+        alert('No financial data available. Please wait for data to load.');
+        return;
+    }
+
+    // Target the specific element you want to turn into a PDF
+    const element = document.body; // or document.getElementById('dashboard-container')
+
+    const opt = {
+        margin:       0.5,
+        filename:     `${reportName || 'Finance_Report'}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, backgroundColor: '#0a0e27' }, // Matches your CSS background
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save();
+}
 const pdfContent = document.createElement('div');
 pdfContent.style.cssText = 'background: white; color: #1a1a1a; padding: 60px; font-family: Arial, sans-serif;';pdfContent.innerHTML = `
     <div style="text-align: center; margin-bottom: 50px; border-bottom: 3px solid #3b82f6; padding-bottom: 30px;">
