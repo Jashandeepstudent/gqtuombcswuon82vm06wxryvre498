@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Actions - ScaleVest</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #0a0e27;
+            color: #fff;
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 12px 24px;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 28px;
+            backdrop-filter: blur(30px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .launch-btn {
+            background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+            border: none;
+            padding: 16px 32px;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(251, 146, 60, 0.3);
+        }
+
+        .launch-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(251, 146, 60, 0.4);
+        }
+
+        .product-select-card {
+            background: rgba(255,255,255,0.03);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .product-select-card:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .select-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getDatabase, ref, get, child, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+  authDomain: "scalevest-163a0.firebaseapp.com",
+  databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+  projectId: "scalevest-163a0",
+  storageBucket: "scalevest-163a0.firebasestorage.app",
+  messagingSenderId: "938358950124",
+  appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
+  measurementId: "G-QD3TWBZHR0"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+const urlParams = new URLSearchParams(window.location.search);
+const action = urlParams.get('action');
+
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        if (action === 'flashsale') {
+            loadFlashSale(user.uid);
+        } else if (action === 'order') {
+            loadOrderReceipt(user.uid);
+        } else if (action === 'sync') {
+            loadSyncOperations(user.uid);
+        }
+    } else {
+        window.location.href = "login.html";
+    }
+});
+
+// ============ FLASH SALE ============
+let selectedFlashProducts = [];
+
+async function loadFlashSale(userId) {
+    document.getElementById('content').innerHTML = `
+        <h2 style="font-size: 28px; color: #fb923c; margin-bottom: 30px;">⚡ Flash Sale Manager</h2>
+        <div id="expiring-products-list"><div style="text-align: center; padding: 40px;">Loading expiring products...</div></div>
+        <div id="discount-section" style="display: none; background: rgba(255,255,255,0.03); padding: 25px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); margin-top: 30px;">
+            <h3 style="margin-bottom: 15px;">Set Discount</h3>
+            <div id="selected-products-summary" style="margin-bottom: 20px; font-size: 14px; color: rgba(255,255,255,0.7);"></div>
+            <input type="number" id="discount-percent" placeholder="Discount %" min="1" max="99" style="width: 100%; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; margin-bottom: 10px; outline: none;">
+            <div id="discount-suggestion" style="font-size: 13px; color: #3b82f6; margin-bottom: 20px;"></div>
+            <button onclick="applyFlashSale()" class="launch-btn">Apply Flash Sale</button>
+        </div>
+    `;
+
+    const dbRef = ref(getDatabase());
+    try {
+        const inventorySnapshot = await get(child(dbRef, `Businesses/${userId}/inventory`));
+        const pricesSnapshot = await get(child(dbRef, `Businesses/${userId}/prices`));
+        
+        if (!inventorySnapshot.exists()) {
+            document.getElementById('expiring-products-list').innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">No products found</div>';
+            return;
+        }
+        
+        const inventory = inventorySnapshot.val();
+        const prices = pricesSnapshot.exists() ? pricesSnapshot.val() : {};
+        const now = new Date();
+        const expiringProducts = [];
+        
+        for (const [productId, productData] of Object.entries(inventory)) {
+            if (productData.expiryDate) {
+                const expiryDate = new Date(productData.expiryDate);
+                const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+                
+                if (daysUntilExpiry <= 7 && daysUntilExpiry >= 0) {
+                    const sellPrice = prices[productId]?.sellPrice ? parseFloat(prices[productId].sellPrice) : 0;
+                    expiringProducts.push({
+                        id: productId,
+                        name: productData.name || "Unknown Product",
+                        daysUntilExpiry,
+                        quantity: productData.quantity || 0,
+                        unit: productData.unit || "units",
+                        sellPrice
+                    });
+                }
+            }
+        }
+        
+        expiringProducts.sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
+        
+        if (expiringProducts.length === 0) {
+            document.getElementById('expiring-products-list').innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">No products expiring within 7 days ✓</div>';
+            return;
+        }
+        
+        document.getElementById('expiring-products-list').innerHTML = expiringProducts.map(product => {
+            const urgencyColor = product.daysUntilExpiry === 0 ? '#f87171' : 
+                                product.daysUntilExpiry <= 2 ? '#fb923c' : '#3b82f6';
+            const timeText = product.daysUntilExpiry === 0 ? 'TODAY!' : `${product.daysUntilExpiry} days`;
+            
+            return `
+                <div class="product-select-card" onclick="toggleFlashProduct('${product.id}')">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">${product.name}</div>
+                            <div style="display: flex; gap: 15px; font-size: 13px; color: rgba(255,255,255,0.7);">
+                                <span>Stock: ${product.quantity} ${product.unit}</span>
+                                <span>Price: $${product.sellPrice}</span>
+                                <span style="color: ${urgencyColor}; font-weight: 600;">Expires in ${timeText}</span>
+                            </div>
+                        </div>
+                        <div class="select-checkbox" id="checkbox-${product.id}"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        window.expiringProductsData = expiringProducts;
+        
+    } catch (error) {
+        console.error("Error loading expiring products:", error);
+        document.getElementById('expiring-products-list').innerHTML = '<div style="text-align: center; padding: 40px; color: #f87171;">Error loading products</div>';
+    }
+}
+
+window.toggleFlashProduct = function(productId) {
+    const checkbox = document.getElementById(`checkbox-${productId}`);
+    const card = checkbox.closest('.product-select-card');
+    
+    if (selectedFlashProducts.includes(productId)) {
+        selectedFlashProducts = selectedFlashProducts.filter(id => id !== productId);
+        checkbox.innerHTML = '';
+        card.style.borderColor = 'rgba(255,255,255,0.1)';
+        card.style.background = 'rgba(255,255,255,0.03)';
+    } else {
+        selectedFlashProducts.push(productId);
+        checkbox.innerHTML = '✓';
+        card.style.borderColor = '#fb923c';
+        card.style.background = 'rgba(251, 146, 60, 0.1)';
+    }
+    
+    if (selectedFlashProducts.length > 0) {
+        showDiscountSection();
+    } else {
+        document.getElementById('discount-section').style.display = 'none';
+    }
+}
+
+function showDiscountSection() {
+    const section = document.getElementById('discount-section');
+    const summary = document.getElementById('selected-products-summary');
+    
+    section.style.display = 'block';
+    
+    const selectedProducts = window.expiringProductsData.filter(p => selectedFlashProducts.includes(p.id));
+    summary.innerHTML = `Selected ${selectedProducts.length} product(s): ` + selectedProducts.map(p => p.name).join(', ');
+    
+    const mostUrgent = selectedProducts.reduce((min, p) => p.daysUntilExpiry < min.daysUntilExpiry ? p : min);
+    
+    let suggestedDiscount = 10;
+    if (mostUrgent.daysUntilExpiry === 0) suggestedDiscount = 50;
+    else if (mostUrgent.daysUntilExpiry === 1) suggestedDiscount = 40;
+    else if (mostUrgent.daysUntilExpiry <= 2) suggestedDiscount = 30;
+    else if (mostUrgent.daysUntilExpiry <= 4) suggestedDiscount = 20;
+    
+    document.getElementById('discount-suggestion').innerHTML = `💡 Suggested discount based on urgency: <strong>${suggestedDiscount}%</strong>`;
+}
+
+window.applyFlashSale = async function() {
+    const discountPercent = parseFloat(document.getElementById('discount-percent').value);
+    
+    if (!discountPercent || discountPercent <= 0 || discountPercent > 99) {
+        alert('Please enter a valid discount percentage (1-99%)');
+        return;
+    }
+    
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    const dbRef = ref(getDatabase());
+    
+    try {
+        for (const productId of selectedFlashProducts) {
+            const priceSnapshot = await get(child(dbRef, `Businesses/${user.uid}/prices/${productId}`));
+            
+            if (priceSnapshot.exists()) {
+                const priceData = priceSnapshot.val();
+                const originalPrice = parseFloat(priceData.sellPrice);
+                const discountedPrice = originalPrice * (1 - discountPercent / 100);
+                
+                await set(ref(db, `Businesses/${user.uid}/prices/${productId}/sellPrice`), discountedPrice.toFixed(2));
+            }
+        }
+        
+        alert(`✓ Flash sale applied! ${discountPercent}% discount on ${selectedFlashProducts.length} product(s)`);
+        window.location.href = 'CFO.html';
+        
+    } catch (error) {
+        console.error("Error applying flash sale:", error);
+        alert('Error applying discount. Please try again.');
+    }
+}
+
+// ============ ORDER RECEIPT ============
+let selectedOrderProducts = [];
+
+async function loadOrderReceipt(userId) {
+    document.getElementById('content').innerHTML = `
+        <h2 style="font-size: 28px; color: #3b82f6; margin-bottom: 30px;">📦 Order Receipt</h2>
+        <div id="low-stock-list"><div style="text-align: center; padding: 40px;">Loading low stock products...</div></div>
+        <div id="quantity-section" style="display: none; background: rgba(255,255,255,0.03); padding: 25px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); margin-top: 30px;">
+            <h3 style="margin-bottom: 15px;">Set Order Quantities</h3>
+            <div id="order-products-list" style="margin-bottom: 20px;"></div>
+            <button onclick="generateOrderPDF()" class="launch-btn">Generate Order PDF</button>
+        </div>
+    `;
+
+    const dbRef = ref(getDatabase());
+    
+    try {
+        const inventorySnapshot = await get(child(dbRef, `Businesses/${userId}/inventory`));
+        
+        if (!inventorySnapshot.exists()) {
+            document.getElementById('low-stock-list').innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">No products found</div>';
+            return;
+        }
+        
+        const inventory = inventorySnapshot.val();
+        const lowStockProducts = [];
+        
+        for (const [productId, productData] of Object.entries(inventory)) {
+            const stock = parseInt(productData.quantity) || 0;
+            
+            if (stock <= 15) {
+                lowStockProducts.push({
+                    id: productId,
+                    name: productData.name || "Unknown Product",
+                    currentStock: stock,
+                    unit: productData.unit || "units",
+                    status: stock === 0 ? 'out' : stock <= 5 ? 'critical' : 'low'
+                });
+            }
+        }
+        
+        lowStockProducts.sort((a, b) => a.currentStock - b.currentStock);
+        
+        if (lowStockProducts.length === 0) {
+            document.getElementById('low-stock-list').innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">All products have sufficient stock ✓</div>';
+            return;
+        }
+        
+        document.getElementById('low-stock-list').innerHTML = lowStockProducts.map(product => {
+            const statusColor = product.status === 'out' ? '#f87171' : 
+                               product.status === 'critical' ? '#fb923c' : '#3b82f6';
+            const statusText = product.status === 'out' ? 'OUT OF STOCK' : 
+                              product.status === 'critical' ? 'CRITICAL' : 'LOW STOCK';
+            
+            return `
+                <div class="product-select-card" onclick="toggleOrderProduct('${product.id}')">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">${product.name}</div>
+                            <div style="display: flex; gap: 15px; font-size: 13px; color: rgba(255,255,255,0.7);">
+                                <span>Current: ${product.currentStock} ${product.unit}</span>
+                                <span style="color: ${statusColor}; font-weight: 600;">${statusText}</span>
+                            </div>
+                        </div>
+                        <div class="select-checkbox" id="order-checkbox-${product.id}"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        window.lowStockProductsData = lowStockProducts;
+        
+    } catch (error) {
+        console.error("Error loading low stock products:", error);
+        document.getElementById('low-stock-list').innerHTML = '<div style="text-align: center; padding: 40px; color: #f87171;">Error loading products</div>';
+    }
+}
+
+window.toggleOrderProduct = function(productId) {
+    const checkbox = document.getElementById(`order-checkbox-${productId}`);
+    const card = checkbox.closest('.product-select-card');
+    
+    if (selectedOrderProducts.includes(productId)) {
+        selectedOrderProducts = selectedOrderProducts.filter(id => id !== productId);
+        checkbox.innerHTML = '';
+        card.style.borderColor = 'rgba(255,255,255,0.1)';
+        card.style.background = 'rgba(255,255,255,0.03)';
+    } else {
+        selectedOrderProducts.push(productId);
+        checkbox.innerHTML = '✓';
+        card.style.borderColor = '#3b82f6';
+        card.style.background = 'rgba(59, 130, 246, 0.1)';
+    }
+    
+    if (selectedOrderProducts.length > 0) {
+        showQuantitySection();
+    } else {
+        document.getElementById('quantity-section').style.display = 'none';
+    }
+}
+
+function showQuantitySection() {
+    const section = document.getElementById('quantity-section');
+    const listEl = document.getElementById('order-products-list');
+    
+    section.style.display = 'block';
+    
+    const selectedProducts = window.lowStockProductsData.filter(p => selectedOrderProducts.includes(p.id));
+    
+    listEl.innerHTML = selectedProducts.map(product => `
+        <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px;">
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; margin-bottom: 5px;">${product.name}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Current: ${product.currentStock} ${product.unit}</div>
+                </div>
+                <input type="number" id="qty-${product.id}" placeholder="Order quantity" min="1" style="width: 150px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; outline: none;">
+            </div>
+        </div>
+    `).join('');
+}
+
+window.generateOrderPDF = function() {
+    const orderData = [];
+    
+    for (const productId of selectedOrderProducts) {
+        const qtyInput = document.getElementById(`qty-${productId}`);
+        const qty = parseInt(qtyInput.value);
+        
+        if (!qty || qty <= 0) {
+            alert(`Please enter a valid quantity for all selected products`);
+            return;
+        }
+        
+        const product = window.lowStockProductsData.find(p => p.id === productId);
+        orderData.push({
+            name: product.name,
+            currentStock: product.currentStock,
+            unit: product.unit,
+            orderQty: qty
+        });
+    }
+    
+    const orderId = `ORD-${Date.now()}`;
+    const date = new Date().toLocaleDateString();
+    
+    let pdfHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 40px; background: #fff; color: #000; }
+                .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #3b82f6; padding-bottom: 20px; }
+                .header h1 { color: #3b82f6; margin: 0; font-size: 36px; }
+                .order-id { font-size: 18px; color: #666; margin-top: 10px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+                th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
+                th { background: #3b82f6; color: white; font-weight: 600; }
+                tr:hover { background: #f5f5f5; }
+                .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>📦 ORDER RECEIPT</h1>
+                <div class="order-id">Order ID: ${orderId}</div>
+                <div class="order-id">Date: ${date}</div>
+            </div>
+            
+            <h2 style="color: #3b82f6;">Product Order List</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Current Stock</th>
+                        <th>Order Quantity</th>
+                        <th>Unit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${orderData.map(item => `
+                        <tr>
+                            <td><strong>${item.name}</strong></td>
+                            <td>${item.currentStock}</td>
+                            <td style="color: #3b82f6; font-weight: 600;">${item.orderQty}</td>
+                            <td>${item.unit}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            
+            <div class="footer">
+                <p>Generated by ScaleVest CFO | ${new Date().toLocaleString()}</p>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    const blob = new Blob([pdfHTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Order_Receipt_${orderId}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    alert('✓ Order receipt downloaded!');
+    window.location.href = 'CFO.html';
+}
+
+// ============ SYNC OPERATIONS ============
+async function loadSyncOperations(userId) {
+    document.getElementById('content').innerHTML = `
+        <h2 style="font-size: 28px; color: #4ade80; margin-bottom: 30px;">🔄 Operations Sync</h2>
+        <div id="pending-operations-list"><div style="text-align: center; padding: 40px;">Loading pending operations...</div></div>
+        <button id="prioritize-btn" onclick="prioritizeTasks()" class="launch-btn" style="margin-top: 30px; display: none;">Start Prioritization</button>
+        <div id="prioritized-results" style="display: none; margin-top: 30px;"></div>
+    `;
+
+    const dbRef = ref(getDatabase());
+    
+    try {
+        const businessItemsSnapshot = await get(child(dbRef, `BusinessOwners/${userId}/businessItems`));
+        
+        if (!businessItemsSnapshot.exists()) {
+            document.getElementById('pending-operations-list').innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">No business items found</div>';
+            return;
+        }
+        
+        const businessItems = businessItemsSnapshot.val();
+        const pendingTasks = [];
+        
+        if (businessItems.notes) {
+            for (const [noteId, noteData] of Object.entries(businessItems.notes)) {
+                if (noteData.completed === false) {
+                    pendingTasks.push({
+                        type: 'note',
+                        id: noteId,
+                        title: noteData.title || 'Untitled Note',
+                        deadline: noteData.lastDate || businessItems.meta?.noteslastdate || 'No deadline',
+                        completed: false
+                    });
+                }
+            }
+        }
+        
+        if (businessItems.pendingorder) {
+            for (const [orderId, orderData] of Object.entries(businessItems.pendingorder)) {
+                if (orderData.completed === false) {
+                    pendingTasks.push({
+                        type: 'order',
+                        id: orderId,
+                        title: orderData.category || 'Pending Order',
+                        deadline: orderData.lastDate || businessItems.meta?.pendingorderslastdate || 'No deadline',
+                        completed: false
+                    });
+                }
+            }
+        }
+        
+        if (businessItems.transactions) {
+            for (const [transId, transData] of Object.entries(businessItems.transactions)) {
+                if (transData.completed === false) {
+                    pendingTasks.push({
+                        type: 'transaction',
+                        id: transId,
+                        title: transData.name || 'Transaction',
+                        deadline: transData.lastDate || businessItems.meta?.translastdate || 'No deadline',
+                        completed: false
+                    });
+                }
+            }
+        }
+        
+        if (businessItems.teamandstaff) {
+            for (const [staffId, staffData] of Object.entries(businessItems.teamandstaff)) {
+                if (staffData.jobs) {
+                    for (const [jobId, jobData] of Object.entries(staffData.jobs)) {
+                        if (jobData.completed === false) {
+                            pendingTasks.push({
+                                type: 'job',
+                                id: jobId,
+                                title: jobData.desc || 'Job Task',
+                                deadline: jobData.lastDate || businessItems.meta?.teamlastdate || 'No deadline',
+                                completed: false
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (pendingTasks.length === 0) {
+            document.getElementById('pending-operations-list').innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">All tasks completed ✓</div>';
+            document.getElementById('prioritize-btn').style.display = 'none';
+            return;
+        }
+        
+        pendingTasks.sort((a, b) => {
+            if (a.deadline === 'No deadline') return 1;
+            if (b.deadline === 'No deadline') return -1;
+            return new Date(a.deadline) - new Date(b.deadline);
+        });
+        
+        const typeIcons = {
+            note: '📝',
+            order: '📦',
+            transaction: '💰',
+            job: '👷'
+        };
+        
+        const typeColors = {
+            note: '#3b82f6',
+            order: '#fb923c',
+            transaction: '#4ade80',
+            job: '#a855f7'
+        };
+        
+        document.getElementById('pending-operations-list').innerHTML = pendingTasks.map((task, index) => {
+            const daysUntil = task.deadline !== 'No deadline' ? 
+                Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+            
+            const urgency = daysUntil !== null ? 
+                (daysUntil < 0 ? 'OVERDUE' : daysUntil === 0 ? 'TODAY' : daysUntil <= 3 ? 'URGENT' : `${daysUntil}d`) : 
+                'No deadline';
+            
+            const urgencyColor = daysUntil !== null ? 
+                (daysUntil < 0 ? '#f87171' : daysUntil <= 3 ? '#fb923c' : '#4ade80') : 
+                '#94a3b8';
+            
+            return `
+                <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border-left: 4px solid ${typeColors[task.type]}; position: relative; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; gap: 15px;">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <span style="font-size: 24px;">${typeIcons[task.type]}</span>
+                                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: ${typeColors[task.type]}; font-weight: 600;">${task.type}</span>
+                            </div>
+                            <div style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">${task.title}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.6);">
+                                Deadline: ${task.deadline}
+                            </div>
+                        </div>
+                        <div style="background: ${urgencyColor}20; color: ${urgencyColor}; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; white-space: nowrap;">
+                            ${urgency}
+                        </div>
+                    </div>
+                    <div style="position: absolute; top: 15px; right: 15px; font-size: 32px; font-weight: 700; color: rgba(255,255,255,0.05);">#${index + 1}</div>
+                </div>
+            `;
+        }).join('');
+        
+        document.getElementById('prioritize-btn').style.display = 'block';
+        window.pendingTasksData = pendingTasks;
+        
+    } catch (error) {
+        console.error("Error loading pending operations:", error);
+        document.getElementById('pending-operations-list').innerHTML = '<div style="text-align: center; padding: 40px; color: #f87171;">Error loading operations</div>';
+    }
+}
+
+window.prioritizeTasks = function() {
+    if (!window.pendingTasksData || window.pendingTasksData.length === 0) return;
+    
+    const tasks = [...window.pendingTasksData];
+    
+    tasks.forEach(task => {
+        let score = 0;
+        
+        if (task.deadline !== 'No deadline') {
+            const daysUntil = Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24));
+            if (daysUntil < 0) score += 100;
+            else if (daysUntil === 0) score += 90;
+            else if (daysUntil <= 3) score += 70;
+            else if (daysUntil <= 7) score += 50;
+            else score += 30;
+        } else {
+            score += 10;
+        }
+        
+        if (task.type === 'transaction') score += 40;
+        else if (task.type === 'job') score += 35;
+        else if (task.type === 'order') score += 30;
+        else if (task.type === 'note') score += 20;
+        
+        task.priorityScore = score;
+    });
+    
+    tasks.sort((a, b) => b.priorityScore - a.priorityScore);
+    
+    const resultsEl = document.getElementById('prioritized-results');
+    resultsEl.style.display = 'block';
+    
+    const typeIcons = {
+        note: '📝',
+        order: '📦',
+        transaction: '💰',
+        job: '👷'
+    };
+    
+    const typeColors = {
+        note: '#3b82f6',
+        order: '#fb923c',
+        transaction: '#4ade80',
+        job: '#a855f7'
+    };
+    
+    resultsEl.innerHTML = `
+        <div style="background: rgba(74, 222, 128, 0.1); border: 2px solid #4ade80; border-radius: 16px; padding: 25px; margin-bottom: 20px;">
+            <h3 style="color: #4ade80; margin-bottom: 15px;">🎯 AI-Prioritized Task List</h3>
+            <p style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 20px;">Based on urgency, deadlines, and business impact</p>
+            
+            ${tasks.map((task, index) => {
+                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                const daysUntil = task.deadline !== 'No deadline' ? 
+                    Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+                
+                return `
+                    <div style="background: rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; margin-bottom: 12px; border-left: 4px solid ${typeColors[task.type]};">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px;">
+                            <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                                <span style="font-size: 24px;">${medal}</span>
+                                <div>
+                                    <div style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">${task.title}</div>
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.6);">
+                                        ${typeIcons[task.type]} ${task.type.toUpperCase()} • ${task.deadline}
+                                        ${daysUntil !== null && daysUntil < 0 ? ' • <span style="color: #f87171; font-weight: 600;">OVERDUE</span>' : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 6px 14px; background: rgba(74, 222, 128, 0.2); border-radius: 8px; font-size: 11px; font-weight: 700; color: #4ade80;">
+                                Score: ${task.priorityScore}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+        
+        <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 16px; padding: 20px;">
+            <h4 style="color: #3b82f6; margin-bottom: 10px;">💡 Prioritization Logic</h4>
+            <div style="font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.6;">
+                <strong>Scoring System:</strong><br>
+                • Urgency: Overdue (+100), Today (+90), 1-3 days (+70)<br>
+                • Type Weight: Transaction (+40), Job (+35), Order (+30), Note (+20)<br>
+                <br>
+                Tasks are ranked by combined score to maximize business impact.
+            </div>
+        </div>
+    `;
+}
+
+</script>
+
+<div class="container">
+    <div class="header">
+        <a href="CFO.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+    
+    <div class="card" id="content">
+        <div style="text-align: center; padding: 60px;">
+            <div style="font-size: 48px; margin-bottom: 20px;">⚡</div>
+            <div style="font-size: 20px; color: rgba(255,255,255,0.7);">Loading...</div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
