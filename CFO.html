@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <title>ScaleVeest CFO</title>
+    <title>ScaleVest CFddO</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * {
@@ -905,48 +905,71 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeBtn = document.getElementById('close-trend');
     const content = document.getElementById('trend-list-content');
 
-    if(trendCard) {
-trendCard.onclick = async () => {
-    overlay.style.display = 'flex';
-    content.innerHTML = '<p style="text-align: center; padding: 20px;">Analyzing Global Market Trends...</p>';
-
-    try {
-        const response = await fetch('https://ai-inventory-pro-sigma.vercel.app/api/gemini', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                prompt: "List 3 currently trending edible products (Chocolates, Biscuits, Ice Cream) in a JSON array format." 
-            })
-        });
-
-        if (!response.ok) throw new Error(`Server error: ${response.status}`);
-
-        const data = await response.json();
+    // Reusable function to fetch and render trends
+    const loadTrends = async () => {
+        content.innerHTML = '<p style="text-align: center; padding: 20px;">Scanning January 2026 Viral Trends...</p>';
         
-        // FIX: Check if data is an array. If Gemini wrapped it in an object, try to find the array.
-        const products = Array.isArray(data) ? data : (data.trends || data.trending || [data]);
+        try {
+            const response = await fetch('https://ai-inventory-pro-sigma.vercel.app/api/gemini', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    prompt: "Analyze absolute latest viral food trends for Jan 2026 (e.g. Angel Hair Chocolate, Oatzempic, Ube Matcha). Return JSON array." 
+                })
+            });
 
-        content.innerHTML = products.map(item => `
-            <div class="trend-item" style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <strong style="font-size: 16px; color:#fff;">${item.item || item.name || "Unknown Product"}</strong>
-                    <div style="font-size: 12px; color: #00e5ff;">${item.reason || item.reply || 'High Market Velocity'}</div>
+            if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+            const data = await response.json();
+            
+            // FIX: Handle both direct arrays and wrapped objects
+            const products = Array.isArray(data) ? data : (data.trends || data.trending || [data]);
+
+            content.innerHTML = `
+                <div id="trend-items-list">
+                    ${products.map(item => {
+                        // FIX: Key Fallbacks to stop "Unknown Product"
+                        const name = item.name || item.item || "Viral Item";
+                        const growth = item.growth || "+25%";
+                        const reason = item.type || item.reason || "Shorts Velocity";
+                        
+                        return `
+                            <div class="trend-item" style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <strong style="font-size: 16px; color:#fff;">${name}</strong>
+                                    <div style="font-size: 12px; color: #00e5ff;">${reason}</div>
+                                </div>
+                                <div style="color: #4ade80; font-weight: 800; font-size: 18px;">${growth} ↑</div>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
-                <div style="color: #4ade80; font-weight: 800; font-size: 18px;">${item.growth || '+15%'} ↑</div>
-            </div>
-        `).join('');
+                <button id="refresh-trends-btn" style="width:100%; margin-top:20px; padding:12px; background:#6366f1; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; transition: 0.3s;">
+                    🔄 Refresh Market Data
+                </button>
+            `;
 
-    } catch (error) {
-        console.error("Trend Fetch Error:", error);
-        content.innerHTML = `<p style="color: #f87171; text-align: center; padding:20px;">Sync Error: ${error.message}</p>`;
-    }
-};
+            // Re-attach the refresh listener to the newly injected button
+            document.getElementById('refresh-trends-btn').onclick = loadTrends;
+
+        } catch (error) {
+            console.error("Trend Fetch Error:", error);
+            content.innerHTML = `
+                <p style="color: #f87171; text-align: center; padding:20px;">Sync Error: ${error.message}</p>
+                <button onclick="location.reload()" style="width:100%; padding:10px; background:#333; color:white; border:none; border-radius:5px;">Retry Connection</button>
+            `;
+        }
+    };
+
+    if(trendCard) {
+        trendCard.onclick = () => {
+            overlay.style.display = 'flex';
+            loadTrends();
+        };
     }
 
     if(closeBtn) {
-        closeBtn.onclick = () => {
-            overlay.style.display = 'none';
-        };
+        closeBtn.onclick = () => { overlay.style.display = 'none'; };
     }
 });
  async function runOnboarding(userId) {
@@ -2207,7 +2230,7 @@ async function askCFO(userInput) {
             <label for="terms-check">I have read and understood the notes</label>
         </div>
 
-        <button id="start-cfo-btn" class="launch-btn" style="opacity: 0.5; cursor: not-allowed;">START CFO</button>
+        <button id="start-cfo-btn" class="launch-btnv" style="opacity: 0.5; cursor: not-allowed;">START CFO</button>
     </div>
 </div>
     <div class="blur-orb orb1"></div>
