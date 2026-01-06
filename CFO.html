@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <title>ScaleVesDt CFO</title>
+    <title>ScaleVest CFO</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * {
@@ -1511,35 +1511,32 @@ function generateExecutiveSummary(data) {
         return;
     }
 
-    // 1. Target the elements
-    const dashboard = document.getElementById('dashboard-container');
-    const modal = document.getElementById('export-modal');
-    
-    // Hide modal and scroll to top to ensure clean capture
-    modal.style.display = 'none';
-    window.scrollTo(0,0);
+    // 1. Target the main dashboard container
+    const dashboardElement = document.getElementById('dashboard-container');
+    if (!dashboardElement) {
+        alert('Error: dashboard-container not found. Please add id="dashboard-container" to your main div.');
+        return;
+    }
 
-    // 2. Create a temporary container for the PDF
+    const modal = document.getElementById('export-modal');
+    modal.style.display = 'none'; // Hide modal from PDF
+
+    // 2. Create the Wrapper for all pages
     const pdfWrapper = document.createElement('div');
-    
-    // --- PAGE 1: CLONE OF LIVE DASHBOARD ---
-    const page1 = dashboard.cloneNode(true);
+    pdfWrapper.style.background = '#0a0e27'; // Maintain your dark theme
+
+    // --- PAGE 1: FULL COPY OF DASHBOARD ---
+    const page1 = dashboardElement.cloneNode(true);
     page1.style.padding = "20px";
-    page1.style.background = "#0a0e27"; // Match your original dark theme
+    page1.style.marginBottom = "50px";
     pdfWrapper.appendChild(page1);
 
-    // --- PAGE 2: PROFESSIONAL CERTIFICATE ---
-    const page2 = document.createElement('div');
-    page2.style.cssText = `
-        background: white; 
-        color: #1a1a1a; 
-        padding: 60px; 
-        font-family: Arial, sans-serif; 
-        page-break-before: always;
-        min-height: 1000px;
-    `;
-
-    page2.innerHTML = `
+    // --- PAGE 2 & 3: PROFESSIONAL REPORT ---
+    const reportContent = document.createElement('div');
+    // Force page break
+    reportContent.style.cssText = 'page-break-before: always; background: white; color: #1a1a1a; padding: 60px; font-family: Arial, sans-serif;';
+    
+    reportContent.innerHTML = `
         <div style="text-align: center; margin-bottom: 50px; border-bottom: 3px solid #3b82f6; padding-bottom: 30px;">
             <div style="font-size: 36px; font-weight: 700; color: #3b82f6; margin-bottom: 10px;">SCALEVEST</div>
             <div style="font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px;">Business Finance Certificate</div>
@@ -1550,59 +1547,45 @@ function generateExecutiveSummary(data) {
         <div style="margin-bottom: 40px;">
             <div style="font-size: 20px; font-weight: 700; color: #3b82f6; margin-bottom: 20px; border-left: 4px solid #3b82f6; padding-left: 15px;">Financial Summary</div>
             <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid #ddd;"><td style="padding: 15px; font-weight: 600;">Total Revenue</td><td style="padding: 15px; text-align: right; color: #10b981; font-weight: 700;">$${data.totalRevenue.toLocaleString()}</td></tr>
-                <tr style="border-bottom: 1px solid #ddd;"><td style="padding: 15px; font-weight: 600;">Total Costs</td><td style="padding: 15px; text-align: right; color: #fb923c; font-weight: 700;">$${data.totalCosts.toLocaleString()}</td></tr>
-                <tr style="border-bottom: 2px solid #3b82f6;"><td style="padding: 15px; font-weight: 700; font-size: 18px;">Net Profit/Loss</td><td style="padding: 15px; text-align: right; font-weight: 700; font-size: 18px; color: ${data.netProfit >= 0 ? '#10b981' : '#ef4444'};">$${data.netProfit.toLocaleString()}</td></tr>
-                <tr><td style="padding: 15px; font-weight: 600;">Profit Margin</td><td style="padding: 15px; text-align: right; color: #3b82f6; font-weight: 700;">${data.profitMargin}%</td></tr>
+                <tr style="border-bottom: 1px solid #ddd;"><td style="padding: 15px;">Total Revenue</td><td style="text-align: right; color: #10b981; font-weight: 700;">$${data.totalRevenue.toLocaleString()}</td></tr>
+                <tr style="border-bottom: 1px solid #ddd;"><td style="padding: 15px;">Total Costs</td><td style="text-align: right; color: #f59e0b; font-weight: 700;">$${data.totalCosts.toLocaleString()}</td></tr>
+                <tr style="border-bottom: 2px solid #3b82f6;"><td style="padding: 15px; font-size: 18px; font-weight: 700;">Net Profit</td><td style="text-align: right; font-size: 18px; font-weight: 700; color: ${data.netProfit >= 0 ? '#10b981' : '#ef4444'};">$${data.netProfit.toLocaleString()}</td></tr>
             </table>
         </div>
 
-        <div style="margin-bottom: 40px;">
+        <div style="margin-bottom: 40px; page-break-inside: avoid;">
             <div style="font-size: 20px; font-weight: 700; color: #3b82f6; margin-bottom: 20px; border-left: 4px solid #3b82f6; padding-left: 15px;">CFO's Executive Summary</div>
-            <div style="line-height: 1.8; color: #333;">${document.getElementById('executive-summary').innerHTML}</div>
+            <div style="line-height: 1.8; color: #333; background: #f8fafc; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                ${document.getElementById('executive-summary').innerHTML}
+            </div>
         </div>
 
-        <div style="margin-bottom: 40px;">
-            <div style="font-size: 20px; font-weight: 700; color: #3b82f6; margin-bottom: 20px; border-left: 4px solid #3b82f6; padding-left: 15px;">Top Performing Products</div>
+        <div style="page-break-before: always;">
+            <div style="font-size: 20px; font-weight: 700; color: #3b82f6; margin-bottom: 20px; border-left: 4px solid #3b82f6; padding-left: 15px;">Product Performance Detail</div>
             <table style="width: 100%; border-collapse: collapse;">
-                ${data.productRevenue.slice(0, 5).map(([name, prodData]) => {
-                    const profit = prodData.revenue - prodData.costs;
-                    return `
-                        <tr style="border-bottom: 1px solid #ddd;">
-                            <td style="padding: 12px; font-weight: 600;">${name}</td>
-                            <td style="padding: 12px; text-align: center;">${prodData.quantity} units</td>
-                            <td style="padding: 12px; text-align: right; color: #10b981; font-weight: 600;">$${prodData.revenue.toFixed(2)}</td>
-                            <td style="padding: 12px; text-align: right; color: ${profit >= 0 ? '#10b981' : '#ef4444'}; font-weight: 600;">$${profit.toFixed(2)}</td>
-                        </tr>`;
-                }).join('')}
+                ${data.productRevenue.slice(0, 10).map(([name, prodData]) => `
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 12px; font-weight: 600;">${name}</td>
+                        <td style="padding: 12px; text-align: center; color: #64748b;">${prodData.quantity} units</td>
+                        <td style="padding: 12px; text-align: right; font-weight: 700; color: #10b981;">$${prodData.revenue.toFixed(2)}</td>
+                    </tr>`).join('')}
             </table>
-        </div>
-
-        <div style="margin-top: 60px; padding-top: 30px; border-top: 2px solid #ddd; text-align: center; color: #999; font-size: 12px;">
-            <p>This report is generated by ScaleVest CFO AI</p>
-            <p style="margin-top: 10px;">Confidential - For Internal Use Only</p>
         </div>
     `;
-    pdfWrapper.appendChild(page2);
+    pdfWrapper.appendChild(reportContent);
 
-    // 3. Conversion Options
+    // 3. Convert to PDF
     const opt = {
-        margin: [0, 0, 0, 0], // No margins to prevent white space
-        filename: `${reportName}_ScaleVest_CFO_Report.pdf`,
+        margin: 0,
+        filename: `${reportName}_ScaleVest_Report.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-            scale: 2, 
-            useCORS: true, 
-            backgroundColor: '#0a0e27',
-            scrollY: 0
-        },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0a0e27' },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: 'css' } // Respects the "page-break-before" in the CSS
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    // 4. Generate
     html2pdf().set(opt).from(pdfWrapper).save().then(() => {
-        alert('Report Generated Successfully!');
+        alert('PDF generated! Page 1 is your Dashboard copy, Pages 2-3 are the full report.');
     });
 }
 
@@ -2445,7 +2428,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- Finance Report Page -->
 <div id="finance-report-page" style="display: none; position: fixed; inset: 0; background: #0a0e27; z-index: 10000; overflow-y: auto; padding: 30px;">
-    <div class="container">
+<div class="container" id="dashboard-container">
         <!-- Header -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
             <button id="finance-back-btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); padding: 12px 24px; border-radius: 12px; color: white; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
