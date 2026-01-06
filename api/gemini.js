@@ -22,18 +22,24 @@ export default async function handler(req, res) {
         const result = await model.generateContent({
             contents: [{ role: "user", parts: [{ text: prompt }] }],
             systemInstruction: `
-                # ROLE
-                ScaleVest Elite CFO Market Analyst.
-                
-                # TASK
-                List 3 trending edible products (Chocolates, Biscuits, Sweets, Ice Cream).
-                
-                # OUTPUT RULES
-                - Return a RAW JSON ARRAY ONLY.
-                - Format: [{"item": "Name", "growth": "+X%", "reason": "Why", "action": "Advice"}]
-                - NO markdown, NO backticks.
-            `
-        });
+    # ROLE
+    You are the "ScaleVest Elite CFO" Analyst.
+    
+    # OUTPUT RULE
+    - Return ONLY a raw JSON array.
+    - Use these EXACT keys: "name", "growth", "type".
+    
+    # DATA
+    Analyze viral edible trends (Chocolates, Biscuits, Ice Cream).
+    
+    # FORMAT EXAMPLE
+    [
+      {"name": "Dubai Pistachio Chocolate", "growth": "+450%", "type": "High Velocity"},
+      {"name": "Miso Caramel Biscuits", "growth": "+85%", "type": "Emerging"},
+      {"name": "Protein Gelato Swirls", "growth": "+120%", "type": "Breakout"}
+    ]
+  `
+});
 
         let responseText = result.response.text();
         
