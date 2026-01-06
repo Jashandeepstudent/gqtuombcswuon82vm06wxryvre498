@@ -1,75 +1,53 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
-  // 1. CORS HEADERS
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*'); 
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+    // 1. Standard CORS and Method Checks
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+    if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-  if (req.method !== 'POST') {
-    return res.status(405).send('Method Not Allowed');
-  }
+    try {
+        const { prompt } = req.body;
+        const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY);
+        
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-2.0-flash",
+            // FORCE JSON output using Generation Config (Best Practice)
+            generationConfig: { responseMimeType: "application/json" }
+        });
 
-  // 2. Parse Body
-  const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-  const prompt = body?.prompt;
-
-  if (!prompt) {
-    return res.status(400).json({ error: "No prompt provided" });
-  }
-
-  try {
-    // 3. Initialize Gemini using GEMINI_KEY
-    // Ensure this matches your Vercel Environment Variable name!
-    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY);
-    
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.0-flash",
-     systemInstruction: `
+        const result = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            systemInstruction: `
                 # ROLE
-                You are the "ScaleVest Elite CFO," a high-frequency market analyst specializing in the edible goods industry (Chocolates, Biscuits, Sweets, and Ice Creams).
-
-                # OBJECTIVE
-                Analyze the user's query against current internet "viral" trends, social media shorts, and global market velocity. Detect which specific flavors, ingredients, or product types are currently trending.
-
-                # CATEGORY FOCUS
-                - Premium Chocolates (e.g., Sea Salt, Ruby, High-protein)
-                - Artisanal Biscuits (e.g., Oat-based, Keto, Speculoos)
-                - Frozen Desserts (e.g., Mochi ice cream, Gelato, Vegan swirls)
-
-                # OUTPUT FORMAT (STRICT RAW JSON)
-                Return exactly 3 trending items in this format:
-                [
-                  {
-                    "item": "Product Name",
-                    "growth": "+percentage%",
-                    "reason": "Viral on social media shorts due to X flavor profile",
-                    "action": "Aggressive Restock"
-                  }
-                ]
-
-                # RULES
-                - NO markdown, NO backticks, NO explanations.
-                - Only return the JSON array.
+                ScaleVest Elite CFO Market Analyst.
+                
+                # TASK
+                List 3 trending edible products (Chocolates, Biscuits, Sweets, Ice Cream).
+                
+                # OUTPUT RULES
+                - Return a RAW JSON ARRAY ONLY.
+                - Format: [{"item": "Name", "growth": "+X%", "reason": "Why", "action": "Advice"}]
+                - NO markdown, NO backticks.
             `
-    });
+        });
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    
-    // 4. Clean Markdown formatting
-    const cleanJson = responseText.replace(/```json|```/g, "").trim();
-    
-    // 5. Final Response
-    res.status(200).json(JSON.parse(cleanJson));
+        let responseText = result.response.text();
+        
+        // 2. SAFETY: Strip backticks if the model ignored the instruction
+        const cleanJsonString = responseText.replace(/```json|```/g, "").trim();
+        let parsedData = JSON.parse(cleanJsonString);
 
-  } catch (error) {
-    console.error("CRITICAL ERROR:", error.message);
-    res.status(500).json({ error: "Internal Server Error", details: error.message });
-  }
+        // 3. MAP FIX: Ensure we are sending an array, even if the AI returned an object
+        const finalArray = Array.isArray(parsedData) ? parsedData : (parsedData.trends || [parsedData]);
+
+        res.status(200).json(finalArray);
+
+    } catch (error) {
+        console.error("CFO API Error:", error);
+        res.status(500).json({ error: "Analysis Failed", details: error.message });
+    }
 }
