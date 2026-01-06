@@ -597,24 +597,17 @@ async function loadSyncOperations(userId) {
         
         if (userDataObj) {
             for (const [key, value] of Object.entries(userDataObj)) {
-                if (typeof value === 'object' && value !== null && 
-                    value.completed === false && 
-                    value.name && 
-                    !['CFO', 'National Currency', 'businessName', 'createdAt', 'expiryDateNotification'].includes(key)) {
-                    
-                    pendingTasks.push({
-                        type: 'transaction',
-                        id: key,
-                        title: value.name || 'Unnamed Transaction',
-                        amount: value.amount ? (value.currency || '') + ' ' + value.amount : '',
-                        transactionType: value.type || '',
-                        deadline: value.date || 'No deadline',
-                        details: value.details || '',
-                        completed: false
-                    });
-                }
+               if (value && typeof value === 'object' && value.completed === false && value.name) {
+                pendingTasks.push({
+                    type: 'transaction',
+                    id: key,
+                    title: value.name,
+                    amount: value.amount ? (value.currency || '') + ' ' + value.amount : '',
+                    transactionType: value.type || 'owe',
+                    deadline: value.date || 'No deadline',
+                    completed: false
+                });
             }
-        }
         
         const businessOwnersSnapshot = await get(child(dbRef, `BusinessOwners/${userId}/businessItems`));
         
