@@ -659,7 +659,6 @@ const firebaseConfig = {
   const auth = getAuth(app);
   const db = getDatabase(app);
 
-
 async function fetchRevenuePulse(userId) {
     const dbRef = ref(getDatabase());
     const salesSnapshot = await get(child(dbRef, `Businesses/${userId}/sales`));
@@ -1615,10 +1614,396 @@ function updateStockRadarCard(lowStockProducts) {
     stockText.innerHTML = statusText;
 }
 
-function launchFlashSale() {
-    alert("Flash Sale feature coming soon! This will allow you to create instant discount campaigns.");
-    // You can build this feature later to create automatic discounts
+// ============ FLASH SALE FUNCTIONS ============
+let selectedFlashProducts = [];
+
+async function openFlashSale() {
+    const popup = document.getElementById('flash-sale-popup');
+    const listEl = document.getElementById('expiring-products-list');
+    
+    popup.style.display = 'block';
+    listEl.innerHTML = '<div style="text-align: center; padding: 40px;">Loading expiring products...</div>';
+    
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    const dbRef = ref(getDatabase());
+    
+    try {
+        const inventorySnapshot = await get(child(dbRef, `Businesses/${user.uid}/inventory`));
+        const pricesSnapshot = await get(child(dbRef, `Businesses/${user.uid}/prices`));
+        
+        if (!inventorySnapshot.exists()) {
+            listEl.innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">No products found</div>';
+            return;
+        }
+        
+        const inventory = inventorySnapshot.val();
+        const prices = pricesSnapshot.exists() ? pricesSnapshot.val() : {};
+        
+        const now = new Date();
+        const expiringProducts = [];
+        
+        for (const [productId, productData] of Object.entries(inventory)) {
+            if (productData.expiryDate) {
+                const expiryDate = new Date(productData.expiryDate);
+                const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+                
+                if (daysUntilExpiry <= 7 && daysUntilExpiry >= 0) {
+                    const sellPrice = prices[productId]?.sellPrice ? parseFloat(prices[productId].sellPrice) : 0;
+                    
+                    expiringProducts.push({
+                        id: productId,
+                        name: productData.name || "Unknown Product",
+                        daysUntilExpiry,
+                        quantity: productData.quantity || 0,
+                        unit: productData.unit || "units",
+                        sellPrice
+                    });
+                }
+            }
+        }
+        
+        expiringProducts.sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
+        
+        if (expiringProducts.length === 0) {
+            listEl.innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">No products expiring within 7 days ✓</div>';
+            return;
+        }
+        
+        listEl.innerHTML = expiringProducts.map(product => {
+            const urgencyColor = product.daysUntilExpiry === 0 ? '#f87171' : 
+                                product.daysUntilExpiry <= 2 ? '#fb923c' : '#3b82f6';
+            const timeText = product.daysUntilExpiry === 0 ? 'TODAY!' : `${product.daysUntilExpiry} days`;
+            
+            return `
+                <div class="product-select-card" style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.3s;" onclick="toggleFlashProduct('${product.id}')">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">${product.name}</div>
+                            <div style="display: flex; gap: 15px; font-size: 13px; color: rgba(255,255,255,0.7);">
+                                <span>Stock: ${product.quantity} ${product.unit}</span>
+                                <span>Price: $${product.sellPrice}</span>
+                                <span style="color: ${urgencyColor}; font-weight: 600;">Expires in ${timeText}</span>
+                            </div>
+                        </div>
+                        <div class="select-checkbox" id="checkbox-${product.id}" style="width: 24px; height: 24px; border: 2px solid rgba(255,255,255,0.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px;"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        window.expiringProductsData = expiringProducts;
+        
+    } catch (error) {
+        console.error("Error loading expiring products:", error);
+        listEl.innerHTML = '<div style="text-align: center; padding: 40px; color: #f87171;">Error loading products</div>';
+    }
 }
+
+function toggleFlashProduct(productId) {
+    const checkbox = document.getElementById(`checkbox-${productId}`);
+    const card = checkbox.closest('.product-select-card');
+    
+    if (selectedFlashProducts.includes(productId)) {
+        selectedFlashProducts = selectedFlashProducts.filter(id => id !== productId);
+        checkbox.innerHTML = '';
+        card.style.borderColor = 'rgba(255,255,255,0.1)';
+        card.style.background = 'rgba(255,255,255,0.03)';
+    } else {
+        selectedFlashProducts.push(productId);
+        checkbox.innerHTML = '✓';
+        card.style.borderColor = '#fb923c';
+        card.style.background = 'rgba(251, 146, 60, 0.1)';
+    }
+    
+    if (selectedFlashProducts.length > 0) {
+        showDiscountSection();
+    } else {
+        document.getElementById('discount-section').style.display = 'none';
+    }
+}
+
+function showDiscountSection() {
+    const section = document.getElementById('discount-section');
+    const summary = document.getElementById('selected-products-summary');
+    
+    section.style.display = 'block';
+    
+    const selectedProducts = window.expiringProductsData.filter(p => selectedFlashProducts.includes(p.id));
+    summary.innerHTML = `Selected ${selectedProducts.length} product(s): ` + selectedProducts.map(p => p.name).join(', ');
+    
+    const mostUrgent = selectedProducts.reduce((min, p) => p.daysUntilExpiry < min.daysUntilExpiry ? p : min);
+    
+    let suggestedDiscount = 10;
+    if (mostUrgent.daysUntilExpiry === 0) suggestedDiscount = 50;
+    else if (mostUrgent.daysUntilExpiry === 1) suggestedDiscount = 40;
+    else if (mostUrgent.daysUntilExpiry <= 2) suggestedDiscount = 30;
+    else if (mostUrgent.daysUntilExpiry <= 4) suggestedDiscount = 20;
+    
+    document.getElementById('discount-suggestion').innerHTML = `💡 Suggested discount based on urgency: <strong>${suggestedDiscount}%</strong>`;
+}
+
+async function applyFlashSale() {
+    const discountPercent = parseFloat(document.getElementById('discount-percent').value);
+    
+    if (!discountPercent || discountPercent <= 0 || discountPercent > 99) {
+        alert('Please enter a valid discount percentage (1-99%)');
+        return;
+    }
+    
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    const { set } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+    const dbRef = ref(getDatabase());
+    
+    try {
+        for (const productId of selectedFlashProducts) {
+            const priceSnapshot = await get(child(dbRef, `Businesses/${user.uid}/prices/${productId}`));
+            
+            if (priceSnapshot.exists()) {
+                const priceData = priceSnapshot.val();
+                const originalPrice = parseFloat(priceData.sellPrice);
+                const discountedPrice = originalPrice * (1 - discountPercent / 100);
+                
+                await set(ref(db, `Businesses/${user.uid}/prices/${productId}/sellPrice`), discountedPrice.toFixed(2));
+            }
+        }
+        
+        alert(`✓ Flash sale applied! ${discountPercent}% discount on ${selectedFlashProducts.length} product(s)`);
+        closeFlashSale();
+        
+    } catch (error) {
+        console.error("Error applying flash sale:", error);
+        alert('Error applying discount. Please try again.');
+    }
+}
+
+function closeFlashSale() {
+    document.getElementById('flash-sale-popup').style.display = 'none';
+    selectedFlashProducts = [];
+    document.getElementById('discount-section').style.display = 'none';
+    document.getElementById('discount-percent').value = '';
+}
+
+// ============ ORDER RECEIPT FUNCTIONS ============
+let selectedOrderProducts = [];
+
+async function openOrderReceipt() {
+    const popup = document.getElementById('order-receipt-popup');
+    const listEl = document.getElementById('low-stock-list');
+    
+    popup.style.display = 'block';
+    listEl.innerHTML = '<div style="text-align: center; padding: 40px;">Loading low stock products...</div>';
+    
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    const dbRef = ref(getDatabase());
+    
+    try {
+        const inventorySnapshot = await get(child(dbRef, `Businesses/${user.uid}/inventory`));
+        
+        if (!inventorySnapshot.exists()) {
+            listEl.innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">No products found</div>';
+            return;
+        }
+        
+        const inventory = inventorySnapshot.val();
+        const lowStockProducts = [];
+        
+        for (const [productId, productData] of Object.entries(inventory)) {
+            const stock = parseInt(productData.quantity) || 0;
+            
+            if (stock <= 15) {
+                lowStockProducts.push({
+                    id: productId,
+                    name: productData.name || "Unknown Product",
+                    currentStock: stock,
+                    unit: productData.unit || "units",
+                    status: stock === 0 ? 'out' : stock <= 5 ? 'critical' : 'low'
+                });
+            }
+        }
+        
+        lowStockProducts.sort((a, b) => a.currentStock - b.currentStock);
+        
+        if (lowStockProducts.length === 0) {
+            listEl.innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">All products have sufficient stock ✓</div>';
+            return;
+        }
+        
+        listEl.innerHTML = lowStockProducts.map(product => {
+            const statusColor = product.status === 'out' ? '#f87171' : 
+                               product.status === 'critical' ? '#fb923c' : '#3b82f6';
+            const statusText = product.status === 'out' ? 'OUT OF STOCK' : 
+                              product.status === 'critical' ? 'CRITICAL' : 'LOW STOCK';
+            
+            return `
+                <div class="product-select-card" style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.3s;" onclick="toggleOrderProduct('${product.id}')">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">${product.name}</div>
+                            <div style="display: flex; gap: 15px; font-size: 13px; color: rgba(255,255,255,0.7);">
+                                <span>Current: ${product.currentStock} ${product.unit}</span>
+                                <span style="color: ${statusColor}; font-weight: 600;">${statusText}</span>
+                            </div>
+                        </div>
+                        <div class="select-checkbox" id="order-checkbox-${product.id}" style="width: 24px; height: 24px; border: 2px solid rgba(255,255,255,0.3); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px;"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        window.lowStockProductsData = lowStockProducts;
+        
+    } catch (error) {
+        console.error("Error loading low stock products:", error);
+        listEl.innerHTML = '<div style="text-align: center; padding: 40px; color: #f87171;">Error loading products</div>';
+    }
+}
+
+function toggleOrderProduct(productId) {
+    const checkbox = document.getElementById(`order-checkbox-${productId}`);
+    const card = checkbox.closest('.product-select-card');
+    
+    if (selectedOrderProducts.includes(productId)) {
+        selectedOrderProducts = selectedOrderProducts.filter(id => id !== productId);
+        checkbox.innerHTML = '';
+        card.style.borderColor = 'rgba(255,255,255,0.1)';
+        card.style.background = 'rgba(255,255,255,0.03)';
+    } else {
+        selectedOrderProducts.push(productId);
+        checkbox.innerHTML = '✓';
+        card.style.borderColor = '#3b82f6';
+        card.style.background = 'rgba(59, 130, 246, 0.1)';
+    }
+    
+    if (selectedOrderProducts.length > 0) {
+        showQuantitySection();
+    } else {
+        document.getElementById('quantity-section').style.display = 'none';
+    }
+}
+
+function showQuantitySection() {
+    const section = document.getElementById('quantity-section');
+    const listEl = document.getElementById('order-products-list');
+    
+    section.style.display = 'block';
+    
+    const selectedProducts = window.lowStockProductsData.filter(p => selectedOrderProducts.includes(p.id));
+    
+    listEl.innerHTML = selectedProducts.map(product => `
+        <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px;">
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; margin-bottom: 5px;">${product.name}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Current: ${product.currentStock} ${product.unit}</div>
+                </div>
+                <input type="number" id="qty-${product.id}" placeholder="Order quantity" min="1" style="width: 150px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; outline: none;">
+            </div>
+        </div>
+    `).join('');
+}
+
+async function generateOrderPDF() {
+    const orderData = [];
+    
+    for (const productId of selectedOrderProducts) {
+        const qtyInput = document.getElementById(`qty-${productId}`);
+        const qty = parseInt(qtyInput.value);
+        
+        if (!qty || qty <= 0) {
+            alert(`Please enter a valid quantity for all selected products`);
+            return;
+        }
+        
+        const product = window.lowStockProductsData.find(p => p.id === productId);
+        orderData.push({
+            name: product.name,
+            currentStock: product.currentStock,
+            unit: product.unit,
+            orderQty: qty
+        });
+    }
+    
+    const orderId = `ORD-${Date.now()}`;
+    const date = new Date().toLocaleDateString();
+    
+    let pdfHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 40px; background: #fff; color: #000; }
+                .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #3b82f6; padding-bottom: 20px; }
+                .header h1 { color: #3b82f6; margin: 0; font-size: 36px; }
+                .order-id { font-size: 18px; color: #666; margin-top: 10px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+                th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
+                th { background: #3b82f6; color: white; font-weight: 600; }
+                tr:hover { background: #f5f5f5; }
+                .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>📦 ORDER RECEIPT</h1>
+                <div class="order-id">Order ID: ${orderId}</div>
+                <div class="order-id">Date: ${date}</div>
+            </div>
+            
+            <h2 style="color: #3b82f6;">Product Order List</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Current Stock</th>
+                        <th>Order Quantity</th>
+                        <th>Unit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${orderData.map(item => `
+                        <tr>
+                            <td><strong>${item.name}</strong></td>
+                            <td>${item.currentStock}</td>
+                            <td style="color: #3b82f6; font-weight: 600;">${item.orderQty}</td>
+                            <td>${item.unit}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            
+            <div class="footer">
+                <p>Generated by ScaleVest CFO | ${new Date().toLocaleString()}</p>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    const blob = new Blob([pdfHTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Order_Receipt_${orderId}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    alert('✓ Order receipt downloaded!');
+    closeOrderReceipt();
+}
+
+function closeOrderReceipt() {
+    document.getElementById('order-receipt-popup').style.display = 'none';
+    selectedOrderProducts = [];
+    document.getElementById('quantity-section').style.display = 'none';
+}
+
 
 
 async function askCFO(userInput) {
@@ -1864,7 +2249,7 @@ async function askCFO(userInput) {
                 </div>
             </div>
 
-            <div class="card actions-card">
+<div class="card actions-card">
     <div class="card-title">QUICK ACTIONS</div>
     <div class="quick-actions">
         <div class="action-btn" onclick="openOrderReceipt()">
@@ -1885,7 +2270,6 @@ async function askCFO(userInput) {
     <div class="sparkle">✨</div>
 
 <script>
-
 document.addEventListener("DOMContentLoaded", () => {
     const termsCheck = document.getElementById("terms-check");
     const startBtn = document.getElementById("start-cfo-btn");
@@ -1926,11 +2310,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-
-
-
-
-
 </script>
 <!-- Product Analysis Page -->
 <div id="product-analysis-page" style="display: none; position: fixed; inset: 0; background: #0a0e27; z-index: 10000; overflow-y: auto; padding: 30px;">
@@ -1949,52 +2328,63 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
     </div>
 </div>
-
-<!-- Flash Sale Popup -->
-<div id="flash-sale-popup" style="display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(10, 14, 39, 0.9); backdrop-filter: blur(20px); overflow-y: auto; padding: 40px;">
+<!-- Flash Sale Pop-up -->
+<div id="flash-sale-popup" style="display: none; position: fixed; inset: 0; background: rgba(10, 14, 39, 0.95); backdrop-filter: blur(20px); z-index: 11000; overflow-y: auto; padding: 40px;">
     <div class="card" style="max-width: 800px; margin: 0 auto;">
-        <h2 style="margin-bottom: 20px; font-size: 32px; background: linear-gradient(135deg, #fb923c, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">⚡ Flash Sale Manager</h2>
-        <button onclick="closeFlashSale()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer;">✕ Close</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h2 style="font-size: 28px; color: #fb923c;">⚡ Flash Sale Manager</h2>
+            <button onclick="closeFlashSale()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer;">✕ Close</button>
+        </div>
         
-        <div id="expiring-products-list" style="margin-top: 20px;"></div>
+        <div id="expiring-products-list" style="display: grid; gap: 15px; margin-bottom: 30px;">
+            <!-- Products will be inserted here -->
+        </div>
         
-        <div id="discount-section" style="display: none; margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 12px;">
+        <div id="discount-section" style="display: none; background: rgba(255,255,255,0.03); padding: 25px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);">
             <h3 style="margin-bottom: 15px;">Set Discount</h3>
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 8px;">Discount Percentage:</label>
-                <input type="number" id="discount-input" placeholder="e.g. 30" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white;">
-                <div id="suggested-discount" style="margin-top: 8px; font-size: 12px; color: #fb923c;"></div>
-            </div>
-            <button onclick="applySaleDiscount()" class="launch-btn" style="margin-top: 15px;">🚀 Launch Flash Sale</button>
+            <div id="selected-products-summary" style="margin-bottom: 20px; font-size: 14px; color: rgba(255,255,255,0.7);"></div>
+            <input type="number" id="discount-percent" placeholder="Discount %" min="1" max="99" style="width: 100%; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; margin-bottom: 10px; outline: none;">
+            <div id="discount-suggestion" style="font-size: 13px; color: #3b82f6; margin-bottom: 20px;"></div>
+            <button onclick="applyFlashSale()" class="launch-btn">Apply Flash Sale</button>
         </div>
     </div>
 </div>
 
-<!-- Order Receipt Popup -->
-<div id="order-receipt-popup" style="display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(10, 14, 39, 0.9); backdrop-filter: blur(20px); overflow-y: auto; padding: 40px;">
+<!-- Order Receipt Pop-up -->
+<div id="order-receipt-popup" style="display: none; position: fixed; inset: 0; background: rgba(10, 14, 39, 0.95); backdrop-filter: blur(20px); z-index: 11000; overflow-y: auto; padding: 40px;">
     <div class="card" style="max-width: 800px; margin: 0 auto;">
-        <h2 style="margin-bottom: 20px; font-size: 32px; background: linear-gradient(135deg, #3b82f6, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">📦 Order Receipt Generator</h2>
-        <button onclick="closeOrderReceipt()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer;">✕ Close</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h2 style="font-size: 28px; color: #3b82f6;">📦 Order Receipt</h2>
+            <button onclick="closeOrderReceipt()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer;">✕ Close</button>
+        </div>
         
-        <div id="low-stock-products-list" style="margin-top: 20px;"></div>
+        <div id="low-stock-list" style="display: grid; gap: 15px; margin-bottom: 30px;">
+            <!-- Products will be inserted here -->
+        </div>
         
-        <div id="quantity-section" style="display: none; margin-top: 30px;"></div>
-        
-        <button onclick="generateOrderPDF()" class="launch-btn" style="margin-top: 20px; display: none;" id="generate-pdf-btn">📄 Generate Order PDF</button>
+        <div id="quantity-section" style="display: none; background: rgba(255,255,255,0.03); padding: 25px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);">
+            <h3 style="margin-bottom: 15px;">Set Order Quantities</h3>
+            <div id="order-products-list" style="display: grid; gap: 15px; margin-bottom: 20px;"></div>
+            <button onclick="generateOrderPDF()" class="launch-btn">Generate Order PDF</button>
+        </div>
     </div>
 </div>
 
-<!-- Sync Operations Popup -->
-<div id="sync-operations-popup" style="display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(10, 14, 39, 0.9); backdrop-filter: blur(20px); overflow-y: auto; padding: 40px;">
+<!-- Sync Operations Pop-up -->
+<div id="sync-operations-popup" style="display: none; position: fixed; inset: 0; background: rgba(10, 14, 39, 0.95); backdrop-filter: blur(20px); z-index: 11000; overflow-y: auto; padding: 40px;">
     <div class="card" style="max-width: 900px; margin: 0 auto;">
-        <h2 style="margin-bottom: 20px; font-size: 32px; background: linear-gradient(135deg, #4ade80, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🔄 Operations Sync Dashboard</h2>
-        <button onclick="closeSyncOperations()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer;">✕ Close</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h2 style="font-size: 28px; color: #4ade80;">🔄 Operations Sync</h2>
+            <button onclick="closeSyncOperations()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer;">✕ Close</button>
+        </div>
         
-        <div id="pending-tasks-list" style="margin-top: 20px;"></div>
+        <div id="pending-operations-list" style="display: grid; gap: 15px;">
+            <!-- Operations will be inserted here -->
+        </div>
         
-        <button onclick="startPrioritize()" class="launch-btn" style="margin-top: 20px; display: none;" id="prioritize-btn">🎯 Start Prioritize</button>
+        <button id="prioritize-btn" onclick="prioritizeTasks()" class="launch-btn" style="margin-top: 30px; display: none;">Start Prioritization</button>
         
-        <div id="prioritized-tasks" style="display: none; margin-top: 30px;"></div>
+        <div id="prioritized-results" style="display: none; margin-top: 30px;"></div>
     </div>
 </div>
 
