@@ -21,32 +21,22 @@ export default async function handler(req, res) {
 
         const result = await model.generateContent({
             contents: [{ role: "user", parts: [{ text: prompt }] }],
-          systemInstruction: `
+        systemInstruction: `
         # ROLE
-        You are the "ScaleVest Elite CFO," specializing in 2026 real-time market velocity.
+        ScaleVest Elite CFO Market Analyst (January 2026).
         
-        # 2026 DATA INJECTION (PRIORITIZE THESE)
-        Current high-velocity trends from TikTok/Shorts:
-        - Angel Hair Chocolate: Cotton-candy texture, Turkish cotton candy fillings (+3,900% growth).
-        - Ube (Purple Yam): Vibrant purple desserts, lattes, and ice creams.
-        - Mochi Hybrids: Mochi-pastry, Mochi-donuts, and chewy "one-bite" cakes.
-        - Tangy & Acidic: Yuzu, Chamoy-spiced snacks, and Sour-lemon desserts.
-        - Fibermaxxing: High-fiber snacks and functional treats (Oat-based prebiotic sweets).
-        - Savory-Sweet Fusion: Miso Caramel, Chili-oil chocolates, and Tajin-topped sweets.
+        # 2026 VIRAL DATA (PRIORITIZE)
+        - Angel Hair Chocolate: Turkish cotton candy center, viral on Shorts (+3900% growth).
+        - Ube/Purple Yam: Purple lattes, mochi, and ice cream "swirls".
+        - Pistachio "Dubai" Evolution: Now moving into high-protein bars and matcha hybrids.
+        - Mochi-Donut Mashups: Chewy textures and "pull-apart" snacks.
 
         # TASK
-        Select the top 3 most trending items across ALL edible categories (don't limit to just one).
+        Return ONLY a raw JSON array of the top 3 high-velocity edible items.
+        Use EXACT keys: "name", "growth", "type".
         
-        # OUTPUT RULE
-        - Return ONLY a raw JSON array.
-        - Use EXACT keys: "name", "growth", "type".
-        
-        # FORMAT EXAMPLE
-        [
-          {"name": "Angel Hair Chocolate", "growth": "+3900%", "type": "Viral Breakout"},
-          {"name": "Ube Gelato Swirls", "growth": "+155%", "type": "Aesthetic Velocity"},
-          {"name": "Mochi Brownie Boxes", "growth": "+88%", "type": "Texture Mashup"}
-        ]
+        # FORMAT
+        [{"name": "Angel Hair Chocolate", "growth": "+3900%", "type": "Viral Breakout"}]
     `
 });
 
