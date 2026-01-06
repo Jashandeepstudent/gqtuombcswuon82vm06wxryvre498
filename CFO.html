@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScaleVeEEEst Dashboard</title>
+    <title>ScaleVest Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -2308,6 +2308,18 @@ async function askCFO(userInput) {
         adviceTextEl.innerText = "Error connecting to ScaleVest CFO.";
     }
 }
+// Make functions globally available
+window.openFlashSale = openFlashSale;
+window.toggleFlashProduct = toggleFlashProduct;
+window.applyFlashSale = applyFlashSale;
+window.closeFlashSale = closeFlashSale;
+window.openOrderReceipt = openOrderReceipt;
+window.toggleOrderProduct = toggleOrderProduct;
+window.generateOrderPDF = generateOrderPDF;
+window.closeOrderReceipt = closeOrderReceipt;
+window.openSyncOperations = openSyncOperations;
+window.prioritizeTasks = prioritizeTasks;
+window.closeSyncOperations = closeSyncOperations;
 </script>
 
 <div id="onboarding-overlay" style="position: fixed; inset: 0; z-index: 9999; background: #0a0e27; display: flex; align-items: center; justify-content: center; transition: opacity 1s ease;">
@@ -2572,6 +2584,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+// Make functions globally available
+window.openFlashSale = openFlashSale;
+window.toggleFlashProduct = toggleFlashProduct;
+window.applyFlashSale = applyFlashSale;
+window.closeFlashSale = closeFlashSale;
+window.openOrderReceipt = openOrderReceipt;
+window.toggleOrderProduct = toggleOrderProduct;
+window.generateOrderPDF = generateOrderPDF;
+window.closeOrderReceipt = closeOrderReceipt;
+window.openSyncOperations = openSyncOperations;
+window.prioritizeTasks = prioritizeTasks;
+window.closeSyncOperations = closeSyncOperations;
 </script>
 <!-- Product Analysis Page -->
 <div id="product-analysis-page" style="display: none; position: fixed; inset: 0; background: #0a0e27; z-index: 10000; overflow-y: auto; padding: 30px;">
