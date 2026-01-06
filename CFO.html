@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <title>ScaleVeeeeest CFO</title>
+    <title>ScaleVest CFO</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * {
@@ -1504,225 +1504,143 @@ function generateExecutiveSummary(data) {
 
     summary += `</p>`;
     summaryEl.innerHTML = summary;
-}<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Finance Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+}function generateFinancePDF(reportName) {
+    const data = window.financeData; // Your data object
+    if (!data) return;
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    // 1. Show Progress Animation
+    const modalContent = document.querySelector('#export-modal .card');
+    const originalHTML = modalContent.innerHTML;
+    modalContent.innerHTML = `
+        <div style="text-align: center; padding: 40px; background: #0b1020; border-radius: 14px;">
+            <div style="border: 4px solid rgba(26, 209, 255, 0.1); border-top: 4px solid #1ad1ff; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+            <p style="color: #1ad1ff; font-family: Inter, sans-serif; font-weight: 600; letter-spacing: 1px;">CREATING FINANCE REPORT...</p>
+        </div>
+        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+    `;
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    // 2. Create PDF Container
+    const pdfContainer = document.createElement('div');
+    pdfContainer.style.cssText = "background: #0b1020; width: 850px; padding: 0; margin: 0; color: white;";
 
-<style>
-*{box-sizing:border-box;font-family:Inter,sans-serif}
+    // --- PAGE 1: BUSINESS FINANCE CERTIFICATE ---
+    const page1 = document.createElement('div');
+    page1.style.cssText = "height: 1150px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at top,#1b2042,#0b1020); position: relative;";
+    
+    page1.innerHTML = `
+        <style>
+            .certificate { width: 720px; background: #1b2042; border-radius: 26px; padding: 50px; border: 2px solid rgba(26, 209, 255, 0.3); position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.5); text-align: center; }
+            .cert-h1 { font-size: 42px; margin: 0; letter-spacing: 2px; }
+            .cert-h2 { font-size: 22px; color: #1ad1ff; text-transform: uppercase; margin: 15px 0; letter-spacing: 4px; }
+            .cfo-badge { width: 150px; height: 150px; border-radius: 50%; border: 4px solid #ffd24d; margin: 30px auto; display: flex; align-items: center; justify-content: center; background: #0b1020; box-shadow: 0 0 30px rgba(26, 209, 255, 0.2); }
+            .stats-grid-cert { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 30px 0; }
+            .stat-unit { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(26, 209, 255, 0.2); }
+            .stat-unit p { font-size: 18px; font-weight: 800; margin: 5px 0 0; }
+        </style>
+        <div class="certificate">
+            <h1 class="cert-h1">ScaleVest</h1>
+            <h2 class="cert-h2">Business Finance Certificate</h2>
+            <p style="color: #aaa; font-size: 12px;">REPORT FILENAME: ${reportName}.pdf</p>
+            <div class="cfo-badge"><h2 style="font-size: 40px; color: #1ad1ff; margin:0;">CFO</h2></div>
+            <div class="stats-grid-cert">
+                <div class="stat-unit"><small style="color:#aaa;">REVENUE</small><p>$${data.totalRevenue.toLocaleString()}</p></div>
+                <div class="stat-unit"><small style="color:#aaa;">PROFIT</small><p>$${data.netProfit.toLocaleString()}</p></div>
+                <div class="stat-unit"><small style="color:#aaa;">MARGIN</small><p>${data.profitMargin}%</p></div>
+                <div class="stat-unit"><small style="color:#aaa;">GROWTH</small><p>${data.weeklyGrowth}%</p></div>
+            </div>
+            <div style="background: rgba(0,0,0,0.2); padding: 25px; border-radius: 15px; text-align: left; border-left: 4px solid #1ad1ff;">
+                <h4 style="color:#1ad1ff; margin-bottom: 10px;">CFO INTELLIGENCE SUMMARY</h4>
+                <p style="font-size: 14px; line-height: 1.6; color: #ddd;">${document.getElementById('executive-summary').innerText}</p>
+            </div>
+            <div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: flex-end;">
+                <div style="text-align: left;"><div style="font-family: 'serif'; font-style: italic; font-size: 28px; border-bottom: 1px solid #555;">ScaleVest AI</div><small style="color:#777;">Authorized Intelligence</small></div>
+                <div style="width: 90px; height: 90px; background: #ffd24d; border-radius: 50%; color: black; font-weight: 900; font-size: 10px; display: flex; align-items: center; justify-content: center;">OFFICIAL<br>VERIFIED</div>
+            </div>
+        </div>
+    `;
+    pdfContainer.appendChild(page1);
 
-body{
-  margin:0;
-  background:#0b1020;
-  color:#fff;
-  padding:30px;
+    // --- PAGE 2: DASHBOARD (USING YOUR PROVIDED CODE STRUCTURE) ---
+    const page2 = document.createElement('div');
+    page2.style.cssText = "page-break-before: always; padding: 40px; background: #0b1020; min-height: 1150px; width: 850px;";
+    
+    // We recreate your dashboard grid specifically for the PDF
+    page2.innerHTML = `
+        <style>
+            .db-grid { display: grid; grid-template-columns: 1.1fr 1fr 0.9fr; gap: 20px; color: white; }
+            .db-card { background: #1b2042; border-radius: 14px; padding: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.3); }
+            .db-rev h1 { margin: 0; font-size: 40px; }
+            .db-progress { margin-top: 12px; height: 8px; background: #2c3160; border-radius: 6px; overflow: hidden; }
+            .db-progress div { height: 100%; background: #1ad1ff; }
+            .db-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+            .db-table th { color: #aaa; text-align: right; padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+            .db-table td { padding: 8px 4px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.05); }
+            .db-table th:first-child, .db-table td:first-child { text-align: left; }
+            .risk-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+            .db-bar { height: 6px; background: #2c3160; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+            .db-bar span { display: block; height: 100%; background: #1ad1ff; }
+        </style>
+        <h3 style="margin-bottom: 20px; color: #1ad1ff;">Financial Intelligence Report</h3>
+        <div class="db-grid">
+            <div>
+                <div class="db-card db-rev">
+                    <h1>$${data.totalRevenue.toLocaleString()}</h1>
+                    <span style="color:#aaa; font-size: 12px;">Actual Revenue (Current Period)</span>
+                    <div class="db-progress"><div style="width: 79%"></div></div>
+                </div>
+                <div class="db-card" style="margin-top: 20px; height: 250px; display: flex; align-items: center; justify-content: center; text-align: center;">
+                    <p style="color:#666; font-size: 12px;">[ Data Visualization Chart ]<br>Forecast vs Actual Trend</p>
+                </div>
+            </div>
+            <div class="db-card">
+                <h3 style="font-size: 14px; margin: 0 0 10px; color: #ddd;">Performance by Region</h3>
+                <table class="db-table">
+                    <tr><th>State</th><th>Forecast</th><th>Actual</th><th>Risk</th></tr>
+                    ${/* Generating rows dynamically from your logic */ ''}
+                    <tr><td>TX</td><td>$650</td><td>$600</td><td><span class="risk-dot" style="background:#00ff99"></span></td></tr>
+                    <tr><td>CA</td><td>$750</td><td>$450</td><td><span class="risk-dot" style="background:#ff3b3b"></span></td></tr>
+                    <tr><td>FL</td><td>$400</td><td>$356</td><td><span class="risk-dot" style="background:#ffcc00"></span></td></tr>
+                    <tr><td>NY</td><td>$520</td><td>$510</td><td><span class="risk-dot" style="background:#00ff99"></span></td></tr>
+                </table>
+            </div>
+            <div class="db-card">
+                <h3 style="font-size: 14px; margin: 0 0 10px; color: #ddd;">Target Status</h3>
+                <div style="margin-bottom: 15px;">
+                    <div style="display:flex; justify-content:space-between; font-size: 11px;"><span>Texas</span><span>90%</span></div>
+                    <div class="db-bar"><span style="width:90%"></span></div>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <div style="display:flex; justify-content:space-between; font-size: 11px;"><span>California</span><span>67%</span></div>
+                    <div class="db-bar"><span style="width:67%"></span></div>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <div style="display:flex; justify-content:space-between; font-size: 11px;"><span>Florida</span><span>88%</span></div>
+                    <div class="db-bar"><span style="width:88%"></span></div>
+                </div>
+            </div>
+        </div>
+    `;
+    pdfContainer.appendChild(page2);
+
+    // 4. PDF Configuration
+    const opt = {
+        margin: 0,
+        filename: `${reportName}.pdf`,
+        image: { type: 'jpeg', quality: 1.0 },
+        html2canvas: { 
+            scale: 2, 
+            useCORS: true, 
+            windowWidth: 850,
+            backgroundColor: '#0b1020'
+        },
+        jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(pdfContainer).save().then(() => {
+        document.getElementById('export-modal').style.display = 'none';
+        modalContent.innerHTML = originalHTML; // Reset modal
+    });
 }
-
-.dashboard{
-  display:grid;
-  grid-template-columns: 1.1fr 1fr 0.9fr;
-  gap:22px;
-}
-
-/* LEFT PANEL */
-.card{
-  background:#1b2042;
-  border-radius:14px;
-  padding:22px;
-  box-shadow:0 0 25px rgba(0,0,0,.3);
-}
-
-.revenue h1{
-  margin:0;
-  font-size:46px;
-}
-
-.revenue span{
-  color:#aaa;
-  font-size:14px;
-}
-
-.progress{
-  margin-top:14px;
-  height:8px;
-  background:#2c3160;
-  border-radius:6px;
-  overflow:hidden;
-}
-
-.progress div{
-  width:79%;
-  height:100%;
-  background:#1ad1ff;
-}
-
-.chart-card{
-  margin-top:18px;
-}
-
-/* TABLE */
-.table-card h3,
-.target-card h3{
-  margin:0 0 14px;
-  font-size:15px;
-  color:#ddd;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:13px;
-}
-
-th,td{
-  padding:8px 6px;
-  text-align:right;
-}
-
-th:first-child,
-td:first-child{
-  text-align:left;
-}
-
-th{
-  color:#aaa;
-  font-weight:600;
-}
-
-tr{
-  border-bottom:1px solid rgba(255,255,255,.05);
-}
-
-.risk{
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  display:inline-block;
-}
-
-.low{background:#00ff99}
-.mid{background:#ffcc00}
-.high{background:#ff3b3b}
-
-/* TARGET */
-.target{
-  display:flex;
-  justify-content:space-between;
-  font-size:13px;
-  margin:8px 0 4px;
-}
-
-.bar{
-  height:6px;
-  background:#2c3160;
-  border-radius:4px;
-  overflow:hidden;
-}
-
-.bar span{
-  display:block;
-  height:100%;
-  background:#1ad1ff;
-}
-</style>
-</head>
-
-<body>
-
-<div class="dashboard">
-
-  <!-- LEFT -->
-  <div>
-    <div class="card revenue">
-      <h1>$6,058</h1>
-      <span>Actual Revenue (thousands)</span>
-      <div class="progress"><div></div></div>
-    </div>
-
-    <div class="card chart-card">
-      <canvas id="forecastChart"></canvas>
-    </div>
-  </div>
-
-  <!-- MIDDLE -->
-  <div class="card table-card">
-    <h3>By state</h3>
-    <table>
-      <tr>
-        <th>State</th><th>Forecast</th><th>Adj</th><th>Actual</th><th>Risk</th>
-      </tr>
-      <tr><td>AL</td><td>$250</td><td>-$5</td><td>$200</td><td><span class="risk low"></span></td></tr>
-      <tr><td>CA</td><td>$750</td><td>-$75</td><td>$450</td><td><span class="risk high"></span></td></tr>
-      <tr><td>CO</td><td>$250</td><td>$4</td><td>$205</td><td><span class="risk low"></span></td></tr>
-      <tr><td>DC</td><td>$400</td><td>$5</td><td>$354</td><td><span class="risk low"></span></td></tr>
-      <tr><td>FL</td><td>$400</td><td>$0</td><td>$356</td><td><span class="risk mid"></span></td></tr>
-      <tr><td>IL</td><td>$504</td><td>-$64</td><td>$302</td><td><span class="risk high"></span></td></tr>
-      <tr><td>TX</td><td>$650</td><td>$20</td><td>$600</td><td><span class="risk low"></span></td></tr>
-    </table>
-  </div>
-
-  <!-- RIGHT -->
-  <div class="card target-card">
-    <h3>Target achieved</h3>
-
-    <div class="target"><span>AL</span><span>82%</span></div>
-    <div class="bar"><span style="width:82%"></span></div>
-
-    <div class="target"><span>CA</span><span>67%</span></div>
-    <div class="bar"><span style="width:67%"></span></div>
-
-    <div class="target"><span>CO</span><span>81%</span></div>
-    <div class="bar"><span style="width:81%"></span></div>
-
-    <div class="target"><span>NY</span><span>72%</span></div>
-    <div class="bar"><span style="width:72%"></span></div>
-
-    <div class="target"><span>TX</span><span>90%</span></div>
-    <div class="bar"><span style="width:90%"></span></div>
-  </div>
-
-</div>
-
-<script>
-new Chart(document.getElementById('forecastChart'), {
-  type: 'line',
-  data: {
-    labels: ['Jan','Mar','May','Jul','Sep','Nov'],
-    datasets: [
-      {
-        label:'Forecast',
-        data:[500,580,900,300,820,750],
-        borderColor:'#ffd24d',
-        tension:.4
-      },
-      {
-        label:'Actual',
-        data:[480,520,850,250,860,500],
-        borderColor:'#1ad1ff',
-        tension:.4
-      }
-    ]
-  },
-  options:{
-    plugins:{legend:{labels:{color:'#fff'}}},
-    scales:{
-      x:{ticks:{color:'#aaa'},grid:{display:false}},
-      y:{ticks:{color:'#aaa'},grid:{color:'rgba(255,255,255,.05)'}}
-    }
-  }
-});
-</script>
-
-</body>
-</html>
-
 
 // Fetch and display expiry alerts
 async function fetchExpiryAlerts(userId) {
