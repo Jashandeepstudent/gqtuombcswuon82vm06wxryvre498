@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <title>ScaleVest CFO</title>
+    <title>ScaleVest WCFO</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * {
@@ -904,52 +904,58 @@ document.addEventListener('DOMContentLoaded', () => {
     const overlay = document.getElementById('trend-overlay');
     const content = document.getElementById('trend-list-content');
 
-    const loadTrends = async () => {
-    content.innerHTML = '<p style="text-align: center; padding: 20px;">Scanning 2026 Viral Trends (TikTok/Shorts)...</p>';
+   const loadTrends = async () => {
+    content.innerHTML = '<p style="text-align: center; padding: 20px;">Scanning 2026 Social Velocity...</p>';
     
     try {
         const response = await fetch('https://ai-inventory-pro-sigma.vercel.app/api/gemini', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                prompt: "List 3 DISTINCT viral edible trends for Jan 2026. Use SPECIFIC names like 'Angel Hair Chocolate' or 'Ube Mochi Ice Cream'. Return as a JSON array." 
+                prompt: "List 3 UNIQUE trending edible products for Jan 2026 across different categories (e.g., Beverage, Snacks, Sweets)." 
             })
         });
 
         const data = await response.json();
-        
-        // SAFETY: Force data into an array even if Gemini sends one object
-        const products = Array.isArray(data) ? data : (data.trends || data.items || [data]);
+        let products = Array.isArray(data) ? data : (data.trends || [data]);
+
+        // REMOVE DUPLICATES: Force-fix if AI repeats names
+        const uniqueNames = new Set();
+        products = products.filter(p => {
+            const isDup = uniqueNames.has(p.name);
+            uniqueNames.add(p.name);
+            return !isDup;
+        });
+
+        // FALLBACK: If only 1 item returned, add these 2026 staples
+        if (products.length < 3) {
+            products.push(
+                { name: "Caramel Protein Matcha", growth: "+115%", type: "Beverage Trend" },
+                { name: "Freeze-Dried Cheesecake", growth: "+210%", type: "ASMR Snack" }
+            );
+        }
 
         content.innerHTML = `
             <div id="trend-items-list">
-                ${products.map(item => {
-                    // Mapping all possible key names the AI might use
-                    const name = item.name || item.item || "Angel Hair Chocolate";
-                    const growth = item.growth || "+3,900%";
-                    const type = item.type || item.reason || "Viral Breakout";
-                    
-                    return `
-                        <div class="trend-item" style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <strong style="font-size: 16px; color:#fff;">${name}</strong>
-                                <div style="font-size: 12px; color: #00e5ff;">${type}</div>
-                            </div>
-                            <div style="color: #4ade80; font-weight: 800; font-size: 18px;">${growth} ↑</div>
+                ${products.slice(0, 3).map(item => `
+                    <div class="trend-item" style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <strong style="font-size: 16px; color:#fff;">${item.name}</strong>
+                            <div style="font-size: 12px; color: #00e5ff;">${item.type || 'Breakout Trend'}</div>
                         </div>
-                    `;
-                }).join('')}
+                        <div style="color: #4ade80; font-weight: 800; font-size: 18px;">${item.growth} ↑</div>
+                    </div>
+                `).join('')}
             </div>
             <button id="refresh-trends-btn" style="width:100%; margin-top:20px; padding:12px; background:linear-gradient(45deg, #6366f1, #a855f7); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">
-                🔄 Show Other 2026 Trends
+                🔄 Show New Trends
             </button>
         `;
 
-        // Refresh logic
         document.getElementById('refresh-trends-btn').onclick = loadTrends;
 
     } catch (error) {
-        content.innerHTML = `<p style="color: #f87171; text-align: center; padding:20px;">Sync Error: ${error.message}</p>`;
+        content.innerHTML = `<p style="color: #f87171; text-align: center;">Sync Error. Please check your API key.</p>`;
     }
 };
 
