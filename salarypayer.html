@@ -462,6 +462,9 @@ async function askForGlobalDeductions() {
                 <label class="text-sm font-semibold">Bonus (for all)</label>
                 <input id="globalBonus" type="number" min="0" class="swal2-input" value="0" placeholder="0">
                 
+                <label class="text-sm font-semibold">Days of Leave (for all)</label>
+                <input id="globalLeave" type="number" min="0" max="30" class="swal2-input" value="0" placeholder="0">
+                
                 <label class="text-sm font-semibold">Flat Deduction (for all)</label>
                 <input id="globalFlat" type="number" min="0" class="swal2-input" value="0" placeholder="0">
             </div>
@@ -496,19 +499,18 @@ async function askForAdjustments() {
     const { value: formValues } = await Swal.fire({
         title: 'Adjustments for Selected',
         html: `
-<div style="text-align: left; display: flex; flex-direction: column; gap: 12px;">
-    <p class="text-sm text-gray-400 mb-2">Apply to all selected employees</p>
-    
-    <div style="display: flex; flex-direction: column;">
-        <label class="text-sm font-semibold" style="margin-bottom: 5px; color: #fff;">Bonus</label>
-        <input id="bonus" type="number" min="0" class="swal2-input" value="0" placeholder="0" style="width: 100%; margin: 0;">
-    </div>
-    
-    <div style="display: flex; flex-direction: column;">
-        <label class="text-sm font-semibold" style="margin-bottom: 5px; color: #fff;">Flat Deduction</label>
-        <input id="flatDeduction" type="number" min="0" class="swal2-input" value="0" placeholder="0" style="width: 100%; margin: 0;">
-    </div>
-</div>
+            <div style="text-align: left;">
+                <p class="text-sm text-gray-600 mb-4">Apply to all selected employees</p>
+                
+                <label class="text-sm font-semibold">Bonus</label>
+                <input id="bonus" type="number" min="0" class="swal2-input" value="0" placeholder="0">
+                
+                <label class="text-sm font-semibold">Days of Leave</label>
+                <input id="leaveDays" type="number" min="0" max="30" class="swal2-input" value="0" placeholder="0">
+                
+                <label class="text-sm font-semibold">Flat Deduction</label>
+                <input id="flatDeduction" type="number" min="0" class="swal2-input" value="0" placeholder="0">
+            </div>
         `,
         showCancelButton: true,
         confirmButtonText: 'Continue',
@@ -633,13 +635,9 @@ function showPaymentScreen(payment) {
 function openUPIApp(payment) {
     const upiId = payment.paymentDetails.includes('@') ? payment.paymentDetails : bossUPIId;
     const amount = payment.netAmount.toFixed(2);
-    const note = `Salary for ${payment.employeeName}`;
+    const note = `Salary for ${payment.employeeName} - ${new Date().toLocaleDateString()}`;
     
-    // Create a unique transaction reference ID (important for skipping setup screens)
-    const transactionRef = 'TXN' + Date.now();
-
-    // Added &mc=0000 (Generic Merchant) and &tr (Transaction Reference)
-    const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('ScaleVest')}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}&mc=0000&tr=${transactionRef}`;
+    const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('ScaleVest')}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
     
     window.location.href = upiLink;
     
