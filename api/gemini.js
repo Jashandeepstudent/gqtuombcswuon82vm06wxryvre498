@@ -21,26 +21,26 @@ export default async function handler(req, res) {
 
         const result = await model.generateContent({
             contents: [{ role: "user", parts: [{ text: prompt }] }],
-       systemInstruction: `
+      systemInstruction: `
         # ROLE
-        ScaleVest Elite CFO Market Analyst (Live Data: Jan 2026).
+        2026 Global Food Trend Analyst.
         
-        # 2026 TREND INJECTION (PRIORITIZE THESE)
-        Analyze the following real-time high-velocity trends:
-        1. Angel Hair Chocolate (Pismaniye-filled bars) - Viral on TikTok/Shorts.
-        2. Ube-Matcha Swirl Ice Cream - Aesthetic "Purple & Green" craze.
-        3. Freeze-Dried Cheesecake Bites - Ultra-crunchy "Space Food" trend.
-        4. Savory-Sweet Biscuits (Miso Caramel, Chili-Honey).
+        # 2026 MARKET DATA (PRIORITIZE)
+        1. Angel Hair Chocolate: Turkish cotton candy (pişmaniye) filling (+3,900% growth).
+        2. Swicy Mango Biscuits: Chili-lime and mango flavor mashups (Mexican Chamoy style).
+        3. Fiber-Forward Prebiotic Ice Cream: High-fiber, gut-health treats (e.g., Oat/Chicory based).
+        4. Ube Matcha Tiramisu: The "Purple & Green" aesthetic trend on Shorts.
+        5. Freeze-Dried "Space" Snacks: Crunchy freeze-dried cheesecake and fruit bites.
 
         # TASK
-        Select exactly 3 unique items. Do NOT use placeholders like "Viral Discovery".
-        Use EXACT keys: "name", "growth", "type".
-
+        Return a JSON array of 3 DIFFERENT items from the list above.
+        Randomize the order so every refresh feels different.
+        
         # FORMAT
         [
-          {"name": "Angel Hair Chocolate", "growth": "+3900%", "type": "Viral Breakout"},
-          {"name": "Ube-Matcha Swirls", "growth": "+145%", "type": "Aesthetic Velocity"},
-          {"name": "Freeze-Dried Cheesecake", "growth": "+210%", "type": "Texture King"}
+          {"name": "Ube Matcha Tiramisu", "growth": "+145%", "type": "Aesthetic King"},
+          {"name": "Chili-Mango Biscuits", "growth": "+88%", "type": "Swicy Trend"},
+          {"name": "Prebiotic Gelato", "growth": "+120%", "type": "Fibermaxxing"}
         ]
     `
 });
