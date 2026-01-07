@@ -304,7 +304,7 @@ onAuthStateChanged(auth, (user) => {
                 ];
                 const greeting = greetings[Math.floor(Math.random() * greetings.length)];
                 addMessageDirect('assistant', greeting);
-            } catch (error) {
+             catch (error) {
                 console.error('Error loading data:', error);
                 alert('Error loading user data. Please try again.');
             }
@@ -329,7 +329,7 @@ onAuthStateChanged(auth, (user) => {
     </script>
 
     <script>
-        const API_URL = 'https://ai-inventory-pro-sigma.vercel.app/api/cfoscalevest'; // Replace with your Vercel URL
+        const API_URL = 'YOUR_VERCEL_URL_HERE'; // Replace with your Vercel URL
 
         function addMessage(type, content) {
             const messagesContainer = document.getElementById('chatMessages');
