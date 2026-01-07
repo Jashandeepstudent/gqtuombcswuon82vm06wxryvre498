@@ -1770,15 +1770,6 @@ box-sizing: border-box;
             <input type="range" id="rotateZ" min="0" max="360" value="360" oninput="updateRotation()">
         </div>
 
-        <div class="control-group">
-            <label>🔥 Heatmap Overlay</label>
-            <div class="toggle-group">
-                <div class="toggle-switch" id="heatmapToggle" onclick="toggleHeatmap()">
-                    <div class="toggle-slider"></div>
-                </div>
-                <span style="color: #ccc; font-size: 12px;">Sales Performance</span>
-            </div>
-        </div>
 
         <button class="time-travel-btn" onclick="openTimeTravel()">
             <span style="font-size: 18px;">⏳</span> Time Travel
@@ -1941,8 +1932,8 @@ import { getDatabase, ref, onValue, update, get } from 'https://www.gstatic.com/
         }
 
 function handleCellClick(cell) {
-    return; 
-}    
+    return;
+    
     const cell = e.target.closest('.grid-cell');
     if (!cell) return;
     
@@ -1990,26 +1981,32 @@ function moveProductToPosition(product, newX, newY, newFloor) {
     });
 }        // --- CORE FEATURES ---
 
-        function updateHeatmap() {
-            if (!heatmapEnabled) {
-    document.querySelectorAll('.grid-cell').forEach(cell => {
-        cell.className = 'grid-cell';
-        cell.style.background = '';
-    });
+       function updateHeatmap() {
+    // If heatmap is disabled (which it is by default), just reset everything
+    if (!heatmapEnabled) {
+        // Reset the floor (grid cells)
+        document.querySelectorAll('.grid-cell').forEach(cell => {
+            cell.className = 'grid-cell';
+            cell.style.background = '';
+        });
+        
+        // Reset the product cards
+        document.querySelectorAll('.product-node').forEach(node => {
+            const card = node.querySelector('.product-card');
+            if (card) {
+                card.style.background = '';
+                card.style.filter = '';
+            }
+            const pid = node.dataset.productId;
+            const prod = productsData.find(p => p.id === pid);
+            if (prod) updateNodeVisuals(node, prod);
+        });
+        return;
+    }
     
-    // RESET all product cards
-    document.querySelectorAll('.product-node').forEach(node => {
-        const card = node.querySelector('.product-card');
-        if (card) {
-            card.style.background = '';
-            card.style.filter = '';
-        }
-        const pid = node.dataset.productId;
-        const prod = productsData.find(p => p.id === pid);
-        if (prod) updateNodeVisuals(node, prod);
-    });
-    return;
-}
+    // Everything below this line should only run if heatmapEnabled is true
+    // Since you are removing the toggle, this part will essentially be ignored
+
 
             // Calculate Max Sales for normalization
             const maxSales = Math.max(...productsData.map(p => p.sales || 0), 1);
