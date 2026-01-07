@@ -2226,14 +2226,9 @@ node.style.height = '80px';
                     </div>
                 `;
 
-                node.addEventListener('click', () => {
-                    if (exchangeModeActive) {
-                        handleProductGrab(product, node);
-                    } else {
-                        openStoryCard(product);
-                    }
-                });
-
+node.addEventListener('click', () => {
+    openStoryCard(product);
+});
                 container.appendChild(node);
             });
 
