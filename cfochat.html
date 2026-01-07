@@ -28,6 +28,7 @@
             max-width: 800px;
             width: 100%;
             height: 600px;
+            display: flex;
             flex-direction: column;
             overflow: hidden;
         }
@@ -65,23 +66,12 @@
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .message.assistant {
-            justify-content: flex-start;
-        }
-
-        .message.user {
-            justify-content: flex-end;
-        }
+        .message.assistant { justify-content: flex-start; }
+        .message.user { justify-content: flex-end; }
 
         .message-content {
             max-width: 70%;
@@ -89,6 +79,7 @@
             border-radius: 18px;
             font-size: 15px;
             line-height: 1.5;
+            white-space: pre-wrap;
         }
 
         .message.assistant .message-content {
@@ -141,14 +132,7 @@
             transition: transform 0.2s;
         }
 
-        .send-btn:hover {
-            transform: scale(1.1);
-        }
-
-        .send-btn svg {
-            width: 24px;
-            height: 24px;
-        }
+        .send-btn:hover { transform: scale(1.1); }
 
         .back-btn {
             position: fixed;
@@ -164,42 +148,21 @@
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             transition: transform 0.2s;
-            display: none;
         }
 
-        .back-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .loading {
-            display: flex;
-            gap: 4px;
-            padding: 12px 18px;
-        }
-
+        .loading { display: flex; gap: 4px; padding: 12px 18px; }
         .loading span {
-            width: 8px;
-            height: 8px;
+            width: 8px; height: 8px;
             background: #667eea;
             border-radius: 50%;
             animation: bounce 1.4s infinite ease-in-out both;
         }
-
-        .loading span:nth-child(1) {
-            animation-delay: -0.32s;
-        }
-
-        .loading span:nth-child(2) {
-            animation-delay: -0.16s;
-        }
+        .loading span:nth-child(1) { animation-delay: -0.32s; }
+        .loading span:nth-child(2) { animation-delay: -0.16s; }
 
         @keyframes bounce {
-            0%, 80%, 100% {
-                transform: scale(0);
-            }
-            40% {
-                transform: scale(1);
-            }
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
         }
 
         .status-indicator {
@@ -214,15 +177,15 @@
         <div class="chat-header">
             <div>
                 <h1>💼 CFO Assistant</h1>
-                <div class="user-info" id="userInfo"></div>
-                <div class="status-indicator">● Data loaded successfully</div>
+                <div class="user-info" id="userInfo">Connecting...</div>
+                <div class="status-indicator" id="statusText">○ Initializing session...</div>
             </div>
         </div>
         <div class="chat-messages" id="chatMessages"></div>
         <div class="chat-input-area">
             <input type="text" class="chat-input" id="chatInput" placeholder="Ask about your business metrics..." onkeypress="handleKeyPress(event)">
             <button class="send-btn" onclick="sendMessage()">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                 </svg>
             </button>
@@ -236,154 +199,80 @@
         import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
         import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-  authDomain: "scalevest-163a0.firebaseapp.com",
-  databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-  projectId: "scalevest-163a0",
-  storageBucket: "scalevest-163a0.firebasestorage.app",
-  messagingSenderId: "938358950124",
-  appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
-  measurementId: "G-QD3TWBZHR0"
-};
+        // --- CONFIGURATION ---
+        const API_URL = 'https://ai-inventory-pro-sigma.vercel.app/api/cfoscalevest'; 
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+            authDomain: "scalevest-163a0.firebaseapp.com",
+            databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+            projectId: "scalevest-163a0",
+            storageBucket: "scalevest-163a0.firebasestorage.app",
+            messagingSenderId: "938358950124",
+            appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
+            measurementId: "G-QD3TWBZHR0"
+        };
 
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
         const auth = getAuth(app);
-        
-        window.database = database;
-        window.dbRef = ref;
-        window.dbGet = get;
-        window.auth = auth;
 
-        // Check authentication status
-onAuthStateChanged(auth, (user) => {
+        // State
+        window.userData = null;
+
+        onAuthStateChanged(auth, (user) => {
             if (!user) {
                 window.location.href = 'login.html';
             } else {
-                window.currentUserId = user.uid;
-                // Wait for auth to be solid before loading data
+                document.getElementById('userInfo').textContent = `ID: ${user.uid.substring(0, 8)}`;
                 loadUserData(user.uid);
             }
         });
 
         async function loadUserData(userId) {
             try {
-                // Ensure your Firebase structure is prices/UID and sales/UID
-                const pricesRef = dbRef(database, `prices/${userId}`);
-                const salesRef = dbRef(database, `sales/${userId}`);
+                const pricesRef = ref(database, `prices/${userId}`);
+                const salesRef = ref(database, `sales/${userId}`);
                 
-                const [pricesSnapshot, salesSnapshot] = await Promise.all([
-                    dbGet(pricesRef),
-                    dbGet(salesRef)
+                const [pricesSnap, salesSnap] = await Promise.all([
+                    get(pricesRef),
+                    get(salesRef)
                 ]);
 
                 window.userData = {
-                    prices: pricesSnapshot.exists() ? pricesSnapshot.val() : "No inventory data.",
-                    sales: salesSnapshot.exists() ? salesSnapshot.val() : "No sales data."
+                    prices: pricesSnap.exists() ? pricesSnap.val() : "No inventory data.",
+                    sales: salesSnap.exists() ? salesSnap.val() : "No sales data."
                 };
 
-                document.getElementById('chatContainer').style.display = 'flex';
-                document.getElementById('userInfo').textContent = `ID: ${userId.substring(0, 8)}`;
-                addMessageDirect('assistant', "Connection established. Data Vault decrypted. What is our objective?");
-            } catch (error) {
-                console.error('Permission Error:', error);
-                alert("Vault Access Denied. Verify your data is stored under your User ID.");
-            }
-        }
-
-                // Add greeting message
+                document.getElementById('statusText').textContent = "● Data Vault Decrypted";
+                
                 const greetings = [
-                    "Good morning! How can I assist you with your business today?",
-                    "Good afternoon! Ready to dive into your metrics?",
-                    "Good evening! Let's review your business performance.",
-                    "Hello! I'm here to help you understand your data better.",
-                    "Hi there! What would you like to know about your business?",
-                    "Welcome back! How can I help optimize your operations today?"
+                    "Connection established. What is our objective today?",
+                    "CFO Assistant online. Ready to review your business performance.",
+                    "Hello! I've loaded your metrics. What would you like to analyze?"
                 ];
-                const greeting = greetings[Math.floor(Math.random() * greetings.length)];
-                addMessageDirect('assistant', greeting);
-             catch (error) {
-                console.error('Error loading data:', error);
-                alert('Error loading user data. Please try again.');
-            }
-        }
+                addMessage('assistant', greetings[Math.floor(Math.random() * greetings.length)]);
 
-        function addMessageDirect(type, content) {
-            const messagesContainer = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}`;
-            
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'message-content';
-            contentDiv.textContent = content;
-            
-            messageDiv.appendChild(contentDiv);
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        window.loadUserData = loadUserData;
-        window.addMessageDirect = addMessageDirect;
-    </script>
-
-    <script>
-        const API_URL = 'YOUR_VERCEL_URL_HERE'; // Replace with your Vercel URL
-
-        function addMessage(type, content) {
-            const messagesContainer = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}`;
-            
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'message-content';
-            contentDiv.textContent = content;
-            
-            messageDiv.appendChild(contentDiv);
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        function addLoadingMessage() {
-            const messagesContainer = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message assistant';
-            messageDiv.id = 'loadingMessage';
-            
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'message-content loading';
-            loadingDiv.innerHTML = '<span></span><span></span><span></span>';
-            
-            messageDiv.appendChild(loadingDiv);
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        function removeLoadingMessage() {
-            const loadingMessage = document.getElementById('loadingMessage');
-            if (loadingMessage) {
-                loadingMessage.remove();
+            } catch (error) {
+                console.error('Data Error:', error);
+                document.getElementById('statusText').textContent = "● Access Error";
+                addMessage('assistant', "Error accessing your financial vault. Please check permissions.");
             }
         }
 
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
-            
             if (!message) return;
 
             addMessage('user', message);
             input.value = '';
-            
             addLoadingMessage();
 
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         message: message,
                         userData: window.userData
@@ -392,27 +281,43 @@ onAuthStateChanged(auth, (user) => {
 
                 const data = await response.json();
                 removeLoadingMessage();
-                addMessage('assistant', data.response || 'I apologize, but I encountered an error processing your request.');
+                addMessage('assistant', data.response || "I'm sorry, I couldn't process that request.");
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Fetch Error:', error);
                 removeLoadingMessage();
-                addMessage('assistant', 'I apologize, but I\'m having trouble connecting right now. Please try again in a moment.');
+                addMessage('assistant', "I'm having trouble connecting to the brain. Please check your internet or Vercel URL.");
             }
         }
 
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
+        function addMessage(type, content) {
+            const container = document.getElementById('chatMessages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}`;
+            msgDiv.innerHTML = `<div class="message-content">${content}</div>`;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
         }
 
-        function goBack() {
-            window.location.href = 'CFO.html';
+        function addLoadingMessage() {
+            const container = document.getElementById('chatMessages');
+            const loader = document.createElement('div');
+            loader.className = 'message assistant';
+            loader.id = 'loadingMessage';
+            loader.innerHTML = `<div class="message-content loading"><span></span><span></span><span></span></div>`;
+            container.appendChild(loader);
+            container.scrollTop = container.scrollHeight;
         }
 
+        function removeLoadingMessage() {
+            const loader = document.getElementById('loadingMessage');
+            if (loader) loader.remove();
+        }
+
+        // Global assignments for HTML attributes
         window.sendMessage = sendMessage;
-        window.handleKeyPress = handleKeyPress;
-        window.goBack = goBack;
+        window.handleKeyPress = (e) => { if (e.key === 'Enter') sendMessage(); };
+        window.goBack = () => { window.location.href = 'CFO.html'; };
+
     </script>
 </body>
 </html>
