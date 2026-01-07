@@ -1579,7 +1579,7 @@
   // 1. AUTH PROTECTOR (Runs immediately on load)
   onAuthStateChanged(auth, (user) => {
       if (!user) {
-          window.location.href = "login2.html";
+          window.location.href = "startup-side.html";
       } else {
           const isCreated = localStorage.getItem('startupProfileCreated');
           if (isCreated === 'true') {
