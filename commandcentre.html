@@ -1771,7 +1771,6 @@ box-sizing: border-box;
         </div>
 
         <div class="control-group">
-<div class="control-group">
             <label>🔥 Heatmap Overlay</label>
             <div class="toggle-group">
                 <div class="toggle-switch" id="heatmapToggle" onclick="toggleHeatmap()">
@@ -1780,10 +1779,6 @@ box-sizing: border-box;
                 <span style="color: #ccc; font-size: 12px;">Sales Performance</span>
             </div>
         </div>
-
-        <button onclick="showHeatmapLegend()" style="width: 100%; padding: 12px; background: rgba(255, 170, 0, 0.15); border: 2px solid var(--neon-orange); border-radius: 10px; color: var(--neon-orange); font-weight: bold; cursor: pointer; margin-top: 10px; transition: all 0.3s; text-transform: uppercase; font-size: 13px;">
-            <i class="fas fa-info-circle"></i> View Heatmap Guide
-        </button>
 
         <button class="time-travel-btn" onclick="openTimeTravel()">
             <span style="font-size: 18px;">⏳</span> Time Travel
@@ -1823,42 +1818,49 @@ box-sizing: border-box;
     </div>
 <!-- Heatmap Legend Popup -->
 <div id="heatmap-legend-popup" class="heatmap-legend-popup">
-    <h3 style="color: var(--neon-orange); margin-bottom: 20px; text-align: center; font-size: 22px;">🔥 Heatmap Sales Guide</h3>
+    <h3 style="color: var(--neon-orange); margin-bottom: 20px; text-align: center; font-size: 22px;">🔥 Heatmap Guide</h3>
     
-    <div class="legend-item" style="border-color: var(--neon-orange);">
-        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, rgba(255, 170, 0, 0.8), rgba(255, 136, 0, 0.9)); border-radius: 10px; box-shadow: 0 0 20px var(--neon-orange);"></div>
+    <div class="legend-item" style="border-color: var(--neon-red);">
+        <div style="width: 40px; height: 40px; background: var(--neon-red); border-radius: 8px;"></div>
         <div>
-            <div style="font-weight: bold; color: var(--neon-orange); font-size: 14px;">🔥 ORANGE</div>
-            <div style="font-size: 13px; color: #ccc;">High Sales (&gt;50 sold)</div>
+            <div style="font-weight: bold; color: var(--neon-red);">Red</div>
+            <div style="font-size: 12px; color: #ccc;">Out of Stock</div>
         </div>
     </div>
     
-    <div class="legend-item" style="border-color: var(--neon-primary);">
-        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, rgba(0, 243, 255, 0.4), rgba(0, 168, 204, 0.5)); border-radius: 10px; box-shadow: 0 0 20px var(--neon-primary);"></div>
+    <div class="legend-item" style="border-color: var(--neon-yellow);">
+        <div style="width: 40px; height: 40px; background: var(--neon-yellow); border-radius: 8px;"></div>
         <div>
-            <div style="font-weight: bold; color: var(--neon-primary); font-size: 14px;">💧 CYAN</div>
-            <div style="font-size: 13px; color: #ccc;">Normal Sales (10-50)</div>
+            <div style="font-weight: bold; color: var(--neon-yellow);">Yellow</div>
+            <div style="font-size: 12px; color: #ccc;">Low Stock (&lt;5 items)</div>
+        </div>
+    </div>
+    
+    <div class="legend-item" style="border-color: var(--neon-orange);">
+        <div style="width: 40px; height: 40px; background: var(--neon-orange); border-radius: 8px;"></div>
+        <div>
+            <div style="font-weight: bold; color: var(--neon-orange);">Orange</div>
+            <div style="font-size: 12px; color: #ccc;">High Sales (&gt;50)</div>
         </div>
     </div>
     
     <div class="legend-item" style="border-color: var(--ice-blue);">
-        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, rgba(0, 212, 255, 0.8), rgba(0, 136, 204, 0.9)); border-radius: 10px; box-shadow: 0 0 20px var(--ice-blue);"></div>
+        <div style="width: 40px; height: 40px; background: var(--ice-blue); border-radius: 8px;"></div>
         <div>
-            <div style="font-weight: bold; color: var(--ice-blue); font-size: 14px;">🔵 DARK BLUE</div>
-            <div style="font-size: 13px; color: #ccc;">Low Sales (&lt;10 sold)</div>
+            <div style="font-weight: bold; color: var(--ice-blue);">Blue</div>
+            <div style="font-size: 12px; color: #ccc;">Low Sales (&lt;10)</div>
         </div>
     </div>
     
-    <div style="margin: 20px 0; padding: 15px; background: rgba(0, 243, 255, 0.1); border-radius: 10px; border-left: 4px solid var(--neon-primary);">
-        <div style="font-size: 12px; color: #aaa; line-height: 1.6;">
-            <strong style="color: var(--neon-primary);">⚠️ Priority Rules:</strong><br>
-            • Out of Stock / Expired products keep their warning colors<br>
-            • Sales colors only show for healthy stock items<br>
-            • Turn OFF heatmap to see normal product view
+    <div class="legend-item" style="border-color: var(--neon-primary);">
+        <div style="width: 40px; height: 40px; background: var(--neon-primary); border-radius: 8px;"></div>
+        <div>
+            <div style="font-weight: bold; color: var(--neon-primary);">Cyan</div>
+            <div style="font-size: 12px; color: #ccc;">Normal Stock</div>
         </div>
     </div>
     
-    <button onclick="closeHeatmapLegend()" style="width: 100%; margin-top: 10px; padding: 14px; background: var(--neon-accent); border: none; border-radius: 10px; color: #000; font-weight: bold; cursor: pointer; font-size: 14px; text-transform: uppercase;">Got It!</button>
+    <button onclick="closeHeatmapLegend()" style="width: 100%; margin-top: 20px; padding: 12px; background: var(--neon-accent); border: none; border-radius: 10px; color: #000; font-weight: bold; cursor: pointer;">Got It!</button>
 </div>
     <div class="toast" id="toast">
         <div class="toast-title" id="toastTitle"></div>
@@ -2036,22 +2038,7 @@ document.querySelectorAll('.grid-cell').forEach(cell => {
     const expiryStatus = getExpiryStatus(product);
     const productNode = document.querySelector(`[data-product-id="${product.id}"]`);
     
-    // ===== HEATMAP SALES COLORS WITH SMART PRIORITY =====
-    
-    if (product.stock === 0) {
-        // PRIORITY 1: Out of Stock (RED - always shows)
-        cell.classList.add('heatmap-oos');
-        if (productNode) {
-            productNode.classList.add('is-out-of-stock');
-            const card = productNode.querySelector('.product-card');
-            if (card) {
-                card.style.background = 'linear-gradient(180deg, rgba(255, 0, 64, 0.7), rgba(100, 0, 20, 0.8))';
-                card.style.filter = 'saturate(1.5) brightness(1.2)';
-            }
-        }
-    }
-    else if (expiryStatus === 'expired') {
-        // PRIORITY 2: Expired (GRAY - overrides sales)
+    if (expiryStatus === 'expired') {
         cell.classList.add('expired');
         if (productNode) {
             productNode.classList.add('is-expired');
@@ -2061,9 +2048,7 @@ document.querySelectorAll('.grid-cell').forEach(cell => {
                 card.style.filter = 'grayscale(0.7)';
             }
         }
-    }
-    else if (expiryStatus === 'expiring-soon') {
-        // PRIORITY 3: Expiring Soon (BROWN - overrides sales)
+    } else if (expiryStatus === 'expiring-soon') {
         cell.classList.add('expiring-soon');
         if (productNode) {
             productNode.classList.add('is-expiring-soon');
@@ -2073,9 +2058,17 @@ document.querySelectorAll('.grid-cell').forEach(cell => {
                 card.style.filter = 'brightness(0.8) sepia(0.5)';
             }
         }
-    }
-    else if (product.stock < 5) {
-        // PRIORITY 4: Low Stock (YELLOW - overrides sales)
+    } else if (product.stock === 0) {
+        cell.classList.add('heatmap-oos');
+        if (productNode) {
+            productNode.classList.add('is-out-of-stock');
+            const card = productNode.querySelector('.product-card');
+            if (card) {
+                card.style.background = 'linear-gradient(180deg, rgba(255, 0, 64, 0.7), rgba(100, 0, 20, 0.8))';
+                card.style.filter = 'saturate(1.5) brightness(1.2)';
+            }
+        }
+    } else if (product.stock < 5) {
         cell.classList.add('heatmap-lowstock');
         if (productNode) {
             productNode.classList.add('is-low-stock');
@@ -2085,66 +2078,33 @@ document.querySelectorAll('.grid-cell').forEach(cell => {
                 card.style.filter = 'saturate(1.3) brightness(1.1)';
             }
         }
-    }
-    else {
-        // ===== SALES PERFORMANCE COLORS (only for healthy stock) =====
+    } else {
         if (product.sales > 50) {
-            // HIGH SALES - ORANGE 🔥
             cell.classList.add('heatmap-high');
             if (productNode) {
                 const card = productNode.querySelector('.product-card');
                 if (card) {
-                    card.style.background = 'linear-gradient(180deg, rgba(255, 170, 0, 0.7), rgba(200, 120, 0, 0.8))';
-                    card.style.filter = 'hue-rotate(20deg) saturate(1.6) brightness(1.2)';
+                    card.style.background = 'linear-gradient(180deg, rgba(255, 170, 0, 0.6), rgba(200, 120, 0, 0.7))';
+                    card.style.filter = 'hue-rotate(30deg) saturate(1.5)';
                 }
             }
         } else if (product.sales < 10) {
-            // LOW SALES - DARK BLUE 🔵
             cell.classList.add('heatmap-low');
             if (productNode) {
                 const card = productNode.querySelector('.product-card');
                 if (card) {
-                    card.style.background = 'linear-gradient(180deg, rgba(0, 136, 204, 0.7), rgba(0, 80, 150, 0.8))';
-                    card.style.filter = 'hue-rotate(200deg) saturate(1.4) brightness(0.9)';
+                    card.style.background = 'linear-gradient(180deg, rgba(0, 212, 255, 0.6), rgba(0, 100, 200, 0.7))';
+                    card.style.filter = 'hue-rotate(180deg) brightness(1.1)';
                 }
             }
         } else {
-            // NORMAL SALES - CYAN 💧
             cell.classList.add('heatmap-med');
-            if (productNode) {
-                const card = productNode.querySelector('.product-card');
-                if (card) {
-                    card.style.background = 'linear-gradient(180deg, rgba(0, 243, 255, 0.4), rgba(0, 168, 204, 0.5))';
-                    card.style.filter = 'saturate(1.2) brightness(1.05)';
-                }
-            }
         }
     }
 }
 
-
-window.toggleHeatmap = function() {
-            heatmapEnabled = !heatmapEnabled;
-            const toggle = document.getElementById('heatmapToggle');
-            toggle.classList.toggle('active');
-            
-            // Show legend popup when heatmap is FIRST enabled
-            if (heatmapEnabled) {
-                showHeatmapLegend();
-            }
-            
-            updateHeatmap();
-        };
-
-        function showHeatmapLegend() {
-            const popup = document.getElementById('heatmap-legend-popup');
-            const overlay = document.getElementById('overlay');
-            popup.classList.add('active');
-            overlay.classList.add('active');
+            });
         }
-
-
-
 
 window.closeHeatmapLegend = function() {
     document.getElementById('heatmap-legend-popup').classList.remove('active');
@@ -2226,29 +2186,15 @@ node.style.height = '80px';
                 let stockBadgeHtml = '';
                 let expiryBadgeHtml = '';
                 
-                // ===== SMART BADGE PRIORITY SYSTEM =====
-                // Priority: OUT OF STOCK > EXPIRED > LOW+EXPIRING > LOW STOCK > EXPIRING SOON
-                
-                if (product.stock === 0) {
-                    // Priority 1: OUT OF STOCK (highest - ignores expiry)
-                    stockBadgeHtml = '<span class="stock-badge" style="background:var(--neon-red);">OUT</span>';
-                } 
-                else if (expiryStatus === 'expired') {
-                    // Priority 2: EXPIRED (only shows if stock > 0)
+                // Determine stock badge
+                if (expiryStatus === 'expired') {
                     stockBadgeHtml = '<span class="stock-badge expired" style="background:#404040;">EXPIRED</span>';
-                } 
-                else if (expiryStatus === 'expiring-soon' && product.stock < 5) {
-                    // Priority 3: LOW STOCK + EXPIRING SOON (combined warning)
-                    stockBadgeHtml = `<span class="stock-badge" style="background:#8B4513;color:#fff;">LOW & ${daysLeft}D EXP</span>`;
-                } 
-                else if (product.stock < 5) {
-                    // Priority 4: LOW STOCK ONLY
-                    stockBadgeHtml = '<span class="stock-badge" style="background:var(--neon-yellow);color:black;">LOW</span>';
-                } 
-                else if (expiryStatus === 'expiring-soon') {
-                    // Priority 5: EXPIRING SOON ONLY (normal stock)
-                    expiryBadgeHtml = `<span class="expiry-badge">EXP ${daysLeft}D</span>`;
-                }
+                } else if (expiryStatus === 'expiring-soon' && product.stock > 0) {
+                    if (product.stock < 5) {
+                        stockBadgeHtml = `<span class="stock-badge" style="background:#8B4513;color:#fff;">LOW & ${daysLeft}D EXP</span>`;
+                    } else {
+                        expiryBadgeHtml = `<span class="expiry-badge">EXP ${daysLeft}D</span>`;
+                    }
                 } else if (product.stock < 5 && product.stock > 0) {
                     stockBadgeHtml = '<span class="stock-badge" style="background:var(--neon-yellow);color:black;">LOW</span>';
                 } else if (product.stock === 0) {
