@@ -1740,6 +1740,10 @@ box-sizing: border-box;
         <div id="oosList"></div>
     </div>
     
+    <a href="mainbusinesshub.html" style="background: rgba(15, 15, 35, 0.9); border: 2px solid var(--neon-primary); color: var(--neon-primary); padding: 12px 20px; border-radius: 10px; text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 8px; font-size: 14px; white-space: nowrap;">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
 <div class="controls" id="controlsPanel">
     <h3>
         <span>🎮 Digital Controls</span>
@@ -2558,6 +2562,21 @@ content.innerHTML = `
             </button>
         </div>
     </div>
+
+    <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+        <div style="font-size: 11px; color: #888; margin-bottom: 4px;">🌍 Origin</div>
+        <div style="color: var(--ice-blue); font-weight: bold; font-size: 13px;">
+            ${aiData.origin || 'Global Distribution'}
+        </div>
+    </div>
+
+    <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+        <div style="font-size: 11px; color: #888; margin-bottom: 6px;">📖 Info</div>
+        <div style="font-style: italic; color: #ccc; font-size: 12px; line-height: 1.4;">
+            "${aiData.description || 'Product details synced.'}"
+        </div>
+    </div>
+
     <style>
         @keyframes pulseRed {
             0% { box-shadow: 0 0 5px var(--neon-red); }
