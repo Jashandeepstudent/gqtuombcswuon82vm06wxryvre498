@@ -356,59 +356,45 @@ function showError(elementId, message){
   el.style.display = "block";
 }
 
-/* EMAIL SIGNUP - Fixed */
-/* EMAIL SIGNUP - Modified to bypass verification */
-/* EMAIL SIGNUP - New User Flow */
 async function emailSignup() {
-    const email = signupEmail.value.trim();
-    const password = signupPassword.value;
+  const email = signupEmail.value.trim();
+  const password = signupPassword.value;
 
-    if (!email) {
-        showError('signupError', 'Please enter your email');
-        return;
-    }
-    if (!validPassword(password)) {
-        showError('signupError', 'Password does not meet requirements');
-        return;
-    }
+  if (!email || !validPassword(password)) {
+    showError('signupError', 'Valid email and strong password required');
+    return;
+  }
 
-    isAuthFlowActive = true;
-    try {
-        await auth.createUserWithEmailAndPassword(email, password);
-        // ALWAYS New User -> Go to Setup
-        window.location.href = "founderandstartupconfig.html";
-    } catch (err) {
-        isAuthFlowActive = false;
-        if (err.code === "auth/email-already-in-use") {
-            showError('signupError', 'Account already exists. Please sign in.');
-            setTimeout(() => {
-                signupModal.style.display = "none";
-                switchToSigninUI();
-            }, 2000);
-        } else {
-            showError('signupError', err.message);
-        }
-    }
+  isAuthFlowActive = true;
+  try {
+    await auth.createUserWithEmailAndPassword(email, password);
+    // New users always need to configure first
+    window.location.href = "founderandstartupconfig.html";
+  } catch (err) {
+    isAuthFlowActive = false;
+    showError('signupError', err.message);
+  }
 }
-/* EMAIL SIGNIN - Existing User Flow */
+/* EMAIL SIGNIN - Modified to bypass verification */
 async function emailSignin() {
-    const email = signinEmail.value.trim();
-    const password = signinPassword.value;
+  const email = signinEmail.value.trim();
+  const password = signinPassword.value;
 
-    if (!email || !password) {
-        showError('signinError', 'Please enter email and password');
-        return;
+  isAuthFlowActive = true;
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    
+    // Check local storage immediately after sign in
+    const isProfileComplete = localStorage.getItem('startupProfileCreated');
+    if (isProfileComplete === 'true') {
+      window.location.href = "founderdashboard.html";
+    } else {
+      window.location.href = "founderandstartupconfig.html";
     }
-
-    isAuthFlowActive = true;
-    try {
-        await auth.signInWithEmailAndPassword(email, password);
-        // ALWAYS Existing User -> Go to Dashboard
-        window.location.href = "founderdashboard.html";
-    } catch (err) {
-        isAuthFlowActive = false;
-        showError('signinError', err.message);
-    }
+  } catch (err) {
+    isAuthFlowActive = false;
+    showError('signinError', err.message);
+  }
 }
 /* FORGOT PASSWORD */
 async function forgotPassword() {
@@ -434,23 +420,21 @@ async function signOutAndClose() {
 
 /* SOCIAL LOGINS */
 async function googleLogin() {
-    isAuthFlowActive = true;
-    try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        const result = await auth.signInWithPopup(provider);
-        
-        // Dynamic check for social logins
-        const isNewUser = result.additionalUserInfo.isNewUser;
-        
-        if (isNewUser) {
-            window.location.href = "founderandstartupconfig.html";
-        } else {
-            window.location.href = "founderdashboard.html";
-        }
-    } catch (err) {
-        isAuthFlowActive = false;
-        alert("Google sign-in failed: " + err.message);
+  isAuthFlowActive = true;
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(provider);
+    
+    const isProfileComplete = localStorage.getItem('startupProfileCreated');
+    if (isProfileComplete === 'true') {
+      window.location.href = "founderdashboard.html";
+    } else {
+      window.location.href = "founderandstartupconfig.html";
     }
+  } catch (err) {
+    isAuthFlowActive = false;
+    alert("Login failed: " + err.message);
+  }
 }
 async function facebookLogin() {
   isAuthFlowActive = true;
@@ -480,15 +464,12 @@ async function appleLogin() {
 }
 
 /* AUTH STATE LISTENER - Modified to redirect all users */
-/* AUTH STATE LISTENER */
 auth.onAuthStateChanged(user => {
-    // If we are currently in the middle of a login click, let the function handle it
-    if (isAuthFlowActive) return;
-
-    if (user) {
-        // Returning user with active session -> Go to Dashboard
-        window.location.href = "founderdashboard.html";
-    }
+  if (isAuthFlowActive) return;
+  if (user) {
+    // If the user is logged in, always send them to the hub
+    window.location.href = "founderdashboard.html";
+  }
 });
 </script>
 
