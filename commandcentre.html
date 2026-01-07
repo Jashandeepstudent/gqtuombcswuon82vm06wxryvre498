@@ -2226,16 +2226,7 @@ node.style.height = '80px';
                     </div>
                 `;
 
-                node.addEventListener('click', () => {
-                    if (exchangeModeActive) {
-                        handleProductGrab(product, node);
-                    } else {
-                        openStoryCard(product);
-                    }
-                });
 
-                container.appendChild(node);
-            });
 
             updateHeatmap(); // Apply heatmap if active
             updateOutOfStockLeaderboard(products);
