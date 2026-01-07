@@ -2234,11 +2234,11 @@ async function askCFO(userInput) {
             <div class="logo">SCALEVEST</div>
         </div>
 
-<div class="search-bar" onclick="openCFOChat()" style="cursor: pointer;">
-    <svg class="mic-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+<div class="search-bar" onclick="window.location.href='cfochat.html'" style="cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s ease;">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #667eea;">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
     </svg>
-    <span class="search-text">Ask CFO: "Why did my profit dip?"</span>
+    <span class="search-text" style="font-weight: 500; color: #555;">Chat with your CFO</span>
 </div>
 
         <div class="dashboard">
@@ -2649,3 +2649,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
