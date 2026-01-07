@@ -1090,7 +1090,45 @@
             color: rgba(255, 255, 255, 0.7);
             font-weight: 600;
         }
+/* Success Modal Styling */
+.success-content {
+    text-align: center;
+    padding: 40px;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
 
+.success-icon {
+    font-size: 50px;
+    margin-bottom: 20px;
+    animation: bounce 1s infinite;
+}
+
+.loading-bar {
+    width: 100%;
+    height: 4px;
+    background: #f0f0f0;
+    margin-top: 20px;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress {
+    width: 0%;
+    height: 100%;
+    background: #007bff;
+    animation: loadProgress 3s linear forwards;
+}
+
+@keyframes loadProgress {
+    to { width: 100%; }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
         .footer-legal {
             display: flex;
             gap: 2rem;
@@ -1199,7 +1237,112 @@
         .form-group {
             margin-bottom: 2rem;
         }
+/* The Full-Screen Immersive Background */
+#successOverlay {
+    display: none; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    /* Animated Gradient Background */
+    background: radial-gradient(circle at top right, #1a1a2e, #0a0a0b 50%),
+                radial-gradient(circle at bottom left, #0d1b2a, #0a0a0b 50%);
+    z-index: 10000;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', -apple-system, sans-serif;
+}
 
+/* Container for the content to keep it sharp */
+.success-inner {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    max-width: 500px;
+    padding: 2rem;
+}
+
+/* High-End Typography */
+.success-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    letter-spacing: -2px;
+    margin-bottom: 1rem;
+    color: #ffffff;
+    /* Subtle text glow */
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+.success-message {
+    color: #94a3b8;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 3rem;
+}
+
+/* The Loading Container */
+.redirect-box {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px); /* Glassmorphism */
+}
+
+.status-text {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #64748b;
+    margin-bottom: 12px;
+}
+
+/* Sleek Progress Bar */
+.full-loading-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 100px;
+    overflow: hidden;
+}
+
+.full-progress {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #007bff, #00d4ff);
+    box-shadow: 0 0 20px rgba(0, 123, 255, 0.5);
+    border-radius: 100px;
+    animation: fullLoad 3s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+/* Background Blobs for Atmosphere */
+.bg-blob {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: rgba(0, 123, 255, 0.15);
+    filter: blur(120px);
+    border-radius: 50%;
+    z-index: 1;
+    pointer-events: none;
+}
+.blob-1 { top: -10%; right: -5%; animation: float 10s infinite alternate; }
+.blob-2 { bottom: -10%; left: -5%; background: rgba(139, 92, 246, 0.1); animation: float 15s infinite alternate-reverse; }
+
+/* Keyframes */
+@keyframes fullLoad {
+    0% { width: 0%; }
+    100% { width: 100%; }
+}
+
+@keyframes float {
+    from { transform: translate(0, 0); }
+    to { transform: translate(30px, 50px); }
+}
         .form-group label {
             display: block;
             margin-bottom: 0.8rem;
@@ -1403,6 +1546,123 @@
         }
     </style>
 </head>
+
+<script type="module">
+  // 1. You MUST import the specific functions you want to use
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { 
+      getFirestore, 
+      collection, 
+      addDoc 
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+ // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+  authDomain: "scalevest-163a0.firebaseapp.com",
+  databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+  projectId: "scalevest-163a0",
+  storageBucket: "scalevest-163a0.firebasestorage.app",
+  messagingSenderId: "938358950124",
+  appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
+  measurementId: "G-QD3TWBZHR0"
+};
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  // Initialize Firestore with your specific database name
+  const db = getFirestore(app, "scalestartup");
+
+window.submitForm = async function(event) {
+    event.preventDefault();
+    
+    const user = auth.currentUser;
+    // Safety check (though onAuthStateChanged should catch this)
+    if (!user) {
+        window.location.href = "login2.html";
+        return;
+    }
+
+    const submitButton = event.target.querySelector('.form-submit');
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="loader"></span> Saving...';
+
+    try {
+        // Use user.uid as the document ID
+        const profileRef = doc(db, "founderprofile", user.uid);
+        
+        // Final check to prevent overwrite
+        const docSnap = await getDoc(profileRef);
+        if (docSnap.exists()) {
+            alert("Profile already exists!");
+            window.location.href = "founderandstartupconfig.html";
+            return;
+        }
+
+        const formData = {
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            email: document.getElementById('email').value,
+            startupName: document.getElementById('startupName').value,
+            founderInfo: document.getElementById('founderinfo').value,
+            goals: document.getElementById('goals').value,
+            userId: user.uid, // Storing UID inside the doc too
+            createdAt: new Date()
+        };
+
+        // SAVE DATA
+        await setDoc(profileRef, formData);
+
+        // SET LOCAL STORAGE FLAG
+        localStorage.setItem('startupProfileCreated', 'true');
+
+        // TRIGGER THE BEAUTIFUL FULL-SCREEN SUCCESS
+        showImmersiveSuccess();
+
+    } catch (error) {
+        console.error("Critical Error:", error);
+        alert("Failed to save profile. Check console for details.");
+        submitButton.disabled = false;
+        submitButton.innerHTML = "Create My Profile";
+    }
+};
+function showImmersiveSuccess() {
+    const overlay = document.getElementById('successOverlay');
+    
+    // Initial state for fade-in
+    overlay.style.opacity = '0';
+    overlay.style.display = 'flex';
+    overlay.style.transition = 'opacity 0.8s ease-out';
+    
+    // Trigger fade in
+    setTimeout(() => {
+        overlay.style.opacity = '1';
+    }, 10);
+    
+    document.body.style.overflow = 'hidden';
+
+    // Redirect after 3.5 seconds (gives user time to see the 100% bar)
+    setTimeout(() => {
+        window.location.href = "founderandstartupconfig.html";
+    }, 3500);
+}
+
+onAuthStateChanged(auth, (user) => {
+    if (!user) {
+        // 1. If not logged in, send to login page
+        console.log("No user found, redirecting to login...");
+        window.location.href = "login2.html";
+    } else {
+        // 2. If logged in, check if they already have a profile in LocalStorage
+        const isCreated = localStorage.getItem('startupProfileCreated');
+        if (isCreated === 'true') {
+            window.location.href = "founderandstartupconfig.html";
+        }
+    }
+});
+
+</script>
 <body>
     <!-- Particle Background -->
     <div class="particles" id="particles"></div>
@@ -1416,9 +1676,8 @@
             </div>
             <ul class="nav-menu">
                 <li><a href="#features">Features</a></li>
-                <li><a href="#services">Services</a></li>
+                <li><a href="#services">Steps</a></li>
                 <li><a href="#videos">Resources</a></li>
-                <li><a href="#testimonials">Stories</a></li>
             </ul>
             <div class="nav-buttons">
                 <button class="nav-btn nav-btn-outline" onclick="scrollToSection('services')">Explore</button>
@@ -1433,43 +1692,14 @@
         <div class="hero-content">
             <div class="hero-badge">
                 <span class="hero-badge-dot"></span>
-                <span>Join 100,000+ Founders</span>
+                <span>Join Now Founders!</span>
             </div>
-            <h1>Build Your Startup<br>From Zero to Launch</h1>
+            <h1>ScaleVest<br>The Infrastrcuture of Scale </h1>
             <p class="hero-subtitle">
-                Connect with world-class talent, access cutting-edge tools, and transform your vision into a thriving business. Everything you need to succeed, all in one place.
+                Connect with Angels , VCs and Investors through your start up vests or direct application to them and get direct reply.
             </p>
-            <div class="hero-search">
-                <div class="search-container">
-                    <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    <input type="text" placeholder="What do you need help with today?" id="heroSearchInput">
-                    <button onclick="handleSearch()">Search</button>
-                </div>
-            </div>
-            <div class="hero-tags">
-                <a href="#" class="hero-tag">🚀 Launch Strategy</a>
-                <a href="#" class="hero-tag">💻 Development</a>
-                <a href="#" class="hero-tag">🎨 Design</a>
-                <a href="#" class="hero-tag">📈 Growth Marketing</a>
-                <a href="#" class="hero-tag">💰 Funding</a>
-            </div>
-            <div class="hero-stats">
-                <div class="stat-item">
-                    <div class="stat-number">100K+</div>
-                    <div class="stat-label">Active Founders</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">$2.5B+</div>
-                    <div class="stat-label">Raised by Startups</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">50K+</div>
-                    <div class="stat-label">Projects Completed</div>
-                </div>
-            </div>
 
+          
             <div class="video-card" onclick="playVideo(this)">
                 <div class="video-thumbnail">
                     <video>
@@ -1541,103 +1771,13 @@
         </div>
     </section>
 
-    <!-- Testimonials Section -->
-    <section id="testimonials" class="testimonials-section">
-        <div class="section-header">
-            <div class="section-label">Success Stories</div>
-            <h2 class="section-title">Hear From Founders Like You</h2>
-            <p class="section-description">
-                Real stories from entrepreneurs who transformed their ideas into successful businesses with ScaleVest.
-            </p>
-        </div>
-
-        <div class="testimonials-grid">
-            <div class="testimonial-card">
-                <p class="testimonial-quote">
-                    "ScaleVest connected me with the perfect technical co-founder. Within 6 months, we built our MVP, raised our seed round, and now have 50K active users. The community support has been invaluable throughout our journey."
-                </p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">SK</div>
-                    <div class="author-info">
-                        <h4>Sarah Kim</h4>
-                        <p>Founder, TechFlow AI</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="testimonial-card">
-                <p class="testimonial-quote">
-                    "The mentorship program was a game-changer. Having weekly calls with successful founders who've been through it helped us avoid so many costly mistakes. We saved at least 6 months of trial and error."
-                </p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">MR</div>
-                    <div class="author-info">
-                        <h4>Marcus Rodriguez</h4>
-                        <p>CEO, HealthSync</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="testimonial-card">
-                <p class="testimonial-quote">
-                    "I found my entire initial team through ScaleVest - designer, developer, and growth marketer. The platform's vetting process meant I only connected with A-players. Best hiring experience I've ever had."
-                </p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">JP</div>
-                    <div class="author-info">
-                        <h4>Jennifer Park</h4>
-                        <p>Founder, EcoCart</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="testimonial-card">
-                <p class="testimonial-quote">
-                    "The resources library alone is worth it. From legal templates to growth playbooks, everything I needed was right there. Plus the community is incredibly active and helpful."
-                </p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">DL</div>
-                    <div class="author-info">
-                        <h4>David Lee</h4>
-                        <p>Founder, FitTrack Pro</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="testimonial-card">
-                <p class="testimonial-quote">
-                    "Got introduced to 3 VCs through ScaleVest's investor network. Closed our Series A within 4 months. The pitch practice sessions and feedback from other founders were crucial to our success."
-                </p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">AN</div>
-                    <div class="author-info">
-                        <h4>Aisha Nakamura</h4>
-                        <p>CEO, CloudNest</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="testimonial-card">
-                <p class="testimonial-quote">
-                    "From solo founder to 15-person team in 18 months. ScaleVest's tools for validation, hiring, and growth made all the difference. Can't imagine building a startup without this platform now."
-                </p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">TC</div>
-                    <div class="author-info">
-                        <h4>Tom Chen</h4>
-                        <p>Founder, DataPulse</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
+  
     <!-- CTA Section -->
     <section class="cta-section">
         <div class="cta-content">
             <h2 class="cta-title">Ready to Build Your Future?</h2>
             <p class="cta-description">
-                Join 100,000+ founders who are turning their ideas into reality. Get started for free today and access everything you need to launch and scale your startup.
+                Join Founders , raise funds and scale your startup.
             </p>
             <div class="cta-buttons">
                 <button class="cta-button cta-button-primary" onclick="openModal()">Create Founder Profile</button>
@@ -1656,7 +1796,7 @@
                         <div class="footer-logo-text">ScaleVest</div>
                     </div>
                     <p class="footer-tagline">
-                        Empowering entrepreneurs to build, launch, and scale innovative startups. Your journey from idea to success starts here.
+                        Empowering entrepreneurs to raise funds and access interested investors from ScaleVest Startup Mode Your journey from idea to success starts here.
                     </p>
                     <div class="footer-social">
                         <div class="social-icon" title="Twitter">𝕏</div>
@@ -1671,55 +1811,24 @@
                     <h3>Platform</h3>
                     <ul class="footer-links">
                         <li><a href="#features">Features</a></li>
-                        <li><a href="#services">Services</a></li>
+                        <li><a href="#services">Steps</a></li>
                         <li><a href="#videos">Resources</a></li>
                         <li><a href="#" onclick="openModal(); return false;">Get Started</a></li>
-                        <li><a href="#">Pricing</a></li>
-                        <li><a href="#">API</a></li>
+                        <li><a href="#">About us</a></li>
+                       
                     </ul>
                 </div>
 
-                <div class="footer-column">
-                    <h3>Resources</h3>
-                    <ul class="footer-links">
-                        <li><a href="#">Blog</a></li>
-                        <li><a href="#">Case Studies</a></li>
-                        <li><a href="#">Webinars</a></li>
-                        <li><a href="#">Playbooks</a></li>
-                        <li><a href="#">Templates</a></li>
-                        <li><a href="#">Community</a></li>
-                    </ul>
-                </div>
 
-                <div class="footer-column">
-                    <h3>Company</h3>
-                    <ul class="footer-links">
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Careers</a></li>
-                        <li><a href="#">Press Kit</a></li>
-                        <li><a href="#">Partners</a></li>
-                        <li><a href="#">Investors</a></li>
-                        <li><a href="#">Contact</a></li>
-                    </ul>
-                </div>
 
-                <div class="footer-column">
-                    <h3>Support</h3>
-                    <ul class="footer-links">
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">Documentation</a></li>
-                        <li><a href="#">Status</a></li>
-                        <li><a href="#">Trust & Safety</a></li>
-                        <li><a href="#">Report Issue</a></li>
-                        <li><a href="#">Feedback</a></li>
-                    </ul>
-                </div>
+
+
             </div>
 
             <div class="footer-bottom">
                 <div>
                     <p class="footer-copyright">© 2026 ScaleVest. All rights reserved.</p>
-                    <p class="footer-company">Powered by UNIORAX PRIVATE LIMITED</p>
+                    <p class="footer-company">Powered by UnioraX Private Limited</p>
                 </div>
                 <ul class="footer-legal">
                     <li><a href="#">Privacy Policy</a></li>
@@ -1736,7 +1845,7 @@
             <div class="modal-header">
                 <div>
                     <h2>Create Your Founder Profile</h2>
-                    <p class="modal-subtitle">Join 100,000+ entrepreneurs building the future</p>
+                    <p class="modal-subtitle">Join ScaleVest as a Founder</p>
                 </div>
                 <div class="modal-close" onclick="closeModal()">×</div>
             </div>
@@ -1763,44 +1872,15 @@
                         <input type="text" id="startupName" required placeholder="What's your startup called?">
                     </div>
 
+                  
                     <div class="form-group">
-                        <label for="industry">Industry *</label>
-                        <select id="industry" required>
-                            <option value="">Select your industry</option>
-                            <option value="fintech">FinTech</option>
-                            <option value="healthtech">HealthTech</option>
-                            <option value="edtech">EdTech</option>
-                            <option value="saas">SaaS</option>
-                            <option value="ecommerce">E-Commerce</option>
-                            <option value="ai">AI/ML</option>
-                            <option value="blockchain">Blockchain</option>
-                            <option value="social">Social Media</option>
-                            <option value="gaming">Gaming</option>
-                            <option value="other">Other</option>
-                        </select>
+                        <label for="founderinfo">Tell Us About Your Yourself *</label>
+                        <textarea id="founderinfo" required placeholder="Why do you start a founder ? and why you are best for this?"></textarea>
                     </div>
 
                     <div class="form-group">
-                        <label for="stage">Startup Stage *</label>
-                        <select id="stage" required>
-                            <option value="">Where are you in your journey?</option>
-                            <option value="idea">Idea Stage</option>
-                            <option value="validation">Validation</option>
-                            <option value="mvp">Building MVP</option>
-                            <option value="launched">Launched</option>
-                            <option value="growth">Growth Stage</option>
-                            <option value="scale">Scaling</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="startupIdea">Tell Us About Your Startup *</label>
-                        <textarea id="startupIdea" required placeholder="What problem are you solving? What's your solution? Who are your customers?"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="goals">What Are Your Primary Goals? *</label>
-                        <textarea id="goals" required placeholder="e.g., Find a technical co-founder, validate my idea, raise funding, build an MVP..."></textarea>
+                        <label for="goals">What Are Your Primary Goals Now? *</label>
+                        <textarea id="goals" required placeholder="e.g., Find a Investor , Scaling etc."></textarea>
                     </div>
 
                     <button type="submit" class="form-submit">Create My Profile</button>
@@ -1813,6 +1893,27 @@
         </div>
     </div>
 
+<div id="successOverlay" class="success-fullscreen">
+    <div class="success-inner">
+        <div class="icon-wrapper">
+            <div class="rocket-icon"></div>
+            <div class="pulse-ring"></div>
+        </div>
+        
+        <h1 class="success-title">Welcome Here!</h1>
+        <p class="success-message">Your founder profile has been successfully created. <br> Preparing your personalized dashboard...</p>
+        
+        <div class="redirect-box">
+            <span class="status-text">Redirecting to Startup Configuration</span>
+            <div class="full-loading-bar">
+                <div class="full-progress"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+</div>
     <script>
         // Particle Generation
         function createParticles() {
@@ -1901,7 +2002,19 @@
                 closeModal();
             }, 2000);
         }
+function openModal() {
+    // Check if the user already created a profile in this browser
+    const isCreated = localStorage.getItem('startupProfileCreated');
+    
+    if (isCreated === 'true') {
+        alert("You've already set up your profile. Redirecting to config...");
+        window.location.href = "founderandstartupconfig.html";
+        return;
+    }
 
+    document.getElementById('founderModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
         // Search Handler
         function handleSearch() {
             const searchInput = document.getElementById('heroSearchInput');
@@ -2150,20 +2263,6 @@
 </body>
 </html>
 
-    <!-- Trusted By Section -->
-    <section class="trusted-section">
-        <div class="trusted-container">
-            <p class="trusted-title">Trusted by Industry Leaders</p>
-            <div class="trusted-logos">
-                <div class="trusted-logo">GOOGLE</div>
-                <div class="trusted-logo">MICROSOFT</div>
-                <div class="trusted-logo">AMAZON</div>
-                <div class="trusted-logo">NETFLIX</div>
-                <div class="trusted-logo">META</div>
-                <div class="trusted-logo">TESLA</div>
-            </div>
-        </div>
-    </section>
 
     <!-- Features Section - Bento Grid -->
     <section id="features" class="features-section">
@@ -2171,16 +2270,16 @@
             <div class="section-label">Why Choose ScaleVest</div>
             <h2 class="section-title">Everything You Need to Build & Scale</h2>
             <p class="section-description">
-                From idea validation to launch and beyond, we provide the tools, talent, and community to make your startup dreams a reality.
+                From idea validation to launch and beyond you need funds and for that ScaleVest help you connect with Investors.
             </p>
         </div>
 
         <div class="bento-grid">
             <div class="bento-item bento-large">
-                <div class="bento-icon">🚀</div>
-                <h3 class="bento-title">Launch Faster with Expert Guidance</h3>
+                <div class="bento-icon"></div>
+                <h3 class="bento-title">Launch With Us</h3>
                 <p class="bento-description">
-                    Get personalized mentorship from successful entrepreneurs who've been exactly where you are. Our community of 10,000+ founders shares real experiences, proven strategies, and actionable insights to help you avoid common pitfalls and accelerate your journey from idea to market.
+                    Create your best Vest Possible to get Much Impact and track your Vests performance from founer Dashboard and Don't Worry ScaleVest and its Algorithm have your Back.
                 </p>
                 <div class="bento-video">
                     <video autoplay muted loop playsinline>
@@ -2193,15 +2292,15 @@
                 <div class="bento-icon">💡</div>
                 <h3 class="bento-title">Validate Your Ideas</h3>
                 <p class="bento-description">
-                    Use our AI-powered validation tools to test your concept, analyze market demand, and refine your value proposition before investing time and resources.
+                   TIP : Show good Transction or Impacting idea to increase your chances.
                 </p>
             </div>
 
             <div class="bento-item bento-small">
                 <div class="bento-icon">👥</div>
-                <h3 class="bento-title">Find Your Co-Founder</h3>
+                <h3 class="bento-title">Find Angel </h3>
                 <p class="bento-description">
-                    Connect with skilled professionals looking to join innovative startups. Our matching algorithm finds the perfect complement to your skills.
+                    Connect with Investors , Angels or VCs Interested in your Start up category and send your application to multiple at once with Founder Emergence.
                 </p>
             </div>
 
@@ -2217,7 +2316,7 @@
                 <div class="bento-icon">🎯</div>
                 <h3 class="bento-title">Growth Tools & Analytics</h3>
                 <p class="bento-description">
-                    Track your progress with powerful analytics, automate workflows, and scale efficiently with enterprise-grade tools designed for startups.
+                    Track your progress with powerful analytics, in-app meetings and chat Q and A.
                 </p>
             </div>
 
@@ -2225,7 +2324,7 @@
                 <div class="bento-icon">🌐</div>
                 <h3 class="bento-title">Global Network & Resources</h3>
                 <p class="bento-description">
-                    Tap into our worldwide network of founders, investors, and industry experts. Access exclusive workshops, networking events, and educational content to continuously level up your entrepreneurial skills.
+                    Tap into our worldwide network of founders and investor . Acess their profiles and try best to be funded , explore other founders picthes and vests and improve your own mistakes.
                 </p>
                 <div class="bento-video">
                     <video autoplay muted loop playsinline>
@@ -2240,9 +2339,9 @@
     <section id="services" class="services-section">
         <div class="section-header">
             <div class="section-label">Our Services</div>
-            <h2 class="section-title">Find the Perfect Service for Your Startup</h2>
+            <h2 class="section-title">Steps to get Started on ScaleVest</h2>
             <p class="section-description">
-                Browse thousands of services from vetted professionals ready to help you build, launch, and scale your business.
+                Browse Investor Profiles and Launch your own vests to get noticed.
             </p>
         </div>
 
@@ -2254,16 +2353,24 @@
                     </video>
                 </div>
                 <div class="service-info">
-                    <div class="service-category">Development</div>
-                    <h3 class="service-title">Full-Stack Web Application</h3>
+                    <div class="service-category">Step 1 </div>
+                    <h3 class="service-title">Creating Founder Profile</h3>
                     <p class="service-description">
-                        Build scalable web applications with modern tech stacks. React, Node.js, MongoDB, and cloud deployment included.
+                        Build or Create your own Founder profile to get started.
                     </p>
                     <div class="service-footer">
                         <div class="service-rating">
-                            ⭐ 4.9 (2.4K reviews)
+                     
                         </div>
-                        <div class="service-price">From $2,500</div>
+                       <div class="service-price" style="display: flex; align-items: center; gap: 10px; color: #667eea;">
+    
+    <span style="font-weight: 600; font-size: 16px;">Next Step</span>
+
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+    </svg>
+</div>
                     </div>
                 </div>
             </div>
@@ -2273,16 +2380,25 @@
                     <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800" alt="Analytics Dashboard">
                 </div>
                 <div class="service-info">
-                    <div class="service-category">Analytics</div>
-                    <h3 class="service-title">Data Analytics & Strategy</h3>
+                    <div class="service-category">Step 2</div>
+                    <h3 class="service-title">Provide the Founder or Founders Details</h3>
                     <p class="service-description">
-                        Transform your data into actionable insights. Custom dashboards, predictive analytics, and growth strategies.
+                    Provide Founder Details to help investors to get information about you.
                     </p>
                     <div class="service-footer">
                         <div class="service-rating">
-                            ⭐ 5.0 (1.8K reviews)
+                           
                         </div>
-                        <div class="service-price">From $1,200</div>
+                       <div class="service-price" style="display: flex; align-items: center; gap: 10px; color: #667eea;">
+    
+    <span style="font-weight: 600; font-size: 16px;">Next Step</span>
+
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+    </svg>
+</div>
+
                     </div>
                 </div>
             </div>
@@ -2292,16 +2408,24 @@
                     <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800" alt="Mobile App">
                 </div>
                 <div class="service-info">
-                    <div class="service-category">Mobile</div>
-                    <h3 class="service-title">iOS & Android App Development</h3>
+                    <div class="service-category">Step 3</div>
+                    <h3 class="service-title">Startup Profile</h3>
                     <p class="service-description">
-                        Native or cross-platform mobile apps built with React Native or Flutter. App Store submission included.
+                       Create your Startup profile to Continue Further into ScaleVest.
                     </p>
                     <div class="service-footer">
                         <div class="service-rating">
-                            ⭐ 4.8 (3.2K reviews)
+                           
                         </div>
-                        <div class="service-price">From $3,500</div>
+                                               <div class="service-price" style="display: flex; align-items: center; gap: 10px; color: #667eea;">
+    
+    <span style="font-weight: 600; font-size: 16px;">Next Step</span>
+
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+    </svg>
+</div>
                     </div>
                 </div>
             </div>
@@ -2313,16 +2437,24 @@
                     </video>
                 </div>
                 <div class="service-info">
-                    <div class="service-category">Design</div>
-                    <h3 class="service-title">Brand Identity & UI/UX Design</h3>
+                    <div class="service-category">Step 4</div>
+                    <h3 class="service-title">Provide your Startup Details </h3>
                     <p class="service-description">
-                        Complete brand identity packages including logo, color palette, typography, and responsive web design.
+                        Provide your Startup Details to help investor completely know about your Startup.
                     </p>
                     <div class="service-footer">
                         <div class="service-rating">
-                            ⭐ 4.9 (2.7K reviews)
+                            
                         </div>
-                        <div class="service-price">From $1,800</div>
+                                                                      <div class="service-price" style="display: flex; align-items: center; gap: 10px; color: #667eea;">
+    
+    <span style="font-weight: 600; font-size: 16px;">Next Step</span>
+
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+    </svg>
+</div>
                     </div>
                 </div>
             </div>
@@ -2332,16 +2464,25 @@
                     <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800" alt="Marketing Analytics">
                 </div>
                 <div class="service-info">
-                    <div class="service-category">Marketing</div>
-                    <h3 class="service-title">Growth Marketing Strategy</h3>
+                    <div class="service-category">Step 5</div>
+                    <h3 class="service-title">Create your first Vest</h3>
                     <p class="service-description">
-                        Data-driven growth strategies including SEO, content marketing, paid ads, and conversion optimization.
+                        Create your first vest with some Startup Details , pitch , transaction and funding requirement.
                     </p>
                     <div class="service-footer">
                         <div class="service-rating">
-                            ⭐ 4.7 (1.9K reviews)
+                            
                         </div>
-                        <div class="service-price">From $1,500</div>
+                       <div class="service-price" style="display: flex; align-items: center; gap: 10px; color: #667eea;">
+    
+    <span style="font-weight: 600; font-size: 16px;">Next Step</span>
+
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+    </svg>
+</div>
+
                     </div>
                 </div>
             </div>
@@ -2351,16 +2492,24 @@
                     <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800" alt="Business Meeting">
                 </div>
                 <div class="service-info">
-                    <div class="service-category">Business</div>
-                    <h3 class="service-title">Startup Business Plan</h3>
+                    <div class="service-category">Step 6 </div>
+                    <h3 class="service-title">Promote Vest</h3>
                     <p class="service-description">
-                        Investor-ready business plans with market research, financial projections, and pitch deck creation.
+                       Promote your Vest with ScaleVest Promotions or getting diffrent buffs.
                     </p>
                     <div class="service-footer">
                         <div class="service-rating">
-                            ⭐ 5.0 (2.1K reviews)
+                            
                         </div>
-                        <div class="service-price">From $900</div>
+                                               <div class="service-price" style="display: flex; align-items: center; gap: 10px; color: #667eea;">
+    
+    <span style="font-weight: 600; font-size: 16px;">Next Step</span>
+
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+    </svg>
+</div>
                     </div>
                 </div>
             </div>
@@ -2370,16 +2519,24 @@
                     <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800" alt="AI Technology">
                 </div>
                 <div class="service-info">
-                    <div class="service-category">AI & ML</div>
-                    <h3 class="service-title">AI Integration & Automation</h3>
+                    <div class="service-category">Step 7</div>
+                    <h3 class="service-title">Direct Applications</h3>
                     <p class="service-description">
-                        Integrate AI/ML capabilities into your product. Custom models, API integration, and automation workflows.
+                       Create and send your Applications to Investors and wait for thier direct Answer.
                     </p>
                     <div class="service-footer">
                         <div class="service-rating">
-                            ⭐ 4.8 (1.5K reviews)
+                            
                         </div>
-                        <div class="service-price">From $2,200</div>
+                                                                    <div class="service-price" style="display: flex; align-items: center; gap: 10px; color: #667eea;">
+    
+    <span style="font-weight: 600; font-size: 16px;">Next Step</span>
+
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+    </svg>
+</div>
                     </div>
                 </div>
             </div>
@@ -2391,16 +2548,24 @@
                     </video>
                 </div>
                 <div class="service-info">
-                    <div class="service-category">Video</div>
-                    <h3 class="service-title">Product Demo & Explainer Videos</h3>
+                    <div class="service-category">Step 8</div>
+                    <h3 class="service-title">Emergence</h3>
                     <p class="service-description">
-                        Professional video production for product launches, explainers, and social media content.
+                    Send your application to multiple investors interested in your Startup Category by Founder Emergence Plan.
                     </p>
                     <div class="service-footer">
                         <div class="service-rating">
-                            ⭐ 4.9 (2.3K reviews)
+                           
                         </div>
-                        <div class="service-price">From $1,600</div>
+                                                                                          <div class="service-price" style="display: flex; align-items: center; gap: 10px; color: #667eea;">
+    
+    <span style="font-weight: 600; font-size: 16px;">Next Step</span>
+
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+    </svg>
+</div>
                     </div>
                 </div>
             </div>
@@ -2410,17 +2575,16 @@
                     <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800" alt="Legal Documents">
                 </div>
                 <div class="service-info">
-                    <div class="service-category">Legal</div>
-                    <h3 class="service-title">Startup Legal Services</h3>
+                    <div class="service-category">Last Step</div>
+                    <h3 class="service-title">Get Funded</h3>
                     <p class="service-description">
-                        Business registration, contracts, terms of service, privacy policies, and IP protection.
+                      Convince Interested investors who invited you in meeting or chat and get FUNDED.
                     </p>
                     <div class="service-footer">
                         <div class="service-rating">
-                            ⭐ 5.0 (1.6K reviews)
+                            
                         </div>
-                        <div class="service-price">From $800</div>
-                    </div>
+                       </div>
                 </div>
             </div>
         </div>
@@ -2432,7 +2596,7 @@
             <div class="section-label">Learn & Grow</div>
             <h2 class="section-title">Master Startup Success</h2>
             <p class="section-description">
-                Watch free tutorials, case studies, and expert interviews to level up your entrepreneurial skills.
+                Watch Following videos to improve your entreprenuial skills.
             </p>
         </div>
 
