@@ -837,7 +837,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-
+import { 
+    getDatabase, 
+    ref, 
+    set, 
+    get, 
+    child, 
+    serverTimestamp // <--- Add this
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     <script>
         // Create animated stars
         function createStars() {
@@ -1089,7 +1096,7 @@ firebase.initializeApp(firebaseConfig);
             awards: document.getElementById('awards').value,
             experience: document.getElementById('experience').value,
             cofounders: cofounders,
-            createdAt: ServerValue.TIMESTAMP // Use firebase.database.ServerValue.TIMESTAMP
+           createdAt: serverTimestamp()
         };
 
         try {
