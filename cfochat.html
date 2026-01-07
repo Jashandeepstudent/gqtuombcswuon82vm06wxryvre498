@@ -258,36 +258,40 @@ const firebaseConfig = {
         window.auth = auth;
 
         // Check authentication status
-        onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, (user) => {
             if (!user) {
-                // User is not logged in, redirect to login page
                 window.location.href = 'login.html';
             } else {
-                // User is logged in, load their data
                 window.currentUserId = user.uid;
+                // Wait for auth to be solid before loading data
                 loadUserData(user.uid);
             }
         });
 
         async function loadUserData(userId) {
             try {
-                const pricesRef = ref(database, `prices/${userId}`);
-                const salesRef = ref(database, `sales/${userId}`);
+                // Ensure your Firebase structure is prices/UID and sales/UID
+                const pricesRef = dbRef(database, `prices/${userId}`);
+                const salesRef = dbRef(database, `sales/${userId}`);
                 
                 const [pricesSnapshot, salesSnapshot] = await Promise.all([
-                    get(pricesRef),
-                    get(salesRef)
+                    dbGet(pricesRef),
+                    dbGet(salesRef)
                 ]);
 
                 window.userData = {
-                    userId: userId,
-                    prices: pricesSnapshot.exists() ? pricesSnapshot.val() : {},
-                    sales: salesSnapshot.exists() ? salesSnapshot.val() : {}
+                    prices: pricesSnapshot.exists() ? pricesSnapshot.val() : "No inventory data.",
+                    sales: salesSnapshot.exists() ? salesSnapshot.val() : "No sales data."
                 };
 
                 document.getElementById('chatContainer').style.display = 'flex';
-                document.getElementById('backBtn').style.display = 'block';
-                document.getElementById('userInfo').textContent = `User: ${userId.substring(0, 8)}...`;
+                document.getElementById('userInfo').textContent = `ID: ${userId.substring(0, 8)}`;
+                addMessageDirect('assistant', "Connection established. Data Vault decrypted. What is our objective?");
+            } catch (error) {
+                console.error('Permission Error:', error);
+                alert("Vault Access Denied. Verify your data is stored under your User ID.");
+            }
+        }
 
                 // Add greeting message
                 const greetings = [
@@ -325,7 +329,7 @@ const firebaseConfig = {
     </script>
 
     <script>
-        const API_URL = 'https://ai-inventory-pro-sigma.vercel.app/api/cfoscalevest'; // Replace with your Vercel URL
+        const API_URL = 'YOUR_VERCEL_URL_HERE'; // Replace with your Vercel URL
 
         function addMessage(type, content) {
             const messagesContainer = document.getElementById('chatMessages');
