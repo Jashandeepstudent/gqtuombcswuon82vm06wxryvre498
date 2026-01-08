@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1551,9 +1550,16 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  // Added onAuthStateChanged here
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  // 1. Switched Firestore imports to Database imports
-  import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+  // Added doc, getDoc, and setDoc here
+  import { 
+      getFirestore, 
+      doc, 
+      getDoc, 
+      setDoc, 
+      collection 
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
@@ -1568,11 +1574,10 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  // 2. Initialize Realtime Database
-  const db = getDatabase(app);
+  const db = getFirestore(app, "scalestartup");
 
 
-  // SUBMIT FUNCTION
+  // 2. SUBMIT FUNCTION
   window.submitForm = async function(event) {
       event.preventDefault();
       
@@ -1587,11 +1592,11 @@
       submitButton.innerHTML = '<span class="loader"></span> Saving...';
 
       try {
-          // 3. RTD Reference (founderprofile/{uid})
-          const profileRef = ref(db, 'founderProfile/' + user.uid);
+          // Document reference using user.uid
+          const profileRef = doc(db, "founderprofile", user.uid);
           
-          const snapshot = await get(profileRef);
-          if (snapshot.exists()) {
+          const docSnap = await getDoc(profileRef);
+          if (docSnap.exists()) {
               localStorage.setItem('startupProfileCreated', 'true');
               window.location.href = "founderandstartupconfig.html";
               return;
@@ -1608,9 +1613,7 @@
               createdAt: new Date().toISOString()
           };
 
-          // 4. Using set() for Realtime Database
-          await set(profileRef, formData);
-          
+          await setDoc(profileRef, formData);
           localStorage.setItem('startupProfileCreated', 'true');
           showImmersiveSuccess();
 
@@ -1622,25 +1625,7 @@
       }
   };
 
-  // Auth State Listener
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-        window.location.href = "login2.html";
-    } else {
-        // 5. Check if profile exists in RTD
-        const dbRef = ref(db);
-        try {
-            const snapshot = await get(child(dbRef, `founderProfile/${user.uid}`));
-            if (snapshot.exists()) {
-                window.location.href = "founderdashboard.html";
-            }
-        } catch (error) {
-            console.error("Error checking profile:", error);
-        }
-    }
-  });
-
-  // SUCCESS ANIMATION
+  // 3. SUCCESS ANIMATION
   window.showImmersiveSuccess = function() {
       const overlay = document.getElementById('successOverlay');
       overlay.style.opacity = '0';
