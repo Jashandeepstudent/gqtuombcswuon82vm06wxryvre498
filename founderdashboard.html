@@ -905,11 +905,13 @@
         </div>
     </footer>
 
-<script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-    import { getDatabase, ref, get, set, update } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+<!-- Firebase v9 Compat -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
+<script>
+    // Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyDHHFyH48gWaOCPL4kDSk9P1LspRfwdpRI",
         authDomain: "scalevest-163a0.firebaseapp.com",
@@ -920,20 +922,12 @@
         appId: "1:803559950121:web:1a1c3f3b3e3f3f3f3f3f3f"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
 
-    // Set persistence to LOCAL so auth state survives page reloads
-    setPersistence(auth, browserLocalPersistence)
-        .then(() => {
-            console.log("Auth persistence set to LOCAL");
-        })
-        .catch((error) => {
-            console.error("Error setting persistence:", error);
-        });
-
-    let hasCheckedAuth = false;
+    let currentUser = null;
+    let isInitialLoad = true;
 
     function generateUserId(username) {
         const hash = username.split('').reduce((acc, char) => {
@@ -951,8 +945,8 @@
 
     async function loadUserData(user) {
         try {
-            const founderRef = ref(db, `founderProfile/${user.uid}`);
-            const founderSnapshot = await get(founderRef);
+            const founderRef = db.ref(`founderProfile/${user.uid}`);
+            const founderSnapshot = await founderRef.once('value');
             
             const email = user.email;
             const firstLetter = email.charAt(0).toUpperCase();
@@ -960,12 +954,12 @@
             const userId = generateUserId(username);
 
             if (!founderSnapshot.exists()) {
-                await set(founderRef, {
+                await founderRef.set({
                     founderEmail: email,
                     founderImage: firstLetter,
                     founderUsername: username,
                     userId: userId,
-                    createdAt: Date.now()
+                    createdAt: firebase.database.ServerValue.TIMESTAMP
                 });
             }
 
@@ -983,8 +977,8 @@
             document.getElementById('dropdownUsername').textContent = founderData.founderUsername;
             document.getElementById('dropdownUserid').textContent = founderData.userId;
 
-            const startupRef = ref(db, `startupprofile/${user.uid}`);
-            const startupSnapshot = await get(startupRef);
+            const startupRef = db.ref(`startupprofile/${user.uid}`);
+            const startupSnapshot = await startupRef.once('value');
 
             if (startupSnapshot.exists()) {
                 const startupData = startupSnapshot.val();
@@ -997,39 +991,32 @@
                     document.getElementById('startupLogo').innerHTML = `<img src="${startupData.logo}" alt="Startup Logo">`;
                 }
 
-                await update(startupRef, { startupId: startupId });
+                await startupRef.update({ startupId: startupId });
             }
         } catch (error) {
             console.error('Error loading data:', error);
         }
     }
 
-    onAuthStateChanged(auth, (user) => {
-        console.log("Auth state changed. User:", user ? user.uid : "No user");
-        
+    auth.onAuthStateChanged((user) => {
         if (user) {
-            // User is signed in
-            hasCheckedAuth = true;
-            console.log("✅ User authenticated:", user.email);
+            currentUser = user;
+            isInitialLoad = false;
+            console.log("✅ User verified:", user.uid);
             loadUserData(user);
         } else {
-            // No user signed in
-            if (!hasCheckedAuth) {
-                // First check - wait a bit for Firebase to initialize
-                hasCheckedAuth = true;
-                console.log("⏳ Waiting for Firebase auth to initialize...");
+            if (isInitialLoad) {
+                console.log("⏳ Firebase is still initializing...");
+                isInitialLoad = false;
                 
                 setTimeout(() => {
                     if (!auth.currentUser) {
-                        console.log("❌ No user found after waiting, redirecting to login");
+                        console.log("❌ No user found after 3 seconds, redirecting to login...");
                         window.location.href = 'login2.html';
-                    } else {
-                        console.log("✅ User found after waiting:", auth.currentUser.email);
                     }
-                }, 2000);
+                }, 3000);
             } else {
-                // User actively signed out
-                console.log("🚪 User signed out, redirecting to login");
+                console.log("🚪 User logged out, redirecting...");
                 window.location.href = 'login2.html';
             }
         }
@@ -1037,8 +1024,7 @@
 
     window.logout = async function() {
         try {
-            console.log("🔓 Logging out user...");
-            await signOut(auth);
+            await auth.signOut();
             console.log("✅ User signed out successfully");
             window.location.href = 'login2.html';
         } catch (error) {
