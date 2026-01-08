@@ -995,20 +995,35 @@
                 console.error('Error loading data:', error);
             }
         }
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                currentUser = user;
-                isInitialLoad = false;
-                console.log("User verified:", user.uid);
-            } else {
-                if (!isInitialLoad) {
+// 1. Declare these variables at the top of your script area
+let isInitialLoad = true; 
+let currentUser = null;
+
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        currentUser = user;
+        isInitialLoad = false;
+        console.log("User verified:", user.uid);
+        
+        // 2. CRITICAL: You must call this to actually show the names/IDs on the page
+        loadUserData(user); 
+    } else {
+        // Only redirect if Firebase has finished its initial check
+        if (!isInitialLoad) {
+            window.location.href = 'login2.html';
+        } else {
+            console.log("Firebase is still initializing...");
+            // After the first check, if user is null, wait a tiny bit 
+            // to be 100% sure before kicking them out
+            setTimeout(() => {
+                if (!auth.currentUser) {
                     window.location.href = 'login2.html';
-                } else {
-                    console.log("Firebase is still initializing...");
-                    isInitialLoad = false;
                 }
-            }
-        });
+            }, 1500);
+            isInitialLoad = false;
+        }
+    }
+});
 
         window.logout = async function() {
             try {
