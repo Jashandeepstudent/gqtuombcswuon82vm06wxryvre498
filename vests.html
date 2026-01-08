@@ -289,111 +289,7 @@
             gap: 15px;
             margin-bottom: 20px;
         }
-.quick-actions {
-    position: fixed;
-    right: 30px;
-    bottom: 30px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 16px;
-    padding: 20px;
-    width: 280px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    z-index: 100;
-}
 
-.quick-actions h3 {
-    margin-bottom: 15px;
-    font-size: 1.2rem;
-}
-
-.quick-action-btn {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 10px;
-    background: #0a0a0a;
-    border: 2px solid #333;
-    border-radius: 10px;
-    color: #fff;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.95rem;
-}
-
-.quick-action-btn:hover {
-    border-color: #fff;
-    transform: translateX(-5px);
-}
-
-.guide-chat {
-    position: fixed;
-    bottom: 30px;
-    right: 330px;
-    width: 350px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 16px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    z-index: 100;
-    overflow: hidden;
-}
-
-.guide-chat.minimized {
-    height: 60px;
-}
-
-.guide-header {
-    background: linear-gradient(135deg, #ff006e, #8338ec);
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-}
-
-.guide-header h3 {
-    font-size: 1.1rem;
-}
-
-.guide-content {
-    padding: 20px;
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.guide-content.hidden {
-    display: none;
-}
-
-.guide-message {
-    background: #0a0a0a;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    border-left: 3px solid #ff006e;
-}
-
-.guide-step {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.step-number {
-    width: 30px;
-    height: 30px;
-    background: linear-gradient(135deg, #ff006e, #8338ec);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    flex-shrink: 0;
-}
         .checkbox-item {
             display: flex;
             align-items: center;
@@ -995,7 +891,91 @@ import { getDatabase, ref, set, push, get } from 'https://www.gstatic.com/fireba
 
     let currentUser = null;
 const STORAGE_KEY = 'vestFormData';
+// Helper function to create reusable navbar
+function createNavBar() {
+    const founderData = cachedFounderData || {};
+    return `
+        <nav class="top-nav">
+            <div class="logo" onclick="window.location.hash='founder_dashboard'" style="cursor: pointer;">ScaleVest</div>
+            <div class="nav-links">
+                <a href="#founder_dashboard" class="nav-link">Dashboard</a>
+                <a href="#" class="nav-link">My Startup</a>
+                <a href="#" class="nav-link">Analytics</a>
+                <div class="dropdown">
+                    <span class="nav-link" onclick="toggleDropdown('scaleDropdown')">Scale and Elevate ▾</span>
+                    <div class="dropdown-content" id="scaleDropdown">
+                        <a href="#" class="dropdown-item">Founder Emergence</a>
+                        <a href="#" class="dropdown-item">Referrals</a>
+                        <a href="#" class="dropdown-item">Contacts</a>
+                        <a href="#" class="dropdown-item">My Trials</a>
+                    </div>
+                </div>
+            </div>
+            <div class="top-nav-right">
+                <div class="icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                </div>
+                <div class="icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+                <div class="profile-dropdown">
+                    <div class="icon-btn" onclick="toggleDashProfileDropdown()">
+                        <div style="font-size:1.2rem;font-weight:600;">${founderData.founderImage || 'U'}</div>
+                    </div>
+                    <div class="profile-dropdown-content" id="dashProfileDropdown">
+                        <div class="profile-info">
+                            <div class="profile-username">${founderData.founderUsername || 'Username'}</div>
+                            <div class="profile-userid">${founderData.userId || 'USER_ID'}</div>
+                        </div>
+                        <button class="switch-btn">Switch to Browse</button>
+                        <div class="profile-section">
+                            <a href="#" class="profile-link">Refer a Friend</a>
+                            <a href="#edit_founderprofile" class="profile-link">Profile</a>
+                            <a href="#" class="profile-link" onclick="auth.signOut();return false;">Log Out</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    `;
+}
 
+// Toggle dropdown function
+window.toggleDropdown = function(id) {
+    event.stopPropagation();
+    const dropdown = document.getElementById(id);
+    
+    // Close all other dropdowns
+    document.querySelectorAll('.dropdown-content').forEach(dd => {
+        if (dd.id !== id) dd.classList.remove('show');
+    });
+    
+    // Toggle this dropdown
+    dropdown.classList.toggle('show');
+};
+
+// Toggle profile dropdown
+window.toggleDashProfileDropdown = function() {
+    event.stopPropagation();
+    const dropdown = document.getElementById('dashProfileDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('show');
+    }
+};
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.dropdown') && !e.target.closest('.profile-dropdown')) {
+        document.querySelectorAll('.dropdown-content, .profile-dropdown-content').forEach(dd => {
+            dd.classList.remove('show');
+        });
+    }
+});
 // Save form data to localStorage
 function saveToLocalStorage() {
     const formData = {
@@ -1046,55 +1026,72 @@ function loadFromLocalStorage() {
         transactionProof: null
     };
  let isNewUser = false; 
-let isLoading = true;
-
-    
-    // 1. Authentication State Observer
+let cachedFounderData = null;
+let cachedStartupData = null;
     onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
-        console.log("User verified:", user.uid);
+        isInitialLoad = false;
         
-        // Show loading
-        const loadingScreen = document.getElementById('loadingScreen');
-        if (loadingScreen) loadingScreen.classList.remove('hidden');
+        // Show loading screen IMMEDIATELY
+        document.getElementById('loadingScreen').classList.remove('hidden');
         
+        // Load all data in parallel for speed
         try {
-            // Check if user has completed vest before
-            const vestsRef = ref(db, `Vests/${user.uid}`);
-            const vestsSnapshot = await get(vestsRef);
+            const [vestsSnapshot, founderSnapshot, startupSnapshot] = await Promise.all([
+                get(ref(db, `Vests/${user.uid}`)),
+                get(ref(db, `founderProfile/${user.uid}`)),
+                get(ref(db, `startupProfile/${user.uid}`))
+            ]);
             
-            // Check if user has founder profile
-            const founderRef = ref(db, `founderProfile/${user.uid}`);
-            const founderSnapshot = await get(founderRef);
+            // Cache the data
+            cachedFounderData = founderSnapshot.val();
+            cachedStartupData = startupSnapshot.val();
             
-            // User is new if they have no vests AND no founder profile
-            isNewUser = !vestsSnapshot.exists() && !founderSnapshot.exists();
-            
-            console.log("Is new user:", isNewUser);
-            
-            // Hide loading
-            setTimeout(() => {
-                if (loadingScreen) loadingScreen.classList.add('hidden');
-                isLoading = false;
+            // Auto-create founder profile if not exists
+            if (!cachedFounderData) {
+                const email = user.email || 'user@scalevest.com';
+                const username = email.split('@')[0];
+                const firstLetter = email.charAt(0).toUpperCase();
+                const userId = generateUserId(username);
                 
-                // Route user
-                const hash = window.location.hash.slice(1);
+                cachedFounderData = {
+                    founderUsername: username,
+                    founderImage: firstLetter,
+                    userId: userId,
+                    email: email,
+                    title: '', // Empty by default
+                    about: '', // Empty by default
+                    createdAt: new Date().toISOString()
+                };
                 
-                if (isNewUser && !hash) {
+                await set(ref(db, `founderProfile/${user.uid}`), cachedFounderData);
+            }
+            
+            isNewUser = !vestsSnapshot.exists();
+            
+            // Hide loading screen
+            document.getElementById('loadingScreen').classList.add('hidden');
+            
+            // Handle routing WITHOUT delay
+            const hash = window.location.hash.slice(1);
+            
+            if (!hash) {
+                // No hash - decide based on user type
+                if (isNewUser) {
                     window.location.hash = 'vest_step1';
-                } else if (!isNewUser && (!hash || hash === 'founder_dashboard')) {
-                    window.location.hash = 'founder_dashboard';
                 } else {
-                    handleHashChange();
+                    window.location.hash = 'founder_dashboard';
                 }
-            }, 500);
+            } else {
+                // Has hash - navigate immediately
+                handleHashChange();
+            }
             
         } catch (error) {
-            console.error("Error loading user data:", error);
-            if (loadingScreen) loadingScreen.classList.add('hidden');
+            console.error('Data loading error:', error);
+            document.getElementById('loadingScreen').classList.add('hidden');
         }
-        
     } else {
         if (!isInitialLoad) {
             window.location.href = 'login2.html';
@@ -1102,8 +1099,8 @@ let isLoading = true;
             setTimeout(() => {
                 if (!auth.currentUser) window.location.href = 'login2.html';
             }, 2000);
+            isInitialLoad = false;
         }
-        isInitialLoad = false;
     }
 });
 
@@ -1114,16 +1111,21 @@ let isLoading = true;
     // Handle hash navigation
     window.addEventListener('hashchange', handleHashChange);
 
-   function handleHashChange() {
-    // Don't do anything if still loading or user isn't authenticated
-    if (isLoading || !currentUser) {
-        console.log("Waiting for authentication...");
+    function handleHashChange() {
+    if (!currentUser || !cachedFounderData) {
+        console.log("Waiting for data...");
         return;
     }
     
     const hash = window.location.hash.slice(1);
     console.log("Hash changed to:", hash);
     
+    // Hide everything first
+    document.querySelector('.vest-container').style.display = 'none';
+    const dashContainer = document.getElementById('dashboardContainer');
+    if (dashContainer) dashContainer.style.display = 'none';
+    
+    // Then show the right thing
     if (hash === 'founder_dashboard') {
         showDashboard();
     } else if (hash === 'edit_founderprofile') {
@@ -1142,23 +1144,6 @@ let isLoading = true;
             window.location.hash = 'founder_dashboard';
         }
     }
-}
-function showEditProfile() {
-    document.title = "Edit Profile | ScaleVest";
-    document.querySelector('.vest-container').style.display = 'none';
-    
-    const dashContainer = document.getElementById('dashboardContainer');
-    if (dashContainer) dashContainer.style.display = 'none';
-    
-    let profileContainer = document.getElementById('editProfileContainer');
-    if (!profileContainer) {
-        profileContainer = document.createElement('div');
-        profileContainer.id = 'editProfileContainer';
-        document.body.appendChild(profileContainer);
-    }
-    
-    profileContainer.style.display = 'block';
-    createEditProfilePage();
 }
 
     function showVestForm() {
@@ -1214,53 +1199,37 @@ function showEditProfile() {
     // SECTION 4: UPDATE createDashboard FUNCTION
     // ========================================
     
-    async function createDashboard() {
-        if (!currentUser) return;
-        
-        // FIXED: Correct case-sensitive paths
+   async function createDashboard() {
+    if (!currentUser) return;
+    
+    // Use cached data if available, otherwise fetch
+    let founderData = cachedFounderData;
+    let startupData = cachedStartupData;
+    let vestsData = {};
+    
+    // If no cached data, fetch it
+    if (!founderData) {
         const founderProfileRef = ref(db, `founderProfile/${currentUser.uid}`);
+        const founderSnap = await get(founderProfileRef);
+        founderData = founderSnap.val();
+        cachedFounderData = founderData;
+    }
+    
+    if (!startupData) {
         const startupProfileRef = ref(db, `startupProfile/${currentUser.uid}`);
-        const vestsRef = ref(db, `Vests/${currentUser.uid}`);
-        
-        let founderData = null;
-        let startupData = null;
-        let vestsData = {};
-        
-        try {
-            const founderSnap = await get(founderProfileRef);
-            founderData = founderSnap.val();
-            
-            // Auto-create founder profile if not exists
-            if (!founderData) {
-                const email = currentUser.email || 'user@scalevest.com';
-                const username = email.split('@')[0];
-                const firstLetter = email.charAt(0).toUpperCase();
-                const userId = generateUserId(username);
-                
-                founderData = {
-                    founderUsername: username,
-                    founderImage: firstLetter,
-                    userId: userId,
-                    email: email,
-                    createdAt: new Date().toISOString()
-                };
-                
-                await set(founderProfileRef, founderData);
-            }
-            
-            // Load startup profile
-            const startupSnap = await get(startupProfileRef);
-            startupData = startupSnap.val();
-            
-            console.log('Loaded startup data:', startupData);
-            
-            const vestsSnap = await get(vestsRef);
-            if (vestsSnap.exists()) {
-                vestsData = vestsSnap.val();
-            }
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        }
+        const startupSnap = await get(startupProfileRef);
+        startupData = startupSnap.val();
+        cachedStartupData = startupData;
+    }
+    
+    // Always fetch fresh vests data
+    const vestsRef = ref(db, `Vests/${currentUser.uid}`);
+    const vestsSnap = await get(vestsRef);
+    if (vestsSnap.exists()) {
+        vestsData = vestsSnap.val();
+    }
+    
+    console.log('Dashboard loaded with:', { founderData, startupData, vestsData });
     
     const draftCount = Object.values(vestsData).filter(v => v.status === 'draft').length;
     const activeCount = Object.values(vestsData).filter(v => v.status === 'live').length;
@@ -2067,9 +2036,9 @@ max-width: 1100px;
                 <div class="profile-avatar">${founderData?.founderImage || 'U'}</div>
                 <div class="card-title">${founderData?.founderUsername || 'Username'}</div>
                 <div class="card-subtitle">${founderData?.userId || 'USER_ID'}</div>
-<button class="card-btn" onclick="window.location.hash='edit_founderprofile'">
-    View Profile
-</button>
+               <button class="card-btn" onclick="window.location.hash='edit_founderprofile'">View Profile</button>
+            </div>
+
              <div class="card">
             <div class="startup-logo">
                 ${startupData?.logo
@@ -2220,76 +2189,7 @@ max-width: 1100px;
 </div>
 
 </div>
-<!-- Quick Actions -->
-<div class="quick-actions">
-    <h3>⚡ Quick Actions</h3>
-    <button class="quick-action-btn" onclick="window.location.hash='vest_step1'">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        Create New Vest
-    </button>
-    <button class="quick-action-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-        </svg>
-        View Analytics
-    </button>
-    <button class="quick-action-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-        Message Investors
-    </button>
-    <button class="quick-action-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>
-        Schedule Meeting
-    </button>
-</div>
 
-<!-- Guide Chat -->
-<div class="guide-chat" id="guideChat">
-    <div class="guide-header" onclick="toggleGuide()">
-        <h3>💡 Getting Started Guide</h3>
-        <span id="guideToggle">−</span>
-    </div>
-    <div class="guide-content" id="guideContent">
-        <div class="guide-message">
-            <strong>Welcome to ScaleVest!</strong><br>
-            Let's get you started with your founder journey.
-        </div>
-        
-        <div class="guide-step">
-            <div class="step-number">1</div>
-            <div>
-                <strong>Complete Your Profile</strong><br>
-                <small>Add your bio, education, and work experience</small>
-            </div>
-        </div>
-        
-        <div class="guide-step">
-            <div class="step-number">2</div>
-            <div>
-                <strong>Create Your First Vest</strong><br>
-                <small>Showcase your startup to investors</small>
-            </div>
-        </div>
-        
-        <div class="guide-step">
-            <div class="step-number">3</div>
-            <div>
-                <strong>Connect with Investors</strong><br>
-                <small>Start receiving investment offers</small>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- FOOTER -->
 <footer class="footer">
@@ -2332,13 +2232,6 @@ max-width: 1100px;
     }, 100);
 }
 
-function toggleDropdown(dropdownId) {
-    const dropdown = document.getElementById(dropdownId);
-    if (dropdown) {
-        dropdown.classList.toggle('show');
-    }
-}
-
 // Close dropdowns when clicking outside
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.dropdown')) {
@@ -2347,21 +2240,6 @@ document.addEventListener('click', (e) => {
         });
     }
 });
-function toggleGuide() {
-    const guide = document.getElementById('guideChat');
-    const content = document.getElementById('guideContent');
-    const toggle = document.getElementById('guideToggle');
-    
-    if (guide.classList.contains('minimized')) {
-        guide.classList.remove('minimized');
-        content.classList.remove('hidden');
-        toggle.textContent = '−';
-    } else {
-        guide.classList.add('minimized');
-        content.classList.add('hidden');
-        toggle.textContent = '+';
-    }
-}
 function generateUserId(username) {
     if (!username) return 'USER_' + Math.floor(Math.random() * 9000 + 1000);
     
@@ -2373,7 +2251,551 @@ function generateUserId(username) {
     
     return `${cleanName}_${uniqueNum}`;
 }
+async function showEditProfile() {
+    document.title = "Edit Profile | ScaleVest";
+    document.querySelector('.vest-container').style.display = 'none';
+    
+    let container = document.getElementById('dashboardContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'dashboardContainer';
+        document.body.appendChild(container);
+    }
+    
+    container.style.display = 'block';
+    
+    const founderData = cachedFounderData || {};
+    const startupData = cachedStartupData || {};
+    
+    // Calculate profile completion
+    const fields = [
+        founderData.founderUsername,
+        founderData.founderImage,
+        founderData.title,
+        founderData.about,
+        founderData.education?.length > 0,
+        founderData.workExperience
+    ];
+    const filledFields = fields.filter(f => f && f !== '').length;
+    const completionPercent = Math.round((filledFields / fields.length) * 100);
+    
+    container.innerHTML = `
+        <style>
+            .edit-profile-container {
+                max-width: 1400px;
+                margin: 0 auto;
+                padding: 2rem 3rem;
+                background: #000;
+                min-height: 100vh;
+            }
+            
+            .profile-grid {
+                display: grid;
+                grid-template-columns: 1fr 300px;
+                gap: 2rem;
+                margin-top: 2rem;
+            }
+            
+            .profile-main {
+                display: flex;
+                flex-direction: column;
+                gap: 2rem;
+            }
+            
+            .profile-sidebar {
+                display: flex;
+                flex-direction: column;
+                gap: 2rem;
+            }
+            
+            .profile-card {
+                background: #0a0a0a;
+                border: 1px solid #222;
+                border-radius: 16px;
+                padding: 2.5rem;
+                transition: all 0.3s;
+            }
+            
+            .profile-card:hover {
+                border-color: #444;
+                box-shadow: 0 10px 40px rgba(255, 255, 255, 0.05);
+            }
+            
+            .profile-header-card {
+                display: flex;
+                align-items: center;
+                gap: 2rem;
+            }
+            
+            .profile-avatar-large {
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                background: #fff;
+                color: #000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 3rem;
+                font-weight: 800;
+                flex-shrink: 0;
+            }
+            
+            .profile-header-info {
+                flex: 1;
+            }
+            
+            .profile-name-row {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .profile-name {
+                font-size: 2rem;
+                font-weight: 700;
+            }
+            
+            .edit-icon-btn {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background: #1a1a1a;
+                border: 1px solid #333;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            
+            .edit-icon-btn:hover {
+                background: #fff;
+                border-color: #fff;
+                transform: scale(1.1);
+            }
+            
+            .edit-icon-btn:hover svg {
+                stroke: #000;
+            }
+            
+            .profile-userid {
+                color: #888;
+                font-size: 1rem;
+                margin-bottom: 1rem;
+            }
+            
+            .profile-title {
+                color: #aaa;
+                font-size: 1.1rem;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+            
+            .section-title {
+                font-size: 1.3rem;
+                font-weight: 700;
+                margin-bottom: 1.5rem;
+            }
+            
+            .about-box {
+                background: #000;
+                border: 1px solid #222;
+                border-radius: 12px;
+                padding: 2rem;
+                min-height: 150px;
+                color: #aaa;
+                line-height: 1.8;
+                position: relative;
+            }
+            
+            .about-box.empty {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #666;
+                font-style: italic;
+            }
+            
+            .edit-details-btn {
+                background: transparent;
+                color: #fff;
+                border: 2px solid #fff;
+                padding: 0.9rem 2rem;
+                border-radius: 10px;
+                cursor: pointer;
+                font-weight: 700;
+                transition: all 0.3s;
+                margin-top: 1.5rem;
+                width: 100%;
+            }
+            
+            .edit-details-btn:hover {
+                background: #fff;
+                color: #000;
+                transform: translateY(-2px);
+            }
+            
+            .startup-info-card {
+                background: #000;
+                border: 1px solid #222;
+                border-radius: 12px;
+                padding: 2rem;
+                position: relative;
+            }
+            
+            .startup-name {
+                font-size: 1.4rem;
+                font-weight: 700;
+                margin-bottom: 1rem;
+            }
+            
+            .startup-description {
+                color: #aaa;
+                line-height: 1.6;
+            }
+            
+            .video-box {
+                background: #000;
+                border: 2px dashed #333;
+                border-radius: 12px;
+                padding: 3rem;
+                text-align: center;
+                min-height: 250px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 1.5rem;
+            }
+            
+            .add-video-btn {
+                background: linear-gradient(135deg, #ff006e, #8338ec);
+                color: #fff;
+                border: none;
+                padding: 1rem 2.5rem;
+                border-radius: 10px;
+                cursor: pointer;
+                font-weight: 700;
+                transition: all 0.3s;
+            }
+            
+            .add-video-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 30px rgba(255, 0, 110, 0.3);
+            }
+            
+            .dual-section {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 2rem;
+            }
+            
+            .empty-state {
+                text-align: center;
+                padding: 2rem;
+                color: #666;
+            }
+            
+            .add-item-btn {
+                background: #1a1a1a;
+                color: #fff;
+                border: 2px solid #333;
+                padding: 0.8rem 1.5rem;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.3s;
+                margin-top: 1rem;
+            }
+            
+            .add-item-btn:hover {
+                border-color: #fff;
+                background: #222;
+            }
+            
+            .quick-links-card {
+                background: #0a0a0a;
+                border: 1px solid #222;
+                border-radius: 16px;
+                padding: 2rem;
+            }
+            
+            .quick-link-btn {
+                background: #1a1a1a;
+                color: #fff;
+                border: 1px solid #333;
+                padding: 1rem;
+                border-radius: 10px;
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.3s;
+                width: 100%;
+                text-align: left;
+                margin-bottom: 0.75rem;
+            }
+            
+            .quick-link-btn:hover {
+                background: #222;
+                border-color: #fff;
+                transform: translateX(5px);
+            }
+            
+            .progress-card {
+                background: #0a0a0a;
+                border: 1px solid #222;
+                border-radius: 16px;
+                padding: 2rem;
+            }
+            
+            .progress-bar {
+                width: 100%;
+                height: 12px;
+                background: #1a1a1a;
+                border-radius: 10px;
+                overflow: hidden;
+                margin: 1rem 0;
+            }
+            
+            .progress-fill {
+                height: 100%;
+                background: linear-gradient(90deg, #10b981, #3a86ff);
+                transition: width 0.5s;
+            }
+            
+            .progress-text {
+                text-align: center;
+                font-size: 2rem;
+                font-weight: 700;
+                color: #10b981;
+            }
+            
+            @media (max-width: 1024px) {
+                .profile-grid {
+                    grid-template-columns: 1fr;
+                }
+                
+                .dual-section {
+                    grid-template-columns: 1fr;
+                }
+                
+                .edit-profile-container {
+                    padding: 2rem 1.5rem;
+                }
+            }
+        </style>
+        
+        ${createNavBar()}
+        
+        <div class="edit-profile-container">
+            <h1 class="welcome-text">Edit Founder Profile</h1>
+            
+            <div class="profile-grid">
+                <!-- Main Column -->
+                <div class="profile-main">
+                    <!-- Header Card -->
+                    <div class="profile-card profile-header-card">
+                        <div class="profile-avatar-large">${founderData.founderImage || 'U'}</div>
+                        <div class="profile-header-info">
+                            <div class="profile-name-row">
+                                <span class="profile-name">${founderData.founderUsername || 'Username'}</span>
+                                <button class="edit-icon-btn" onclick="editUsername()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="profile-userid">${founderData.userId || 'USER_ID'}</div>
+                            <div class="profile-title">
+                                <span>${founderData.title || 'No title'}</span>
+                                <button class="edit-icon-btn" onclick="editTitle()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- About Me Card -->
+                    <div class="profile-card">
+                        <h3 class="section-title">About Me</h3>
+                        <div class="about-box ${founderData.about ? '' : 'empty'}">
+                            ${founderData.about || 'Tell investors about yourself...'}
+                        </div>
+                        <button class="edit-details-btn" onclick="editAbout()">Edit Details</button>
+                    </div>
+                    
+                    <!-- Startup Info Card -->
+                    ${startupData ? `
+                    <div class="profile-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 class="section-title" style="margin: 0;">Startup</h3>
+                            <button class="edit-icon-btn" onclick="editStartup()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="startup-info-card">
+                            <div class="startup-name">${startupData.startupName || 'Startup Name'}</div>
+                            <div class="startup-description">${startupData.description || 'No description available'}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Intro Video Card -->
+                    <div class="profile-card">
+                        <h3 class="section-title">Intro Video</h3>
+                        <div class="video-box">
+                            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            <p style="color: #666;">No video yet</p>
+                            <button class="add-video-btn" onclick="uploadVideo()">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                Add Video
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Education & Work Experience -->
+                    <div class="dual-section">
+                        <!-- Education -->
+                        <div class="profile-card">
+                            <h3 class="section-title">Education</h3>
+                            <div class="empty-state">
+                                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-bottom: 1rem;">
+                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                                    <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                                </svg>
+                                <p>No education added yet</p>
+                                <button class="add-item-btn" onclick="addEducation()">+ Add Education</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Work Experience -->
+                        <div class="profile-card">
+                            <h3 class="section-title">Past Work</h3>
+                            <div class="empty-state">
+                                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-bottom: 1rem;">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                </svg>
+                                <p>No past work yet</p>
+                                <button class="add-item-btn" onclick="addWorkExperience()">+ Add Experience</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sidebar -->
+                <div class="profile-sidebar">
+                    <!-- Quick Links -->
+                    <div class="quick-links-card">
+                        <h3 class="section-title">Quick Links</h3>
+                        <button class="quick-link-btn" onclick="window.location.hash='founder_dashboard'">
+                            📊 Dashboard
+                        </button>
+                        <button class="quick-link-btn" onclick="window.location.hash='vest_step1'">
+                            🚀 Create Vest
+                        </button>
+                        <button class="quick-link-btn">
+                            💼 My Vests
+                        </button>
+                        <button class="quick-link-btn">
+                            📈 Analytics
+                        </button>
+                    </div>
+                    
+                    <!-- Profile Progress -->
+                    <div class="progress-card">
+                        <h3 class="section-title">Profile Completion</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${completionPercent}%"></div>
+                        </div>
+                        <div class="progress-text">${completionPercent}%</div>
+                        <p style="color: #888; font-size: 0.9rem; text-align: center; margin-top: 1rem;">
+                            Complete your profile to attract more investors
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
 
+// Helper function to create navbar (reusable)
+function createNavBar() {
+    const founderData = cachedFounderData || {};
+    return `
+        <nav class="top-nav">
+            <div class="logo" onclick="window.location.hash='founder_dashboard'" style="cursor: pointer;">ScaleVest</div>
+            <div class="nav-links">
+                <a href="#founder_dashboard" class="nav-link">Dashboard</a>
+                <a href="#" class="nav-link">My Startup</a>
+                <a href="#" class="nav-link">Analytics</a>
+                <div class="dropdown">
+                    <span class="nav-link" onclick="toggleDropdown('scaleDropdown')">Scale and Elevate ▾</span>
+                    <div class="dropdown-content" id="scaleDropdown">
+                        <a href="#" class="dropdown-item">Founder Emergence</a>
+                        <a href="#" class="dropdown-item">Referrals</a>
+                        <a href="#" class="dropdown-item">Contacts</a>
+                        <a href="#" class="dropdown-item">My Trials</a>
+                    </div>
+                </div>
+            </div>
+            <div class="top-nav-right">
+                <div class="icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                </div>
+                <div class="icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+                <div class="profile-dropdown">
+                    <div class="icon-btn" onclick="toggleDashProfileDropdown()">
+                        <div style="font-size:1.2rem;font-weight:600;">${founderData.founderImage || 'U'}</div>
+                    </div>
+                    <div class="profile-dropdown-content" id="dashProfileDropdown">
+                        <div class="profile-info">
+                            <div class="profile-username">${founderData.founderUsername || 'Username'}</div>
+                            <div class="profile-userid">${founderData.userId || 'USER_ID'}</div>
+                        </div>
+                        <button class="switch-btn">Switch to Browse</button>
+                        <div class="profile-section">
+                            <a href="#" class="profile-link">Refer a Friend</a>
+                            <a href="#edit_founderprofile" class="profile-link">Profile</a>
+                            <a href="#" class="profile-link" onclick="auth.signOut();return false;">Log Out</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    `;
+}
+
+// Edit functions (placeholders for now)
+window.editUsername = () => alert('Edit username feature coming soon!');
+window.editTitle = () => alert('Edit title feature coming soon!');
+window.editAbout = () => alert('Edit about feature coming soon!');
+window.editStartup = () => alert('Edit startup feature coming soon!');
+window.uploadVideo = () => alert('Video upload feature coming soon!');
+window.addEducation = () => alert('Add education feature coming soon!');
+window.addWorkExperience = () => alert('Add work experience feature coming soon!');
 function generateStartupId(startupName) {
     if (!startupName) return 'STARTUP_' + Math.floor(Math.random() * 9000 + 1000);
     
@@ -2603,526 +3025,18 @@ window.previousStep = function() {
     document.getElementById('transactionProof').addEventListener('change', (e) => {
         if (e.target.files[0]) document.getElementById('transactionProofName').textContent = '✓ ' + e.target.files[0].name;
     });
-
-// ADD THIS COMPLETE FUNCTION
-async function createEditProfilePage() {
-    if (!currentUser) return;
+window.toggleDropdown = function(id) {
+    event.stopPropagation();
+    const dropdown = document.getElementById(id);
     
-    const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
-    const startupRef = ref(db, `startupProfile/${currentUser.uid}`);
+    // Close all other dropdowns
+    document.querySelectorAll('.dropdown-content').forEach(dd => {
+        if (dd.id !== id) dd.classList.remove('show');
+    });
     
-    let founderData = null;
-    let startupData = null;
-    
-    try {
-        const founderSnap = await get(founderRef);
-        founderData = founderSnap.val() || {};
-        
-        const startupSnap = await get(startupRef);
-        startupData = startupSnap.val() || {};
-    } catch (error) {
-        console.error('Error loading profile:', error);
-    }
-    
-    // Calculate profile completion
-    let completionPercent = 0;
-    if (founderData.founderUsername) completionPercent += 10;
-    if (founderData.founderImage) completionPercent += 10;
-    if (founderData.email) completionPercent += 10;
-    if (founderData.userId) completionPercent += 10;
-    if (founderData.title) completionPercent += 5;
-    if (founderData.aboutMe) completionPercent += 15;
-    if (startupData.startupName) completionPercent += 10;
-    if (founderData.introVideo) completionPercent += 10;
-    if (founderData.education && founderData.education.length > 0) completionPercent += 10;
-    if (founderData.workExperience) completionPercent += 10;
-    
-    const profileHTML = `
-    <style>
-        #editProfileContainer {
-            background: #fff;
-            color: #000;
-            min-height: 100vh;
-        }
-        
-        .edit-profile-nav {
-            background: #0a0a0a;
-            padding: 1.2rem 3rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #222;
-        }
-        
-        .edit-profile-nav .logo {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #fff;
-        }
-        
-        .edit-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 2rem;
-        }
-        
-        .profile-main {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-        
-        .profile-section {
-            background: #f5f5f5;
-            padding: 2rem;
-            border-radius: 12px;
-            border: 1px solid #e0e0e0;
-        }
-        
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-        
-        .section-header h3 {
-            font-size: 1.3rem;
-        }
-        
-        .edit-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-            transition: all 0.3s;
-        }
-        
-        .edit-btn:hover {
-            background: #e0e0e0;
-        }
-        
-        .edit-btn svg {
-            width: 20px;
-            height: 20px;
-            stroke: #000;
-        }
-        
-        .profile-photo-section {
-            text-align: center;
-        }
-        
-        .profile-photo-large {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background: #000;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4rem;
-            font-weight: 700;
-            margin: 0 auto 1rem;
-        }
-        
-        .username-display {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-        
-        .userid-display {
-            color: #666;
-            margin-bottom: 1rem;
-        }
-        
-        .title-display {
-            color: #999;
-            font-style: italic;
-        }
-        
-        .about-box {
-            background: #fff;
-            padding: 1.5rem;
-            border-radius: 8px;
-            min-height: 150px;
-            border: 1px solid #e0e0e0;
-            white-space: pre-wrap;
-        }
-        
-        .empty-state {
-            color: #999;
-            text-align: center;
-            padding: 2rem;
-        }
-        
-        .add-btn {
-            background: #000;
-            color: #fff;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .add-btn:hover {
-            background: #333;
-        }
-        
-        .sidebar {
-            position: sticky;
-            top: 2rem;
-            height: fit-content;
-        }
-        
-        .quick-links-box {
-            background: #f5f5f5;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 1px solid #e0e0e0;
-            margin-bottom: 1.5rem;
-        }
-        
-        .quick-links-box h4 {
-            margin-bottom: 1rem;
-        }
-        
-        .sidebar-btn {
-            width: 100%;
-            padding: 0.8rem;
-            background: #000;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-bottom: 0.5rem;
-            transition: all 0.3s;
-        }
-        
-        .sidebar-btn:hover {
-            background: #333;
-        }
-        
-        .progress-box {
-            background: #f5f5f5;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 1px solid #e0e0e0;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 10px;
-            background: #e0e0e0;
-            border-radius: 5px;
-            overflow: hidden;
-            margin: 1rem 0;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ff006e, #8338ec);
-            transition: width 0.5s;
-        }
-        
-        .entry-item {
-            background: #fff;
-            padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
-            margin-bottom: 1rem;
-        }
-        
-        .entry-item h4 {
-            margin-bottom: 0.5rem;
-        }
-        
-        .entry-item p {
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 0.3rem;
-        }
-    </style>
-    
-    <!-- Navigation (same as dashboard) -->
-    <nav class="edit-profile-nav">
-        <div class="logo" onclick="window.location.hash='founder_dashboard'">ScaleVest</div>
-        <button class="add-btn" onclick="window.location.hash='founder_dashboard'">Back to Dashboard</button>
-    </nav>
-    
-    <div class="edit-content">
-        <!-- Main Content -->
-        <div class="profile-main">
-            <!-- Profile Photo & Basic Info -->
-            <div class="profile-section profile-photo-section">
-                <div class="profile-photo-large">
-                    ${founderData.founderImage || 'U'}
-                </div>
-                <div class="username-display">
-                    ${founderData.founderUsername || 'Username'}
-                    <button class="edit-btn" onclick="editUsername()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="userid-display">${founderData.userId || 'USER_ID'}</div>
-                <div class="title-display">
-                    ${founderData.title || 'No title'}
-                    <button class="edit-btn" onclick="editTitle()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- About Me -->
-            <div class="profile-section">
-                <div class="section-header">
-                    <h3>About Me</h3>
-                    <button class="edit-btn" onclick="editAbout()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="about-box">
-                    ${founderData.aboutMe || '<span style="color: #999;">Tell us about yourself...</span>'}
-                </div>
-            </div>
-            
-            <!-- Startup Details -->
-            ${startupData.startupName ? `
-            <div class="profile-section">
-                <div class="section-header">
-                    <h3>🏢 Startup</h3>
-                    <button class="edit-btn" onclick="editStartup()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                    </button>
-                </div>
-                <h4>${startupData.startupName}</h4>
-                <p style="color: #666; margin-top: 0.5rem;">${startupData.description || 'No description'}</p>
-            </div>
-            ` : ''}
-            
-            <!-- Intro Video -->
-            <div class="profile-section">
-                <div class="section-header">
-                    <h3>🎥 Intro Video</h3>
-                </div>
-                ${founderData.introVideo ? 
-                    `<video controls style="width: 100%; border-radius: 8px;">
-                        <source src="${founderData.introVideo}">
-                    </video>` : 
-                    `<div class="empty-state">
-                        <p>No video yet</p>
-                        <button class="add-btn" onclick="addVideo()">Add Video</button>
-                    </div>`
-                }
-            </div>
-            
-            <!-- Education -->
-            <div class="profile-section">
-                <div class="section-header">
-                    <h3>🎓 Education</h3>
-                    ${(!founderData.education || founderData.education.length < 2) ? 
-                        '<button class="add-btn" onclick="addEducation()">Add Education</button>' : ''}
-                </div>
-                ${founderData.education && founderData.education.length > 0 ? 
-                    founderData.education.map((edu, i) => `
-                        <div class="entry-item">
-                            <h4>${edu.degree || 'Degree'}</h4>
-                            <p><strong>${edu.university || 'University'}</strong></p>
-                            <p>Graduated: ${edu.year || 'Year'}</p>
-                            <button class="edit-btn" onclick="editEducation(${i})">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    `).join('') : 
-                    '<div class="empty-state">No education added yet</div>'
-                }
-            </div>
-            
-           <div class="profile-section">
-    <div class="section-header">
-        <h3>💼 Past Work</h3>
-        ${!founderData.workExperience ? '<button class="add-btn" onclick="addWork()">Add Experience</button>' : ''}
-    </div>
-
-    ${founderData.workExperience ? `
-        <div class="entry-item">
-            <h4>${founderData.workExperience.title || 'Job Title'}</h4>
-            <p><strong>${founderData.workExperience.company || 'Company'}</strong></p>
-            <p>${founderData.workExperience.stillWorking ? 'Currently working here' : `Left: ${founderData.workExperience.endDate || 'N/A'}`}</p>
-            <button class="edit-btn" onclick="editWork()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-            </button>
-        </div>` 
-    : '<div class="empty-state">No work experience added yet</div>'}
-</div>
-</div>    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="quick-links-box">
-            <h4>Quick Links</h4>
-            <button class="sidebar-btn" onclick="window.location.hash='founder_dashboard'">
-                📊 Dashboard
-            </button>
-            <button class="sidebar-btn" onclick="window.location.hash='vest_step1'">
-                ✨ Create Vest
-            </button>
-        </div>        <div class="progress-box">
-            <h4>Profile Completion</h4>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: ${completionPercent}%"></div>
-            </div>
-            <p style="text-align: center; font-weight: 600;">${completionPercent}% Complete</p>
-        </div>
-    </div>
-</div>
-`;const container = document.getElementById('editProfileContainer');
-container.innerHTML = profileHTML;
-}
-
-
-
-// ADD THESE HELPER FUNCTIONS
-function editUsername() {
-    const newUsername = prompt('Enter new username:');
-    if (newUsername && currentUser) {
-        // Wrap the path in backticks `` so the ${} works
-        const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
-        
-        set(founderRef, { founderUsername: newUsername }, { merge: true })
-            .then(() => {
-                alert('Username updated!');
-                createEditProfilePage(); // Refresh the UI
-            })
-            .catch((error) => {
-                console.error("Error updating username:", error);
-            });
-    }
-}
-function editTitle() {
-    const newTitle = prompt('Enter your title:');
-    if (newTitle && currentUser) {
-        // Corrected: Wrapped the path in backticks ``
-        const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
-        
-        set(founderRef, { title: newTitle }, { merge: true })
-            .then(() => {
-                alert('Title updated!');
-                createEditProfilePage();
-            })
-            .catch((error) => {
-                console.error("Update failed:", error);
-            });
-    }
-}
-// --- Fixed editAbout ---
-function editAbout() {
-    const newAbout = prompt('Tell us about yourself:');
-    if (newAbout && currentUser) {
-        // FIXED: Added backticks
-        const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
-        set(founderRef, { aboutMe: newAbout }, { merge: true })
-            .then(() => {
-                alert('About Me updated!');
-                createEditProfilePage();
-            })
-            .catch(err => console.error("Update failed:", err));
-    }
-}
-
-// --- Fixed addEducation ---
-async function addEducation() {
-    const degree = prompt('Enter degree (e.g., B.Tech in Computer Science):');
-    if (!degree) return;
-    const university = prompt('Enter university/school name:');
-    if (!university) return;
-    const year = prompt('Enter graduation year:');
-    if (!year) return;
-
-    if (currentUser) {
-        const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
-        try {
-            const snap = await get(founderRef);
-            const data = snap.val() || {};
-            const education = data.education || [];
-            education.push({ degree, university, year });
-            await set(founderRef, { education }, { merge: true });
-            alert('Education added!');
-            createEditProfilePage();
-        } catch (err) {
-            console.error("Error adding education:", err);
-        }
-    }
-}
-
-// --- Fixed addWork ---
-async function addWork() {
-    const company = prompt('Where did you work?');
-    if (!company) return;
-    const title = prompt('What was your job title?');
-    if (!title) return;
-    const stillWorking = confirm('Are you still working there?');
-    let endDate = null;
-    if (!stillWorking) {
-        endDate = prompt('When did you leave? (e.g., Dec 2023)');
-    }
-
-    if (currentUser) {
-        const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
-        try {
-            await set(founderRef, { 
-                workExperience: { company, title, stillWorking, endDate }
-            }, { merge: true });
-            alert('Work experience added!');
-            createEditProfilePage();
-        } catch (err) {
-            console.error("Error adding work:", err);
-        }
-    }
-}
-
-// --- Fixed addVideo ---
-function addVideo() {
-    alert('Video upload feature coming soon! You can add a video URL for now.');
-    const videoUrl = prompt('Enter video URL:');
-    if (videoUrl && currentUser) {
-        // FIXED: Added backticks
-        const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
-        set(founderRef, { introVideo: videoUrl }, { merge: true })
-            .then(() => {
-                alert('Video added!');
-                createEditProfilePage();
-            })
-            .catch(err => console.error("Error adding video:", err));
-    }
-}
-
-
-
-
+    // Toggle this dropdown
+    dropdown.classList.toggle('show');
+};
 </script>
 <!-- FOUNDER DASHBOARD -->
 <div id="dashboardContainer" style="display: none;"></div>
