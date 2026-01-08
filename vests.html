@@ -1718,182 +1718,223 @@ async function createDashboard() {
     </style>
 
 
-<!-- Top Navigation -->
-<nav class="dash-top-nav top-nav">
-  <div class="dash-logo logo">ScaleVest</div>
+      <!-- Top Navigation -->
+<nav class="top-nav">
+    <div class="logo">ScaleVest</div>
 
-  <div class="dash-nav-links nav-links">
-    <a href="#founder_dashboard" class="dash-nav-link nav-link">Dashboard</a>
-    <a href="#" class="dash-nav-link nav-link">My Startup</a>
-    <a href="#" class="dash-nav-link nav-link">Analytics</a>
+    <div class="nav-links">
+        <a href="#founder_dashboard" class="nav-link">Dashboard</a>
+        <a href="#" class="nav-link">My Startup</a>
+        <a href="#" class="nav-link">Analytics</a>
 
-    <div class="dash-dropdown dropdown">
-      <span class="dash-nav-link nav-link">Scale and Elevate ▾</span>
-      <div class="dash-dropdown-content dropdown-content">
-        <a href="#" class="dash-dropdown-item dropdown-item">Founder Emergence</a>
-        <a href="#" class="dash-dropdown-item dropdown-item">Referrals</a>
-        <a href="#" class="dash-dropdown-item dropdown-item">Contacts</a>
-        <a href="#" class="dash-dropdown-item dropdown-item">My Trials</a>
-      </div>
-    </div>
-  </div>
+        <div class="dropdown">
+            <span class="nav-link" onclick="event.stopPropagation()">
+                Scale and Elevate ▾
+            </span>
 
-  <div class="dash-top-nav-right top-nav-right">
-    <div class="dash-icon-btn icon-btn">
-      🔔
-    </div>
-    <div class="dash-icon-btn icon-btn">
-      💬
-    </div>
-
-    <div class="dash-profile-dropdown profile-dropdown">
-      <div class="dash-icon-btn icon-btn" onclick="toggleDashProfileDropdown()">
-        <strong>${founderData?.founderImage || 'U'}</strong>
-      </div>
-
-      <div class="dash-profile-dropdown-content profile-dropdown-content" id="dashProfileDropdown">
-        <div class="dash-profile-info profile-info">
-          <div class="dash-profile-username profile-username">
-            ${founderData?.founderUsername || 'Username'}
-          </div>
-          <div class="dash-profile-userid profile-userid">
-            ${founderData?.userId || 'USER_ID'}
-          </div>
+            <div class="dropdown-content">
+                <a href="#" class="dropdown-item">Founder Emergence</a>
+                <a href="#" class="dropdown-item">Referrals</a>
+                <a href="#" class="dropdown-item">Contacts</a>
+                <a href="#" class="dropdown-item">My Trials</a>
+            </div>
         </div>
-
-        <button class="dash-switch-btn switch-btn">Switch to Browse</button>
-
-        <div class="dash-profile-section profile-section">
-          <a href="#" class="dash-profile-link profile-link">Refer a Friend</a>
-          <a href="#" class="dash-profile-link profile-link">Profile</a>
-          <a href="#" class="dash-profile-link profile-link" onclick="auth.signOut();return false;">Log Out</a>
-        </div>
-      </div>
     </div>
-  </div>
 </nav>
 
-<!-- Main Content -->
-<div class="dash-container container">
-
-  <!-- Left -->
-  <div class="dash-left-section left-section">
-    <div class="dash-left-cards left-cards">
-
-      <div class="dash-card card">
-        <div class="dash-profile-avatar profile-avatar">
-          ${founderData?.founderImage || 'U'}
-        </div>
-        <div class="dash-card-title card-title">
-          ${founderData?.founderUsername || 'Username'}
-        </div>
-        <div class="dash-card-subtitle card-subtitle">
-          ${founderData?.userId || 'USER_ID'}
-        </div>
-        <button class="dash-card-btn card-btn">View Profile</button>
-      </div>
-
-      <div class="dash-card card">
-        <div class="dash-startup-logo startup-logo">
-          ${startupData?.logo
-            ? `<img src="${startupData.logo}" alt="Startup Logo">`
-            : `<span style="font-size:32px;">🚀</span>`}
-        </div>
-        <div class="dash-card-title card-title">
-          ${startupData?.startupName || 'My Startup'}
-        </div>
-        <div class="dash-card-subtitle card-subtitle">
-          ${generateStartupId(startupData?.startupName || 'Startup')}
-        </div>
-        <button class="dash-card-btn card-btn">View Startup</button>
-      </div>
-
-      <div class="dash-card card">
-        <div class="dash-availability-indicator availability-indicator">✓</div>
-        <div class="dash-card-title card-title">Founder Availability</div>
-        <button class="dash-card-btn card-btn">Set Availability</button>
-        <p class="dash-card-description card-description">
-          Control when you're available. Your vests won't be visible on days you're unavailable.
-        </p>
-      </div>
-
-      <div class="dash-card dash-inbox-card card inbox-card">
-        <div class="dash-card-title card-title">Inbox</div>
-        <div class="dash-inbox-message inbox-message">
-          <strong>Welcome to ScaleVest!</strong>
-        </div>
-        <div class="dash-inbox-message inbox-message">
-          <strong>Complete your profile</strong>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- Right -->
-  <div class="dash-right-section right-section">
-
-    <div class="dash-welcome-section welcome-section">
-      <h1 class="dash-welcome-text welcome-text">
-        Welcome, ${founderData?.founderUsername || 'Founder'}!
-      </h1>
-      <p class="dash-welcome-subtext welcome-subtext">
-        Let's make today count and connect with potential investors
-      </p>
-    </div>
-
-    <div class="dash-banners-section banners-section">
-
-      <div class="dash-banner banner">
-        <div class="dash-banner-content banner-content">
-          <h3>Start Founder Emergence</h3>
-          <p>Reach more investors and expand your network.</p>
-        </div>
-        <div class="dash-banner-icon banner-icon">⭐</div>
-      </div>
-
-      <div class="dash-banner banner">
-        <div class="dash-banner-content banner-content">
-          <h3>Setup Auto Reply</h3>
-          <p>Never miss an investor message.</p>
-        </div>
-        <div class="dash-banner-icon banner-icon">💬</div>
-      </div>
-
-      <div class="dash-banner banner">
-        <div class="dash-banner-content banner-content">
-          <div class="dash-vests-header vests-header">
-            <h3>Active Vests</h3>
-            <div class="dash-vests-tabs vests-tabs">
-              <div class="dash-vest-tab vest-tab active">Active (${activeCount})</div>
-              <div class="dash-vest-tab vest-tab">Draft (${draftCount})</div>
+            <div class="dash-top-nav-right">
+                <div class="dash-icon-btn" title="Notifications">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                </div>
+                <div class="dash-icon-btn" title="Messages">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+                <div class="dash-profile-dropdown">
+                    <div class="dash-icon-btn" onclick="toggleDashProfileDropdown()" id="dashProfileIcon">
+                        <div style="font-size: 1.2rem; font-weight: 600;">${founderData?.founderImage || 'U'}</div>
+                    </div>
+                    <div class="dash-profile-dropdown-content" id="dashProfileDropdown">
+                        <div class="dash-profile-info">
+                            <div class="dash-profile-username">${founderData?.founderUsername || 'Username'}</div>
+                            <div class="dash-profile-userid">${founderData?.userId || 'USER_ID'}</div>
+                        </div>
+                        <button class="dash-switch-btn">Switch to Browse</button>
+                        <div class="dash-profile-section">
+                            <a href="#" class="dash-profile-link">Refer a Friend</a>
+                            <a href="#" class="dash-profile-link">Profile</a>
+                            <a href="#" class="dash-profile-link" onclick="auth.signOut(); return false;">Log Out</a>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-          <p>Manage investor outreach effectively.</p>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="dash-container">
+            <!-- Left Section -->
+            <div class="dash-left-section">
+                <div class="dash-left-cards">
+                    <!-- Profile Card -->
+                    <div class="dash-card">
+                        <div class="dash-profile-avatar">${founderData?.founderImage || 'U'}</div>
+                        <div class="dash-card-title">${founderData?.founderUsername || 'Username'}</div>
+                        <div class="dash-card-subtitle">${founderData?.userId || 'USER_ID'}</div>
+                        <button class="dash-card-btn">View Profile</button>
+                    </div>
+
+                    <!-- Startup Card -->
+                    <div class="dash-card">
+                        <div class="dash-startup-logo">
+                            ${startupData?.logo ? `<img src="${startupData.logo}" alt="Startup Logo">` : `
+                            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                <path d="M2 17l10 5 10-5"></path>
+                                <path d="M2 12l10 5 10-5"></path>
+                            </svg>
+                            `}
+                        </div>
+                        <div class="dash-card-title">${startupData?.startupName || 'My Startup'}</div>
+                        <div class="dash-card-subtitle">${generateStartupId(startupData?.startupName || 'Startup')}</div>
+                        <button class="dash-card-btn">View Startup</button>
+                    </div>
+
+                    <!-- Availability Card -->
+                    <div class="dash-card">
+                        <div class="dash-availability-indicator">
+                            <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <div class="dash-card-title">Founder Availability</div>
+                        <button class="dash-card-btn">Set Availability</button>
+                        <p class="dash-card-description">Control when you're available. Your vests won't be visible on days you're unavailable.</p>
+                    </div>
+
+                    <!-- Inbox Card -->
+                    <div class="dash-card dash-inbox-card">
+                        <div class="dash-card-title" style="margin-bottom: 1.5rem;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
+                                <path d="M22 12h-6l-2 3h-4l-2-3H2"></path>
+                                <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+                            </svg>
+                            Inbox
+                        </div>
+                        <div class="dash-inbox-message">
+                            <strong>Welcome to ScaleVest!</strong><br>
+                            <small style="color: #888;">Start connecting with investors today.</small>
+                        </div>
+                        <div class="dash-inbox-message">
+                            <strong>Complete your profile</strong><br>
+                            <small style="color: #888;">Add more details to attract investors.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Section -->
+            <div class="dash-right-section">
+                <div class="dash-welcome-section">
+                    <h1 class="dash-welcome-text">
+                        Welcome, ${founderData?.founderUsername || 'Founder'}!
+                        <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-left: 0.5rem;">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </h1>
+                    <p class="dash-welcome-subtext">Let's make today count and connect with potential investors</p>
+                </div>
+
+                <!-- Banners Section -->
+                <div class="dash-banners-section">
+                    <!-- Founder Emergence Banner -->
+                    <div class="dash-banner">
+                        <div class="dash-banner-content">
+                            <h3>
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                               Start Founder Emergence
+                            </h3>
+                            <p>Reach out to more interested investors and expand your network. Launch your Founder Emergence campaign to help get your startup funded faster and connect with the right people.</p>
+                        </div>
+                        <div class="dash-banner-icon">
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Auto Replies Banner -->
+                    <div class="dash-banner">
+                        <div class="dash-banner-content">
+                            <h3>
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
+                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                                </svg>
+                                Setup Auto Reply for Investors
+                            </h3>
+                            <p>Configure automatic first responses to greet your investors professionally. Make a great first impression and ensure no investor inquiry goes unnoticed with smart auto-replies.</p>
+                        </div>
+                        <div class="dash-banner-icon">
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                <path d="M8 10h8"></path>
+                                <path d="M8 14h4"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Active Vests Banner -->
+                    <div class="dash-banner">
+                        <div class="dash-banner-content">
+                            <div class="dash-vests-header">
+                                <h3>
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                    </svg>
+                                    Active Vests
+                                </h3>
+                                <div class="dash-vests-tabs">
+                                    <div class="dash-vest-tab active" onclick="filterVests('active')">Active (${activeCount})</div>
+                                    <div class="dash-vest-tab" onclick="filterVests('draft')">Draft (${draftCount})</div>
+                                </div>
+                            </div>
+                            <p>Manage your active and draft vests to connect with the right investors. Track your outreach campaigns and optimize your investor engagement strategy.</p>
+                        </div>
+                        <div class="dash-banner-icon">
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="9" y1="9" x2="15" y2="9"></line>
+                                <line x1="9" y1="15" x2="15" y2="15"></line>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="dash-banner-icon banner-icon">📊</div>
-      </div>
 
-    </div>
-  </div>
-</div>
-
-<!-- Footer -->
-<footer class="dash-footer footer">
-  <div class="dash-footer-content footer-content">
-    <div class="dash-footer-logo footer-logo">
-      <div class="dash-footer-logo-text footer-logo-text">ScaleVest</div>
-      <div class="dash-footer-company footer-company">UnioraX Private Limited</div>
-    </div>
-    <div class="dash-footer-links footer-links">
-      <a href="#" class="dash-footer-link footer-link">About</a>
-      <a href="#" class="dash-footer-link footer-link">Contact</a>
-      <a href="#" class="dash-footer-link footer-link">Privacy</a>
-      <a href="#" class="dash-footer-link footer-link">Terms</a>
-    </div>
-  </div>
-</footer>
-
+        <!-- Footer -->
+        <footer class="dash-footer">
+            <div class="dash-footer-content">
+                <div class="dash-footer-logo">
+                    <div class="dash-footer-logo-text">ScaleVest</div>
+                    <div class="dash-footer-company">UnioraX Private Limited</div>
+                </div>
+                <div class="dash-footer-links">
+                    <a href="#" class="dash-footer-link">About</a>
+                    <a href="#" class="dash-footer-link">Contact</a>
+                    <a href="#" class="dash-footer-link">Privacy</a>
+                    <a href="#" class="dash-footer-link">Terms</a>
+                </div>
+            </div>
+        </footer>
     `;
     
     const container = document.getElementById('dashboardContainer');
