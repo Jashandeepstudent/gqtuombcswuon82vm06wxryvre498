@@ -527,7 +527,7 @@
             </div>
 
             <!-- Step 2: Startup Details -->
-           <div class="step-content active" data-step="2" id="vest_step2">
+          <div class="step-content" data-step="2" id="vest_step2">
                 <h2>
                     <svg style="width: 30px; height: 30px; display: inline-block; vertical-align: middle; margin-right: 10px;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" fill="#8338ec" stroke="#8338ec" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -606,7 +606,7 @@
             </div>
 
             <!-- Step 3: Documents -->
-           <div class="step-content active" data-step="3" id="vest_step3">
+        <div class="step-content" data-step="3" id="vest_step3">
                 <h2>
                     <svg style="width: 30px; height: 30px; display: inline-block; vertical-align: middle; margin-right: 10px;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M13 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V9L13 2Z" fill="#3a86ff" stroke="#3a86ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -673,7 +673,7 @@
             </div>
 
             <!-- Step 4: Funding -->
-           <div class="step-content active" data-step="4" id="vest_step4">
+         <div class="step-content" data-step="4" id="vest_step4">
                 <h2>
                     <svg style="width: 30px; height: 30px; display: inline-block; vertical-align: middle; margin-right: 10px;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="12" cy="12" r="10" fill="#10b981" stroke="#10b981" stroke-width="2"/>
@@ -760,7 +760,7 @@
             </div>
 
             <!-- Step 5: Launch -->
-           <div class="step-content active" data-step="5" id="vest_step5">
+         <div class="step-content" data-step="5" id="vest_step5">
                 <h2>
                     <svg style="width: 30px; height: 30px; display: inline-block; vertical-align: middle; margin-right: 10px;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" fill="url(#gradLaunch)" stroke="url(#gradLaunch)" stroke-width="2"/>
@@ -1026,624 +1026,697 @@ async function createDashboard() {
     const activeCount = Object.values(vestsData).filter(v => v.status === 'live').length;
     
     const dashboardHTML = `
-        <style>
-            #dashboardContainer * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
+       <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            background: #0a0a0a;
+            padding: 1.2rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #222;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #fff;
+            transition: width 0.3s;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #1a1a1a;
+            min-width: 220px;
+            border-radius: 12px;
+            margin-top: 1rem;
+            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+            border: 1px solid #333;
+            overflow: hidden;
+        }
+
+        .dropdown:hover .dropdown-content,
+        .dropdown-content.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-item {
+            padding: 1rem 1.5rem;
+            color: #fff;
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .dropdown-item:hover {
+            background: #222;
+            border-left-color: #fff;
+            padding-left: 2rem;
+        }
+
+        .top-nav-right {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .icon-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            border: 1px solid #222;
+        }
+
+        .icon-btn:hover {
+            background: #fff;
+            border-color: #fff;
+            transform: translateY(-3px) scale(1.1);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .icon-btn:hover svg {
+            stroke: #000;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .profile-dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: #1a1a1a;
+            min-width: 300px;
+            border-radius: 12px;
+            margin-top: 1rem;
+            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+            border: 1px solid #333;
+            padding: 1rem;
+            animation: fadeIn 0.3s;
+        }
+
+        .profile-dropdown-content.show {
+            display: block;
+        }
+
+        .profile-info {
+            padding: 1rem;
+            border-bottom: 1px solid #333;
+            margin-bottom: 1rem;
+        }
+
+        .profile-username {
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .profile-userid {
+            color: #888;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        .switch-btn {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 0.9rem;
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .switch-btn:hover {
+            background: #ddd;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-section {
+            padding: 0.5rem 0;
+        }
+
+        .profile-link {
+            padding: 0.9rem 1rem;
+            display: block;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .profile-link:hover {
+            background: #222;
+            padding-left: 1.5rem;
+        }
+
+        /* Main Content */
+        .container {
+            padding: 3rem 3rem;
+            display: flex;
+            gap: 3rem;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .left-section {
+            width: 380px;
+            flex-shrink: 0;
+        }
+
+        .right-section {
+            flex: 1;
+        }
+
+        .welcome-section {
+            margin-bottom: 3rem;
+        }
+
+        .welcome-text {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #fff 0%, #888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-subtext {
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        /* Left Cards Section */
+        .left-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .card {
+            background: #0a0a0a;
+            border-radius: 16px;
+            padding: 2.5rem;
+            border: 1px solid #222;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #fff 0%, #666 100%);
+            transform: scaleX(0);
+            transition: transform 0.4s;
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card:hover {
+            border-color: #444;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: #fff;
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .card-title {
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-btn {
+            background: transparent;
+            color: #fff;
+            border: 2px solid #fff;
+            padding: 0.9rem 1.5rem;
+            width: 100%;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .card-btn:hover {
+            background: #fff;
+            color: #000;
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .startup-logo {
+            width: 90px;
+            height: 90px;
+            border-radius: 16px;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a1a1a;
+            overflow: hidden;
+            border: 2px solid #333;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .startup-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .availability-indicator {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .card-description {
+            text-align: center;
+            color: #aaa;
+            font-size: 0.85rem;
+            margin-top: 1.5rem;
+            line-height: 1.6;
+        }
+
+        /* Banners Section */
+        .banners-section {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .banner {
+            background: #0a0a0a;
+            border-radius: 16px;
+            padding: 3rem;
+            border: 1px solid #222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #fff;
+            transform: scaleY(0);
+            transition: transform 0.4s;
+        }
+
+        .banner:hover::before {
+            transform: scaleY(1);
+        }
+
+        .banner:hover {
+            border-color: #444;
+            transform: translateX(10px);
+            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+        }
+
+        .banner-content h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .banner-content p {
+            color: #aaa;
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        .banner-icon {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a1a1a;
+            border-radius: 20px;
+            border: 2px solid #333;
+            flex-shrink: 0;
+            margin-left: 2rem;
+        }
+
+        .vests-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .vests-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .vest-tab {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 0.9rem;
+            background: transparent;
+            border: 1px solid #333;
+        }
+
+        .vest-tab.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+
+        .vest-tab:hover:not(.active) {
+            background: #222;
+            border-color: #444;
+        }
+
+        /* Footer */
+        .footer {
+            background: #0a0a0a;
+            border-top: 1px solid #222;
+            padding: 3rem;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-logo {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .footer-logo-text {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .footer-company {
+            color: #fff;
+            font-size: 0.9rem;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
+                         0 0 20px rgba(255, 255, 255, 0.3),
+                         0 0 30px rgba(255, 255, 255, 0.2);
+            font-weight: 500;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .footer-link {
+            color: #888;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .footer-link:hover {
+            color: #fff;
+        }
+
+        .inbox-card {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .inbox-card::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .inbox-card::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 10px;
+        }
+
+        .inbox-card::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 10px;
+        }
+
+        .inbox-message {
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: #1a1a1a;
+            border-radius: 8px;
+            border-left: 3px solid #fff;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+                padding: 2rem 1.5rem;
+                gap: 2rem;
             }
 
-            #dashboardContainer {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background: #000;
-                color: #fff;
-                min-height: 100vh;
-            }
-
-            .dash-top-nav {
-                background: #0a0a0a;
-                padding: 1.2rem 3rem;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-bottom: 1px solid #222;
-                position: sticky;
-                top: 0;
-                z-index: 1000;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            }
-
-            .dash-logo {
-                font-size: 2rem;
-                font-weight: 700;
-                color: #fff;
-                cursor: pointer;
-                letter-spacing: 1px;
-                transition: all 0.3s;
-            }
-
-            .dash-logo:hover {
-                transform: scale(1.05);
-            }
-
-            .dash-nav-links {
-                display: flex;
-                gap: 2.5rem;
-                align-items: center;
-            }
-
-            .dash-nav-link {
-                color: #fff;
-                text-decoration: none;
-                font-weight: 500;
-                transition: all 0.3s;
-                position: relative;
-                cursor: pointer;
-                font-size: 0.95rem;
-            }
-
-            .dash-nav-link::after {
-                content: '';
-                position: absolute;
-                bottom: -5px;
-                left: 0;
-                width: 0;
-                height: 2px;
-                background: #fff;
-                transition: width 0.3s;
-            }
-
-            .dash-nav-link:hover::after {
+            .left-section {
                 width: 100%;
             }
 
-            .dash-dropdown {
-                position: relative;
-            }
-
-            .dash-dropdown-content {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                background: #1a1a1a;
-                min-width: 220px;
-                border-radius: 12px;
-                margin-top: 1rem;
-                box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
-                border: 1px solid #333;
-                overflow: hidden;
-                z-index: 1000;
-            }
-
-            .dash-dropdown:hover .dash-dropdown-content {
-                display: block;
-                animation: dashFadeIn 0.3s;
-            }
-
-            @keyframes dashFadeIn {
-                from { opacity: 0; transform: translateY(-10px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-
-            .dash-dropdown-item {
+            .top-nav {
                 padding: 1rem 1.5rem;
-                color: #fff;
-                text-decoration: none;
-                display: block;
-                transition: all 0.3s;
-                cursor: pointer;
-                border-left: 3px solid transparent;
+                flex-wrap: wrap;
             }
 
-            .dash-dropdown-item:hover {
-                background: #222;
-                border-left-color: #fff;
-                padding-left: 2rem;
+            .logo {
+                font-size: 1.5rem;
             }
 
-            .dash-top-nav-right {
-                display: flex;
-                gap: 1.5rem;
-                align-items: center;
-            }
-
-            .dash-icon-btn {
-                width: 44px;
-                height: 44px;
-                border-radius: 50%;
-                background: #1a1a1a;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: all 0.3s;
-                position: relative;
-                border: 1px solid #222;
-            }
-
-            .dash-icon-btn:hover {
-                background: #fff;
-                border-color: #fff;
-                transform: translateY(-3px) scale(1.1);
-                box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
-            }
-
-            .dash-icon-btn:hover svg {
-                stroke: #000;
-            }
-
-            .dash-profile-dropdown {
-                position: relative;
-            }
-
-            .dash-profile-dropdown-content {
+            .nav-links {
                 display: none;
-                position: absolute;
-                top: 100%;
-                right: 0;
-                background: #1a1a1a;
-                min-width: 300px;
-                border-radius: 12px;
-                margin-top: 1rem;
-                box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
-                border: 1px solid #333;
-                padding: 1rem;
-                animation: dashFadeIn 0.3s;
-                z-index: 1000;
             }
 
-            .dash-profile-dropdown-content.show {
-                display: block;
+            .welcome-text {
+                font-size: 1.8rem;
             }
 
-            .dash-profile-info {
-                padding: 1rem;
-                border-bottom: 1px solid #333;
-                margin-bottom: 1rem;
+            .banner {
+                padding: 2rem;
+                flex-direction: column;
+                text-align: center;
             }
 
-            .dash-profile-username {
-                font-weight: 600;
+            .banner-icon {
+                margin-left: 0;
+                margin-top: 1.5rem;
+            }
+
+            .banner-content h3 {
+                font-size: 1.4rem;
+            }
+
+            .card {
+                padding: 2rem;
+            }
+
+            .footer {
+                padding: 2rem 1.5rem;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                gap: 2rem;
+                text-align: center;
+            }
+
+            .vests-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .vests-tabs {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .top-nav {
+                padding: 0.75rem 1rem;
+            }
+
+            .container {
+                padding: 1.5rem 1rem;
+            }
+
+            .welcome-text {
+                font-size: 1.5rem;
+            }
+
+            .banner {
+                padding: 1.5rem;
+            }
+
+            .banner-content h3 {
                 font-size: 1.2rem;
             }
 
-            .dash-profile-userid {
-                color: #888;
-                font-size: 0.85rem;
-                margin-top: 0.5rem;
-            }
-
-            .dash-switch-btn {
-                background: #fff;
-                color: #000;
-                border: none;
-                padding: 0.9rem;
-                width: 100%;
-                border-radius: 8px;
-                cursor: pointer;
-                font-weight: 700;
-                margin-bottom: 1rem;
-                transition: all 0.3s;
+            .banner-content p {
                 font-size: 0.95rem;
             }
 
-            .dash-switch-btn:hover {
-                background: #ddd;
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+            .card {
+                padding: 1.5rem;
             }
 
-            .dash-profile-section {
-                padding: 0.5rem 0;
+            .profile-avatar, .startup-logo, .availability-indicator {
+                width: 70px;
+                height: 70px;
             }
 
-            .dash-profile-link {
-                padding: 0.9rem 1rem;
-                display: block;
-                color: #fff;
-                text-decoration: none;
-                border-radius: 8px;
-                transition: all 0.3s;
-                cursor: pointer;
-                font-weight: 500;
-            }
-
-            .dash-profile-link:hover {
-                background: #222;
-                padding-left: 1.5rem;
-            }
-
-            .dash-container {
-                padding: 3rem 3rem;
-                display: flex;
-                gap: 3rem;
-                max-width: 1800px;
-                margin: 0 auto;
-            }
-
-            .dash-left-section {
-                width: 380px;
-                flex-shrink: 0;
-            }
-
-            .dash-right-section {
-                flex: 1;
-            }
-
-            .dash-welcome-section {
-                margin-bottom: 3rem;
-            }
-
-            .dash-welcome-text {
-                font-size: 2.5rem;
-                font-weight: 700;
-                margin-bottom: 0.5rem;
-                background: linear-gradient(90deg, #fff 0%, #888 100%);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-            }
-
-            .dash-welcome-subtext {
-                color: #888;
+            .card-title {
                 font-size: 1.1rem;
             }
 
-            .dash-left-cards {
-                display: flex;
-                flex-direction: column;
-                gap: 2rem;
-            }
-
-.dash-card {
-    background: #0a0a0a;
-    border-radius: 20px;
-    padding: 3.5rem;
-    border: 1px solid #222;
-    transition: all 0.4s;
-    position: relative;
-    overflow: hidden;
-}
-
-            .dash-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 3px;
-                background: linear-gradient(90deg, #fff 0%, #666 100%);
-                transform: scaleX(0);
-                transition: transform 0.4s;
-            }
-
-            .dash-card:hover::before {
-                transform: scaleX(1);
-            }
-
-            .dash-card:hover {
-                border-color: #444;
-                transform: translateY(-5px);
-                box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
-            }
-
-.dash-profile-avatar {
-    width: 110px;
-    height: 110px;
-    border-radius: 50%;
-    background: #fff;
-    color: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3rem;
-    font-weight: 800;
-    margin: 0 auto 2rem;
-    box-shadow: 0 8px 30px rgba(255, 255, 255, 0.3);
-}
-
-.dash-card-title {
-    text-align: center;
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 0.8rem;
-}
-.dash-card-subtitle {
-    text-align: center;
-    color: #888;
-    font-size: 1rem;
-    margin-bottom: 2rem;
-}
-
-.dash-card-btn {
-    background: transparent;
-    color: #fff;
-    border: 2px solid #fff;
-    padding: 1.1rem 2rem;
-    width: 100%;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: 700;
-    transition: all 0.3s;
-    font-size: 1.05rem;
-}
-            .dash-card-btn:hover {
-                background: #fff;
-                color: #000;
-                transform: scale(1.05);
-                box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
-            }
-
-.dash-startup-logo {
-    width: 110px;
-    height: 110px;
-    border-radius: 20px;
-    margin: 0 auto 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #1a1a1a;
-    overflow: hidden;
-    border: 2px solid #444;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
-}
-
-            .dash-startup-logo img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
-
-.dash-availability-indicator {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    margin: 0 auto 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fff;
-    box-shadow: 0 8px 30px rgba(255, 255, 255, 0.3);
-}
-
-            .dash-card-description {
-                text-align: center;
-                color: #aaa;
+            .vest-tab {
+                padding: 0.5rem 0.75rem;
                 font-size: 0.85rem;
-                margin-top: 1.5rem;
-                line-height: 1.6;
             }
 
-            .dash-inbox-card {
-                max-height: 300px;
-                overflow-y: auto;
+            .footer {
+                padding: 1.5rem 1rem;
             }
+        }
+    </style>
 
-            .dash-inbox-card::-webkit-scrollbar {
-                width: 6px;
-            }
-
-            .dash-inbox-card::-webkit-scrollbar-track {
-                background: #1a1a1a;
-                border-radius: 10px;
-            }
-
-            .dash-inbox-card::-webkit-scrollbar-thumb {
-                background: #444;
-                border-radius: 10px;
-            }
-
-            .dash-inbox-message {
-                padding: 1rem;
-                margin-bottom: 0.75rem;
-                background: #1a1a1a;
-                border-radius: 8px;
-                border-left: 3px solid #fff;
-            }
-
-            .dash-banners-section {
-                display: flex;
-                flex-direction: column;
-                gap: 2rem;
-            }
-
-            .dash-banner {
-                background: #0a0a0a;
-                border-radius: 16px;
-                padding: 3rem;
-                border: 1px solid #222;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                transition: all 0.4s;
-                position: relative;
-                overflow: hidden;
-            }
-
-            .dash-banner::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 4px;
-                height: 100%;
-                background: #fff;
-                transform: scaleY(0);
-                transition: transform 0.4s;
-            }
-
-            .dash-banner:hover::before {
-                transform: scaleY(1);
-            }
-
-            .dash-banner:hover {
-                border-color: #444;
-                transform: translateX(10px);
-                box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
-            }
-
-.dash-banner-content h3 {
-    font-size: 2.2rem;
-    margin-bottom: 1.5rem;
-    font-weight: 700;
-}
-.dash-banner-content p {
-    color: #aaa;
-    line-height: 2;
-    font-size: 1.15rem;
-}
-            .dash-banner-icon {
-                width: 100px;
-                height: 100px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: #1a1a1a;
-                border-radius: 20px;
-                border: 2px solid #333;
-                flex-shrink: 0;
-                margin-left: 2rem;
-            }
-
-            .dash-vests-header {
-                display: flex;
-                align-items: center;
-                gap: 1.5rem;
-                margin-bottom: 1rem;
-            }
-
-            .dash-vests-tabs {
-                display: flex;
-                gap: 0.5rem;
-            }
-
-            .dash-vest-tab {
-                padding: 0.5rem 1rem;
-                border-radius: 6px;
-                cursor: pointer;
-                transition: all 0.3s;
-                font-weight: 500;
-                font-size: 0.9rem;
-                background: transparent;
-                border: 1px solid #333;
-            }
-
-            .dash-vest-tab.active {
-                background: #fff;
-                color: #000;
-                border-color: #fff;
-            }
-
-            .dash-vest-tab:hover:not(.active) {
-                background: #222;
-                border-color: #444;
-            }
-
-            .dash-footer {
-                background: #0a0a0a;
-                border-top: 1px solid #222;
-                padding: 3rem;
-                margin-top: 4rem;
-            }
-
-            .dash-footer-content {
-                max-width: 1800px;
-                margin: 0 auto;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .dash-footer-logo {
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-
-            .dash-footer-logo-text {
-                font-size: 2rem;
-                font-weight: 700;
-                color: #fff;
-            }
-
-            .dash-footer-company {
-                color: #fff;
-                font-size: 0.9rem;
-                text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-                font-weight: 500;
-            }
-
-            .dash-footer-links {
-                display: flex;
-                gap: 2rem;
-            }
-
-            .dash-footer-link {
-                color: #888;
-                text-decoration: none;
-                transition: all 0.3s;
-                font-weight: 500;
-            }
-
-            .dash-footer-link:hover {
-                color: #fff;
-            }
-
-            @media (max-width: 1024px) {
-                .dash-container {
-                    flex-direction: column;
-                    padding: 2rem 1.5rem;
-                    gap: 2rem;
-                }
-
-                .dash-left-section {
-                    width: 100%;
-                }
-
-                .dash-top-nav {
-                    padding: 1rem 1.5rem;
-                    flex-wrap: wrap;
-                }
-
-                .dash-logo {
-                    font-size: 1.5rem;
-                }
-
-                .dash-nav-links {
-                    display: none;
-                }
-
-                .dash-welcome-text {
-                    font-size: 1.8rem;
-                }
-
-.dash-banner {
-    background: #0a0a0a;
-    border-radius: 20px;
-    padding: 4rem;
-    border: 1px solid #222;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: all 0.4s;
-    position: relative;
-    overflow: hidden;
-}
-
-.dash-banner-icon {
-    width: 140px;
-    height: 140px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #1a1a1a;
-    border-radius: 24px;
-    border: 2px solid #444;
-    flex-shrink: 0;
-    margin-left: 3rem;
-}
-            }
-        </style>
 
         <!-- Top Navigation -->
         <nav class="dash-top-nav">
@@ -2115,6 +2188,14 @@ if (logoFile && !uploadedFiles.startupLogo) {
     document.getElementById('transactionProof').addEventListener('change', (e) => {
         if (e.target.files[0]) document.getElementById('transactionProofName').textContent = '✓ ' + e.target.files[0].name;
     });
+
+window.addEventListener('load', () => {
+    if (window.location.hash === '#founder_dashboard') {
+        // Logic to show your dashboard container and hide others
+        document.querySelector('.vest-container').style.display = 'block';
+        showStep(1); // Function to initialize to the first step
+    }
+});
 </script>
 <!-- FOUNDER DASHBOARD -->
 <div id="dashboardContainer" style="display: none;"></div>
