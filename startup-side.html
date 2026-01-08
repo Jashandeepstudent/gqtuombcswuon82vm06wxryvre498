@@ -1587,8 +1587,8 @@
       submitButton.innerHTML = '<span class="loader"></span> Saving...';
 
       try {
-          // 3. RTD Reference (founderprofile/{uid})
-          const profileRef = ref(db, 'founderprofile/' + user.uid);
+          // 3. RTD Reference (founderProfile/{uid})
+          const profileRef = ref(db, 'founderProfile/' + user.uid);
           
           const snapshot = await get(profileRef);
           if (snapshot.exists()) {
@@ -1630,7 +1630,7 @@
         // 5. Check if profile exists in RTD
         const dbRef = ref(db);
         try {
-            const snapshot = await get(child(dbRef, `founderprofile/${user.uid}`));
+            const snapshot = await get(child(dbRef, `founderProfile/${user.uid}`));
             if (snapshot.exists()) {
                 window.location.href = "founderdashboard.html";
             }
@@ -1686,7 +1686,7 @@
                 <span class="hero-badge-dot"></span>
                 <span>Join Now Founders!</span>
             </div>
-            <h1>ScaleVest<br>The Infrastrcuture of Scale </h1>
+            <h1>ScaleVest<br>The Infrastructure of Scale </h1>
             <p class="hero-subtitle">
                 Connect with Angels , VCs and Investors through your start up vests or direct application to them and get direct reply.
             </p>
