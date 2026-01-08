@@ -920,15 +920,13 @@
         appId: "1:803559950121:web:1a1c3f3b3e3f3f3f3f3f3f"
     };
 
-    // Initialize Firebase Services
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app); // FIXED: Initialized correctly for v10
+    const auth = getAuth(app);
     const db = getDatabase(app);
 
     let currentUser = null;
     let isInitialLoad = true;
 
-    // --- ID Generation Functions ---
     function generateUserId(username) {
         const hash = username.split('').reduce((acc, char) => {
             return char.charCodeAt(0) + ((acc << 5) - acc);
@@ -943,7 +941,6 @@
         return 'STP-' + Math.abs(hash).toString(16).toUpperCase().substring(0, 8);
     }
 
-    // --- Data Loading Logic ---
     async function loadUserData(user) {
         try {
             const founderRef = ref(db, `founderProfile/${user.uid}`);
@@ -970,7 +967,6 @@
                 userId: userId
             };
 
-            // Update UI Elements
             document.getElementById('profileAvatar').textContent = founderData.founderImage;
             document.getElementById('profileIcon').innerHTML = `<div style="font-size: 1.2rem; font-weight: 600;">${founderData.founderImage}</div>`;
             document.getElementById('userName').textContent = founderData.founderUsername;
@@ -1000,7 +996,6 @@
         }
     }
 
-    // --- Auth State Observer ---
     onAuthStateChanged(auth, (user) => {
         if (user) {
             currentUser = user;
@@ -1012,25 +1007,27 @@
                 console.log("Firebase is still initializing...");
                 isInitialLoad = false;
                 
-                // FIXED: Check against auth.currentUser instead of global firebase object
                 setTimeout(() => {
                     if (!auth.currentUser) {
+                        console.log("No user found after 3 seconds, redirecting to login...");
                         window.location.href = 'login2.html';
                     }
-                }, 1500);
+                }, 3000);
             } else {
+                console.log("User logged out, redirecting...");
                 window.location.href = 'login2.html';
             }
         }
     });
 
-    // --- Global Interface (Attaching to window for HTML access) ---
     window.logout = async function() {
         try {
             await signOut(auth);
+            console.log("User signed out successfully");
             window.location.href = 'login2.html';
         } catch (error) {
             console.error('Error logging out:', error);
+            alert('Error logging out. Please try again.');
         }
     };
 
