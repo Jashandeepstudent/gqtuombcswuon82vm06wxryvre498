@@ -995,14 +995,32 @@
                 console.error('Error loading data:', error);
             }
         }
+// Add a flag to check if this is the first time the page is loading
+let isInitialLoad = true;
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                loadUserData(user);
-            } else {
-                window.location.href = 'login.html';
-            }
-        });
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // User is authenticated
+        loadUserData(user);
+        isInitialLoad = false;
+    } else {
+        // Only redirect if Firebase has finished checking and definitely found no user
+        if (!isInitialLoad) {
+            window.location.href = 'login2.html';
+        } else {
+            // If it's the first check and user is null, 
+            // wait a moment or check if a session exists
+            isInitialLoad = false;
+            
+            // Optional: Small delay to let Firebase finish verification
+            setTimeout(() => {
+                if (!auth.currentUser) {
+                    window.location.href = 'login.html';
+                }
+            }, 1000); 
+        }
+    }
+});
 
         window.logout = async function() {
             try {
