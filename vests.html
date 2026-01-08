@@ -1044,36 +1044,34 @@ let cachedStartupData = null;
                 get(ref(db, `startupProfile/${user.uid}`))
             ]);
             
-            // Cache the data
-            cachedFounderData = founderSnapshot.val();
-            cachedStartupData = startupSnapshot.val();
-            
-            // Auto-create founder profile if not exists
-if (!cachedFounderData) {
+// Auto-create founder profile if not exists
+if (!founderSnapshot.exists()) {
     const email = user.email || 'user@scalevest.com';
     const username = email.split('@')[0];
-    
-    // FIX: Instead of just a letter, let's prepare for a real logo URL
-    // You can use a high-quality placeholder service initially
-    const placeholderLogo = `https://ui-avatars.com/api/?name=${username}&background=random&color=fff&size=128`;
-    
-    // FIX: Ensure you have a working ID generator
-    const userId = "SV-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+    const firstLetter = email.charAt(0).toUpperCase();
+    const userId = generateUserId(username);
     
     cachedFounderData = {
         founderUsername: username,
-        founderImage: placeholderLogo, // Stores a URL instead of just a letter
-        userId: userId,                // This is your 'USERID'
+        founderImage: firstLetter,
+        userId: userId,
         email: email,
-        title: 'Founder',
-        about: '', 
-        createdAt: new Date().toISOString(),
-        authId: user.uid               // Link back to user.uid
+        title: '',
+        about: '',
+        createdAt: new Date().toISOString()
     };
     
-    // Save to the database
+    // Save to Firebase and WAIT for it to complete
     await set(ref(db, `founderProfile/${user.uid}`), cachedFounderData);
+    console.log('✅ Created new founder profile:', cachedFounderData);
+} else {
+    // Profile exists, just cache it
+    cachedFounderData = founderSnapshot.val();
+    console.log('✅ Loaded existing founder profile:', cachedFounderData);
 }
+
+// Cache startup data
+cachedStartupData = startupSnapshot.val();
             
             isNewUser = !vestsSnapshot.exists();
             
