@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Founder Dashboard - ScaleVest</title>
+    <title>ScaleVest Startup - Configuration</title>
     <style>
         * {
             margin: 0;
@@ -13,1040 +14,1169 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #000;
+            background: #0a0e27;
             color: #fff;
             min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
         }
 
-        /* Top Navigation */
-        .top-nav {
-            background: #0a0a0a;
-            padding: 1.2rem 3rem;
+        /* Animated Space Background */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Step Progress Bar */
+        .step-progress {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #222;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            margin-bottom: 60px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .step-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 60%;
+            width: 80%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 0;
+        }
+
+        .step-item.active:not(:last-child)::after {
+            background: linear-gradient(90deg, #667eea 0%, rgba(102, 126, 234, 0.3) 100%);
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .step-item.active .step-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .step-item.completed .step-number {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .step-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .step-item.active .step-label {
+            color: #fff;
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            text-align: center;
+            animation: fadeIn 1s ease-in;
+            padding: 60px 20px;
         }
 
         .logo {
-            font-size: 2rem;
+            font-size: 64px;
             font-weight: 700;
-            color: #fff;
-            cursor: pointer;
-            letter-spacing: 1px;
-            transition: all 0.3s;
-        }
-
-        .logo:hover {
-            transform: scale(1.05);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2.5rem;
-            align-items: center;
-        }
-
-        .nav-link {
-            color: #fff;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s;
-            position: relative;
-            cursor: pointer;
-            font-size: 0.95rem;
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: #fff;
-            transition: width 0.3s;
-        }
-
-        .nav-link:hover::after {
-            width: 100%;
-        }
-
-        .dropdown {
-            position: relative;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: #1a1a1a;
-            min-width: 220px;
-            border-radius: 12px;
-            margin-top: 1rem;
-            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
-            border: 1px solid #333;
-            overflow: hidden;
-        }
-
-        .dropdown:hover .dropdown-content,
-        .dropdown-content.show {
-            display: block;
-            animation: fadeIn 0.3s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .dropdown-item {
-            padding: 1rem 1.5rem;
-            color: #fff;
-            text-decoration: none;
-            display: block;
-            transition: all 0.3s;
-            cursor: pointer;
-            border-left: 3px solid transparent;
-        }
-
-        .dropdown-item:hover {
-            background: #222;
-            border-left-color: #fff;
-            padding-left: 2rem;
-        }
-
-        .top-nav-right {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-        }
-
-        .icon-btn {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: #1a1a1a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-            border: 1px solid #222;
-        }
-
-        .icon-btn:hover {
-            background: #fff;
-            border-color: #fff;
-            transform: translateY(-3px) scale(1.1);
-            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
-        }
-
-        .icon-btn:hover svg {
-            stroke: #000;
-        }
-
-        .profile-dropdown {
-            position: relative;
-        }
-
-        .profile-dropdown-content {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: #1a1a1a;
-            min-width: 300px;
-            border-radius: 12px;
-            margin-top: 1rem;
-            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
-            border: 1px solid #333;
-            padding: 1rem;
-            animation: fadeIn 0.3s;
-        }
-
-        .profile-dropdown-content.show {
-            display: block;
-        }
-
-        .profile-info {
-            padding: 1rem;
-            border-bottom: 1px solid #333;
-            margin-bottom: 1rem;
-        }
-
-        .profile-username {
-            font-weight: 600;
-            font-size: 1.2rem;
-        }
-
-        .profile-userid {
-            color: #888;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-        }
-
-        .switch-btn {
-            background: #fff;
-            color: #000;
-            border: none;
-            padding: 0.9rem;
-            width: 100%;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            transition: all 0.3s;
-            font-size: 0.95rem;
-        }
-
-        .switch-btn:hover {
-            background: #ddd;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
-        }
-
-        .profile-section {
-            padding: 0.5rem 0;
-        }
-
-        .profile-link {
-            padding: 0.9rem 1rem;
-            display: block;
-            color: #fff;
-            text-decoration: none;
-            border-radius: 8px;
-            transition: all 0.3s;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .profile-link:hover {
-            background: #222;
-            padding-left: 1.5rem;
-        }
-
-        /* Main Content */
-        .container {
-            padding: 3rem 3rem;
-            display: flex;
-            gap: 3rem;
-            max-width: 1800px;
-            margin: 0 auto;
-        }
-
-        .left-section {
-            width: 380px;
-            flex-shrink: 0;
-        }
-
-        .right-section {
-            flex: 1;
-        }
-
-        .welcome-section {
-            margin-bottom: 3rem;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px rgba(102, 126, 234, 0.3);
         }
 
         .welcome-text {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(90deg, #fff 0%, #888 100%);
+            font-size: 42px;
+            margin-bottom: 20px;
+            font-weight: 300;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 80px;
+            font-weight: 300;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            padding: 20px 70px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        /* Form Screens */
+        .form-screen {
+            display: none;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .form-screen.active {
+            display: block;
+        }
+
+        .form-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .form-title {
+            font-size: 36px;
+            font-weight: 300;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.6) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .welcome-subtext {
-            color: #888;
-            font-size: 1.1rem;
+        .form-subtitle {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.5);
         }
 
-        /* Left Cards Section */
-        .left-cards {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
+        .form-group {
+            margin-bottom: 30px;
         }
 
-        .card {
-            background: #0a0a0a;
-            border-radius: 16px;
-            padding: 2.5rem;
-            border: 1px solid #222;
-            transition: all 0.4s;
-            position: relative;
-            overflow: hidden;
+        .form-label {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
         }
 
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
+        .required {
+            color: #f87171;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
             width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, #fff 0%, #666 100%);
-            transform: scaleX(0);
-            transition: transform 0.4s;
-        }
-
-        .card:hover::before {
-            transform: scaleX(1);
-        }
-
-        .card:hover {
-            border-color: #444;
-            transform: translateY(-5px);
-            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
-        }
-
-        .profile-avatar {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: #fff;
-            color: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin: 0 auto 1.5rem;
-            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.2);
-        }
-
-        .card-title {
-            text-align: center;
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .card-subtitle {
-            text-align: center;
-            color: #888;
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card-btn {
-            background: transparent;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
             color: #fff;
-            border: 2px solid #fff;
-            padding: 0.9rem 1.5rem;
-            width: 100%;
-            border-radius: 10px;
+            font-size: 16px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-select {
             cursor: pointer;
-            font-weight: 700;
-            transition: all 0.3s;
-            font-size: 0.95rem;
         }
 
-        .card-btn:hover {
-            background: #fff;
-            color: #000;
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+        .form-select option {
+            background: #1a1f3a;
+            color: #fff;
         }
 
-        .startup-logo {
-            width: 90px;
-            height: 90px;
+        /* Co-founders Section */
+        .cofounder-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
-            margin: 0 auto 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #1a1a1a;
-            overflow: hidden;
-            border: 2px solid #333;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            margin-bottom: 20px;
+            position: relative;
+            transition: all 0.3s ease;
         }
 
-        .startup-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .cofounder-item:hover {
+            border-color: rgba(102, 126, 234, 0.5);
+            background: rgba(255, 255, 255, 0.08);
         }
 
-        .availability-indicator {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            margin: 0 auto 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #fff;
-            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.2);
-        }
-
-        .card-description {
-            text-align: center;
-            color: #aaa;
-            font-size: 0.85rem;
-            margin-top: 1.5rem;
-            line-height: 1.6;
-        }
-
-        /* Banners Section */
-        .banners-section {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-
-        .banner {
-            background: #0a0a0a;
-            border-radius: 16px;
-            padding: 3rem;
-            border: 1px solid #222;
+        .cofounder-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.4s;
-            position: relative;
-            overflow: hidden;
+            margin-bottom: 25px;
         }
 
-        .banner::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: #fff;
-            transform: scaleY(0);
-            transition: transform 0.4s;
+        .cofounder-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #667eea;
         }
 
-        .banner:hover::before {
-            transform: scaleY(1);
-        }
-
-        .banner:hover {
-            border-color: #444;
-            transform: translateX(10px);
-            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
-        }
-
-        .banner-content h3 {
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-            font-weight: 700;
-        }
-
-        .banner-content p {
-            color: #aaa;
-            line-height: 1.8;
-            font-size: 1.05rem;
-        }
-
-        .banner-icon {
-            width: 100px;
-            height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #1a1a1a;
-            border-radius: 20px;
-            border: 2px solid #333;
-            flex-shrink: 0;
-            margin-left: 2rem;
-        }
-
-        .vests-header {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .vests-tabs {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .vest-tab {
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 500;
-            font-size: 0.9rem;
-            background: transparent;
-            border: 1px solid #333;
-        }
-
-        .vest-tab.active {
-            background: #fff;
-            color: #000;
-            border-color: #fff;
-        }
-
-        .vest-tab:hover:not(.active) {
-            background: #222;
-            border-color: #444;
-        }
-
-        /* Footer */
-        .footer {
-            background: #0a0a0a;
-            border-top: 1px solid #222;
-            padding: 3rem;
-            margin-top: 4rem;
-        }
-
-        .footer-content {
-            max-width: 1800px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .footer-logo {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .footer-logo-text {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .footer-company {
-            color: #fff;
-            font-size: 0.9rem;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
-                         0 0 20px rgba(255, 255, 255, 0.3),
-                         0 0 30px rgba(255, 255, 255, 0.2);
-            font-weight: 500;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 2rem;
-        }
-
-        .footer-link {
-            color: #888;
-            text-decoration: none;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-
-        .footer-link:hover {
-            color: #fff;
-        }
-
-        .inbox-card {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .inbox-card::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .inbox-card::-webkit-scrollbar-track {
-            background: #1a1a1a;
-            border-radius: 10px;
-        }
-
-        .inbox-card::-webkit-scrollbar-thumb {
-            background: #444;
-            border-radius: 10px;
-        }
-
-        .inbox-message {
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-            background: #1a1a1a;
+        .remove-btn {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            padding: 8px 16px;
             border-radius: 8px;
-            border-left: 3px solid #fff;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-weight: 500;
         }
 
-        @media (max-width: 1024px) {
-            .container {
-                flex-direction: column;
-                padding: 2rem 1.5rem;
-                gap: 2rem;
-            }
+        .remove-btn:hover {
+            background: rgba(248, 113, 113, 0.3);
+            border-color: #f87171;
+        }
 
-            .left-section {
-                width: 100%;
-            }
+        .add-cofounder-btn {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            padding: 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
 
-            .top-nav {
-                padding: 1rem 1.5rem;
-                flex-wrap: wrap;
+        .add-cofounder-btn:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            color: #fff;
+        }
+
+        /* File Upload */
+        .file-upload {
+            position: relative;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: block;
+            padding: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-label:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .file-preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .file-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Buttons */
+        .form-actions {
+            display: flex;
+            gap: 20px;
+            margin-top: 50px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Completion Screen */
+        .completion-screen {
+            display: none;
+            text-align: center;
+            animation: fadeIn 1s ease-in;
+            padding: 60px 20px;
+        }
+
+        .completion-screen.active {
+            display: block;
+        }
+
+        .success-icon {
+            font-size: 100px;
+            margin-bottom: 40px;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .completion-title {
+            font-size: 42px;
+            font-weight: 300;
+            margin-bottom: 20px;
+        }
+
+        .completion-text {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 60px;
+        }
+
+        /* Error Messages */
+        .error-message {
+            color: #f87171;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            min-width: 300px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-card {
+                padding: 30px 20px;
             }
 
             .logo {
-                font-size: 1.5rem;
-            }
-
-            .nav-links {
-                display: none;
+                font-size: 48px;
             }
 
             .welcome-text {
-                font-size: 1.8rem;
+                font-size: 32px;
             }
 
-            .banner {
-                padding: 2rem;
+            .form-title {
+                font-size: 28px;
+            }
+
+            .form-actions {
                 flex-direction: column;
-                text-align: center;
             }
 
-            .banner-icon {
-                margin-left: 0;
-                margin-top: 1.5rem;
+            .step-progress {
+                padding: 20px;
             }
 
-            .banner-content h3 {
-                font-size: 1.4rem;
+            .step-label {
+                font-size: 10px;
             }
 
-            .card {
-                padding: 2rem;
-            }
-
-            .footer {
-                padding: 2rem 1.5rem;
-            }
-
-            .footer-content {
-                flex-direction: column;
-                gap: 2rem;
-                text-align: center;
-            }
-
-            .vests-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-
-            .vests-tabs {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .top-nav {
-                padding: 0.75rem 1rem;
-            }
-
-            .container {
-                padding: 1.5rem 1rem;
-            }
-
-            .welcome-text {
-                font-size: 1.5rem;
-            }
-
-            .banner {
-                padding: 1.5rem;
-            }
-
-            .banner-content h3 {
-                font-size: 1.2rem;
-            }
-
-            .banner-content p {
-                font-size: 0.95rem;
-            }
-
-            .card {
-                padding: 1.5rem;
-            }
-
-            .profile-avatar, .startup-logo, .availability-indicator {
-                width: 70px;
-                height: 70px;
-            }
-
-            .card-title {
-                font-size: 1.1rem;
-            }
-
-            .vest-tab {
-                padding: 0.5rem 0.75rem;
-                font-size: 0.85rem;
-            }
-
-            .footer {
-                padding: 1.5rem 1rem;
+            .step-number {
+                width: 35px;
+                height: 35px;
+                font-size: 14px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Top Navigation -->
-    <nav class="top-nav">
-        <div class="logo">ScaleVest</div>
-        <div class="nav-links">
-            <a href="#" class="nav-link">Dashboard</a>
-            <a href="#" class="nav-link">My Startup</a>
-            <a href="#" class="nav-link">Analytics</a>
-            <div class="dropdown">
-                <span class="nav-link" onclick="toggleDropdown()">Scale and Elevate ▾</span>
-                <div class="dropdown-content" id="scaleDropdown">
-                    <a href="#" class="dropdown-item">Founder Emergence</a>
-                    <a href="#" class="dropdown-item">Referrals</a>
-                    <a href="#" class="dropdown-item">Contacts</a>
-                    <a href="#" class="dropdown-item">My Trials</a>
-                </div>
-            </div>
-        </div>
-        <div class="top-nav-right">
-            <div class="icon-btn" title="Notifications">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                </svg>
-            </div>
-            <div class="icon-btn" title="Messages">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-            </div>
-            <div class="profile-dropdown">
-                <div class="icon-btn" onclick="toggleProfileDropdown()" id="profileIcon">
-                    <div style="font-size: 1.2rem; font-weight: 600;">U</div>
-                </div>
-                <div class="profile-dropdown-content" id="profileDropdown">
-                    <div class="profile-info">
-                        <div class="profile-username" id="dropdownUsername">Username</div>
-                        <div class="profile-userid" id="dropdownUserid">User ID</div>
-                    </div>
-                    <button class="switch-btn">Switch to Browse</button>
-                    <div class="profile-section">
-                        <a href="#" class="profile-link">Refer a Friend</a>
-                        <a href="#" class="profile-link">Profile</a>
-                        <a href="#" class="profile-link" onclick="logout()">Log Out</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- Animated Stars Background -->
+    <div class="stars" id="stars"></div>
 
-    <!-- Main Content -->
     <div class="container">
-        <!-- Left Section -->
-        <div class="left-section">
-            <div class="left-cards">
-                <!-- Profile Card -->
-                <div class="card">
-                    <div class="profile-avatar" id="profileAvatar">U</div>
-                    <div class="card-title" id="userName">Username</div>
-                    <div class="card-subtitle" id="userId">User ID: Loading...</div>
-                    <button class="card-btn">View Profile</button>
-                </div>
-
-                <!-- Startup Card -->
-                <div class="card">
-                    <div class="startup-logo" id="startupLogo">
-                        <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                            <path d="M2 17l10 5 10-5"></path>
-                            <path d="M2 12l10 5 10-5"></path>
-                        </svg>
-                    </div>
-                    <div class="card-title" id="startupName">My Startup</div>
-                    <div class="card-subtitle" id="startupId">Startup ID: Loading...</div>
-                    <button class="card-btn">View Startup</button>
-                </div>
-
-                <!-- Availability Card -->
-                <div class="card">
-                    <div class="availability-indicator">
-                        <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                    </div>
-                    <div class="card-title">Founder Availability</div>
-                    <button class="card-btn">Set Availability</button>
-                    <p class="card-description">Control when you're available. Your vests won't be visible on days you're unavailable.</p>
-                </div>
-
-                <!-- Inbox Card -->
-                <div class="card inbox-card">
-                    <div class="card-title" style="margin-bottom: 1.5rem;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
-                            <path d="M22 12h-6l-2 3h-4l-2-3H2"></path>
-                            <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
-                        </svg>
-                        Inbox
-                    </div>
-                    <div class="inbox-message">
-                        <strong>Welcome to ScaleVest!</strong><br>
-                        <small style="color: #888;">Start connecting with investors today.</small>
-                    </div>
-                    <div class="inbox-message">
-                        <strong>Complete your profile</strong><br>
-                        <small style="color: #888;">Add more details to attract investors.</small>
-                    </div>
-                </div>
+        <!-- Step Progress (Hidden on Welcome) -->
+        <div class="step-progress" id="stepProgress" style="display: none;">
+            <div class="step-item" id="step1">
+                <div class="step-number">1</div>
+                <div class="step-label">Founder Profile</div>
+            </div>
+            <div class="step-item" id="step2">
+                <div class="step-number">2</div>
+                <div class="step-label">Startup Details</div>
+            </div>
+            <div class="step-item" id="step3">
+                <div class="step-number">3</div>
+                <div class="step-label">Business Info</div>
+            </div>
+            <div class="step-item" id="step4">
+                <div class="step-number">4</div>
+                <div class="step-label">Complete</div>
             </div>
         </div>
 
-        <!-- Right Section -->
-        <div class="right-section">
-            <div class="welcome-section">
-                <h1 class="welcome-text">
-                    Welcome, <span id="founderName">Founder</span>!
-                    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-left: 0.5rem;">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                </h1>
-                <p class="welcome-subtext">Let's make today count and connect with potential investors</p>
+        <!-- Welcome Screen -->
+        <div class="welcome-screen active" id="welcomeScreen">
+            <div class="logo">ScaleStartup</div>
+            <h1 class="welcome-text">Welcome to Your Journey</h1>
+            <p class="subtitle">Let's build something extraordinary together</p>
+            <button class="start-btn" onclick="startConfiguration()">Get Started</button>
+        </div>
+
+        <!-- Step 1: Founder Details -->
+        <div class="form-screen" id="founderScreen">
+            <div class="form-card">
+                <div class="form-header">
+                    <h2 class="form-title">Founder Profile</h2>
+                    <p class="form-subtitle">Tell us about yourself and your team</p>
+                </div>
+
+                <form id="founderForm">
+                    <div class="form-group">
+                        <label class="form-label">Location <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="location" placeholder="City, State, Country" required>
+                        <div class="error-message" id="locationError">Location is required</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Languages You Speak <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="languages" placeholder="English, Hindi, etc." required>
+                        <div class="error-message" id="languagesError">Languages are required</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Your Age <span class="required">*</span></label>
+                        <input type="number" class="form-input" id="userAge" placeholder="25" required>
+                        <div class="error-message" id="userAgeError">Age is required</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Graduation/Education <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="graduation" placeholder="B.Tech, MBA, etc." required>
+                        <div class="error-message" id="graduationError">Education is required</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Awards & Recognition</label>
+                        <textarea class="form-textarea" id="awards" placeholder="List any awards or recognition you've received"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Experience in Field <span class="required">*</span></label>
+                        <textarea class="form-textarea" id="experience" placeholder="Describe your relevant experience" required></textarea>
+                        <div class="error-message" id="experienceError">Experience is required</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Co-Founders</label>
+                        <div id="cofoundersContainer"></div>
+                        <button type="button" class="add-cofounder-btn" onclick="addCofounder()">+ Add Co-Founder</button>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="goToWelcome()">Back</button>
+                        <button type="button" class="btn btn-primary" onclick="saveFounderDetails()">Next Step</button>
+                    </div>
+                </form>
             </div>
+        </div>
 
-            <!-- Banners Section -->
-            <div class="banners-section">
-                <!-- Founder Emergence Banner -->
-                <div class="banner">
-                    <div class="banner-content">
-                        <h3>
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 16 14"></polyline>
-                            </svg>
-                            Start Founder Emergence
-                        </h3>
-                        <p>Reach out to more interested investors and expand your network. Launch your Founder Emergence campaign to help get your startup funded faster and connect with the right people.</p>
-                    </div>
-                    <div class="banner-icon">
-                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"></path>
-                        </svg>
-                    </div>
+        <!-- Step 2: Startup Profile -->
+        <div class="form-screen" id="startupScreen">
+            <div class="form-card">
+                <div class="form-header">
+                    <h2 class="form-title">Startup Profile</h2>
+                    <p class="form-subtitle">Tell us about your venture</p>
                 </div>
 
-                <!-- Auto Replies Banner -->
-                <div class="banner">
-                    <div class="banner-content">
-                        <h3>
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
-                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                            </svg>
-                            Setup Auto Reply for Investors
-                        </h3>
-                        <p>Configure automatic first responses to greet your investors professionally. Make a great first impression and ensure no investor inquiry goes unnoticed with smart auto-replies.</p>
+                <form id="startupForm">
+                    <div class="form-group">
+                        <label class="form-label">Startup Name <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="startupName" placeholder="Enter your startup name" required>
+                        <div class="error-message" id="startupNameError">Startup name is required</div>
                     </div>
-                    <div class="banner-icon">
-                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                            <path d="M8 10h8"></path>
-                            <path d="M8 14h4"></path>
-                        </svg>
-                    </div>
-                </div>
 
-                <!-- Active Vests Banner -->
-                <div class="banner">
-                    <div class="banner-content">
-                        <div class="vests-header">
-                            <h3>
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
-                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                </svg>
-                                Active Vests
-                            </h3>
-                            <div class="vests-tabs">
-                                <div class="vest-tab active">Active (0)</div>
-                                <div class="vest-tab">Draft (0)</div>
-                            </div>
+                    <div class="form-group">
+                        <label class="form-label">Year of Establishment <span class="required">*</span></label>
+                        <input type="number" class="form-input" id="yearEstablished" placeholder="2024" min="1900" max="2026" required>
+                        <div class="error-message" id="yearError">Year is required</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Country <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="country" placeholder="e.g., India" required>
+                        <div class="error-message" id="countryError">Country is required</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">State <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="state" placeholder="e.g., Maharashtra" required>
+                        <div class="error-message" id="stateError">State is required</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">City <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="city" placeholder="e.g., Mumbai" required>
+                        <div class="error-message" id="cityError">City is required</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Startup Logo</label>
+                        <div class="file-upload">
+                            <input type="file" class="file-input" id="logoInput" accept="image/*" onchange="previewLogo(event)">
+                            <label for="logoInput" class="file-label">
+                                <div style="font-size: 40px; margin-bottom: 15px;">📁</div>
+                                <div style="font-size: 16px;">Click to upload logo</div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 10px;">PNG, JPG up to 5MB</div>
+                            </label>
+                            <div class="file-preview" id="logoPreview"></div>
                         </div>
-                        <p>Manage your active and draft vests to connect with the right investors. Track your outreach campaigns and optimize your investor engagement strategy.</p>
                     </div>
-                    <div class="banner-icon">
-                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="9" y1="9" x2="15" y2="9"></line>
-                            <line x1="9" y1="15" x2="15" y2="15"></line>
-                        </svg>
+
+                    <div class="form-group">
+                        <label class="form-label">Category <span class="required">*</span></label>
+                        <select class="form-select" id="category" required>
+                            <option value="">Select a category</option>
+                            <option value="AgTech">AgTech (Agriculture Technology)</option>
+                            <option value="AdTech">AdTech (Advertising Technology)</option>
+                            <option value="AI/ML">AI/ML (Artificial Intelligence & Machine Learning)</option>
+                            <option value="Aerospace">Aerospace (Space exploration and satellites)</option>
+                            <option value="AutoTech">AutoTech (Automotive and autonomous driving)</option>
+                            <option value="BioTech">BioTech (Biology-based innovation)</option>
+                            <option value="Blockchain">Blockchain (Decentralized ledgers and crypto)</option>
+                            <option value="B2B SaaS">B2B SaaS (Business-to-Business Software)</option>
+                            <option value="CleanTech">CleanTech (Environmentally friendly tech)</option>
+                            <option value="Cybersecurity">Cybersecurity (Data protection and safety)</option>
+                            <option value="ClimateTech">ClimateTech (Addressing global warming)</option>
+                            <option value="EdTech">EdTech (Education and online learning)</option>
+                            <option value="E-commerce">E-commerce (Online retail)</option>
+                            <option value="FinTech">FinTech (Financial services)</option>
+                            <option value="FoodTech">FoodTech (Food production and delivery)</option>
+                            <option value="GameTech">GameTech (Video games and engines)</option>
+                            <option value="HealthTech">HealthTech (Hospital and medical systems)</option>
+                            <option value="InsurTech">InsurTech (Insurance innovation)</option>
+                            <option value="IoT">IoT (Internet of Things/connected devices)</option>
+                            <option value="LegalTech">LegalTech (Automating law services)</option>
+                            <option value="Logistics">Logistics (Supply chain and shipping)</option>
+                            <option value="MarTech">MarTech (Marketing automation)</option>
+                            <option value="MedTech">MedTech (Medical devices and hardware)</option>
+                            <option value="PropTech">PropTech (Property and Real Estate)</option>
+                            <option value="SaaS">SaaS (Software as a Service)</option>
+                            <option value="SpaceTech">SpaceTech (Rocketry and satellite data)</option>
+                            <option value="TravelTech">TravelTech (Booking and tourism)</option>
+                            <option value="VR/AR">VR/AR (Virtual and Augmented Reality)</option>
+                            <option value="Web3">Web3 (Decentralized internet)</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <div class="error-message" id="categoryError">Category is required</div>
                     </div>
-                </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Startup Stage <span class="required">*</span></label>
+                        <select class="form-select" id="stage" required>
+                            <option value="">Select startup stage</option>
+                            <option value="Idea">Idea</option>
+                            <option value="Building">Building</option>
+                            <option value="MVP">MVP</option>
+                            <option value="Pre-Launch">Pre-Launch</option>
+                            <option value="Growing">Growing</option>
+                            <option value="Scale">Scale</option>
+                        </select>
+                        <div class="error-message" id="stageError">Stage is required</div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="goToFounder()">Back</button>
+                        <button type="button" class="btn btn-primary" onclick="saveStartupProfile()">Next Step</button>
+                    </div>
+                </form>
             </div>
+        </div>
+
+        <!-- Step 3: Business Details -->
+        <div class="form-screen" id="businessScreen">
+            <div class="form-card">
+                <div class="form-header">
+                    <h2 class="form-title">Business Details</h2>
+                    <p class="form-subtitle">Final step - tell us about your business metrics</p>
+                </div>
+
+                <form id="businessForm">
+                    <div class="form-group">
+                        <label class="form-label">Company Valuation (USD)</label>
+                        <input type="number" class="form-input" id="valuation" placeholder="e.g., 1000000">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">What Does Your Company Do? <span class="required">*</span></label>
+                        <textarea class="form-textarea" id="companyDescription" placeholder="Describe your product/service and value proposition" required></textarea>
+                        <div class="error-message" id="descriptionError">Description is required</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Current Revenue (USD)</label>
+                        <input type="number" class="form-input" id="revenue" placeholder="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">User Count</label>
+                        <input type="number" class="form-input" id="userCount" placeholder="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Monetization Idea <span class="required">*</span></label>
+                        <textarea class="form-textarea" id="monetization" placeholder="How do you plan to make money?" required></textarea>
+                        <div class="error-message" id="monetizationError">Monetization idea is required</div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="goToStartup()">Back</button>
+                        <button type="button" class="btn btn-primary" onclick="completeSetup()">Complete Setup</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Completion Screen -->
+        <div class="completion-screen" id="completionScreen">
+            <div class="success-icon">✓</div>
+            <h2 class="completion-title">Your Startup Profile is Complete!</h2>
+            <p class="completion-text">Ready to get started in ScaleStartup by creating your first vest?</p>
+            <button class="start-btn" onclick="createFirstVest()">Create First Vest</button>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 20px; color: #888;">Saving your information...</p>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-logo">
-                <div class="footer-logo-text">ScaleVest</div>
-                <div class="footer-company">UnioraX Private Limited</div>
-            </div>
-            <div class="footer-links">
-                <a href="#" class="footer-link">About</a>
-                <a href="#" class="footer-link">Contact</a>
-                <a href="#" class="footer-link">Privacy</a>
-                <a href="#" class="footer-link">Terms</a>
-            </div>
-        </div>
-    </footer>
+    <!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-        import { getDatabase, ref, get, set, update } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+    <script>
+        // Create animated stars
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+        createStars();
 
+        // Firebase Configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyDHHFyH48gWaOCPL4kDSk9P1LspRfwdpRI",
+            apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
             authDomain: "scalevest-163a0.firebaseapp.com",
             databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
             projectId: "scalevest-163a0",
             storageBucket: "scalevest-163a0.firebasestorage.app",
-            messagingSenderId: "803559950121",
-            appId: "1:803559950121:web:1a1c3f3b3e3f3f3f3f3f3f"
+            messagingSenderId: "938358950124",
+            appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
+            measurementId: "G-QD3TWBZHR0"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
+firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database(); 
+    const storage = firebase.storage();
 
-        function generateUserId(username) {
-            const hash = username.split('').reduce((acc, char) => {
-                return char.charCodeAt(0) + ((acc << 5) - acc);
-            }, 0);
-            return 'USR-' + Math.abs(hash).toString(16).toUpperCase().substring(0, 8);
-        }
+        let currentUser = null;
+        let cofoundersData = [];
+        let logoFile = null;
+        let isInitialLoad = true;
 
-        function generateStartupId(startupName) {
-            const hash = startupName.split('').reduce((acc, char) => {
-                return char.charCodeAt(0) + ((acc << 5) - acc);
-            }, 0);
-            return 'STP-' + Math.abs(hash).toString(16).toUpperCase().substring(0, 8);
-        }
-
-        async function loadUserData(user) {
-            try {
-                const founderRef = ref(db, `founderProfile/${user.uid}`);
-                const founderSnapshot = await get(founderRef);
-                
-                const email = user.email;
-                const firstLetter = email.charAt(0).toUpperCase();
-                const username = email.split('@')[0];
-                const userId = generateUserId(username);
-
-                if (!founderSnapshot.exists()) {
-                    await set(founderRef, {
-                        founderEmail: email,
-                        founderImage: firstLetter,
-                        founderUsername: username,
-                        userId: userId,
-                        createdAt: Date.now()
-                    });
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                isInitialLoad = false;
+                console.log("User verified:", user.uid);
+            } else {
+                if (!isInitialLoad) {
+                    window.location.href = 'login2.html';
+                } else {
+                    console.log("Firebase is still initializing...");
+                    isInitialLoad = false;
                 }
-
-                const founderData = founderSnapshot.exists() ? founderSnapshot.val() : {
-                    founderImage: firstLetter,
-                    founderUsername: username,
-                    userId: userId
-                };
-
-                document.getElementById('profileAvatar').textContent = founderData.founderImage;
-                document.getElementById('profileIcon').innerHTML = `<div style="font-size: 1.2rem; font-weight: 600;">${founderData.founderImage}</div>`;
-                document.getElementById('userName').textContent = founderData.founderUsername;
-                document.getElementById('userId').textContent = `User ID: ${founderData.userId}`;
-                document.getElementById('founderName').textContent = founderData.founderUsername;
-                document.getElementById('dropdownUsername').textContent = founderData.founderUsername;
-                document.getElementById('dropdownUserid').textContent = founderData.userId;
-
-                const startupRef = ref(db, `startupprofile/${user.uid}`);
-                const startupSnapshot = await get(startupRef);
-
-                if (startupSnapshot.exists()) {
-                    const startupData = startupSnapshot.val();
-                    const startupId = generateStartupId(startupData.startupName);
-                    
-                    document.getElementById('startupName').textContent = startupData.startupName;
-                    document.getElementById('startupId').textContent = `Startup ID: ${startupId}`;
-                    
-                    if (startupData.logo) {
-                        document.getElementById('startupLogo').innerHTML = `<img src="${startupData.logo}" alt="Startup Logo">`;
-                    }
-
-                    await update(startupRef, {
-                        startupId: startupId
-                    });
-                }
-
-            } catch (error) {
-                console.error('Error loading data:', error);
-            }
-        }
-// Add a flag to check if this is the first time the page is loading
-let isInitialLoad = true;
-
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        // User is authenticated
-        loadUserData(user);
-        isInitialLoad = false;
-    } else {
-        // Only redirect if Firebase has finished checking and definitely found no user
-        if (!isInitialLoad) {
-            window.location.href = 'login2.html';
-        } else {
-            // If it's the first check and user is null, 
-            // wait a moment or check if a session exists
-            isInitialLoad = false;
-            
-            // Optional: Small delay to let Firebase finish verification
-            setTimeout(() => {
-                if (!auth.currentUser) {
-                    window.location.href = 'login.html';
-                }
-            }, 1000); 
-        }
-    }
-});
-
-        window.logout = async function() {
-            try {
-                await signOut(auth);
-                window.location.href = 'login2.html';
-            } catch (error) {
-                console.error('Error logging out:', error);
-            }
-        };
-
-        window.toggleDropdown = function() {
-            const dropdown = document.getElementById('scaleDropdown');
-            dropdown.classList.toggle('show');
-        };
-
-        window.toggleProfileDropdown = function() {
-            const dropdown = document.getElementById('profileDropdown');
-            dropdown.classList.toggle('show');
-        };
-
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.dropdown') && !e.target.closest('.profile-dropdown')) {
-                document.getElementById('scaleDropdown').classList.remove('show');
-                document.getElementById('profileDropdown').classList.remove('show');
             }
         });
+
+        function updateStepProgress(stepNumber) {
+            // Show step progress bar
+            document.getElementById('stepProgress').style.display = 'flex';
+            
+            // Update step items
+            for (let i = 1; i <= 4; i++) {
+                const stepItem = document.getElementById(`step${i}`);
+                if (i < stepNumber) {
+                    stepItem.classList.add('completed');
+                    stepItem.classList.remove('active');
+                } else if (i === stepNumber) {
+                    stepItem.classList.add('active');
+                    stepItem.classList.remove('completed');
+                } else {
+                    stepItem.classList.remove('active', 'completed');
+                }
+            }
+        }
+
+        function startConfiguration() {
+            document.getElementById('welcomeScreen').classList.remove('active');
+            document.getElementById('founderScreen').classList.add('active');
+            updateStepProgress(1);
+        }
+
+        function goToWelcome() {
+            document.getElementById('founderScreen').classList.remove('active');
+            document.getElementById('welcomeScreen').classList.add('active');
+            document.getElementById('stepProgress').style.display = 'none';
+        }
+
+        function goToFounder() {
+            document.getElementById('startupScreen').classList.remove('active');
+            document.getElementById('founderScreen').classList.add('active');
+            updateStepProgress(1);
+        }
+
+        function goToStartup() {
+            document.getElementById('businessScreen').classList.remove('active');
+            document.getElementById('startupScreen').classList.add('active');
+            updateStepProgress(2);
+        }
+
+        // Co-founder Management
+        function addCofounder() {
+            const container = document.getElementById('cofoundersContainer');
+            const index = cofoundersData.length;
+            
+            const cofounderDiv = document.createElement('div');
+            cofounderDiv.className = 'cofounder-item';
+            cofounderDiv.innerHTML = `
+                <div class="cofounder-header">
+                    <div class="cofounder-title">Co-Founder ${index + 1}</div>
+                    <button type="button" class="remove-btn" onclick="removeCofounder(${index})">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Name <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="cofounderName${index}" placeholder="Full Name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email <span class="required">*</span></label>
+                    <input type="email" class="form-input" id="cofounderEmail${index}" placeholder="email@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Age <span class="required">*</span></label>
+                    <input type="number" class="form-input" id="cofounderAge${index}" placeholder="25" required>
+                </div>
+            `;
+            
+            container.appendChild(cofounderDiv);
+            cofoundersData.push({ index });
+        }
+
+        function removeCofounder(index) {
+            cofoundersData = cofoundersData.filter(cf => cf.index !== index);
+            renderCofounders();
+        }
+
+        function renderCofounders() {
+            const container = document.getElementById('cofoundersContainer');
+            container.innerHTML = '';
+            cofoundersData.forEach((cf, idx) => {
+                const cofounderDiv = document.createElement('div');
+                cofounderDiv.className = 'cofounder-item';
+                cofounderDiv.innerHTML = `
+                    <div class="cofounder-header">
+                        <div class="cofounder-title">Co-Founder ${idx + 1}</div>
+                        <button type="button" class="remove-btn" onclick="removeCofounder(${cf.index})">Remove</button>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Name <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="cofounderName${cf.index}" placeholder="Full Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email <span class="required">*</span></label>
+                        <input type="email" class="form-input" id="cofounderEmail${cf.index}" placeholder="email@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Age <span class="required">*</span></label>
+                        <input type="number" class="form-input" id="cofounderAge${cf.index}" placeholder="25" required>
+                    </div>
+                `;
+                container.appendChild(cofounderDiv);
+            });
+        }
+
+        function previewLogo(event) {
+            const file = event.target.files[0];
+            if (file) {
+                logoFile = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('logoPreview');
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Logo Preview">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function validateFounderForm() {
+            let isValid = true;
+            const fields = ['location', 'languages', 'userAge', 'graduation', 'experience'];
+            
+            fields.forEach(field => {
+                const input = document.getElementById(field);
+                const error = document.getElementById(field + 'Error');
+                
+                if (input && error) {
+                    if (!input.value.trim()) {
+                        error.classList.add('show');
+                        isValid = false;
+                    } else {
+                        error.classList.remove('show');
+                    }
+                }
+            });
+
+            return isValid;
+        }
+
+        function validateStartupForm() {
+            let isValid = true;
+            const fields = ['startupName', 'yearEstablished', 'country', 'state', 'city', 'category', 'stage'];
+            
+            fields.forEach(field => {
+                const input = document.getElementById(field);
+                const error = document.getElementById(field + 'Error');
+                
+                if (input && error) {
+                    if (!input.value.trim()) {
+                        error.classList.add('show');
+                        isValid = false;
+                    } else {
+                        error.classList.remove('show');
+                    }
+                }
+            });
+            return isValid;
+        }
+
+        function validateBusinessForm() {
+            let isValid = true;
+            const fields = ['companyDescription', 'monetization'];
+            
+            fields.forEach(field => {
+                const input = document.getElementById(field);
+                const error = document.getElementById(field + 'Error');
+                
+                if (input && error) {
+                    if (!input.value.trim()) {
+                        error.classList.add('show');
+                        isValid = false;
+                    } else {
+                        error.classList.remove('show');
+                    }
+                }
+            });
+            return isValid;
+        }
+
+       async function saveFounderDetails() {
+        if (!validateFounderForm()) return;
+
+        const cofounders = {}; // RTD works better with objects or indexed lists
+        cofoundersData.forEach((cf, idx) => {
+            const name = document.getElementById(`cofounderName${cf.index}`)?.value;
+            const email = document.getElementById(`cofounderEmail${cf.index}`)?.value;
+            const age = document.getElementById(`cofounderAge${cf.index}`)?.value;
+            if (name) cofounders[`founder_${idx}`] = { name, email, age: parseInt(age) };
+        });
+
+        const founderData = {
+            location: document.getElementById('location').value,
+            languages: document.getElementById('languages').value,
+            age: parseInt(document.getElementById('userAge').value),
+            graduation: document.getElementById('graduation').value,
+            awards: document.getElementById('awards').value,
+            experience: document.getElementById('experience').value,
+            cofounders: cofounders,
+           createdAt: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        try {
+            document.getElementById('loading').style.display = 'block';
+            
+            // Saving to founderprofile/{uid}
+            await db.ref('founderprofile/' + currentUser.uid).set(founderData);
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('founderScreen').classList.remove('active');
+            document.getElementById('startupScreen').classList.add('active');
+            updateStepProgress(2);
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error saving: ' + error.message);
+            document.getElementById('loading').style.display = 'none';
+        }
+    }
+
+        async function saveStartupProfile() {
+        if (!validateStartupForm()) return;
+        document.getElementById('loading').style.display = 'block';
+
+        try {
+            let logoUrl = '';
+            if (logoFile) {
+                const storageRef = storage.ref(`startup-logos/${currentUser.uid}/${logoFile.name}`);
+                const snapshot = await storageRef.put(logoFile);
+                logoUrl = await snapshot.ref.getDownloadURL();
+            }
+
+            const startupData = {
+                startupName: document.getElementById('startupName').value,
+                yearEstablished: parseInt(document.getElementById('yearEstablished').value),
+                location: {
+                    country: document.getElementById('country').value,
+                    state: document.getElementById('state').value,
+                    city: document.getElementById('city').value
+                },
+                logo: logoUrl,
+                category: document.getElementById('category').value,
+                stage: document.getElementById('stage').value
+            };
+
+            // Using update() to merge data in RTD
+            await db.ref('startupprofile/' + currentUser.uid).update(startupData);
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('startupScreen').classList.remove('active');
+            document.getElementById('businessScreen').classList.add('active');
+            updateStepProgress(3);
+        } catch (error) {
+            alert('Error: ' + error.message);
+            document.getElementById('loading').style.display = 'none';
+        }
+    }
+
+       async function completeSetup() {
+        if (!validateBusinessForm()) return;
+        document.getElementById('loading').style.display = 'block';
+
+        try {
+            const businessData = {
+                valuation: parseFloat(document.getElementById('valuation').value) || 0,
+                companyDescription: document.getElementById('companyDescription').value,
+                revenue: parseFloat(document.getElementById('revenue').value) || 0,
+                userCount: parseInt(document.getElementById('userCount').value) || 0,
+                monetization: document.getElementById('monetization').value,
+                setupCompleted: true,
+                completedAt: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            await db.ref('startupprofile/' + currentUser.uid).update(businessData);
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('businessScreen').classList.remove('active');
+            document.getElementById('completionScreen').classList.add('active');
+            updateStepProgress(4);
+        } catch (error) {
+            alert('Error: ' + error.message);
+            document.getElementById('loading').style.display = 'none';
+        }
+    }
+
+        function createFirstVest() {
+            window.location.href = 'vests.html';
+        }
     </script>
 </body>
 </html>
