@@ -908,134 +908,200 @@ function loadFromLocalStorage() {
         pitchDeck: null,
         transactionProof: null
     };
+ let isNewUser = false; 
+ const STORAGE_KEY = 'vestFormData';
 
-// 1. Authentication State Observer
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        currentUser = user;
-        isInitialLoad = false;
-        console.log("User verified:", user.uid);
-        
-        // Check hash and show appropriate view after user is set
-        setTimeout(() => {
-            const hash = window.location.hash.slice(1);
-            if (!hash || hash === 'founder_dashboard') {
-                window.location.hash = 'founder_dashboard';
-                handleHashChange();
-            } else {
-                handleHashChange();
-            }
-        }, 100);
-    } else {
-        if (!isInitialLoad) {
-            window.location.href = 'login2.html';
-        } else {
-            setTimeout(() => {
-                if (!auth.currentUser) window.location.href = 'login2.html';
-            }, 2000);
+    // ========================================
+    // SECTION 1: PLACE AUTHENTICATION OBSERVER HERE
+    // ========================================
+    
+    // 1. Authentication State Observer
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            currentUser = user;
             isInitialLoad = false;
+            console.log("User verified:", user.uid);
+            
+            // Check if user has completed vest before
+            const vestsRef = ref(db, `Vests/${user.uid}`);
+            const vestsSnapshot = await get(vestsRef);
+            
+            // Check if user has founder profile
+            const founderRef = ref(db, `founderProfile/${user.uid}`);
+            const founderSnapshot = await get(founderRef);
+            
+            // User is new if they have no vests AND no founder profile
+            isNewUser = !vestsSnapshot.exists() && !founderSnapshot.exists();
+            
+            console.log("Is new user:", isNewUser);
+            
+            // Decide where to route
+            setTimeout(() => {
+                const hash = window.location.hash.slice(1);
+                
+                // If new user and no hash, show vest creation (step 1)
+                if (isNewUser && !hash) {
+                    window.location.hash = 'vest_step1';
+                    handleHashChange();
+                } 
+                // If returning user and no hash, show dashboard
+                else if (!isNewUser && (!hash || hash === 'founder_dashboard')) {
+                    window.location.hash = 'founder_dashboard';
+                    handleHashChange();
+                }
+                // If there's a specific hash, respect it
+                else {
+                    handleHashChange();
+                }
+            }, 100);
+        } else {
+            if (!isInitialLoad) {
+                window.location.href = 'login2.html';
+            } else {
+                setTimeout(() => {
+                    if (!auth.currentUser) window.location.href = 'login2.html';
+                }, 2000);
+                isInitialLoad = false;
+            }
+        }
+    });
+
+    // ========================================
+    // SECTION 2: PLACE HASH CHANGE HANDLER HERE
+    // ========================================
+    
+    // Handle hash navigation
+    window.addEventListener('hashchange', handleHashChange);
+
+    function handleHashChange() {
+        // Don't do anything if user isn't authenticated yet
+        if (!currentUser) {
+            console.log("Waiting for authentication...");
+            return;
+        }
+        
+        const hash = window.location.hash.slice(1); // Remove #
+        console.log("Hash changed to:", hash);
+        
+        if (hash === 'founder_dashboard') {
+            showDashboard();
+        } else if (hash.startsWith('vest_step')) {
+            const stepNum = parseInt(hash.replace('vest_step', ''));
+            if (stepNum >= 1 && stepNum <= 5) {
+                currentStep = stepNum;
+                updateStepDisplay();
+                showVestForm();
+            }
+        } else if (!hash) {
+            // If no hash, decide based on user status
+            if (isNewUser) {
+                window.location.hash = 'vest_step1';
+            } else {
+                window.location.hash = 'founder_dashboard';
+            }
         }
     }
-});
-// Handle hash navigation
-window.addEventListener('hashchange', handleHashChange);
-window.addEventListener('load', () => {
-    // Wait for auth to initialize
-    setTimeout(handleHashChange, 300);
-});
 
-function handleHashChange() {
-    // Don't do anything if user isn't authenticated yet
-    if (!currentUser) {
-        console.log("Waiting for authentication...");
-        return;
+    function showVestForm() {
+        document.title = "Create Your Vest | ScaleVest"; 
+        document.querySelector('.vest-container').style.display = 'block';
+        const dashContainer = document.getElementById('dashboardContainer');
+        if (dashContainer) {
+            dashContainer.style.display = 'none';
+        }
     }
-    
-    const hash = window.location.hash.slice(1); // Remove #
-    
-    if (hash === 'founder_dashboard') {
+
+    function showDashboard() {
+        document.title = "Founder Dashboard | ScaleVest";
         document.querySelector('.vest-container').style.display = 'none';
-        showDashboard();
-    } else if (hash.startsWith('vest_step')) {
-        const stepNum = parseInt(hash.replace('vest_step', ''));
-        if (stepNum >= 1 && stepNum <= 5) {
-            currentStep = stepNum;
-            updateStepDisplay();
-            showVestForm();
+        
+        let container = document.getElementById('dashboardContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'dashboardContainer';
+            document.body.appendChild(container);
         }
-    } else {
-        // Default to dashboard if no hash
-        window.location.hash = 'founder_dashboard';
+        
+        container.style.display = 'block';
+        createDashboard();
     }
-}
 
-function showVestForm() {
-    document.title = "Create Your Vest | ScaleVest"; 
-    document.querySelector('.vest-container').style.display = 'block';
-    const dashContainer = document.getElementById('dashboardContainer');
-    if (dashContainer) {
-        dashContainer.style.display = 'none';
+    // ========================================
+    // SECTION 3: ADD NEW STARTUP PROFILE SAVE FUNCTION HERE
+    // ========================================
+    
+    async function saveStartupProfile(vestData) {
+        if (!currentUser) return;
+        
+        const startupProfileRef = ref(db, `startupProfile/${currentUser.uid}`);
+        
+        const startupData = {
+            startupName: vestData.startupName,
+            startupId: generateStartupId(vestData.startupName),
+            logo: vestData.startupLogoUrl,
+            description: vestData.startupDescription,
+            stage: vestData.startupStage,
+            category: vestData.category,
+            founderId: currentUser.uid,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        
+        await set(startupProfileRef, startupData);
+        return startupData;
     }
-}
 
-function showDashboard() {
-    document.title = "Founder Dashboard | ScaleVest";
-    document.querySelector('.vest-container').style.display = 'none';
+    // ========================================
+    // SECTION 4: UPDATE createDashboard FUNCTION
+    // ========================================
     
-    let container = document.getElementById('dashboardContainer');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'dashboardContainer';
-        document.body.appendChild(container);
-    }
-    
-    container.style.display = 'block';
-    createDashboard();
-}
-async function createDashboard() {
-    if (!currentUser) return;
-    
-    // Fetch user data
-    const founderProfileRef = ref(db, `founderProfile/${currentUser.uid}`);
-    const startupProfileRef = ref(db, `startupprofile/${currentUser.uid}`);
-    const vestsRef = ref(db, `Vests/${currentUser.uid}`);
-    
-    let founderData = null;
-    let startupData = null;
-    let vestsData = {};
-    
-    try {
-        const founderSnap = await get(founderProfileRef);
-        founderData = founderSnap.val();
+    async function createDashboard() {
+        if (!currentUser) return;
         
-        // Auto-create founder profile if not exists
-        if (!founderData) {
-            const email = currentUser.email || 'user@scalevest.com';
-            const username = email.split('@')[0];
-            const firstLetter = email.charAt(0).toUpperCase();
-            const userId = generateUserId(username);
+        // FIXED: Correct case-sensitive paths
+        const founderProfileRef = ref(db, `founderProfile/${currentUser.uid}`);
+        const startupProfileRef = ref(db, `startupProfile/${currentUser.uid}`);
+        const vestsRef = ref(db, `Vests/${currentUser.uid}`);
+        
+        let founderData = null;
+        let startupData = null;
+        let vestsData = {};
+        
+        try {
+            const founderSnap = await get(founderProfileRef);
+            founderData = founderSnap.val();
             
-            founderData = {
-                founderUsername: username,
-                founderImage: firstLetter,
-                userId: userId,
-                email: email,
-                createdAt: new Date().toISOString()
-            };
+            // Auto-create founder profile if not exists
+            if (!founderData) {
+                const email = currentUser.email || 'user@scalevest.com';
+                const username = email.split('@')[0];
+                const firstLetter = email.charAt(0).toUpperCase();
+                const userId = generateUserId(username);
+                
+                founderData = {
+                    founderUsername: username,
+                    founderImage: firstLetter,
+                    userId: userId,
+                    email: email,
+                    createdAt: new Date().toISOString()
+                };
+                
+                await set(founderProfileRef, founderData);
+            }
             
-            await set(founderProfileRef, founderData);
+            // Load startup profile
+            const startupSnap = await get(startupProfileRef);
+            startupData = startupSnap.val();
+            
+            console.log('Loaded startup data:', startupData);
+            
+            const vestsSnap = await get(vestsRef);
+            if (vestsSnap.exists()) {
+                vestsData = vestsSnap.val();
+            }
+        } catch (error) {
+            console.error('Error fetching data:', error);
         }
-        
-        const startupSnap = await get(startupProfileRef);
-        startupData = startupSnap.val();
-        
-        const vestsSnap = await get(vestsRef);
-        if (vestsSnap.exists()) {
-            vestsData = vestsSnap.val();
-        }
-    } catch (error) {
-        console.error('Error fetching data:', error);
-    }
     
     const draftCount = Object.values(vestsData).filter(v => v.status === 'draft').length;
     const activeCount = Object.values(vestsData).filter(v => v.status === 'live').length;
@@ -1842,22 +1908,22 @@ max-width: 1100px;
                 <button class="card-btn">View Profile</button>
             </div>
 
-            <div class="card">
-                <div class="startup-logo">
-                    ${startupData?.logo
-                        ? `<img src="${startupData.logo}" alt="Startup Logo">`
-                        : `
-                        <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                            <path d="M12 2L2 7l10 5 10-5z"></path>
-                            <path d="M2 17l10 5 10-5"></path>
-                            <path d="M2 12l10 5 10-5"></path>
-                        </svg>`}
-                </div>
-
-                <div class="card-title">${startupData?.startupName || 'My Startup'}</div>
-                <div class="card-subtitle">${generateStartupId(startupData?.startupName || 'Startup')}</div>
-                <button class="card-btn">View Startup</button>
+             <div class="card">
+            <div class="startup-logo">
+                ${startupData?.logo
+                    ? `<img src="${startupData.logo}" alt="Startup Logo">`
+                    : `
+                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5z"></path>
+                        <path d="M2 17l10 5 10-5"></path>
+                        <path d="M2 12l10 5 10-5"></path>
+                    </svg>`}
             </div>
+
+            <div class="card-title">${startupData?.startupName || 'My Startup'}</div>
+            <div class="card-subtitle">${startupData?.startupId || 'Create your first vest'}</div>
+            <button class="card-btn">View Startup</button>
+        </div>
 
 <div class="card">
     <div class="availability-indicator">
@@ -2199,58 +2265,64 @@ window.previousStep = function() {
         };
     }
 
-    window.saveAsDraft = async function() {
-        const btn = event.currentTarget;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '⏳ Uploading & Saving...';
-        btn.disabled = true;
+   window.saveAsDraft = async function() {
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Uploading & Saving...';
+    btn.disabled = true;
 
-        try {
-            await processAllFiles(); // Upload files first
-const logoFile = document.getElementById('startupLogo').files[0];
-if (logoFile && !uploadedFiles.startupLogo) {
-    uploadedFiles.startupLogo = await uploadFile(logoFile, 'startup-logos');
-}
-            const vestData = collectVestData();
-            if (!vestData) return;
-            vestData.status = 'draft';
+    try {
+        await processAllFiles(); // Upload files first
+        
+        const vestData = collectVestData();
+        if (!vestData) return;
+        vestData.status = 'draft';
 
-            const vestRef = ref(db, `Vests/${currentUser.uid}`);
-            await set(push(vestRef), vestData);
-            
-            btn.innerHTML = '✅ Saved!';
-            setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
-        } catch (error) {
-            btn.innerHTML = '❌ Error';
-            btn.disabled = false;
+        // Save startup profile if startup name exists
+        if (vestData.startupName) {
+            await saveStartupProfile(vestData);
         }
-    };
+        
+        // Save vest as draft
+        const vestRef = ref(db, `Vests/${currentUser.uid}`);
+        await set(push(vestRef), vestData);
+        
+        btn.innerHTML = '✅ Saved!';
+        setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
+    } catch (error) {
+        console.error('Save error:', error);
+        btn.innerHTML = '❌ Error';
+        btn.disabled = false;
+    }
+};
 
-    window.launchVest = async function() {
-        const btn = event.currentTarget;
-        btn.innerHTML = '⏳ Launching...';
-        btn.disabled = true;
+   window.launchVest = async function() {
+    const btn = event.currentTarget;
+    btn.innerHTML = '⏳ Launching...';
+    btn.disabled = true;
 
-        try {
-            await processAllFiles(); // Upload files first
-const logoFile = document.getElementById('startupLogo').files[0];
-if (logoFile && !uploadedFiles.startupLogo) {
-    uploadedFiles.startupLogo = await uploadFile(logoFile, 'startup-logos');
-}
-            const vestData = collectVestData();
-            if (!vestData) return;
-            vestData.status = 'live';
+    try {
+        await processAllFiles(); // Upload files first
+        
+        const vestData = collectVestData();
+        if (!vestData) return;
+        vestData.status = 'live';
 
-            const vestRef = ref(db, `Vests/${currentUser.uid}`);
-            await set(push(vestRef), vestData);
-            
-            document.querySelector('.step-content.active').style.display = 'none';
-            document.getElementById('celebration').classList.add('active');
-        } catch (error) {
-            btn.innerHTML = '❌ Error';
-            btn.disabled = false;
-        }
-    };
+        // Save startup profile FIRST
+        await saveStartupProfile(vestData);
+        
+        // Then save vest
+        const vestRef = ref(db, `Vests/${currentUser.uid}`);
+        await set(push(vestRef), vestData);
+        
+        document.querySelector('.step-content.active').style.display = 'none';
+        document.getElementById('celebration').classList.add('active');
+    } catch (error) {
+        console.error('Launch error:', error);
+        btn.innerHTML = '❌ Error';
+        btn.disabled = false;
+    }
+};
 
     function displaySummary() {
         const data = collectVestData();
