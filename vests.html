@@ -1219,7 +1219,17 @@ cachedStartupData = startupSnapshot.val();
         founderData = founderSnap.val();
         cachedFounderData = founderData;
     }
-    
+    if (founderData && !founderData.founderUsername) {
+        founderData.founderUsername = founderData.firstName 
+            ? `${founderData.firstName} ${founderData.lastName || ''}`
+            : (founderData.email || 'User').split('@')[0];
+        
+        founderData.founderImage = founderData.firstName 
+            ? founderData.firstName.charAt(0).toUpperCase()
+            : (founderData.email || 'U').charAt(0).toUpperCase();
+        
+        console.log('✅ Converted old profile to new format:', founderData);
+    }
     if (!startupData) {
         const startupProfileRef = ref(db, `startupProfile/${currentUser.uid}`);
         const startupSnap = await get(startupProfileRef);
