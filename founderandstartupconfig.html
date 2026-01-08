@@ -1135,7 +1135,7 @@ firebase.initializeApp(firebaseConfig);
             };
 
             // Using update() to merge data in RTD
-            await db.ref('startupprofile/' + currentUser.uid).update(startupData);
+            await db.ref('startupProfile/' + currentUser.uid).update(startupData);
 
             document.getElementById('loading').style.display = 'none';
             document.getElementById('startupScreen').classList.remove('active');
@@ -1162,7 +1162,7 @@ firebase.initializeApp(firebaseConfig);
                 completedAt: firebase.database.ServerValue.TIMESTAMP
             };
 
-            await db.ref('startupprofile/' + currentUser.uid).update(businessData);
+            await db.ref('startupProfile/' + currentUser.uid).update(businessData);
 
             document.getElementById('loading').style.display = 'none';
             document.getElementById('businessScreen').classList.remove('active');
