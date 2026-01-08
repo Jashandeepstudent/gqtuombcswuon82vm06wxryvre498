@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1587,7 +1588,7 @@
 
       try {
           // 3. RTD Reference (founderprofile/{uid})
-          const profileRef = ref(db, 'founderprofile/' + user.uid);
+          const profileRef = ref(db, 'founderProfile/' + user.uid);
           
           const snapshot = await get(profileRef);
           if (snapshot.exists()) {
@@ -1629,7 +1630,7 @@
         // 5. Check if profile exists in RTD
         const dbRef = ref(db);
         try {
-            const snapshot = await get(child(dbRef, `founderprofile/${user.uid}`));
+            const snapshot = await get(child(dbRef, `founderProfile/${user.uid}`));
             if (snapshot.exists()) {
                 window.location.href = "founderdashboard.html";
             }
