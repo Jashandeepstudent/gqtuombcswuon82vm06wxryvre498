@@ -1200,26 +1200,28 @@ let cachedStartupData = null;
     // SECTION 3: ADD NEW STARTUP PROFILE SAVE FUNCTION HERE
     // ========================================
     
-    async function saveStartupProfile(vestData) {
-        if (!currentUser) return;
-        
-        const startupProfileRef = ref(db, `startupProfile/${currentUser.uid}`);
-        
-        const startupData = {
-            startupName: vestData.startupName,
-            startupId: generateStartupId(vestData.startupName),
-            logo: vestData.startupLogoUrl,
-            description: vestData.startupDescription,
-            stage: vestData.startupStage,
-            category: vestData.category,
-            founderId: currentUser.uid,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-        
-        await set(startupProfileRef, startupData);
-        return startupData;
-    }
+async function saveStartupProfile(vestData) {
+    if (!currentUser) return;
+    
+    const startupProfileRef = ref(db, `startupProfile/${currentUser.uid}`);
+    
+    const startupData = {
+        startupName: vestData.startupName,
+        startupId: generateStartupId(vestData.startupName),
+        logo: vestData.startupLogoUrl,
+        description: vestData.startupDescription,
+        stage: vestData.startupStage,
+        category: vestData.category,
+        founderId: currentUser.uid,
+        // Optional: Remove createdAt from here so it doesn't overwrite the original join date
+        updatedAt: new Date().toISOString()
+    };
+    
+    
+    await update(startupProfileRef, startupData); 
+    
+    return startupData;
+}
 
     // ========================================
     // SECTION 4: UPDATE createDashboard FUNCTION
