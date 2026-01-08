@@ -2980,24 +2980,31 @@ window.previousStep = function() {
     }
 };
 
-   window.launchVest = async function() {
+  window.launchVest = async function() {
     const btn = event.currentTarget;
     btn.innerHTML = '⏳ Launching...';
     btn.disabled = true;
 
     try {
-        await processAllFiles(); // Upload files first
+        await processAllFiles(); 
         
         const vestData = collectVestData();
         if (!vestData) return;
         vestData.status = 'live';
 
-        // Save startup profile FIRST
-        await saveStartupProfile(vestData);
+        // --- REMOVE THE saveStartupProfile CALL ENTIRELY ---
+        // await saveStartupProfile(vestData); <--- DELETE THIS LINE
         
-        // Then save vest
+        // Only update the STATUS on the profile, don't re-save the whole profile
+        const profileRef = ref(db, `startupProfile/${currentUser.uid}`);
+        await update(profileRef, { 
+            lastLaunchedVest: new Date().toISOString(),
+            status: 'active'
+        });
+        
+        // Save the vest to the Vests collection (This is the important part)
         const vestRef = ref(db, `Vests/${currentUser.uid}`);
-        await update(push(vestRef), vestData);
+        await set(push(vestRef), vestData);
         
         document.querySelector('.step-content.active').style.display = 'none';
         document.getElementById('celebration').classList.add('active');
@@ -3007,7 +3014,6 @@ window.previousStep = function() {
         btn.disabled = false;
     }
 };
-
     function displaySummary() {
         const data = collectVestData();
         if (!data) return;
