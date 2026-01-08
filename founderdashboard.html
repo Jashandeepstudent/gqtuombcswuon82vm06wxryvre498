@@ -907,7 +907,7 @@
 
 <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
     import { getDatabase, ref, get, set, update } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 
     const firebaseConfig = {
@@ -924,8 +924,16 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    let currentUser = null;
-    let isInitialLoad = true;
+    // Set persistence to LOCAL so auth state survives page reloads
+    setPersistence(auth, browserLocalPersistence)
+        .then(() => {
+            console.log("Auth persistence set to LOCAL");
+        })
+        .catch((error) => {
+            console.error("Error setting persistence:", error);
+        });
+
+    let hasCheckedAuth = false;
 
     function generateUserId(username) {
         const hash = username.split('').reduce((acc, char) => {
@@ -997,24 +1005,31 @@
     }
 
     onAuthStateChanged(auth, (user) => {
+        console.log("Auth state changed. User:", user ? user.uid : "No user");
+        
         if (user) {
-            currentUser = user;
-            isInitialLoad = false;
-            console.log("User verified:", user.uid);
+            // User is signed in
+            hasCheckedAuth = true;
+            console.log("✅ User authenticated:", user.email);
             loadUserData(user);
         } else {
-            if (isInitialLoad) {
-                console.log("Firebase is still initializing...");
-                isInitialLoad = false;
+            // No user signed in
+            if (!hasCheckedAuth) {
+                // First check - wait a bit for Firebase to initialize
+                hasCheckedAuth = true;
+                console.log("⏳ Waiting for Firebase auth to initialize...");
                 
                 setTimeout(() => {
                     if (!auth.currentUser) {
-                        console.log("No user found after 3 seconds, redirecting to login...");
+                        console.log("❌ No user found after waiting, redirecting to login");
                         window.location.href = 'login2.html';
+                    } else {
+                        console.log("✅ User found after waiting:", auth.currentUser.email);
                     }
-                }, 3000);
+                }, 2000);
             } else {
-                console.log("User logged out, redirecting...");
+                // User actively signed out
+                console.log("🚪 User signed out, redirecting to login");
                 window.location.href = 'login2.html';
             }
         }
@@ -1022,11 +1037,12 @@
 
     window.logout = async function() {
         try {
+            console.log("🔓 Logging out user...");
             await signOut(auth);
-            console.log("User signed out successfully");
+            console.log("✅ User signed out successfully");
             window.location.href = 'login2.html';
         } catch (error) {
-            console.error('Error logging out:', error);
+            console.error('❌ Error logging out:', error);
             alert('Error logging out. Please try again.');
         }
     };
