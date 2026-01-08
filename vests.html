@@ -1071,22 +1071,23 @@ function loadFromLocalStorage() {
             founderData = founderSnap.val();
             
             // Auto-create founder profile if not exists
-            if (!founderData) {
-                const email = currentUser.email || 'user@scalevest.com';
-                const username = email.split('@')[0];
-                const firstLetter = email.charAt(0).toUpperCase();
-                const userId = generateUserId(username);
-                
-                founderData = {
-                    founderUsername: username,
-                    founderImage: firstLetter,
-                    userId: userId,
-                    email: email,
-                    createdAt: new Date().toISOString()
-                };
-                
-                await set(founderProfileRef, founderData);
-            }
+// Auto-create founder profile if not exists
+if (!founderData) {
+    const email = currentUser.email || 'user@scalevest.com';
+    const username = email.split('@')[0];
+    const firstLetter = email.charAt(0).toUpperCase();
+
+    founderData = {
+        founderUsername: username,
+        founderImage: firstLetter,
+        userId: currentUser.uid, // 🔥 USE EXISTING AUTH UID
+        email: email,
+        createdAt: new Date().toISOString()
+    };
+
+    await set(founderProfileRef, founderData);
+}
+
             
             // Load startup profile
             const startupSnap = await get(startupProfileRef);
