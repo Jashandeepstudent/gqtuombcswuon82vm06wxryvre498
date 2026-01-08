@@ -905,120 +905,128 @@
         </div>
     </footer>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-        import { getDatabase, ref, get, set, update } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+    import { getDatabase, ref, get, set, update } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDHHFyH48gWaOCPL4kDSk9P1LspRfwdpRI",
-            authDomain: "scalevest-163a0.firebaseapp.com",
-            databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-            projectId: "scalevest-163a0",
-            storageBucket: "scalevest-163a0.firebasestorage.app",
-            messagingSenderId: "803559950121",
-            appId: "1:803559950121:web:1a1c3f3b3e3f3f3f3f3f3f"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyDHHFyH48gWaOCPL4kDSk9P1LspRfwdpRI",
+        authDomain: "scalevest-163a0.firebaseapp.com",
+        databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+        projectId: "scalevest-163a0",
+        storageBucket: "scalevest-163a0.firebasestorage.app",
+        messagingSenderId: "803559950121",
+        appId: "1:803559950121:web:1a1c3f3b3e3f3f3f3f3f3f"
+    };
 
-        const app = initializeApp(firebaseConfig);
-          const auth = firebase.auth();
-        const db = getDatabase(app);
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app); // FIXED: Correct way to initialize auth in v10
+    const db = getDatabase(app);
 
-        function generateUserId(username) {
-            const hash = username.split('').reduce((acc, char) => {
-                return char.charCodeAt(0) + ((acc << 5) - acc);
-            }, 0);
-            return 'USR-' + Math.abs(hash).toString(16).toUpperCase().substring(0, 8);
-        }
+    // Helper functions
+    function generateUserId(username) {
+        const hash = username.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
+        return 'USR-' + Math.abs(hash).toString(16).toUpperCase().substring(0, 8);
+    }
 
-        function generateStartupId(startupName) {
-            const hash = startupName.split('').reduce((acc, char) => {
-                return char.charCodeAt(0) + ((acc << 5) - acc);
-            }, 0);
-            return 'STP-' + Math.abs(hash).toString(16).toUpperCase().substring(0, 8);
-        }
+    function generateStartupId(startupName) {
+        const hash = startupName.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
+        return 'STP-' + Math.abs(hash).toString(16).toUpperCase().substring(0, 8);
+    }
 
-        async function loadUserData(user) {
-            try {
-                const founderRef = ref(db, `founderProfile/${user.uid}`);
-                const founderSnapshot = await get(founderRef);
-                
-                const email = user.email;
-                const firstLetter = email.charAt(0).toUpperCase();
-                const username = email.split('@')[0];
-                const userId = generateUserId(username);
+    async function loadUserData(user) {
+        try {
+            // NOTE: Ensure 'founderprofile' matches your security rules case-sensitivity
+            const founderRef = ref(db, `founderprofile/${user.uid}`);
+            const founderSnapshot = await get(founderRef);
+            
+            const email = user.email;
+            const firstLetter = email.charAt(0).toUpperCase();
+            const username = email.split('@')[0];
+            const userId = generateUserId(username);
 
-                if (!founderSnapshot.exists()) {
-                    await set(founderRef, {
-                        founderEmail: email,
-                        founderImage: firstLetter,
-                        founderUsername: username,
-                        userId: userId,
-                        createdAt: Date.now()
-                    });
-                }
-
-                const founderData = founderSnapshot.exists() ? founderSnapshot.val() : {
+            if (!founderSnapshot.exists()) {
+                await set(founderRef, {
+                    founderEmail: email,
                     founderImage: firstLetter,
                     founderUsername: username,
-                    userId: userId
-                };
+                    userId: userId,
+                    createdAt: Date.now()
+                });
+            }
 
-                document.getElementById('profileAvatar').textContent = founderData.founderImage;
-                document.getElementById('profileIcon').innerHTML = `<div style="font-size: 1.2rem; font-weight: 600;">${founderData.founderImage}</div>`;
-                document.getElementById('userName').textContent = founderData.founderUsername;
-                document.getElementById('userId').textContent = `User ID: ${founderData.userId}`;
-                document.getElementById('founderName').textContent = founderData.founderUsername;
-                document.getElementById('dropdownUsername').textContent = founderData.founderUsername;
-                document.getElementById('dropdownUserid').textContent = founderData.userId;
+            const founderData = founderSnapshot.exists() ? founderSnapshot.val() : {
+                founderImage: firstLetter,
+                founderUsername: username,
+                userId: userId
+            };
 
-                const startupRef = ref(db, `startupprofile/${user.uid}`);
-                const startupSnapshot = await get(startupRef);
+            // Update UI Elements
+            document.getElementById('profileAvatar').textContent = founderData.founderImage;
+            document.getElementById('profileIcon').innerHTML = `<div style="font-size: 1.2rem; font-weight: 600;">${founderData.founderImage}</div>`;
+            document.getElementById('userName').textContent = founderData.founderUsername;
+            document.getElementById('userId').textContent = `User ID: ${founderData.userId}`;
+            document.getElementById('founderName').textContent = founderData.founderUsername;
+            document.getElementById('dropdownUsername').textContent = founderData.founderUsername;
+            document.getElementById('dropdownUserid').textContent = founderData.userId;
 
-                if (startupSnapshot.exists()) {
-                    const startupData = startupSnapshot.val();
-                    const startupId = generateStartupId(startupData.startupName);
-                    
-                    document.getElementById('startupName').textContent = startupData.startupName;
-                    document.getElementById('startupId').textContent = `Startup ID: ${startupId}`;
-                    
-                    if (startupData.logo) {
-                        document.getElementById('startupLogo').innerHTML = `<img src="${startupData.logo}" alt="Startup Logo">`;
-                    }
+            const startupRef = ref(db, `startupprofile/${user.uid}`);
+            const startupSnapshot = await get(startupRef);
 
-                    await update(startupRef, {
-                        startupId: startupId
-                    });
+            if (startupSnapshot.exists()) {
+                const startupData = startupSnapshot.val();
+                const startupId = generateStartupId(startupData.startupName);
+                
+                document.getElementById('startupName').textContent = startupData.startupName;
+                document.getElementById('startupId').textContent = `Startup ID: ${startupId}`;
+                
+                if (startupData.logo) {
+                    document.getElementById('startupLogo').innerHTML = `<img src="${startupData.logo}" alt="Startup Logo">`;
                 }
 
-            } catch (error) {
-                console.error('Error loading data:', error);
+                await update(startupRef, { startupId: startupId });
+            }
+
+        } catch (error) {
+            console.error('Error loading data:', error);
+        }
+    }
+
+    // --- AUTH LISTENER LOGIC ---
+    let isInitialLoad = true;
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            console.log("User verified:", user.uid);
+            isInitialLoad = false;
+            loadUserData(user);
+        } else {
+            if (isInitialLoad) {
+                // If it's the very first check, wait 1 second to give Firebase 
+                // time to find the saved session before redirecting.
+                isInitialLoad = false;
+                setTimeout(() => {
+                    if (!auth.currentUser) {
+                        window.location.replace('login2.html');
+                    }
+                }, 1000);
+            } else {
+                window.location.replace('login2.html');
             }
         }
-        let isInitialLoad = true;
+    });
 
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                currentUser = user;
-                isInitialLoad = false;
-                console.log("User verified:", user.uid);
-            } else {
-                if (!isInitialLoad) {
-                    window.location.href = 'login2.html';
-                } else {
-                    console.log("Firebase is still initializing...");
-                    isInitialLoad = false;
-                }
-            }
-        });
-        window.logout = async function() {
-            try {
-                await signOut(auth);
-                window.location.href = 'login2.html';
-            } catch (error) {
-                console.error('Error logging out:', error);
-            }
-        };
+    window.logout = async function() {
+        try {
+            await signOut(auth);
+            window.location.replace('login2.html');
+        } catch (error) {
+            console.error('Error logging out:', error);
+        }
+    };
+
 
         window.toggleDropdown = function() {
             const dropdown = document.getElementById('scaleDropdown');
