@@ -5516,110 +5516,109 @@ async function showEditStartup() {
                     </div>
                     
                     <!-- Traction Photos Card (Optional) -->
-<div class="profile-main">
-    
-    <div class="profile-card">
-        <h3 class="section-title">Interest Tracking Photos (Optional)</h3>
-        <p style="color: #888; margin-bottom: 1.5rem; font-size: 0.95rem;">
-            Upload screenshots of transactions, user growth, or any proof of traction
-        </p>
+<div class="profile-grid"> <div class="profile-main">
         
-        ${startupData.tractionPhotos?.length > 0 
-            ? `<div class="photo-grid">
-                ${startupData.tractionPhotos.map(url => `
-                    <div class="photo-item">
-                        <img src="${url}" alt="Traction Photo">
-                    </div>
-                `).join('')}
-               </div>`
-            : `<div class="upload-section">
-                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-bottom: 1rem;">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                    <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-                <p style="color: #666;">No traction photos uploaded</p>
-               </div>`}
-        
-        <button class="upload-btn" onclick="uploadTractionPhotos()">
-            ${startupData.tractionPhotos?.length > 0 ? 'Add More Photos' : 'Upload Photos'}
-        </button>
-    </div>
-
-    <div class="profile-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h3 class="section-title" style="margin-bottom: 0;">Team</h3>
-            <button class="edit-icon-btn" onclick="addTeamMember()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
+        <div class="profile-card">
+            <h3 class="section-title">Interest Tracking Photos (Optional)</h3>
+            <p style="color: #888; margin-bottom: 1.5rem; font-size: 0.95rem;">
+                Upload screenshots of transactions, user growth, or any proof of traction
+            </p>
+            
+            ${startupData.tractionPhotos?.length > 0 
+                ? `<div class="photo-grid">
+                    ${startupData.tractionPhotos.map(url => `
+                        <div class="photo-item">
+                            <img src="${url}" alt="Traction Photo">
+                        </div>
+                    `).join('')}
+                   </div>`
+                : `<div class="upload-section">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-bottom: 1rem;">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    <p style="color: #666;">No traction photos uploaded</p>
+                   </div>`}
+            
+            <button class="upload-btn" onclick="uploadTractionPhotos()">
+                ${startupData.tractionPhotos?.length > 0 ? 'Add More Photos' : 'Upload Photos'}
             </button>
         </div>
-        
-        <p style="color: #888; margin-bottom: 1.5rem; font-size: 0.95rem;">
-            Add co-founders and key team members to showcase your team's strength.
-        </p>
 
-        <div id="team-container">
-            <div class="empty-state" style="border: 1px dashed #333; border-radius: 12px; padding: 1.5rem; text-align: center;">
-                <p style="color: #555; font-size: 0.9rem;">No team members added yet.</p>
+        <div class="profile-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 class="section-title" style="margin-bottom: 0;">Team</h3>
+                <button class="edit-icon-btn" onclick="addTeamMember()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
             </div>
+            
+            <p style="color: #888; margin-bottom: 1.5rem; font-size: 0.95rem;">
+                Add co-founders and key team members to showcase your team's strength.
+            </p>
+
+            <div id="team-container">
+                <div class="empty-state" style="border: 1px dashed #333; border-radius: 12px; padding: 1.5rem; text-align: center;">
+                    <p style="color: #555; font-size: 0.9rem;">No team members added yet.</p>
+                </div>
+            </div>
+
+            <button class="add-item-btn" style="width: 100%; margin-top: 1.5rem;" onclick="addTeamMember()">
+                + Add Member
+            </button>
         </div>
-
-        <button class="add-item-btn" style="width: 100%; margin-top: 1.5rem;" onclick="addTeamMember()">
-            + Add Member
-        </button>
-    </div>
-
-</div> <div class="profile-sidebar">
-    <div class="progress-card">
-        <h3 class="section-title">Profile Completion</h3>
-        <div class="progress-bar">
-            <div class="progress-fill" style="width: ${completionPercent}%"></div>
+    </div> <div class="profile-sidebar">
+        <div class="progress-card">
+            <h3 class="section-title">Profile Completion</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${completionPercent}%"></div>
+            </div>
+            <div class="progress-text">${completionPercent}%</div>
+            <p style="color: #888; font-size: 0.9rem; text-align: center; margin-top: 1rem;">
+                Complete your profile to attract more investors
+            </p>
         </div>
-        <div class="progress-text">${completionPercent}%</div>
-        <p style="color: #888; font-size: 0.9rem; text-align: center; margin-top: 1rem;">
-            Complete your profile to attract more investors
-        </p>
-    </div>
-    
-    <div class="quick-links-card">
-        <h3 class="section-title">Quick Actions</h3>
         
-        <button class="quick-link-btn" onclick="previewProfile('${currentUser.uid}')">
-            <span style="display: flex; align-items: center; gap: 0.75rem;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-                Preview Public Profile
-            </span>
-        </button>
+        <div class="quick-links-card">
+            <h3 class="section-title">Quick Actions</h3>
+            
+            <button class="quick-link-btn" onclick="previewProfile('${currentUser.uid}')">
+                <span style="display: flex; align-items: center; gap: 0.75rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    Preview Public Profile
+                </span>
+            </button>
 
-        <button class="quick-link-btn" onclick="copyShareLink()">
-            <span style="display: flex; align-items: center; gap: 0.75rem;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-                    <polyline points="16 6 12 2 8 6"></polyline>
-                    <line x1="12" y1="2" x2="12" y2="15"></line>
-                </svg>
-                Share Profile Link
-            </span>
-        </button>
-        
-        <button class="quick-link-btn" onclick="contactSupport()">
-            <span style="display: flex; align-items: center; gap: 0.75rem;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-                Help & Support
-            </span>
-        </button>
-    </div>
-</div> `;
+            <button class="quick-link-btn" onclick="copyShareLink()">
+                <span style="display: flex; align-items: center; gap: 0.75rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                        <polyline points="16 6 12 2 8 6"></polyline>
+                        <line x1="12" y1="2" x2="12" y2="15"></line>
+                    </svg>
+                    Share Profile Link
+                </span>
+            </button>
+            
+            <button class="quick-link-btn" onclick="contactSupport()">
+                <span style="display: flex; align-items: center; gap: 0.75rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    Help & Support
+                </span>
+            </button>
+        </div>
+    </div> </div>`;
 }
 
 // --- Placeholder functions for the onclick events ---
