@@ -2324,10 +2324,18 @@ async function showEditProfile() {
     let founderData = cachedFounderData || {};
     const startupData = cachedStartupData || {};
     
-    // FIX 2: Ensure languages is always an array
-    if (!founderData.languages || !Array.isArray(founderData.languages)) {
-        founderData.languages = [];
-    }
+// FIX 2: Convert old string format to new array format
+if (!founderData.languages) {
+    founderData.languages = [];
+} else if (typeof founderData.languages === 'string') {
+    // Old format: "HINDI" -> New format: [{name: "Hindi", level: "Fluent"}]
+    const oldLang = founderData.languages.trim();
+    founderData.languages = oldLang ? [{name: oldLang, level: 'Fluent'}] : [];
+    // Save updated format to Firebase
+    update(ref(db, `founderProfile/${currentUser.uid}`), { languages: founderData.languages });
+} else if (!Array.isArray(founderData.languages)) {
+    founderData.languages = [];
+}
     
     // Fetch location data from startupProfile
     const locationData = startupData?.location || { country: '', state: '', city: '' };
