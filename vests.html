@@ -4875,7 +4875,677 @@ async function showEditStartup() {
             .member-name { display: block; font-weight: 600; }
             .member-role { color: #888; font-size: 0.85rem; }
             .team-remove-btn { background: none; border: none; color: #666; font-size: 1.5rem; cursor: pointer; }
+             .top-nav {
+
+            background: #0a0a0a;
+
+            padding: 1.2rem 3rem;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            border-bottom: 1px solid #222;
+
+            position: sticky;
+
+            top: 0;
+
+            z-index: 1000;
+
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+
+        }
+
+
+
+        .logo {
+
+            font-size: 2rem;
+
+            font-weight: 700;
+
+            color: #fff;
+
+            cursor: pointer;
+
+            letter-spacing: 1px;
+
+            transition: all 0.3s;
+
+        }
+
+
+
+        .nav-links {
+
+            display: flex;
+
+            gap: 2.5rem;
+
+            align-items: center;
+
+        }
+
+
+
+        .nav-link {
+
+            color: #fff;
+
+            text-decoration: none;
+
+            font-weight: 500;
+
+            transition: all 0.3s;
+
+            position: relative;
+
+            cursor: pointer;
+
+            font-size: 0.95rem;
+
+        }
+
+
+
+        .nav-link::after {
+
+            content: '';
+
+            position: absolute;
+
+            bottom: -5px;
+
+            left: 0;
+
+            width: 0;
+
+            height: 2px;
+
+            background: #fff;
+
+            transition: width 0.3s;
+
+        }
+
+
+
+        .nav-link:hover::after {
+
+            width: 100%;
+
+        }
+
+
+
+        .dropdown {
+
+            position: relative;
+
+        }
+
+@media (max-width: 768px) {
+
+    .edit-profile-container {
+
+        padding: 1rem;
+
+    }
+
+    
+
+    .profile-grid {
+
+        grid-template-columns: 1fr;
+
+        gap: 1rem;
+
+    }
+
+    
+
+    .profile-header-card {
+
+        flex-direction: column;
+
+        text-align: center;
+
+    }
+
+    
+
+    .profile-avatar-large {
+
+        width: 80px;
+
+        height: 80px;
+
+        font-size: 2rem;
+
+    }
+
+    
+
+    .profile-name {
+
+        font-size: 1.5rem;
+
+    }
+
+    
+
+    .profile-card {
+
+        padding: 1.5rem;
+
+    }
+
+    
+
+    .dual-section {
+
+        grid-template-columns: 1fr;
+
+    }
+
+    
+
+    .edit-modal-content {
+
+        width: 95%;
+
+        max-height: 90vh;
+
+    }
+
+    
+
+    .back-btn {
+
+        padding: 0.6rem 1rem;
+
+        font-size: 0.9rem;
+
+    }
+
+    
+
+    .action-buttons {
+
+        flex-direction: column;
+
+        width: 100%;
+
+    }
+
+    
+
+    .preview-btn, .share-btn {
+
+        width: 100%;
+
+    }
+
+}
+
+        .dropdown-content {
+
+            display: none;
+
+            position: absolute;
+
+            top: 100%;
+
+            left: 0;
+
+            background: #1a1a1a;
+
+            min-width: 220px;
+
+            border-radius: 12px;
+
+            margin-top: 1rem;
+
+            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+
+            border: 1px solid #333;
+
+            overflow: hidden;
+
+            z-index: 1000;
+
+        }
+
+
+
+        .dropdown-content.show {
+
+            display: block !important;
+
+            animation: fadeInDropdown 0.3s;
+
+        }
+
+
+
+        @keyframes fadeInDropdown {
+
+            from { opacity: 0; transform: translateY(-10px); }
+
+            to { opacity: 1; transform: translateY(0); }
+
+        }
+
+
+
+        .dropdown-item {
+
+            padding: 1rem 1.5rem;
+
+            color: #fff;
+
+            text-decoration: none;
+
+            display: block;
+
+            transition: all 0.3s;
+
+            cursor: pointer;
+
+            border-left: 3px solid transparent;
+
+        }
+
+
+
+        .dropdown-item:hover {
+
+            background: #222;
+
+            border-left-color: #fff;
+
+            padding-left: 2rem;
+
+        }
+
+
+
+        .top-nav-right {
+
+            display: flex;
+
+            gap: 1.5rem;
+
+            align-items: center;
+
+        }
+
+
+
+        .icon-btn {
+
+            width: 44px;
+
+            height: 44px;
+
+            border-radius: 50%;
+
+            background: #1a1a1a;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            cursor: pointer;
+
+            transition: all 0.3s;
+
+            position: relative;
+
+            border: 1px solid #222;
+
+        }
+
+
+
+        .icon-btn:hover {
+
+            background: #fff;
+
+            border-color: #fff;
+
+            transform: translateY(-3px) scale(1.1);
+
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+
+        }
+
+
+
+        .icon-btn:hover svg {
+
+            stroke: #000;
+
+        }
+
+
+
+        .profile-dropdown {
+
+            position: relative;
+
+        }
+
+
+
+        .profile-dropdown-content {
+
+            display: none;
+
+            position: absolute;
+
+            top: 100%;
+
+            right: 0;
+
+            background: #1a1a1a;
+
+            min-width: 300px;
+
+            border-radius: 12px;
+
+            margin-top: 1rem;
+
+            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+
+            border: 1px solid #333;
+
+            padding: 1rem;
+
+            z-index: 1000;
+
+        }
+
+
+
+        .profile-dropdown-content.show {
+
+            display: block;
+
+            animation: fadeInDropdown 0.3s;
+
+        }
+
+
+
+        .profile-info {
+
+            padding: 1rem;
+
+            border-bottom: 1px solid #333;
+
+            margin-bottom: 1rem;
+
+        }
+
+
+
+        .profile-username {
+
+            font-weight: 600;
+
+            font-size: 1.2rem;
+
+        }
+
+
+
+        .profile-userid {
+
+            color: #888;
+
+            font-size: 0.85rem;
+
+            margin-top: 0.5rem;
+
+        }
+
+
+
+        .switch-btn {
+
+            background: #fff;
+
+            color: #000;
+
+            border: none;
+
+            padding: 0.9rem;
+
+            width: 100%;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            font-weight: 700;
+
+            margin-bottom: 1rem;
+
+            transition: all 0.3s;
+
+            font-size: 0.95rem;
+
+        }
+
+
+
+        .switch-btn:hover {
+
+            background: #ddd;
+
+            transform: translateY(-2px);
+
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+
+        }
+
+
+
+        .profile-section {
+
+            padding: 0.5rem 0;
+
+        }
+
+
+
+        .profile-link {
+
+            padding: 0.9rem 1rem;
+
+            display: block;
+
+            color: #fff;
+
+            text-decoration: none;
+
+            border-radius: 8px;
+
+            transition: all 0.3s;
+
+            cursor: pointer;
+
+            font-weight: 500;
+
+        }
+
+
+
+        .profile-link:hover {
+
+            background: #222;
+
+            padding-left: 1.5rem;
+
+        }
+
+            .edit-profile-container {
+
+                max-width: 1400px;
+
+                margin: 0 auto;
+
+                padding: 2rem 3rem;
+
+                background: #000;
+
+                min-height: 100vh;
+
+            }
+
             
+
+            .profile-grid {
+
+                display: grid;
+
+                grid-template-columns: 1fr 300px;
+
+                gap: 2rem;
+
+                margin-top: 2rem;
+
+            }
+
+            
+
+            .profile-main {
+
+                display: flex;
+
+                flex-direction: column;
+
+                gap: 2rem;
+
+            }
+
+            
+
+            .profile-sidebar {
+
+                display: flex;
+
+                flex-direction: column;
+
+                gap: 2rem;
+
+            }
+
+            
+
+            .profile-card {
+
+                background: #0a0a0a;
+
+                border: 1px solid #222;
+
+                border-radius: 16px;
+
+                padding: 2.5rem;
+
+                transition: all 0.3s;
+
+            }
+
+            
+
+            .profile-card:hover {
+
+                border-color: #444;
+
+                box-shadow: 0 10px 40px rgba(255, 255, 255, 0.05);
+
+            }
+
+            
+
+            .profile-header-card {
+
+                display: flex;
+
+                align-items: center;
+
+                gap: 2rem;
+
+            }
+
+            
+
+            .profile-avatar-large {
+
+                width: 120px;
+
+                height: 120px;
+
+                border-radius: 50%;
+
+                background: #fff;
+
+                color: #000;
+
+                display: flex;
+
+                align-items: center;
+
+                justify-content: center;
+
+                font-size: 3rem;
+
+                font-weight: 800;
+
+                flex-shrink: 0;
+
+            }
+
+            
+
+            .profile-header-info {
+
+                flex: 1;
+
+            }
+
+            
+
+            .profile-name-row {
+
+                display: flex;
+
+                align-items: center;
+
+                gap: 1rem;
+
+                margin-bottom: 0.5rem;
+
+            }
+
+            
+
+            .profile-name {
+
+                font-size: 2rem;
+
+                font-weight: 700;
+
+            }
+
+
             /* --- SIDEBAR CARDS --- */
             .progress-card, .quick-links-card { background: #0a0a0a; border: 1px solid #222; border-radius: 16px; padding: 1.5rem; }
             .progress-bar { width: 100%; height: 10px; background: #222; border-radius: 5px; margin: 10px 0; overflow: hidden; }
