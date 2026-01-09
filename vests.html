@@ -4757,7 +4757,8 @@ window.previousStep = function() {
             uploadedFiles.pitchDeck = await uploadFileToStorage(pitchFile, 'pitch-decks');
         }
 if (demoFile && !uploadedFiles.demoVideo) {
-        uploadedFiles.demoVideo = await uploadFileToStorage(demoFile, 'demo-videos'}
+        uploadedFiles.demoVideo = await uploadFileToStorage(demoFile, 'demo-videos');
+}
 
         if (transFile && !uploadedFiles.transactionProof) {
             uploadedFiles.transactionProof = await uploadFileToStorage(transFile, 'transactions');
