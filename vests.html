@@ -4834,72 +4834,67 @@ if (demoFile && !uploadedFiles.demoVideo) {
     }
 
     // 5. Data Collection & Saving
-   function collectVestData() {
-    if (!currentUser) return null;
-    
-    // Collect co-founders if any
+  window.collectVestData = function() {
+    // 1. Get User ID (Safety Fallback)
+    const uid = currentUser ? currentUser.uid : (cachedFounderData?.userId || 'GUEST');
+
+    // 2. Co-founder Logic (Safe)
     const cofounders = [];
-    const cofounderCount = parseInt(document.getElementById('cofounderCount')?.value) || 0;
+    const countInput = document.getElementById('cofounderCount');
+    const cofounderCount = countInput ? (parseInt(countInput.value) || 0) : 0;
+    
     for (let i = 1; i <= cofounderCount; i++) {
-        const name = document.getElementById(`cofounder${i}Name`)?.value;
-        const work = document.getElementById(`cofounder${i}Work`)?.value;
-        if (name) {
-            cofounders.push({ name, work });
+        const nameEl = document.getElementById(`cofounder${i}Name`);
+        const workEl = document.getElementById(`cofounder${i}Work`);
+        if (nameEl && nameEl.value) {
+            cofounders.push({ name: nameEl.value, work: workEl ? workEl.value : '' });
         }
     }
 
+    // 3. Return Data Object (Using Safe Access ?.)
     return {
-        // Step 1: MainVest
         MainVest: {
             vestHook: document.getElementById('vestHook')?.value || '',
             vestDescription: document.getElementById('vestDescription')?.value || '',
             currentProblem: document.getElementById('currentProblem')?.value || '',
             yourSolution: document.getElementById('yourSolution')?.value || '',
             whyBest: document.getElementById('whyBest')?.value || '',
-            equityWilling: document.getElementById('equityWilling')?.value || '',
-            fundAsk: document.getElementById('fundAsk')?.value || '',
+            equityWilling: document.getElementById('equityWilling')?.value || '0',
+            fundAsk: document.getElementById('fundAsk')?.value || '0',
         },
-        
-        // Step 2: StartupDetails
         StartupDetails: {
             startupName: document.getElementById('startupName')?.value || '',
-            startupDescription: document.getElementById('startupDescription')?.value ||'',
-category: document.getElementById('category')?.value || '',
-startupStage: document.getElementById('startupStage')?.value || '',
-currentRevenue: document.getElementById('currentRevenue')?.value || '',
-valuation: document.getElementById('valuation')?.value || '',
-pitchDeckUrl: uploadedFiles.pitchDeck || '',
-},
-    // Step 3: Audit
-    Audit: {
-        canScale: document.querySelector('input[name="canScale"]:checked')?.value || '',
-        scaleExplanation: document.getElementById('scaleExplanation')?.value || '',
-        marketShare: document.getElementById('marketShare')?.value || '',
-        competitors: document.getElementById('competitors')?.value || '',
-        whyBetter: document.getElementById('whyBetter')?.value || '',
-        monetizationIdea: document.getElementById('monetizationIdea')?.value || '',
-    },
-    
-    // Step 4: Roadmap
-    Roadmap: {
-        fundingPlans: document.getElementById('fundingPlans')?.value || '',
-        yearGoal: document.getElementById('yearGoal')?.value || '',
-        threeYearVision: document.getElementById('threeYearVision')?.value || '',
-        fundStrategy: document.getElementById('fundStrategy')?.value || '',
-    },
-    
-    // Step 5: FounderPresence
-    FounderPresence: {
-        founderName: document.getElementById('founderName')?.value || '',
-        hasCofounder: document.querySelector('input[name="hasCofounder"]:checked')?.value || 'no',
-        cofounders: cofounders,
-        demoVideoUrl: uploadedFiles.demoVideo || '',
-        founderWork: document.getElementById('founderWork')?.value || '',
-    },
-    
-    // Metadata
-    createdAt: new Date().toISOString(),
-    userId: cachedFounderData?.userId || currentUser.uid,
+            startupDescription: document.getElementById('startupDescription')?.value || '',
+            category: document.getElementById('category')?.value || '',
+            startupStage: document.getElementById('startupStage')?.value || '',
+            currentRevenue: document.getElementById('currentRevenue')?.value || '0',
+            valuation: document.getElementById('valuation')?.value || '0',
+            pitchDeckUrl: uploadedFiles?.pitchDeck || '',
+        },
+        Audit: {
+            canScale: document.querySelector('input[name="canScale"]:checked')?.value || '',
+            scaleExplanation: document.getElementById('scaleExplanation')?.value || '',
+            marketShare: document.getElementById('marketShare')?.value || '',
+            competitors: document.getElementById('competitors')?.value || '',
+            whyBetter: document.getElementById('whyBetter')?.value || '',
+            monetizationIdea: document.getElementById('monetizationIdea')?.value || '',
+        },
+        Roadmap: {
+            fundingPlans: document.getElementById('fundingPlans')?.value || '',
+            yearGoal: document.getElementById('yearGoal')?.value || '',
+            threeYearVision: document.getElementById('threeYearVision')?.value || '',
+            fundStrategy: document.getElementById('fundStrategy')?.value || '',
+        },
+        FounderPresence: {
+            founderName: document.getElementById('founderName')?.value || '',
+            hasCofounder: document.querySelector('input[name="hasCofounder"]:checked')?.value || 'no',
+            cofounders: cofounders,
+            demoVideoUrl: uploadedFiles?.demoVideo || '',
+            founderWork: document.getElementById('founderWork')?.value || '',
+        },
+        createdAt: new Date().toISOString(),
+        userId: uid,
+    };
 };
 // ==========================================
 //  CO-FOUNDER 
@@ -6483,49 +6478,60 @@ window.closeFullScreenPDF = function() {
     }
 };
 }
-// --- PASTE THIS AT THE BOTTOM OF YOUR SCRIPT ---
 
-// Make displaySummary globally available
+
 window.displaySummary = function() {
-    // Check if data collection exists
-    if (typeof collectVestData !== 'function') {
-        console.error("collectVestData function is missing!");
-        return;
-    }
-
-    const data = collectVestData();
+    console.log("Generating Summary...");
     const summaryContainer = document.getElementById('summary');
-    
-    if (!data || !summaryContainer) return;
-    
-    // Safety check for empty arrays
-    const cofounderCount = data.FounderPresence?.cofounders?.length || 0;
-    const askAmount = parseInt(data.MainVest?.fundAsk || 0).toLocaleString();
+    if (!summaryContainer) return;
 
-    summaryContainer.innerHTML = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div>
-                <p style="color:#aaa; font-size:0.9rem;">Vest Hook</p>
-                <p style="color:#fff; font-weight:600; margin-bottom:15px;">${data.MainVest.vestHook || 'N/A'}</p>
+    try {
+        // Call the global collector
+        const data = window.collectVestData();
+        
+        if (!data) {
+            summaryContainer.innerHTML = "<p style='color:red'>Error: Could not retrieve data.</p>";
+            return;
+        }
+
+        // Format Numbers Safely
+        const ask = parseInt(data.MainVest.fundAsk.replace(/,/g, '') || 0).toLocaleString();
+        const equity = data.MainVest.equityWilling;
+        const cCount = data.FounderPresence.cofounders.length;
+
+        // Generate HTML
+        summaryContainer.innerHTML = `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; text-align: left;">
+                <div style="background: #111; padding: 20px; border-radius: 10px; border: 1px solid #333;">
+                    <p style="color:#888; font-size:0.85rem; margin-bottom:5px;">Vest Hook</p>
+                    <p style="color:#fff; font-weight:700; font-size:1.1rem;">${data.MainVest.vestHook || 'Not defined'}</p>
+                </div>
+                <div style="background: #111; padding: 20px; border-radius: 10px; border: 1px solid #333;">
+                    <p style="color:#888; font-size:0.85rem; margin-bottom:5px;">Startup Name</p>
+                    <p style="color:#fff; font-weight:700; font-size:1.1rem;">${data.StartupDetails.startupName || 'Not defined'}</p>
+                </div>
+                <div style="background: #111; padding: 20px; border-radius: 10px; border: 1px solid #333;">
+                    <p style="color:#888; font-size:0.85rem; margin-bottom:5px;">Fund Ask</p>
+                    <p style="color:#10b981; font-weight:700; font-size:1.4rem;">$${ask}</p>
+                </div>
+                <div style="background: #111; padding: 20px; border-radius: 10px; border: 1px solid #333;">
+                    <p style="color:#888; font-size:0.85rem; margin-bottom:5px;">Equity Offering</p>
+                    <p style="color:#ff006e; font-weight:700; font-size:1.4rem;">${equity}%</p>
+                </div>
             </div>
-            <div>
-                <p style="color:#aaa; font-size:0.9rem;">Startup Name</p>
-                <p style="color:#fff; font-weight:600; margin-bottom:15px;">${data.StartupDetails.startupName || 'N/A'}</p>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #222;">
+                <h4 style="color: #fff; margin-bottom: 10px;">Founder Team</h4>
+                <p style="color: #ccc;">
+                    <span style="color: #fff; font-weight: 600;">${data.FounderPresence.founderName}</span>
+                    ${cCount > 0 ? ` + ${cCount} Co-founder(s)` : ' (Solo Founder)'}
+                </p>
             </div>
-            <div>
-                <p style="color:#aaa; font-size:0.9rem;">Fund Ask</p>
-                <p style="color:#10b981; font-weight:600; margin-bottom:15px;">$${askAmount}</p>
-            </div>
-            <div>
-                <p style="color:#aaa; font-size:0.9rem;">Equity Offering</p>
-                <p style="color:#fff; font-weight:600; margin-bottom:15px;">${data.MainVest.equityWilling || 0}%</p>
-            </div>
-        </div>
-        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333;">
-            <p style="color:#aaa; font-size:0.9rem;">Founder</p>
-            <p style="color:#fff;">${data.FounderPresence.founderName || 'N/A'} <span style="color:#666;">(${cofounderCount} Co-founders)</span></p>
-        </div>
-    `;
+        `;
+    } catch (err) {
+        console.error("Summary Error:", err);
+        summaryContainer.innerHTML = `<p style='color:red'>Error loading summary: ${err.message}</p>`;
+    }
 };
 </script>
 <!-- FOUNDER DASHBOARD -->
