@@ -4961,46 +4961,6 @@ async function showEditStartup() {
         width: 100%;
     }
 }
-
-/* Team Member item styling similar to your experience items */
-.team-member-item {
-    background: #000;
-    border: 1px solid #222;
-    border-radius: 10px;
-    padding: 1.2rem;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.team-member-avatar {
-    width: 45px;
-    height: 45px;
-    background: #1a1a1a;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #333;
-    color: #fff;
-    font-weight: bold;
-}
-
-.team-member-info {
-    flex: 1;
-}
-
-.team-member-name {
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 2px;
-}
-
-.team-member-role {
-    color: #888;
-    font-size: 0.85rem;
-}
         .dropdown-content {
             display: none;
             position: absolute;
@@ -5271,7 +5231,48 @@ async function showEditStartup() {
             color: #aaa;
             line-height: 1.8;
         }
-        
+        /* Team Member Row Styling */
+.team-member-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #000;
+    border: 1px solid #222;
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+}
+
+.member-avatar-circle {
+    width: 40px;
+    height: 40px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.member-details {
+    flex: 1;
+}
+
+.member-name {
+    display: block;
+    font-weight: 600;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.member-role {
+    display: block;
+    color: #888;
+    font-size: 0.85rem;
+}
         .photo-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -5544,28 +5545,28 @@ async function showEditStartup() {
                     </div>
                 </div>
                 <div class="profile-card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <h3 class="section-title" style="margin-bottom: 0;">Team</h3>
         <button class="edit-icon-btn" onclick="addTeamMember()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
         </button>
     </div>
-
+    
     <p style="color: #888; margin-bottom: 1.5rem; font-size: 0.95rem;">
-        Add your co-founders and key team members to showcase your collective expertise.
+        Add co-founders and key team members to showcase your team's strength.
     </p>
 
-    <div id="team-list">
-        <div class="empty-state" style="border: 2px dashed #222; border-radius: 12px; padding: 2rem;">
-            <p style="color: #666; font-style: italic;">No team members added yet.</p>
+    <div id="team-container">
+        <div class="empty-state" style="border: 1px dashed #333; border-radius: 12px; padding: 1.5rem; text-align: center;">
+            <p style="color: #555; font-size: 0.9rem;">No team members added yet.</p>
         </div>
     </div>
 
     <button class="add-item-btn" style="width: 100%; margin-top: 1.5rem;" onclick="addTeamMember()">
-        + Add Team Member
+        + Add Member
     </button>
 </div>
                 <!-- Sidebar -->
