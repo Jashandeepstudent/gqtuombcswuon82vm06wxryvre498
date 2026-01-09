@@ -37,6 +37,12 @@ body {
     letter-spacing: -1px;
 }
 
+.header h1 svg {
+    width: 50px;       
+    height: 50px;     
+    margin-right: 15px; 
+    vertical-align: middle;
+}
 .header p {
     color: #888;
     font-size: 1.1rem;
@@ -1304,6 +1310,57 @@ function loadFromLocalStorage() {
  let isNewUser = false; 
 let cachedFounderData = null;
 let cachedStartupData = null;
+
+// --- MOVE THIS BLOCK TO THE GLOBAL SCOPE (Top of script) ---
+
+window.nextStep = function() {
+    // Validate current step before moving
+    if (!validateStep(currentStep)) return;
+
+    if (currentStep < 6) {
+        currentStep++;
+        saveToLocalStorage();
+        window.location.hash = `vest_step${currentStep}`;
+        updateStepDisplay();
+        if (currentStep === 6) displaySummary();
+        window.scrollTo(0, 0);
+    }
+};
+
+window.previousStep = function() {
+    if (currentStep > 1) {
+        currentStep--;
+        saveToLocalStorage();
+        window.location.hash = `vest_step${currentStep}`;
+        updateStepDisplay();
+        window.scrollTo(0, 0);
+    }
+};
+
+// Simple validation helper
+function validateStep(step) {
+    const activeStep = document.querySelector(`.step-content[data-step="${step}"]`);
+    if (!activeStep) return true;
+
+    const requiredInputs = activeStep.querySelectorAll('[required]');
+    let isValid = true;
+
+    requiredInputs.forEach(input => {
+        if (!input.value.trim()) {
+            input.style.borderColor = '#ff006e';
+            isValid = false;
+        } else {
+            input.style.borderColor = '#222';
+        }
+    });
+
+    if (!isValid) {
+        alert('Please fill in all required fields marked with *');
+    }
+    return isValid;
+}
+// -----------------------------------------------------------
+
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -4650,22 +4707,44 @@ window.saveWorkExperience = async function() {
 window.filterVests = function(type) {
     alert(`Filtering ${type} vests - feature coming soon!`);
 };
-    // 2. Tags/Keywords logic
+    function addSafeListener(id, event, handler) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener(event, handler);
+        }
+    }
+
+    // 2. Tags/Keywords logic (Wrapped safely)
     const keywordInput = document.getElementById('keywordInput');
     const tagsContainer = document.getElementById('tagsContainer');
 
-    keywordInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const value = this.value.trim();
-            if (value && keywords.length < 5 && !keywords.includes(value)) {
-                keywords.push(value);
-                addTagPill(value);
-                this.value = '';
-            } else if (keywords.length >= 5) {
-                alert('Maximum 5 keywords allowed');
+    if (keywordInput && tagsContainer) {
+        keywordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const value = this.value.trim();
+                if (value && keywords.length < 5 && !keywords.includes(value)) {
+                    keywords.push(value);
+                    addTagPill(value);
+                    this.value = '';
+                } else if (keywords.length >= 5) {
+                    alert('Maximum 5 keywords allowed');
+                }
             }
-        }
+        });
+    }
+
+    // UI File listeners (Wrapped safely)
+    addSafeListener('pitchDeck', 'change', (e) => {
+        if (e.target.files[0]) document.getElementById('pitchDeckName').textContent = '✓ ' + e.target.files[0].name;
+    });
+
+    addSafeListener('transactionProof', 'change', (e) => {
+        if (e.target.files[0]) document.getElementById('transactionProofName').textContent = '✓ ' + e.target.files[0].name;
+    });
+    
+    addSafeListener('demoVideo', 'change', (e) => {
+        if (e.target.files[0]) document.getElementById('demoVideoName').textContent = '✓ ' + e.target.files[0].name;
     });
 
     function addTagPill(keyword) {
@@ -4699,26 +4778,7 @@ window.addEventListener('load', () => {
 
 
 
-    // 3. Navigation
-window.nextStep = function() {
-    if (currentStep < 6) {
-        currentStep++;
-        saveToLocalStorage();
-        window.location.hash = `vest_step${currentStep}`;
-        updateStepDisplay();
-        if (currentStep === 6) displaySummary();
-    }
-};
-
-window.previousStep = function() {
-    if (currentStep > 1) {
-        currentStep--;
-        saveToLocalStorage();
-        window.location.hash = `vest_step${currentStep}`;
-        updateStepDisplay();
-    }
-};
-
+    
     function updateStepDisplay() {
         document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
         document.querySelector(`.step-content[data-step="${currentStep}"]`).classList.add('active');
