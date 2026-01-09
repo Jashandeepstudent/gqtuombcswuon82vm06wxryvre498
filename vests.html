@@ -3271,23 +3271,24 @@ const completionPercent = Math.round((filledFields / fields.length) * 100);
     margin-bottom: 0.5rem;
 }
 
-/* ===== MODAL STYLES ===== */
-/* ===== SPECIAL POPUP OVERLAY STYLES ===== */
+/* ========================================= */
+/* GLOBAL POPUP / MODAL STYLES (FIXED)      */
+/* ========================================= */
 .edit-modal {
-    position: fixed;       /* Stays in place when scrolling */
+    position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.85); /* Dark transparent background */
-    backdrop-filter: blur(8px);      /* Blur the background */
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.9); /* Darker backdrop */
+    backdrop-filter: blur(5px);     /* Blur effect */
     display: flex;
-    align-items: center;   /* Center Vertically */
-    justify-content: center; /* Center Horizontally */
-    z-index: 99999;        /* Sit on top of EVERYTHING */
+    align-items: center;            /* Center Vertically */
+    justify-content: center;        /* Center Horizontally */
+    z-index: 999999;                /* On top of everything */
     opacity: 0;
-    transition: opacity 0.3s ease;
     visibility: hidden;
+    transition: all 0.3s ease;
 }
 
 .edit-modal.show {
@@ -3296,138 +3297,106 @@ const completionPercent = Math.round((filledFields / fields.length) * 100);
 }
 
 .edit-modal-content {
-    background: #1a1a1a;
+    background: #111;
     border: 1px solid #333;
     border-radius: 16px;
     width: 90%;
-    max-width: 500px;      /* Prevent it from being too wide */
+    max-width: 450px;
     padding: 0;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
     transform: translateY(20px);
     transition: transform 0.3s ease;
-    position: relative;    /* Ensure content is positioned relative to modal */
+    overflow: hidden;
 }
 
 .edit-modal.show .edit-modal-content {
-    transform: translateY(0); /* Slide up animation */
-}
-
-/* Header, Body, Footer styling for the popup */
-.edit-modal-header {
-    padding: 1.5rem 2rem;
-    border-bottom: 1px solid #333;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.edit-modal-body {
-    padding: 2rem;
-}
-
-.edit-modal-footer {
-    padding: 1.5rem 2rem;
-    border-top: 1px solid #333;
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-}
-@keyframes modalSlideIn {
-    from {
-        transform: translateY(-50px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+    transform: translateY(0);
 }
 
 .edit-modal-header {
-    padding: 1.5rem 2rem;
-    border-bottom: 1px solid #333;
+    padding: 1.5rem;
+    border-bottom: 1px solid #222;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: #161616;
 }
 
 .edit-modal-header h3 {
-    font-size: 1.3rem;
-    font-weight: 700;
     margin: 0;
+    font-size: 1.2rem;
+    color: #fff;
 }
 
 .modal-close {
     background: none;
     border: none;
-    color: #fff;
-    font-size: 2rem;
+    color: #888;
+    font-size: 1.5rem;
     cursor: pointer;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: all 0.3s;
+    line-height: 1;
 }
 
-.modal-close:hover {
-    background: #333;
-    transform: rotate(90deg);
+.modal-close:hover { color: #fff; }
+
+.edit-modal-body {
+    padding: 1.5rem;
 }
 
+.edit-modal-body label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #ccc;
+    font-size: 0.9rem;
+}
 
 .edit-modal-body input,
-.edit-modal-body textarea {
+.edit-modal-body textarea,
+.edit-modal-body select {
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 12px;
     background: #0a0a0a;
-    border: 2px solid #333;
+    border: 1px solid #333;
     border-radius: 8px;
     color: #fff;
     font-size: 1rem;
-    transition: all 0.3s;
-}
-
-.edit-modal-body input:focus,
-.edit-modal-body textarea:focus {
     outline: none;
-    border-color: #ff006e;
-    box-shadow: 0 0 0 3px rgba(255, 0, 110, 0.1);
+    margin-bottom: 1rem;
 }
 
+.edit-modal-body input:focus, 
+.edit-modal-body textarea:focus {
+    border-color: #ff006e;
+}
 
-
-.modal-btn-cancel,
-.modal-btn-save {
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    border: none;
+.edit-modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #222;
+    background: #161616;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
 }
 
 .modal-btn-cancel {
-    background: #333;
-    color: #fff;
-}
-
-.modal-btn-cancel:hover {
-    background: #444;
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid #333;
+    color: #ccc;
+    border-radius: 8px;
+    cursor: pointer;
 }
 
 .modal-btn-save {
+    padding: 10px 24px;
     background: linear-gradient(135deg, #ff006e, #8338ec);
+    border: none;
     color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
 }
-
-.modal-btn-save:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 20px rgba(255, 0, 110, 0.3);
-}
-
 
 
 
@@ -5024,7 +4993,132 @@ async function showEditStartup() {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+/* ========================================= */
+/* GLOBAL POPUP / MODAL STYLES (FIXED)      */
+/* ========================================= */
+.edit-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.9); /* Darker backdrop */
+    backdrop-filter: blur(5px);     /* Blur effect */
+    display: flex;
+    align-items: center;            /* Center Vertically */
+    justify-content: center;        /* Center Horizontally */
+    z-index: 999999;                /* On top of everything */
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
 
+.edit-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.edit-modal-content {
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 450px;
+    padding: 0;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+}
+
+.edit-modal.show .edit-modal-content {
+    transform: translateY(0);
+}
+
+.edit-modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #222;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #161616;
+}
+
+.edit-modal-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modal-close:hover { color: #fff; }
+
+.edit-modal-body {
+    padding: 1.5rem;
+}
+
+.edit-modal-body label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.edit-modal-body input,
+.edit-modal-body textarea,
+.edit-modal-body select {
+    width: 100%;
+    padding: 12px;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+    margin-bottom: 1rem;
+}
+
+.edit-modal-body input:focus, 
+.edit-modal-body textarea:focus {
+    border-color: #ff006e;
+}
+
+.edit-modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #222;
+    background: #161616;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modal-btn-cancel {
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid #333;
+    color: #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.modal-btn-save {
+    padding: 10px 24px;
+    background: linear-gradient(135deg, #ff006e, #8338ec);
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
         .dropdown-item {
             padding: 1rem 1.5rem;
             color: #fff;
@@ -5604,9 +5698,9 @@ if(startupData.pitchDeckUrl) {
 // --- 4. Team Members ---
 
 window.addTeamMember = function() {
-    // Custom modal for team member
     const modal = document.createElement('div');
-    modal.className = 'edit-modal show';
+    modal.className = 'edit-modal'; 
+    
     modal.innerHTML = `
         <div class="edit-modal-content">
             <div class="edit-modal-header">
@@ -5614,15 +5708,18 @@ window.addTeamMember = function() {
                 <button class="modal-close" onclick="closeEditModal()">×</button>
             </div>
             <div class="edit-modal-body">
-                <div style="margin-bottom:1rem;">
-                    <label>Name</label>
-                    <input type="text" id="tmName" placeholder="Full Name">
+                <div>
+                    <label>Full Name</label>
+                    <input type="text" id="tmName" placeholder="e.g. Sarah Smith">
                 </div>
-                <div style="margin-bottom:1rem;">
-                    <label>Role</label>
+                <div>
+                    <label>Role / Position</label>
                     <input type="text" id="tmRole" placeholder="e.g. CTO, Lead Marketing">
                 </div>
                 <div>
+                    <label>LinkedIn (Optional)</label>
+                    <input type="text" id="tmLink" placeholder="https://linkedin.com/in/...">
+                </div>
             </div>
             <div class="edit-modal-footer">
                 <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
@@ -5630,9 +5727,19 @@ window.addTeamMember = function() {
             </div>
         </div>
     `;
+    
     document.body.appendChild(modal);
+    
+    // Small delay to trigger the fade-in animation
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
+    
+    // Auto-focus the name field
+    setTimeout(() => {
+        document.getElementById('tmName').focus();
+    }, 100);
 };
-
 window.saveTeamMember = async function() {
     const name = document.getElementById('tmName').value.trim();
     const role = document.getElementById('tmRole').value.trim();
