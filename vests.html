@@ -4643,6 +4643,26 @@ async function showEditStartup() {
     const filledFields = fields.filter(f => f && f !== '').length;
     const completionPercent = Math.round((filledFields / fields.length) * 100);
 
+    // --- GENERATE TEAM LIST HTML (Dynamic) ---
+    const teamListHTML = (startupData.team && startupData.team.length > 0) 
+        ? startupData.team.map(member => `
+            <div class="team-member-row">
+                <div class="member-avatar-circle">
+                    ${member.name.charAt(0).toUpperCase()}
+                </div>
+                <div class="member-details">
+                    <span class="member-name">${member.name}</span>
+                    <span class="member-role">${member.role}</span>
+                </div>
+                <button onclick="removeTeamMember(${member.id})" style="background:none; border:none; color:#666; cursor:pointer; font-size:1.5rem; line-height:1;">
+                    &times;
+                </button>
+            </div>
+        `).join('')
+        : `<div class="empty-state" style="border: 1px dashed #333; border-radius: 12px; padding: 1.5rem; text-align: center;">
+               <p style="color: #555; font-size: 0.9rem;">No team members added yet.</p>
+           </div>`;
+
     container.innerHTML = `
         <style>
         .edit-profile-container {
@@ -4655,70 +4675,25 @@ async function showEditStartup() {
         
         .profile-grid {
             display: grid;
-            grid-template-columns: 1fr 300px; /* This defines the layout: Left (Flex) | Right (300px) */
+            grid-template-columns: 1fr 300px;
             gap: 2rem;
             margin-top: 2rem;
-            align-items: start; /* Ensures sidebar stays at top */
+            align-items: start;
         }
         
         .profile-main {
             display: flex;
             flex-direction: column;
             gap: 2rem;
-            min-width: 0; /* Prevents overflow issues */
+            min-width: 0;
         }
-        .team-member-row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: #000;
-    border: 1px solid #222;
-    border-radius: 10px;
-    margin-bottom: 0.75rem;
-    transition: all 0.3s;
-}
-
-.team-member-row:hover {
-    border-color: #444;
-}
-
-.member-avatar-circle {
-    width: 40px;
-    height: 40px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-weight: 600;
-    flex-shrink: 0;
-}
-
-.member-details {
-    flex: 1;
-}
-
-.member-name {
-    display: block;
-    font-weight: 600;
-    color: #fff;
-    font-size: 1rem;
-}
-
-.member-role {
-    display: block;
-    color: #888;
-    font-size: 0.85rem;
-}
+        
         .profile-sidebar {
             display: flex;
             flex-direction: column;
             gap: 2rem;
             position: sticky;
-            top: 100px; /* Optional: Makes sidebar sticky */
+            top: 100px;
         }
         
         .profile-card {
@@ -4733,8 +4708,30 @@ async function showEditStartup() {
             border-color: #444;
             box-shadow: 0 10px 40px rgba(255, 255, 255, 0.05);
         }
+
+        /* TEAM STYLES */
+        .team-member-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #000;
+            border: 1px solid #222;
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s;
+        }
+        .team-member-row:hover { border-color: #444; }
+        .member-avatar-circle {
+            width: 40px; height: 40px; background: #1a1a1a; border: 1px solid #333;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 600; flex-shrink: 0;
+        }
+        .member-details { flex: 1; }
+        .member-name { display: block; font-weight: 600; color: #fff; font-size: 1rem; }
+        .member-role { display: block; color: #888; font-size: 0.85rem; }
         
-        /* Reuse Header Styles */
+        /* HEADER & INFO STYLES */
         .startup-header-card { display: flex; align-items: center; gap: 2rem; }
         .startup-logo-large { width: 120px; height: 120px; border-radius: 16px; background: #1a1a1a; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; cursor: pointer; overflow: hidden; border: 2px solid #333; }
         .startup-logo-large img { width: 100%; height: 100%; object-fit: cover; }
@@ -4744,30 +4741,7 @@ async function showEditStartup() {
         .logo-edit-overlay span { color: #fff; font-size: 0.85rem; font-weight: 600; }
         .startup-header-info { flex: 1; }
         .startup-name-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
-        .startup-name-large { font-size: 2rem; font-weight: 700; }
-        .startup-id { color: #888; font-size: 1rem; }
-        .section-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem; }
-        .info-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #000; border-radius: 10px; margin-bottom: 1rem; border: 1px solid #222; }
-        .info-label { color: #888; font-size: 0.9rem; }
-        .info-value { color: #fff; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; }
-        .not-set { color: #666; font-style: italic; }
-        .edit-icon-btn { width: 26px; height: 26px; flex-shrink: 0; border-radius: 4px; background: #1a1a1a; border: 1px solid #555; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; padding: 0; }
-        .edit-icon-btn svg { width: 14px; height: 14px; stroke: #fff; flex-shrink: 0; }
-        .edit-icon-btn:hover { background: #fff; border-color: #fff; transform: scale(1.05); }
-        .edit-icon-btn:hover svg { stroke: #000; }
-        .back-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: #1a1a1a; color: #fff; border: 2px solid #333; padding: 0.75rem 1.5rem; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s; text-decoration: none; margin-bottom: 1.5rem; }
-        .back-btn:hover { background: #fff; color: #000; border-color: #fff; transform: translateX(-5px); }
-        .pitch-box { background: #000; border: 1px solid #222; border-radius: 12px; padding: 2rem; min-height: 100px; }
-        .pitch-text { color: #aaa; line-height: 1.8; font-size: 1.1rem; }
-        .upload-section { background: #000; border: 2px dashed #333; border-radius: 12px; padding: 2rem; text-align: center; margin-top: 1rem; }
-        .upload-btn { background: linear-gradient(135deg, #ff006e, #8338ec); color: #fff; border: none; padding: 0.9rem 2rem; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s; margin-top: 1rem; }
-        .upload-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(255, 0, 110, 0.3); }
-        .pdf-viewer { width: 100%; height: 400px; border: 1px solid #333; border-radius: 10px; background: #000; margin-top: 1rem; }
-        .progress-card, .quick-links-card { background: #0a0a0a; border: 1px solid #222; border-radius: 16px; padding: 2rem; }
-        .progress-bar { width: 100%; height: 12px; background: #1a1a1a; border-radius: 10px; overflow: hidden; margin: 1rem 0; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #10b981, #3a86ff); transition: width 0.5s; }
-        .progress-text { text-align: center; font-size: 2rem; font-weight: 700; color: #10b981; }
-  .top-nav {
+ .top-nav {
             background: #0a0a0a;
             padding: 1.2rem 3rem;
             display: flex;
@@ -5091,7 +5065,41 @@ async function showEditStartup() {
                 flex: 1;
             }
             
+            .profile-name-row {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .profile-name {
+                font-size: 2rem;
+                font-weight: 700;
+            }
 
+        .startup-name-large { font-size: 2rem; font-weight: 700; }
+        .startup-id { color: #888; font-size: 1rem; }
+        .section-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem; }
+        .info-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #000; border-radius: 10px; margin-bottom: 1rem; border: 1px solid #222; }
+        .info-label { color: #888; font-size: 0.9rem; }
+        .info-value { color: #fff; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; }
+        .not-set { color: #666; font-style: italic; }
+        .edit-icon-btn { width: 26px; height: 26px; flex-shrink: 0; border-radius: 4px; background: #1a1a1a; border: 1px solid #555; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; padding: 0; }
+        .edit-icon-btn svg { width: 14px; height: 14px; stroke: #fff; flex-shrink: 0; }
+        .edit-icon-btn:hover { background: #fff; border-color: #fff; transform: scale(1.05); }
+        .edit-icon-btn:hover svg { stroke: #000; }
+        .back-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: #1a1a1a; color: #fff; border: 2px solid #333; padding: 0.75rem 1.5rem; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s; text-decoration: none; margin-bottom: 1.5rem; }
+        .back-btn:hover { background: #fff; color: #000; border-color: #fff; transform: translateX(-5px); }
+        .pitch-box { background: #000; border: 1px solid #222; border-radius: 12px; padding: 2rem; min-height: 100px; }
+        .pitch-text { color: #aaa; line-height: 1.8; font-size: 1.1rem; }
+        .upload-section { background: #000; border: 2px dashed #333; border-radius: 12px; padding: 2rem; text-align: center; margin-top: 1rem; }
+        .upload-btn { background: linear-gradient(135deg, #ff006e, #8338ec); color: #fff; border: none; padding: 0.9rem 2rem; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s; margin-top: 1rem; }
+        .upload-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(255, 0, 110, 0.3); }
+        .pdf-viewer { width: 100%; height: 400px; border: 1px solid #333; border-radius: 10px; background: #000; margin-top: 1rem; }
+        .progress-card, .quick-links-card { background: #0a0a0a; border: 1px solid #222; border-radius: 16px; padding: 2rem; }
+        .progress-bar { width: 100%; height: 12px; background: #1a1a1a; border-radius: 10px; overflow: hidden; margin: 1rem 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #10b981, #3a86ff); transition: width 0.5s; }
+        .progress-text { text-align: center; font-size: 2rem; font-weight: 700; color: #10b981; }
         .quick-link-btn { background: #1a1a1a; color: #fff; border: 1px solid #333; padding: 1rem; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s; width: 100%; text-align: left; margin-bottom: 0.75rem; }
         .quick-link-btn:hover { background: #222; border-color: #fff; transform: translateX(5px); }
         .description-box { background: #000; border: 1px solid #222; border-radius: 12px; padding: 2rem; min-height: 150px; color: #aaa; line-height: 1.8; }
@@ -5339,24 +5347,7 @@ async function showEditStartup() {
                             ${startupData.tractionPhotos?.length > 0 ? 'Add More Photos' : 'Upload Photos'}
                         </button>
                     </div>
-const teamListHTML = (startupData.team && startupData.team.length > 0) 
-    ? startupData.team.map(member => `
-        <div class="team-member-row">
-            <div class="member-avatar-circle">
-                ${member.name.charAt(0).toUpperCase()}
-            </div>
-            <div class="member-details">
-                <span class="member-name">${member.name}</span>
-                <span class="member-role">${member.role}</span>
-            </div>
-            <button onclick="removeTeamMember(${member.id})" style="background:none; border:none; color:#666; cursor:pointer; font-size:1.2rem;">
-                &times;
-            </button>
-        </div>
-    `).join('')
-    : `<div class="empty-state" style="border: 1px dashed #333; border-radius: 12px; padding: 1.5rem; text-align: center;">
-           <p style="color: #555; font-size: 0.9rem;">No team members added yet.</p>
-       </div>`;
+
                     <div class="profile-card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                             <h3 class="section-title" style="margin-bottom: 0;">Team</h3>
@@ -5373,9 +5364,7 @@ const teamListHTML = (startupData.team && startupData.team.length > 0)
                         </p>
 
                         <div id="team-container">
-                            <div class="empty-state" style="border: 1px dashed #333; border-radius: 12px; padding: 1.5rem; text-align: center;">
-                                <p style="color: #555; font-size: 0.9rem;">No team members added yet.</p>
-                            </div>
+                            ${teamListHTML}
                         </div>
 
                         <button class="add-item-btn" style="width: 100%; margin-top: 1.5rem;" onclick="addTeamMember()">
@@ -5435,7 +5424,6 @@ const teamListHTML = (startupData.team && startupData.team.length > 0)
                 </div> </div>
     `;
 }
-
 // --- 4. Team Members ---
 
 window.addTeamMember = function() {
