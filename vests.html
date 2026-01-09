@@ -5019,6 +5019,7 @@ async function showEditStartup() {
 }
 
 .edit-modal-content {
+position: relative;
     background: #111;
     border: 1px solid #333;
     border-radius: 16px;
@@ -5051,12 +5052,17 @@ async function showEditStartup() {
 }
 
 .modal-close {
-    background: none;
+    position: absolute;
+    top: 15px;        
+    right: 20px;        
+    background: transparent;
     border: none;
     color: #888;
-    font-size: 1.5rem;
-    cursor: pointer;
+    font-size: 2rem;
     line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s;
+    z-index: 10;
 }
 
 .modal-close:hover { color: #fff; }
@@ -5734,9 +5740,6 @@ window.addTeamMember = function() {
                     <input type="text" id="tmRole" placeholder="e.g. CTO, Lead Marketing">
                 </div>
                 <div>
-                    <label>LinkedIn (Optional)</label>
-                    <input type="text" id="tmLink" placeholder="https://linkedin.com/in/...">
-                </div>
             </div>
             <div class="edit-modal-footer">
                 <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
