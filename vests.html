@@ -3707,10 +3707,12 @@ const completionPercent = Math.round((filledFields / fields.length) * 100);
 // EDIT PROFILE FUNCTIONS - ALL WORKING
 // ============================================
 
-// Create modal HTML
+// Ensure this variable exists globally
+let currentEditAction = null;
+
 function createEditModal(title, currentValue, placeholder, isTextarea = false) {
     const modal = document.createElement('div');
-    modal.className = 'edit-modal';
+    modal.className = 'edit-modal show'; // Add 'show' class immediately
     modal.innerHTML = `
         <div class="edit-modal-content">
             <div class="edit-modal-header">
@@ -3730,20 +3732,20 @@ function createEditModal(title, currentValue, placeholder, isTextarea = false) {
         </div>
     `;
     document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('show'), 10);
     document.getElementById('editInput').focus();
 }
 
 window.closeEditModal = function() {
     const modal = document.querySelector('.edit-modal');
-    if (modal) {
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-    }
+    if (modal) modal.remove();
 };
 
-let currentEditAction = null;
-
+window.saveEditModal = function() {
+    const value = document.getElementById('editInput').value.trim();
+    if (currentEditAction) {
+        currentEditAction(value);
+    }
+};
 window.editUsername = function() {
     currentEditAction = async (newValue) => {
         if (!newValue || newValue === cachedFounderData?.founderUsername) return;
@@ -5501,7 +5503,217 @@ window.saveTeamMember = async function() {
 
     await updateStartupField({ team: currentTeam });
 };
+// ==========================================
+//  STARTUP PROFILE EDIT LOGIC (Paste this!)
+// ==========================================
 
+// --- Helper: Save Changes to Firebase ---
+async function updateStartupField(updates) {
+    if (!currentUser) return;
+    
+    // Attempt to find the button that triggered the save to show loading state
+    const saveBtn = document.querySelector('.modal-btn-save');
+    const originalText = saveBtn ? saveBtn.innerHTML : 'Save';
+    if(saveBtn) {
+        saveBtn.innerHTML = 'Saving...';
+        saveBtn.disabled = true;
+    }
+
+    try {
+        // Update Firebase
+        const startupRef = ref(db, `startupProfile/${currentUser.uid}`);
+        await update(startupRef, updates);
+        
+        // Update Local Cache
+        if (cachedStartupData) {
+            cachedStartupData = { ...cachedStartupData, ...updates };
+        } else {
+            cachedStartupData = updates;
+        }
+        
+        // Close Modal and Refresh View
+        closeEditModal();
+        showEditStartup(); 
+        
+    } catch (error) {
+        console.error("Error updating startup profile:", error);
+        alert("Failed to save changes. Please try again.");
+        if(saveBtn) {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }
+    }
+}
+
+// --- 1. Basic Text Edits ---
+
+window.editStartupName = function() {
+    currentEditAction = (value) => {
+        if(!value) return alert("Name cannot be empty");
+        updateStartupField({ startupName: value });
+    };
+    createEditModal("Edit Startup Name", cachedStartupData?.startupName || "", "Enter startup name");
+};
+
+window.editStartupDescription = function() {
+    currentEditAction = (value) => {
+        updateStartupField({ description: value }); // Note: mapped to 'description'
+    };
+    createEditModal("Edit Description", cachedStartupData?.description || "", "Describe your startup...", true); // true = textarea
+};
+
+window.editHookPitch = function() {
+    currentEditAction = (value) => {
+        updateStartupField({ hookPitch: value });
+    };
+    createEditModal("Edit Hook Pitch", cachedStartupData?.hookPitch || "", "One-liner that grabs attention");
+};
+
+window.editCompanyDescription = function() {
+    currentEditAction = (value) => {
+        updateStartupField({ companyDescription: value });
+    };
+    createEditModal("Detailed Description", cachedStartupData?.companyDescription || "", "Full details about your company...", true);
+};
+
+window.editStage = function() {
+    currentEditAction = (value) => {
+        updateStartupField({ stage: value });
+    };
+    createEditModal("Startup Stage", cachedStartupData?.stage || "", "e.g., Idea, MVP, Pre-Seed, Series A");
+};
+
+window.editYearEstablished = function() {
+    currentEditAction = (value) => {
+        updateStartupField({ yearEstablished: value });
+    };
+    createEditModal("Year Established", cachedStartupData?.yearEstablished || "", "YYYY");
+};
+
+// --- 2. Financials & Metrics (Numbers) ---
+
+window.editMonetization = function() {
+    currentEditAction = (value) => {
+        updateStartupField({ monetization: value });
+    };
+    createEditModal("Monetization Model", cachedStartupData?.monetization || "", "e.g., SaaS Subscription, Ads");
+};
+
+window.editRevenue = function() {
+    currentEditAction = (value) => {
+        // Strip currency symbols and commas before saving
+        const cleanValue = value.replace(/[$,]/g, ''); 
+        const numValue = parseFloat(cleanValue);
+        if(isNaN(numValue)) return alert("Please enter a valid number");
+        updateStartupField({ revenue: numValue });
+    };
+    createEditModal("Revenue (USD)", cachedStartupData?.revenue || "0", "Enter amount");
+};
+
+window.editUserCount = function() {
+    currentEditAction = (value) => {
+        const cleanValue = value.replace(/[,]/g, '');
+        const numValue = parseInt(cleanValue);
+        if(isNaN(numValue)) return alert("Please enter a valid number");
+        updateStartupField({ userCount: numValue });
+    };
+    createEditModal("User Count", cachedStartupData?.userCount || "0", "Enter number of users");
+};
+
+window.editValuation = function() {
+    currentEditAction = (value) => {
+        const cleanValue = value.replace(/[$,]/g, '');
+        const numValue = parseFloat(cleanValue);
+        if(isNaN(numValue)) return alert("Please enter a valid number");
+        updateStartupField({ valuation: numValue });
+    };
+    createEditModal("Valuation (USD)", cachedStartupData?.valuation || "0", "Enter amount");
+};
+
+// --- 3. File Upload Functions ---
+
+window.editStartupLogo = function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Show simplified loading
+        const btn = document.querySelector('.startup-logo-large');
+        if(btn) btn.style.opacity = '0.5';
+
+        try {
+            const logoUrl = await uploadFileToStorage(file, 'startup-logos');
+            await updateStartupField({ logo: logoUrl });
+        } catch (error) {
+            console.error(error);
+            alert("Logo upload failed");
+        } finally {
+            if(btn) btn.style.opacity = '1';
+        }
+    };
+    input.click();
+};
+
+window.uploadPitchDeck = function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf'; // PDF preferred for viewer
+    
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const btn = event?.target || document.querySelector('.upload-btn');
+        const originalText = btn ? btn.innerHTML : '';
+        if(btn) btn.innerHTML = 'Uploading...';
+
+        try {
+            const deckUrl = await uploadFileToStorage(file, 'pitch-decks');
+            await updateStartupField({ pitchDeckUrl: deckUrl });
+        } catch (error) {
+            console.error(error);
+            alert("Pitch deck upload failed");
+        } finally {
+            if(btn) btn.innerHTML = originalText;
+        }
+    };
+    input.click();
+};
+
+window.uploadTractionPhotos = function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true; // Allow multiple
+    
+    input.onchange = async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        const btn = document.querySelector('.upload-btn'); // Find the button
+        if(btn) btn.innerHTML = 'Uploading...';
+
+        try {
+            // Upload all files
+            const uploadPromises = files.map(file => uploadFileToStorage(file, 'traction-photos'));
+            const newUrls = await Promise.all(uploadPromises);
+            
+            // Get existing photos and append new ones
+            const existingPhotos = cachedStartupData?.tractionPhotos || [];
+            const updatedPhotos = [...existingPhotos, ...newUrls];
+            
+            await updateStartupField({ tractionPhotos: updatedPhotos });
+        } catch (error) {
+            console.error(error);
+            alert("Photo upload failed");
+        }
+    };
+    input.click();
+};
 </script>
 <!-- FOUNDER DASHBOARD -->
 <div id="dashboardContainer" style="display: none;"></div>
