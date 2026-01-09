@@ -2760,10 +2760,11 @@ const completionPercent = Math.round((filledFields / fields.length) * 100);
             }
             
 .edit-icon-btn {
-    /* Reduced size from 32px to 24px */
-    width: 24px;
-    height: 24px;
-    /* Adjusted radius for a tighter look */
+    width: 26px;        
+    height: 26px;        
+    flex-shrink: 0;     
+    flex-grow: 0;            
+     margin-left: auto; 
     border-radius: 4px;
     background: #1a1a1a;
     border: 1px solid #555;
@@ -2771,15 +2772,13 @@ const completionPercent = Math.round((filledFields / fields.length) * 100);
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s; /* Snappier transition */
-    flex-shrink: 0;
+    transition: all 0.3s;
     padding: 0;
 }
 
 .edit-icon-btn svg {
-    /* Reduced icon size slightly to fit the smaller button */
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     stroke: #fff;
     flex-shrink: 0;
 }
@@ -2787,7 +2786,6 @@ const completionPercent = Math.round((filledFields / fields.length) * 100);
 .edit-icon-btn:hover {
     background: #fff;
     border-color: #fff;
-    /* Slight scale is fine, but kept minimal */
     transform: scale(1.05);
 }
 
