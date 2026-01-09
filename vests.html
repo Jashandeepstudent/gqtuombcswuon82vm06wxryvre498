@@ -3115,24 +3115,27 @@ const completionPercent = Math.round((filledFields / fields.length) * 100);
 }
 
 /* ===== MODAL STYLES ===== */
+/* ===== SPECIAL POPUP OVERLAY STYLES ===== */
 .edit-modal {
-    position: fixed;
+    position: fixed;       /* Stays in place when scrolling */
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.85); /* Dark transparent background */
+    backdrop-filter: blur(8px);      /* Blur the background */
     display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
+    align-items: center;   /* Center Vertically */
+    justify-content: center; /* Center Horizontally */
+    z-index: 99999;        /* Sit on top of EVERYTHING */
     opacity: 0;
-    transition: opacity 0.3s;
+    transition: opacity 0.3s ease;
+    visibility: hidden;
 }
 
 .edit-modal.show {
     opacity: 1;
+    visibility: visible;
 }
 
 .edit-modal-content {
@@ -3140,12 +3143,38 @@ const completionPercent = Math.round((filledFields / fields.length) * 100);
     border: 1px solid #333;
     border-radius: 16px;
     width: 90%;
-    max-width: 500px;
-    max-height: 80vh;
-    overflow-y: auto;
-    animation: modalSlideIn 0.3s;
+    max-width: 500px;      /* Prevent it from being too wide */
+    padding: 0;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+    position: relative;    /* Ensure content is positioned relative to modal */
 }
 
+.edit-modal.show .edit-modal-content {
+    transform: translateY(0); /* Slide up animation */
+}
+
+/* Header, Body, Footer styling for the popup */
+.edit-modal-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.edit-modal-body {
+    padding: 2rem;
+}
+
+.edit-modal-footer {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #333;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
 @keyframes modalSlideIn {
     from {
         transform: translateY(-50px);
@@ -3191,9 +3220,6 @@ const completionPercent = Math.round((filledFields / fields.length) * 100);
     transform: rotate(90deg);
 }
 
-.edit-modal-body {
-    padding: 2rem;
-}
 
 .edit-modal-body input,
 .edit-modal-body textarea {
@@ -3214,13 +3240,7 @@ const completionPercent = Math.round((filledFields / fields.length) * 100);
     box-shadow: 0 0 0 3px rgba(255, 0, 110, 0.1);
 }
 
-.edit-modal-footer {
-    padding: 1.5rem 2rem;
-    border-top: 1px solid #333;
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-}
+
 
 .modal-btn-cancel,
 .modal-btn-save {
