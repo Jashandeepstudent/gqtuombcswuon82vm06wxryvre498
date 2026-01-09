@@ -2320,11 +2320,19 @@ async function showEditProfile() {
     
     container.style.display = 'block';
     
-    const founderData = cachedFounderData || {};
+    // FIX 1: Ensure founderData is loaded properly
+    let founderData = cachedFounderData || {};
     const startupData = cachedStartupData || {};
+    
+    // FIX 2: Ensure languages is always an array
+    if (!founderData.languages || !Array.isArray(founderData.languages)) {
+        founderData.languages = [];
+    }
     
     // Fetch location data from startupProfile
     const locationData = startupData?.location || { country: '', state: '', city: '' };
+    
+    console.log('PROFILE DATA:', founderData); // DEBUG
     
     // Calculate profile completion
     const fields = [
@@ -3211,15 +3219,36 @@ async function showEditProfile() {
         
         ${createNavBar()}
         
-       <div class="edit-profile-container">
-            <a href="#founder_dashboard" class="back-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+      <div class="edit-profile-container">
+    <a href="#founder_dashboard" class="back-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to Dashboard
+    </a>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1 class="welcome-text" style="margin: 0;">Edit Founder Profile</h1>
+        <div class="action-buttons">
+            <button class="preview-btn" onclick="alert('🔍 Preview feature coming soon!')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.3rem;">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
                 </svg>
-                Back to Dashboard
-            </a>
-            
-            <h1 class="welcome-text">Edit Founder Profile</h1>
+                Preview
+            </button>
+            <button class="share-btn" onclick="alert('🔗 Share feature coming soon!')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.3rem;">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+                Share
+            </button>
+        </div>
+    </div>
             
             <div class="profile-grid">
                 <!-- Main Column -->
@@ -3249,26 +3278,7 @@ async function showEditProfile() {
             </button>
         </div>
         
-        <div class="action-buttons">
-            <button class="preview-btn" onclick="alert('🔍 Preview feature coming soon!')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.3rem;">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-                Preview
-            </button>
-            <button class="share-btn" onclick="alert('🔗 Share feature coming soon!')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.3rem;">
-                    <circle cx="18" cy="5" r="3"></circle>
-                    <circle cx="6" cy="12" r="3"></circle>
-                    <circle cx="18" cy="19" r="3"></circle>
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                </svg>
-                Share
-            </button>
-        </div>
-        
+                
         <div class="profile-userid">${founderData.userId || 'USER_ID'}</div>
         
         <div class="profile-title">
