@@ -4795,7 +4795,7 @@ async function showEditStartup() {
             cachedStartupData = startupData;
         }
     }
-
+const completionPercent = Math.round((filledFields / fields.length) * 100);
     // --- GENERATE TEAM LIST HTML ---
     const teamListHTML = (startupData.team && startupData.team.length > 0) 
         ? startupData.team.map(member => `
