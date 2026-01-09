@@ -5255,6 +5255,84 @@ async function showEditStartup() {
                         </p>
                     </div>
                     
+                    <!-- Quick Actions -->
+                    <div class="quick-links-card">
+                        <h3 class="section-title">Quick Actions</h3>
+                        
+                        <button class="quick-link-btn" onclick="previewProfile('${currentUser.uid}')">
+                            <span style="display: flex; align-items: center; gap: 0.75rem;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                Preview Public Profile
+                            </span>
+                        </button>
+
+                        <button class="quick-link-btn" onclick="copyShareLink()">
+                            <span style="display: flex; align-items: center; gap: 0.75rem;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                                    <polyline points="16 6 12 2 8 6"></polyline>
+                                    <line x1="12" y1="2" x2="12" y2="15"></line>
+                                </svg>
+                                Share Profile Link
+                            </span>
+                        </button>
+                        
+                        <button class="quick-link-btn" onclick="contactSupport()">
+                            <span style="display: flex; align-items: center; gap: 0.75rem;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                                Help & Support
+                            </span>
+                        </button>
+                    </div>
+                </div> </div> </div> `;
+}
+
+// --- Placeholder functions for the onclick events ---
+// You will need to implement the logic for these functions based on your backend 
+
+async function editStartupLogo() {
+    alert("Functionality to upload logo coming soon.");
+}
+
+async function editStartupName() {
+    const newName = prompt("Enter new startup name:");
+    if(newName) console.log("Update name to:", newName);
+}
+
+async function editHookPitch() {
+    console.log("Edit hook pitch triggered");
+}
+
+async function uploadPitchDeck() {
+    console.log("Upload pitch deck triggered");
+}
+
+async function editStartupDescription() {
+    console.log("Edit description triggered");
+}
+
+async function uploadTractionPhotos() {
+    console.log("Upload traction photos triggered");
+}
+
+function previewProfile(uid) {
+    window.open(`/startup/${uid}`, '_blank');
+}
+
+function copyShareLink() {
+    alert("Profile link copied to clipboard!");
+}
+
+function contactSupport() {
+    window.location.href = "mailto:support@scalevest.com";
+} 
 
 
 </script>
