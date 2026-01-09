@@ -1322,7 +1322,18 @@ window.nextStep = function() {
         saveToLocalStorage();
         window.location.hash = `vest_step${currentStep}`;
         updateStepDisplay();
-        if (currentStep === 6) displaySummary();
+        
+        // FIX: Add delay and force window.displaySummary
+        if (currentStep === 6) {
+            setTimeout(() => {
+                if (typeof window.displaySummary === 'function') {
+                    window.displaySummary();
+                } else {
+                    console.error("displaySummary missing");
+                }
+            }, 100); 
+        }
+        
         window.scrollTo(0, 0);
     }
 };
@@ -5016,41 +5027,7 @@ if (demoFile && !uploadedFiles.demoVideo) {
     };
 };
 
-// ==========================================
-     function displaySummary() {
-    const data = collectVestData();
-    if (!data) return;
-    
-    document.getElementById('summary').innerHTML = `
-        <p><strong>Vest Hook:</strong> ${data.MainVest.vestHook || 'N/A'}</p>
-        <p><strong>Startup:</strong> ${data.StartupDetails.startupName || 'N/A'}</p>
-        <p><strong>Stage:</strong> ${data.StartupDetails.startupStage || 'N/A'}</p>
-        <p><strong>Fund Ask:</strong> $${parseInt(data.MainVest.fundAsk || 0).toLocaleString()}</p>
-        <p><strong>Equity Offering:</strong> ${data.MainVest.equityWilling || 0}%</p>
-        <p><strong>Founder:</strong> ${data.FounderPresence.founderName || 'N/A'}</p>
-        <p><strong>Co-Founders:</strong> ${data.FounderPresence.cofounders.length || 0}</p>
-    `;
-}
 
-    // UI File listeners
-    document.getElementById('pitchDeck').addEventListener('change', (e) => {
-        if (e.target.files[0]) document.getElementById('pitchDeckName').textContent = '✓ ' + e.target.files[0].name;
-    });
-    document.getElementById('transactionProof').addEventListener('change', (e) => {
-        if (e.target.files[0]) document.getElementById('transactionProofName').textContent = '✓ ' + e.target.files[0].name;
-    });
-window.toggleDropdown = function(id) {
-    event.stopPropagation();
-    const dropdown = document.getElementById(id);
-    
-    // Close all other dropdowns
-    document.querySelectorAll('.dropdown-content').forEach(dd => {
-        if (dd.id !== id) dd.classList.remove('show');
-    });
-    
-    // Toggle this dropdown
-    dropdown.classList.toggle('show');
-};
 
 async function showEditStartup() {
     document.title = "Edit Startup | ScaleVest";
