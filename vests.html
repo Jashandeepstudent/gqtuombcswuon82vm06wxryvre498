@@ -5084,8 +5084,30 @@ async function showEditStartup() {
         .info-label { color: #888; font-size: 0.9rem; }
         .info-value { color: #fff; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; }
         .not-set { color: #666; font-style: italic; }
-        .edit-icon-btn { width: 26px; height: 26px; flex-shrink: 0; border-radius: 4px; background: #1a1a1a; border: 1px solid #555; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; padding: 0; }
-        .edit-icon-btn svg { width: 14px; height: 14px; stroke: #fff; flex-shrink: 0; }
+        .edit-icon-btn {
+    width: 26px;        
+    height: 26px;        
+    flex-shrink: 0;     
+    flex-grow: 0;            
+     margin-left: auto; 
+    border-radius: 4px;
+    background: #1a1a1a;
+    border: 1px solid #555;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    padding: 0;
+}
+
+.edit-icon-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: #fff;
+    flex-shrink: 0;
+}
+
         .edit-icon-btn:hover { background: #fff; border-color: #fff; transform: scale(1.05); }
         .edit-icon-btn:hover svg { stroke: #000; }
         .back-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: #1a1a1a; color: #fff; border: 2px solid #333; padding: 0.75rem 1.5rem; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s; text-decoration: none; margin-bottom: 1.5rem; }
