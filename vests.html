@@ -109,29 +109,65 @@
     background: #000 !important; /* Pure Black */
 }
 /* --- SPECIAL WHITE POPUP UI --- */
+.edit-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex; /* Use flexbox */
+    align-items: center; /* Vertical center */
+    justify-content: center; /* Horizontal center */
+    z-index: 1000000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.edit-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* --- SPECIAL WHITE POPUP UI --- */
 .special-app-popup {
     background: #ffffff;
     width: 90%;
     max-width: 500px;
-    border-radius: 2px; /* Sharp, professional edges */
+    border-radius: 4px; /* Slightly smoother professional edges */
     padding: 0;
+    position: relative; /* Required for absolute positioning of close button */
     overflow: hidden;
-    box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+    box-shadow: 0 30px 100px rgba(0,0,0,0.6);
     animation: popupSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes popupSlideIn {
-    from { opacity: 0; transform: scale(0.9) translateY(30px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+/* --- CLOSE BUTTON: Absolute Top Right --- */
+.close-x {
+    position: absolute; /* Take out of flow */
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 32px;
+    line-height: 1;
+    cursor: pointer;
+    color: #bbb; /* Subtle gray */
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.close-x:hover { 
+    color: #000; 
+    transform: scale(1.1);
 }
 
 .app-popup-header {
-    padding: 20px 30px;
+    padding: 30px 40px 10px 40px; /* Aligned with content */
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: flex-start; /* Move logo to the left */
 }
-
 .logo-mini {
     font-weight: 900;
     font-size: 1.2rem;
@@ -2797,17 +2833,16 @@ window.showApplicationsList = async function() {
 
 // --- 2. INITIALIZATION: NAME THE APPLICATION ---
 window.promptNewApplication = function() {
-    // Create the modal overlay
     const modal = document.createElement('div');
     modal.className = 'edit-modal show';
     modal.id = 'appNameModal';
-    modal.style.background = "rgba(0,0,0,0.85)"; // Deep dark backdrop
     
     modal.innerHTML = `
         <div class="special-app-popup">
+            <button class="close-x" onclick="this.closest('.edit-modal').remove()">×</button>
+            
             <div class="app-popup-header">
                 <div class="logo-mini">SV</div>
-                <button class="close-x" onclick="this.closest('.edit-modal').remove()">×</button>
             </div>
             
             <div class="app-popup-content">
@@ -2832,8 +2867,6 @@ window.promptNewApplication = function() {
         </div>
     `;
     document.body.appendChild(modal);
-    
-    // Smooth focus delay
     setTimeout(() => document.getElementById('newAppNameInput').focus(), 200);
 };
 // --- CONFIRMATION LOGIC ---
