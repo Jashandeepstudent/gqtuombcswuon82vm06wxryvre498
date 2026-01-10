@@ -46,7 +46,79 @@
             width: 50px;
             height: 50px;
         }
+/* Premium Black & White Shop UI */
+.shop-bw {
+    background: #000 !important;
+}
 
+/* Button UI Improvements */
+.buy-btn-premium {
+    width: 100%;
+    padding: 16px;
+    background: #fff;
+    color: #000;
+    border: 1px solid #fff;
+    border-radius: 8px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.buy-btn-premium:hover {
+    background: #000;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+/* Dashboard & Shop Nav Buttons */
+.shop-nav-btn {
+    background: transparent;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.shop-nav-btn:hover {
+    border-color: #fff;
+    background: rgba(255,255,255,0.1);
+}
+
+.shop-nav-btn.active {
+    background: #fff;
+    color: #000;
+}
+
+/* Chest Image Styling */
+.bundle-image-wrapper {
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.chest-img {
+    height: 100%;
+    width: auto;
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+    transition: transform 0.3s ease;
+}
+
+.bundle-card:hover .chest-img {
+    transform: scale(1.1) rotate(-2deg);
+}
+
+/* Featured Card (Middle One) */
+.emergence-card.featured {
+    border: 2px solid #fff !important;
+    background: linear-gradient(180deg, #0a0a0a 0%, #151515 100%) !important;
+}
         .roadmap {
             display: flex;
             justify-content: space-between;
@@ -65,46 +137,7 @@
             background: #333;
             z-index: 0;
         }
-/* Token Shop Specific UI */
-.bundle-card {
-    text-align: center;
-    border-radius: 30px !important;
-    padding: 60px 30px !important;
-}
 
-.bundle-icon {
-    width: 100px !important;
-    height: 100px !important;
-    margin: 0 auto 30px auto !important;
-    background: linear-gradient(145deg, #111, #000);
-    border: 1px solid #333;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-
-.bundle-icon svg {
-    width: 50px;
-    height: 50px;
-}
-
-.token-amount {
-    font-size: 3.5rem !important;
-    font-weight: 900;
-    margin: 10px 0;
-    font-family: 'Arial Black', sans-serif;
-    letter-spacing: -2px;
-}
-
-/* Floating Animation for the Chests */
-.bundle-card:hover .bundle-icon {
-    transform: translateY(-10px) rotate(3deg);
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* Success Glow for the Featured Large Bundle */
-.featured.bundle-card {
-    background: linear-gradient(180deg, #0a0a0a 0%, #151515 100%) !important;
-    border: 2px solid #fff !important;
-}
         .step-indicator {
             display: flex;
             flex-direction: column;
@@ -2193,62 +2226,47 @@ window.showScaleShop = async function() {
 window.showTokenShop = async function() {
     const tokens = await getLiveTokens();
     const container = document.getElementById('dashboardContainer');
-    
+    document.title = "Buy Scale Tokens | ScaleVest";
+
     container.innerHTML = `
-        ${createNavBar()}
-        <div class="emergence-page">
+      
+        <div class="emergence-page shop-bw">
             ${getShopHeaderHTML(tokens, 'tokens')}
             
             <div class="emergence-header">
                 <h1>Token Shop</h1>
-                <p>Choose a bundle to refill your Scale balance and unlock platform potential.</p>
+                <p>Choose a bundle to refill your Scale balance.</p>
             </div>
 
             <div class="emergence-grid">
                 <div class="emergence-card bundle-card">
-                    <div class="plan-icon bundle-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
-                            <path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path>
-                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                        </svg>
+                    <div class="bundle-image-wrapper">
+                        <img src="chest1.svg" alt="Small Chest" class="chest-img">
                     </div>
                     <h2 class="plan-title">Small Bundle</h2>
                     <div class="token-amount">80</div>
                     <div class="price-section"><span class="new-price">₹50</span></div>
-                    <button class="buy-btn" onclick="window.addTokensToDB(80)">Buy Now</button>
+                    <button class="buy-btn-premium" onclick="window.addTokensToDB(80)">Buy Now</button>
                 </div>
 
-                <div class="emergence-card bundle-card featured" style="border-color:#fff !important;">
-                    <div class="plan-icon bundle-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
-                            <path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path>
-                            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path>
-                            <circle cx="18" cy="5" r="2" fill="#FFD700" stroke="#FFD700" />
-                            <circle cx="21" cy="7" r="2" fill="#FFD700" stroke="#FFD700" />
-                        </svg>
+                <div class="emergence-card bundle-card featured">
+                    <div class="bundle-image-wrapper">
+                        <img src="chest2.svg" alt="Medium Chest" class="chest-img">
                     </div>
                     <h2 class="plan-title">Medium Bundle</h2>
                     <div class="token-amount">180</div>
                     <div class="price-section"><span class="new-price">₹150</span></div>
-                    <button class="buy-btn" onclick="window.addTokensToDB(180)">Buy Now</button>
+                    <button class="buy-btn-premium" onclick="window.addTokensToDB(180)">Buy Now</button>
                 </div>
 
                 <div class="emergence-card bundle-card">
-                    <div class="plan-icon bundle-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
-                            <path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" fill="rgba(255,255,255,0.1)"></path>
-                            <circle cx="12" cy="4" r="2.5" fill="#FFD700" stroke="#FFD700" />
-                            <circle cx="8" cy="5" r="2.5" fill="#FFD700" stroke="#FFD700" />
-                            <circle cx="16" cy="5" r="2.5" fill="#FFD700" stroke="#FFD700" />
-                            <circle cx="4" cy="6" r="2.5" fill="#FFD700" stroke="#FFD700" />
-                            <circle cx="20" cy="6" r="2.5" fill="#FFD700" stroke="#FFD700" />
-                            <path d="M12 2v5" stroke="#FFD700" stroke-width="2"/>
-                        </svg>
+                    <div class="bundle-image-wrapper">
+                        <img src="chest3.svg" alt="Large Chest" class="chest-img">
                     </div>
                     <h2 class="plan-title">Large Bundle</h2>
                     <div class="token-amount">500</div>
                     <div class="price-section"><span class="new-price">₹400</span></div>
-                    <button class="buy-btn" onclick="window.addTokensToDB(500)">Buy Now</button>
+                    <button class="buy-btn-premium" onclick="window.addTokensToDB(500)">Buy Now</button>
                 </div>
             </div>
         </div>
