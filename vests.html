@@ -2064,50 +2064,63 @@ window.toggleCoFounders = function(hasCoFounders) {
 
 
 
+// 1. FOUNDER EMERGENCE (CASH SHOP)
 window.showFounderEmergence = async function() {
     const tokens = await getLiveTokens();
     const container = document.getElementById('dashboardContainer');
+    document.title = "Founder Emergence Plans | ScaleVest";
+    container.style.display = 'block';
     document.querySelector('.vest-container').style.display = 'none';
+
     container.innerHTML = `
-     
+        ${createNavBar()}
         <div class="emergence-page">
             ${getShopHeaderHTML(tokens, 'emergence')}
+            
             <div class="emergence-header">
+                <div class="release-tag">PREMIUM OUTREACH</div>
                 <h1>Founder Emergence Plans</h1>
-                <p>Send your funding application to targeted investors.</p>
+                <p>Get your startup in front of the right eyes. Our algorithms match your Funding Application with investors who specialize in your specific category.</p>
             </div>
+
             <div class="emergence-grid">
-                <div class="emergence-card">
-                    <div class="plan-badge" style="background:#fff; color:#000;">50% OFF</div>
-                    <h2>Alpha</h2>
-                    <p class="plan-desc">7 Category-specific investors.</p>
-                    <div class="price-section"><span class="new-price">₹150</span></div>
+                <div class="emergence-card alpha">
+                    <div class="plan-badge">50% OFF</div>
+                    <div class="plan-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2"><path d="M12 2L2 7l10 5-10-5-10-5zM2 17l10 5-10-5M2 12l10 5-10-5"></path></svg></div>
+                    <h2 class="plan-title">Emerge: Alpha</h2>
+                    <p class="plan-desc">The essential entry point. We send your application to <strong>7 interested investors</strong> who actively fund startups in your category.</p>
+                    <div class="price-section"><div class="price-row"><span class="old-price">₹300</span><span class="discount-pill">Launch Promo</span></div><span class="new-price">₹150</span></div>
                     <button class="buy-btn">Choose Alpha</button>
                 </div>
-                <div class="emergence-card featured" style="border-color:#fff !important;">
-                    <div class="plan-badge" style="background:#fff; color:#000;">50% OFF</div>
-                    <h2>Steady</h2>
-                    <p class="plan-desc">12 Category-specific investors.</p>
-                    <div class="price-section"><span class="new-price">₹200</span></div>
+
+                <div class="emergence-card steady featured">
+                    <div class="plan-badge">50% OFF</div>
+                    <div class="most-popular">MOST POPULAR</div>
+                    <div class="plan-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#8338ec" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg></div>
+                    <h2 class="plan-title">Emerge: Steady</h2>
+                    <p class="plan-desc">Our most balanced plan. Take your funding application to <strong>12 interested investors</strong> with high-intent matching.</p>
+                    <div class="price-section"><div class="price-row"><span class="old-price">₹400</span><span class="discount-pill">Launch Promo</span></div><span class="new-price">₹200</span></div>
                     <button class="buy-btn">Choose Steady</button>
                 </div>
-                <div class="emergence-card">
-                    <div class="plan-badge" style="background:#fff; color:#000;">50% OFF</div>
-                    <h2>Super Critical</h2>
-                    <p class="plan-desc">18 Top-tier investors.</p>
-                    <div class="price-section"><span class="new-price">₹350</span></div>
-                    <button class="buy-btn">Choose Critical</button>
+
+                <div class="emergence-card critical">
+                    <div class="plan-badge">50% OFF</div>
+                    <div class="plan-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#3a86ff" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="12" r="3"></circle></svg></div>
+                    <h2 class="plan-title">Emerge: Super Critical</h2>
+                    <p class="plan-desc">The ultimate outreach powerhouse. Send your application to <strong>18 top-tier investors</strong> for maximum visibility.</p>
+                    <div class="price-section"><div class="price-row"><span class="old-price">₹699</span><span class="discount-pill">Launch Promo</span></div><span class="new-price">₹350</span></div>
+                    <button class="buy-btn">Go Super Critical</button>
                 </div>
             </div>
-        </div>`;
+        </div>
+    `;
 };
 
-// 2. SCALE SHOP (TOKEN REDEMPTION)
 window.showScaleShop = async function() {
     const tokens = await getLiveTokens();
     const container = document.getElementById('dashboardContainer');
     container.innerHTML = `
-        
+        ${createNavBar()}
         <div class="emergence-page">
             ${getShopHeaderHTML(tokens, 'scale')}
             <div class="emergence-header">
@@ -2141,34 +2154,43 @@ window.showScaleShop = async function() {
 window.showTokenShop = async function() {
     const tokens = await getLiveTokens();
     const container = document.getElementById('dashboardContainer');
+    document.title = "Buy Scale Tokens | ScaleVest";
+
     container.innerHTML = `
-               <div class="emergence-page">
+        ${createNavBar()}
+        <div class="emergence-page">
             ${getShopHeaderHTML(tokens, 'tokens')}
+            
             <div class="emergence-header">
+                <div class="release-tag" style="border-color:#ffb703; color:#ffb703;">REFILL BALANCE</div>
                 <h1>Token Shop</h1>
-                <p>Choose a bundle to refill your Scale balance.</p>
+                <p>Refill your Scale Tokens to unlock free outreach plans and platform perks.</p>
             </div>
+
             <div class="emergence-grid">
                 <div class="emergence-card">
-                    <h2>Small Bundle</h2>
-                    <div class="token-amount">80</div>
+                    <h2 class="plan-title">Small Bundle</h2>
+                    <div class="token-amount">80 Tokens</div>
                     <div class="price-section"><span class="new-price">₹50</span></div>
-                    <button class="buy-btn" onclick="window.addTokensToDB(80)">Buy Now</button>
+                    <button class="buy-btn" style="background:#ffb703;" onclick="window.addTokensToDB(80)">Buy Now</button>
                 </div>
-                <div class="emergence-card featured" style="border-color:#fff !important;">
-                    <h2>Medium Bundle</h2>
-                    <div class="token-amount">180</div>
+
+                <div class="emergence-card featured" style="border-color:#ffb703;">
+                    <h2 class="plan-title">Medium Bundle</h2>
+                    <div class="token-amount">180 Tokens</div>
                     <div class="price-section"><span class="new-price">₹150</span></div>
-                    <button class="buy-btn" onclick="window.addTokensToDB(180)">Buy Now</button>
+                    <button class="buy-btn" style="background:#ffb703;" onclick="window.addTokensToDB(180)">Buy Now</button>
                 </div>
+
                 <div class="emergence-card">
-                    <h2>Large Bundle</h2>
-                    <div class="token-amount">500</div>
+                    <h2 class="plan-title">Large Bundle</h2>
+                    <div class="token-amount">500 Tokens</div>
                     <div class="price-section"><span class="new-price">₹400</span></div>
-                    <button class="buy-btn" onclick="window.addTokensToDB(500)">Buy Now</button>
+                    <button class="buy-btn" style="background:#ffb703;" onclick="window.addTokensToDB(500)">Buy Now</button>
                 </div>
             </div>
-        </div>`;
+        </div>
+    `;
 };
 async function showManageVests() {
     document.title = "Manage Your Vests | ScaleVest";
