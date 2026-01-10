@@ -312,122 +312,205 @@
             gap: 15px;
             margin-bottom: 20px;
         }
+/* Emergence Page Styles */
 .emergence-page {
-    padding: 60px 20px;
-    max-width: 1200px;
+    padding: 80px 20px;
+    max-width: 1300px;
     margin: 0 auto;
+    background: radial-gradient(circle at top center, #1a0b2e 0%, #000 60%);
+}
+
+.emergence-header {
     text-align: center;
+    margin-bottom: 60px;
+}
+
+.release-tag {
+    display: inline-block;
+    padding: 6px 15px;
+    background: rgba(255, 0, 110, 0.1);
+    border: 1px solid #ff006e;
+    color: #ff006e;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
 }
 
 .emergence-header h1 {
-    font-size: 3rem;
-    margin-bottom: 15px;
-    background: linear-gradient(90deg, #fff, #888);
+    font-size: 3.5rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(to bottom, #fff 30%, #666 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    margin-bottom: 20px;
 }
 
 .emergence-header p {
     color: #888;
-    margin-bottom: 50px;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
 }
 
+/* Card Grid */
 .emergence-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: 30px;
 }
 
+/* Base Card Styling */
 .emergence-card {
-    background: #0a0a0a;
+    background: rgba(10, 10, 10, 0.6);
+    backdrop-filter: blur(10px);
     border: 1px solid #222;
-    border-radius: 20px;
-    padding: 40px 30px;
+    border-radius: 24px;
+    padding: 50px 40px;
     position: relative;
-    transition: all 0.4s ease;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
 }
 
 .emergence-card:hover {
-    transform: translateY(-10px);
+    transform: translateY(-15px);
     border-color: #444;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
 }
 
-.emergence-card.highlighted {
-    border: 2px solid #8338ec;
-    background: linear-gradient(180deg, #0a0a0a 0%, #11081a 100%);
+/* Featured / Steady Card */
+.emergence-card.featured {
+    border: 1px solid #8338ec;
+    box-shadow: 0 0 30px rgba(131, 56, 236, 0.2);
+    background: rgba(15, 5, 25, 0.8);
+    transform: scale(1.05);
 }
 
-.plan-icon svg {
-    width: 60px;
-    height: 60px;
-    margin-bottom: 20px;
-}
-
-.emergence-card h2 {
-    font-size: 1.6rem;
-    margin-bottom: 15px;
+.most-popular {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #8338ec;
     color: #fff;
+    padding: 5px 20px;
+    font-size: 0.7rem;
+    font-weight: 900;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Icons */
+.plan-icon {
+    width: 70px;
+    height: 70px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 25px;
+    color: #fff;
+}
+
+.alpha .plan-icon { color: #ff006e; border-color: rgba(255, 0, 110, 0.3); }
+.steady .plan-icon { color: #8338ec; border-color: rgba(131, 56, 236, 0.3); }
+.critical .plan-icon { color: #3a86ff; border-color: rgba(58, 134, 255, 0.3); }
+
+/* Text Content */
+.plan-title {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
 }
 
 .plan-desc {
-    color: #aaa;
+    color: #999;
     font-size: 0.95rem;
-    line-height: 1.6;
-    margin-bottom: 30px;
-    min-height: 80px;
+    line-height: 1.7;
+    margin-bottom: 40px;
+    min-height: 100px;
 }
 
-.price-box {
-    margin-bottom: 30px;
+/* Pricing */
+.price-section {
+    margin-bottom: 40px;
+    text-align: left;
+}
+
+.price-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
 }
 
 .old-price {
+    color: #555;
     text-decoration: line-through;
-    color: #666;
     font-size: 1.2rem;
-    margin-right: 10px;
 }
 
-.new-price {
-    color: #fff;
-    font-size: 2.2rem;
-    font-weight: 800;
-}
-
-.plan-badge {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: #ff006e;
-    color: #fff;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
+.discount-pill {
+    font-size: 0.65rem;
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
     font-weight: 700;
 }
 
+.new-price {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+/* Badges */
+.plan-badge {
+    position: absolute;
+    top: 20px;
+    right: -30px;
+    background: #ff006e;
+    color: #fff;
+    padding: 5px 40px;
+    transform: rotate(45deg);
+    font-size: 0.75rem;
+    font-weight: 800;
+    box-shadow: 0 5px 15px rgba(255, 0, 110, 0.3);
+}
+
+/* Button */
 .buy-btn {
     width: 100%;
-    padding: 15px;
-    border-radius: 12px;
+    padding: 18px;
+    border-radius: 14px;
     border: none;
-    background: #fff;
-    color: #000;
     font-weight: 700;
     font-size: 1rem;
     cursor: pointer;
     transition: all 0.3s;
-    margin-top: auto;
+    background: #fff;
+    color: #000;
 }
 
 .buy-btn:hover {
     background: #ff006e;
     color: #fff;
-    transform: scale(1.05);
+    transform: scale(1.02);
+}
+
+.featured .buy-btn {
+    background: #8338ec;
+    color: #fff;
+}
+
+.featured .buy-btn:hover {
+    background: #fff;
+    color: #8338ec;
 }
         .checkbox-item {
             display: flex;
@@ -1667,54 +1750,68 @@ async function showFounderEmergence() {
         ${createNavBar()}
         <div class="emergence-page">
             <div class="emergence-header">
+                <div class="release-tag">LATEST RELEASE SPECIAL</div>
                 <h1>Founder Emergence Plans</h1>
-                <p>Accelerate your reach to active investors matching your category</p>
+                <p>Get your startup in front of the right eyes. Our algorithms match your vest with investors who specialize in your specific category.</p>
             </div>
 
             <div class="emergence-grid">
-                <div class="emergence-card">
+                <div class="emergence-card alpha">
                     <div class="plan-badge">50% OFF</div>
                     <div class="plan-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2">
-                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                            <path d="M2 17l10 5 10-5" opacity="0.5"></path>
+                            <path d="M2 12l10 5 10-5"></path>
                         </svg>
                     </div>
-                    <h2>Emerge: Alpha</h2>
-                    <p class="plan-desc">Emergence: Alpha is the first plan of founder emergence which will send your funding application to 7 interested investors who usually invest in the category of your startup.</p>
-                    <div class="price-box">
-                        <span class="old-price">₹300</span>
+                    <h2 class="plan-title">Emerge: Alpha</h2>
+                    <p class="plan-desc">The essential entry point. We send your application to <strong>7 interested investors</strong> who actively fund startups in your specific category.</p>
+                    <div class="price-section">
+                        <div class="price-row">
+                            <span class="old-price">₹300</span>
+                            <span class="discount-pill">ScaleVest Launch Promo</span>
+                        </div>
                         <span class="new-price">₹150</span>
                     </div>
                     <button class="buy-btn">Choose Alpha</button>
                 </div>
 
-                <div class="emergence-card highlighted">
+                <div class="emergence-card steady featured">
                     <div class="plan-badge">50% OFF</div>
+                    <div class="most-popular">MOST POPULAR</div>
                     <div class="plan-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#8338ec" stroke-width="2">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
                         </svg>
                     </div>
-                    <h2>Emerge: Steady</h2>
-                    <p class="plan-desc">Emergence: Steady is the second plan of founder emergence which will take your funding application to 12 interested investors who usually invest in your category.</p>
-                    <div class="price-box">
-                        <span class="old-price">₹400</span>
+                    <h2 class="plan-title">Emerge: Steady</h2>
+                    <p class="plan-desc">Our most balanced plan. Take your funding application to <strong>12 interested investors</strong> with high-intent matching.</p>
+                    <div class="price-section">
+                        <div class="price-row">
+                            <span class="old-price">₹400</span>
+                            <span class="discount-pill">ScaleVest Launch Promo</span>
+                        </div>
                         <span class="new-price">₹200</span>
                     </div>
                     <button class="buy-btn">Choose Steady</button>
                 </div>
 
-                <div class="emergence-card">
+                <div class="emergence-card critical">
                     <div class="plan-badge">50% OFF</div>
                     <div class="plan-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#3a86ff" stroke-width="2">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
                         </svg>
                     </div>
-                    <h2>Emerge: Super Critical</h2>
-                    <p class="plan-desc">Emergence: Super Critical is the last and most powerful plan of founder emergence which will take your funding application to 18 investors instantly.</p>
-                    <div class="price-box">
-                        <span class="old-price">₹699</span>
+                    <h2 class="plan-title">Emerge: Super Critical</h2>
+                    <p class="plan-desc">The ultimate outreach powerhouse. Send your application to <strong>18 top-tier investors</strong> for maximum visibility.</p>
+                    <div class="price-section">
+                        <div class="price-row">
+                            <span class="old-price">₹699</span>
+                            <span class="discount-pill">ScaleVest Launch Promo</span>
+                        </div>
                         <span class="new-price">₹350</span>
                     </div>
                     <button class="buy-btn">Go Super Critical</button>
