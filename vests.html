@@ -1763,7 +1763,7 @@ document.addEventListener('keydown', (e) => {
 window.launchVest = async function() {
     console.log('🚀 Launch initiated...');
     
-    // Close completion popup if open
+    // Close completion popup immediately
     closeCompletionPopup();
     
     const btn = event?.target?.closest('button');
@@ -1809,36 +1809,16 @@ window.launchVest = async function() {
             console.log('✅ Startup profile saved');
         }
         
-        // Step 6: FORCE SHOW CELEBRATION (Multiple methods to ensure it works)
-        console.log('🎉 Showing celebration...');
+        // Step 6: REDIRECT TO DASHBOARD
+        console.log('🏁 Redirecting to dashboard...');
         
-        // Close popup
-        const popup = document.getElementById('completionPopup');
-        if (popup) {
-            popup.classList.remove('show');
-            popup.style.display = 'none';
-        }
+        // Clear local storage draft data so the next "Create Vest" is empty
+        localStorage.removeItem(STORAGE_KEY);
         
-        // Hide vest container
-        const vestContainer = document.querySelector('.vest-container');
-        if (vestContainer) {
-            vestContainer.style.display = 'none';
-        }
+        // Change the URL hash to trigger the dashboard view
+        window.location.hash = 'founder_dashboard';
         
-        // Show celebration with multiple fallbacks
-        const celebration = document.getElementById('celebration');
-        if (celebration) {
-            celebration.style.display = 'block';
-            celebration.classList.add('active');
-            celebration.style.opacity = '1';
-            celebration.style.visibility = 'visible';
-        } else {
-            console.error('❌ Celebration element not found!');
-        }
-        
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        
+        // Optional: Provide a small alert or toast notification here
         console.log('✅ LAUNCH SUCCESSFUL!');
         
     } catch (error) {
