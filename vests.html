@@ -226,7 +226,36 @@
     border-radius: 0;
     transition: border-color 0.3s;
 }
+.success-toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #10b981; /* ScaleVest Green */
+    color: white;
+    padding: 16px 28px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    z-index: 10000001;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: toastSlideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
 
+@keyframes toastSlideIn {
+    from { transform: translateY(100px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.toast-exit {
+    animation: toastFadeOut 0.4s ease forwards;
+}
+
+@keyframes toastFadeOut {
+    to { opacity: 0; transform: translateY(20px) scale(0.95); }
+}
 #newAppNameInput:focus {
     outline: none;
     border-color: #000;
@@ -2906,7 +2935,7 @@ window.confirmApplicationName = async function() {
         return;
     }
 
-    // 1. Close the popup
+    // 1. Remove the name-input popup immediately
     const modal = document.getElementById('appNameModal');
     if (modal) modal.remove();
 
@@ -2915,42 +2944,47 @@ window.confirmApplicationName = async function() {
         const snap = await get(profileRef);
         const currentCount = (snap.exists() && snap.val().applicationsCount) ? parseInt(snap.val().applicationsCount) : 0;
 
-        // 2. Generate the unique ID for this specific application
         const newAppRef = push(ref(db, `Applications/${currentUser.uid}`));
         const appId = newAppRef.key;
 
-        // 3. Save initial data to Firebase
+        // 2. Save data to Firebase
         await update(ref(db), {
             [`founderProfile/${currentUser.uid}/applicationsCount`]: currentCount + 1,
             [`Applications/${currentUser.uid}/${appId}/appName`]: appName,
-            [`Applications/${currentUser.uid}/${appId}/status`]: 'draft'
+            [`Applications/${currentUser.uid}/${appId}/status`]: 'draft',
+            [`Applications/${currentUser.uid}/${appId}/founderName`]: cachedFounderData?.founderUsername || 'Founder'
         });
         
-        // 4. THE FIX: Open the Editor directly instead of redirecting
-        window.showSuccessToast("ID Generated. Opening Editor...");
-        window.renderApplicationForm(appId, appName);
+        // 3. IMMEDIATE REDIRECT - No loading screen
+        window.location.hash = 'applications';
+        
+        // 4. Trigger the Success Pop-up
+        setTimeout(() => {
+            window.showSuccessToast("Application Created Successfully!");
+        }, 500);
         
     } catch (error) {
         console.error("Database Error:", error);
-        alert("Failed to initialize editor. Check Firebase rules.");
+        alert("Creation failed. Check your connection.");
+        window.location.hash = 'applications';
     }
 };
 window.showSuccessToast = function(message) {
     const toast = document.createElement('div');
     toast.className = 'success-toast';
     toast.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
             <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
-        ${message}
+        <span>${message}</span>
     `;
     document.body.appendChild(toast);
 
-    // Remove after 3 seconds
+    // Auto-remove after 3.5 seconds
     setTimeout(() => {
-        toast.classList.add('toast-fade-out');
-        setTimeout(() => toast.remove(), 500);
-    }, 3000);
+        toast.classList.add('toast-exit');
+        setTimeout(() => toast.remove(), 400);
+    }, 3500);
 };
 
 // --- 3. INPUT FORM: THE WHITE PAPER INPUT INTERFACE ---
