@@ -642,22 +642,38 @@
 <div id="availabilityModal" class="modal">
   <div class="modal-content">
     <span class="close-btn">&times;</span>
-    <h3>Set Your Availability</h3>
+    <h3 style="margin-bottom: 20px;">Manage Availability</h3>
     
-    <div class="form-group">
+    <div id="modalMenu">
+        <button class="modal-option-btn" onclick="showAvailabilityDetail('dateSection')">
+            📅 Set Date of Unavailability
+        </button>
+        <button class="modal-option-btn" onclick="showAvailabilityDetail('statusSection')">
+            🔘 Set Status Now (Active/Busy)
+        </button>
+    </div>
+
+    <div id="dateSection" class="availability-sub-section">
       <label>On which date are you unavailable?</label>
       <input type="date" id="unavailableDate">
+      <div style="display:flex; gap:10px; margin-top:20px;">
+          <button class="btn-back" onclick="resetModal()">Back</button>
+          <button class="btn-launch" onclick="saveStatus()">Save Date</button>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label>Current Status:</label>
+    <div id="statusSection" class="availability-sub-section">
+      <label>Set your current status:</label>
       <select id="status">
-        <option value="active">Active</option>
-        <option value="busy">Busy</option>
+        <option value="active">🟢 Active</option>
+        <option value="busy">🔴 Busy / Passive</option>
       </select>
+      <div style="display:flex; gap:10px; margin-top:20px;">
+          <button class="btn-back" onclick="resetModal()">Back</button>
+          <button class="btn-launch" onclick="saveStatus()">Update Status</button>
+      </div>
     </div>
 
-    <button id="saveAvailability" class="card-btn">Save Status</button>
   </div>
 </div>
 
@@ -2299,7 +2315,59 @@ max-width: 1100px;
         .banner:hover::before {
             transform: scaleY(1);
         }
+/* Dark Modal Styling */
+#availabilityModal .modal-content {
+    background-color: #0f0f0f; /* Pitch Black */
+    border: 1px solid #333;
+    color: #ffffff;
+    max-width: 450px;
+    padding: 30px;
+}
 
+#availabilityModal .close-btn {
+    color: #888;
+    transition: color 0.3s;
+}
+
+#availabilityModal .close-btn:hover {
+    color: #fff;
+}
+
+/* Option Buttons */
+.modal-option-btn {
+    background: #1a1a1a;
+    color: #fff;
+    border: 1px solid #333;
+    padding: 12px;
+    width: 100%;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.modal-option-btn:hover {
+    border-color: #ff006e;
+    background: #222;
+}
+
+/* Hidden Sections */
+.availability-sub-section {
+    display: none;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #222;
+    animation: fadeIn 0.3s ease;
+}
+
+#availabilityModal input, #availabilityModal select {
+    background: #000;
+    color: #fff;
+    border: 1px solid #444;
+    margin-top: 10px;
+}
         .banner:hover {
             border-color: #444;
             transform: translateX(10px);
@@ -2848,21 +2916,47 @@ max-width: 1100px;
     container.innerHTML = dashboardHTML;
     container.style.display = 'block';
     
-const modal = document.getElementById("availabilityModal");
-    const openBtn = container.querySelector("#openModal"); // Find the button inside the new HTML
-    const closeBtn = document.querySelector(".close-btn");
+// Function to show sub-sections
+window.showAvailabilityDetail = function(sectionId) {
+    document.getElementById('modalMenu').style.display = 'none';
+    document.getElementById(sectionId).style.display = 'block';
+}
 
-    if (openBtn) {
-        openBtn.onclick = function() {
-            modal.style.display = "block";
-        }
+// Function to go back to main modal menu
+window.resetModal = function() {
+    document.getElementById('dateSection').style.display = 'none';
+    document.getElementById('statusSection').style.display = 'none';
+    document.getElementById('modalMenu').style.display = 'block';
+}
+
+// Updated Event Listener to handle opening/closing
+document.addEventListener('click', function (e) {
+    const modal = document.getElementById("availabilityModal");
+
+    // 1. Open Modal
+    if (e.target && e.target.id === 'openModal') {
+        modal.style.display = "block";
+        resetModal(); // Ensure it starts at the menu
     }
 
-    if (closeBtn) {
-        closeBtn.onclick = function() {
-            modal.style.display = "none";
-        }
+    // 2. Close Modal (X button)
+    if (e.target && e.target.classList.contains('close-btn')) {
+        modal.style.display = "none";
     }
+
+    // 3. Close if clicking outside the box
+    if (e.target === modal) {
+        modal.style.display = "none";
+    }
+});
+
+// Save Function Placeholder
+window.saveStatus = function() {
+    const date = document.getElementById('unavailableDate').value;
+    const status = document.getElementById('status').value;
+    alert("ScaleVest Updated! \nStatus: " + status + (date ? "\nUnavailable on: " + date : ""));
+    document.getElementById("availabilityModal").style.display = "none";
+}
 
     // Add dropdown interaction after DOM is loaded
     setTimeout(() => {
