@@ -3217,20 +3217,7 @@ window.selectVestForApp = function(id, hook) {
 
 window.submitApplication = async function(appId) {
     const vestId = document.getElementById('selectedVestId').value;
-    const submitBtn = event.currentTarget; // Capture the button clicked
-    
-    if(!vestId) {
-        alert("Please attach a vest before completing!");
-        return;
-    }
-
-    // 1. Visual Feedback: Loading State
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `
-        <span class="spinner" style="display:inline-block; width:16px; height:16px; border:2px solid #ffffff33; border-top-color:#fff; border-radius:50%; animation: spin 0.8s linear infinite; margin-right:10px; vertical-align:middle;"></span>
-        Finalizing Document...
-    `;
+    if(!vestId) return alert("Please attach a vest before completing!");
 
     // Gather the data
     const data = {
@@ -3240,29 +3227,24 @@ window.submitApplication = async function(appId) {
         endingContent: document.getElementById('appEnding').value,
         founderName: document.getElementById('appFounderName').value,
         vestId: vestId,
-        status: 'ready', // Changes status from 'incomplete' to 'ready'
+        status: 'ready',
         updatedAt: Date.now()
     };
 
     try {
-        // 2. Perform the save
+        // 1. Perform the save in the background
         await set(ref(db, `Applications/${currentUser.uid}/${appId}`), data);
         
-        // 3. Small psychological delay for the "Processing" feel
-        setTimeout(() => {
-            // 4. Redirect to the applications list
-            window.location.hash = 'applications';
-            
-            // 5. Trigger success toast on the new page
-            if (window.showSuccessToast) {
-                window.showSuccessToast("Application Processed Successfully!");
-            }
-        }, 800);
+        // 2. IMMEDIATE REDIRECT (No loading screen)
+        window.location.hash = 'founder_dashboard';
+        
+        // 3. Trigger the success popup on the list page
+        if (window.showSuccessToast) {
+            window.showSuccessToast("Application Processed Successfully!");
+        }
         
     } catch (error) {
         console.error("Save Error:", error);
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
         alert("Failed to save application. Please check your connection.");
     }
 };
