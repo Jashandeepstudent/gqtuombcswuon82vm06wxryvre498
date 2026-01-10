@@ -325,27 +325,28 @@
     background: #fff;
     color: #000;
     border: 1px solid #fff;
-    /* Reduced padding: 10px top/bottom, 24px left/right */
-    padding: 10px 24px; 
-    border-radius: 6px;
+    /* 8px top/bottom, 16px left/right for a tighter look */
+    padding: 8px 16px; 
+    border-radius: 4px; /* Sharper corners for a more technical look */
     font-weight: 800;
-    font-size: 0.85rem; /* Slightly smaller font for premium look */
+    font-size: 0.75rem; /* Smaller text for a micro-button feel */
     cursor: pointer;
     text-transform: uppercase;
-    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
     
-    /* Crucial changes for size control */
-    display: inline-block; 
-    width: auto; 
-    min-width: 140px; /* Ensures a consistent button base */
-    margin: 0 auto;  /* Centers it if the parent is a flex column */
+    /* Strict size control */
+    display: inline-block;
+    width: fit-content; /* Only as wide as the text */
+    min-width: 100px;    /* Much smaller minimum length */
+    margin: 0 auto;
 }
 
 .buy-btn-premium:hover {
     background: #000;
     color: #fff;
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
 }
 /* Token Shop Specific */
 .token-amount { color: #fff !important; font-size: 2.5rem !important; }
