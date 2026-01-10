@@ -451,7 +451,81 @@
     color: #fff !important;
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
 }
+/* Real Document Snapshot Simulation */
+.app-screenshot-preview {
+    height: 160px;
+    background: #111; /* Dark background behind the paper */
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 20px;
+    overflow: hidden;
+    position: relative;
+    border-bottom: 1px solid #222;
+}
 
+.mini-white-sheet {
+    width: 120px;
+    height: 160px;
+    background: #fff;
+    border-radius: 2px 2px 0 0;
+    padding: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+}
+
+.application-doc-card:hover .mini-white-sheet {
+    transform: translateY(-5px);
+}
+
+/* Miniature Content Inside the Snapshot */
+.mini-line {
+    height: 3px;
+    background: #eee;
+    margin-bottom: 6px;
+    border-radius: 2px;
+}
+.mini-line.header { width: 30%; background: #ddd; height: 5px; margin-bottom: 10px; }
+
+.mini-title-box {
+    font-size: 6px;
+    font-weight: 900;
+    color: #000;
+    line-height: 1;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    font-family: sans-serif;
+}
+
+.mini-body-content { margin-top: 15px; }
+
+.mini-black-card {
+    margin-top: 15px;
+    height: 30px;
+    background: #000;
+    border-radius: 1px;
+}
+
+/* Status Overlay */
+.status-pill-overlay {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    font-size: 9px;
+    font-weight: 900;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+}
+.pill-draft { background: #ffb703; color: #000; }
+.pill-completed { background: #10b981; color: #fff; }
+
+.doc-date {
+    font-size: 10px;
+    color: #555;
+    font-family: monospace;
+}
 /* Specific Style for the Token/Alpha/Critical Image Wrappers */
 .bundle-image-wrapper {
     height: 100px;
@@ -2892,8 +2966,6 @@ window.showApplicationsList = async function() {
     const container = document.getElementById('dashboardContainer');
     document.querySelector('.vest-container').style.display = 'none';
     container.style.display = 'block';
-    
-    // Force black background for dashboard list
     document.body.style.background = "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)";
 
     const appRef = ref(db, `Applications/${currentUser.uid}`);
@@ -2901,7 +2973,6 @@ window.showApplicationsList = async function() {
     const apps = snapshot.val() || {};
 
     container.innerHTML = `
-      
         <div class="manage-vests-page">
             <div class="header-row">
                 <a href="#founder_dashboard" class="back-to-dash">
@@ -2912,32 +2983,44 @@ window.showApplicationsList = async function() {
                 <h1>My Funding Applications</h1>
             </div>
             
-            <div class="vest-cards-grid" id="appsGrid">
-                ${Object.keys(apps).length > 0 ? 
-                    Object.entries(apps).map(([id, app]) => `
-                        <div class="vest-gig-card" onclick="window.location.hash='view_application_${id}'">
-                            <div class="doc-card-header">
-                                <div class="doc-badge">OFFICIAL</div>
-                                <div class="doc-sv-logo">SV</div>
-                                <div class="doc-id-tag">#${id.substring(0,6).toUpperCase()}</div>
+            <div class="vest-cards-grid">
+                ${Object.entries(apps).length > 0 ? 
+                    Object.entries(apps).map(([id, app]) => {
+                        const isDraft = app.status === 'incomplete';
+                        const clickAction = isDraft 
+                            ? `window.renderApplicationForm('${id}', '${app.appName || "Draft"}')` 
+                            : `window.location.hash='view_application_${id}'`;
+
+                        return `
+                        <div class="vest-gig-card application-doc-card" onclick="${clickAction}">
+                            <div class="app-screenshot-preview">
+                                <div class="mini-white-sheet">
+                                    <div class="mini-line header"></div>
+                                    <div class="mini-title-box">${app.appHook ? app.appHook.substring(0, 20) + '...' : 'Untitled'}</div>
+                                    <div class="mini-body-content">
+                                        <div class="mini-line"></div>
+                                        <div class="mini-line"></div>
+                                        <div class="mini-line short"></div>
+                                    </div>
+                                    ${!isDraft ? `<div class="mini-black-card"></div>` : ''}
+                                </div>
+                                <div class="status-pill-overlay ${isDraft ? 'pill-draft' : 'pill-completed'}">
+                                    ${isDraft ? 'DRAFT' : 'COMPLETED'}
+                                </div>
                             </div>
 
                             <div class="vest-card-content">
-                                <h3 class="vest-hook-text">${app.appHook || 'Funding Application'}</h3>
-                                <div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
-                                     <div style="width:6px; height:6px; border-radius:50%; background:#10b981;"></div>
-                                     <p class="vest-desc-text" style="margin:0; font-weight:600; color:#fff;">Status: Review Ready</p>
-                                </div>
-                                
-                                <div class="vest-card-footer" style="margin-top:20px; border-top:1px solid #222; padding-top:15px;">
+                                <h3 class="vest-hook-text">${app.appHook || 'New Funding Proposal'}</h3>
+                                <div class="vest-card-footer">
                                     <span class="startup-label">${app.founderName || 'Founder'}</span>
-                                    <span class="equity-tag" style="color:#888; font-family:monospace;"></span>
+                                    <span class="doc-date">${new Date(app.updatedAt || Date.now()).toLocaleDateString()}</span>
                                 </div>
                             </div>
                         </div>
-                    `).join('') : `
+                        `;
+                    }).join('') : `
                     <div class="empty-state" style="grid-column: 1/-1; padding:100px; text-align:center;">
-                        <p style="color:#666; font-size:1.1rem;">No applications created. Click below to start.</p>
+                        <p style="color:#666;">No applications yet.</p>
                     </div>
                 `}
             </div>
@@ -2946,44 +3029,6 @@ window.showApplicationsList = async function() {
             </div>
         </div>
     `;
-};
-// --- 2. INITIALIZATION: NAME THE APPLICATION ---
-window.promptNewApplication = function() {
-    const modal = document.createElement('div');
-    modal.className = 'edit-modal show';
-    modal.id = 'appNameModal';
-    
-    modal.innerHTML = `
-        <div class="special-app-popup">
-            <button class="close-x" onclick="this.closest('.edit-modal').remove()">×</button>
-            
-            <div class="app-popup-header">
-                <div class="logo-mini">SV</div>
-            </div>
-            
-            <div class="app-popup-content">
-                <h2>Application Identity</h2>
-                <p>Assign a professional title to this funding request. This title will be the primary reference for investors.</p>
-                
-                <div class="input-wrapper-op">
-                    <label>APPLICATION NAME</label>
-                    <input type="text" id="newAppNameInput" placeholder="e.g. Series A Equity Proposal - 2026">
-                </div>
-            </div>
-
-            <div class="app-popup-footer">
-                <button class="btn-cancel-op" onclick="this.closest('.edit-modal').remove()">Discard</button>
-                <button class="btn-confirm-op" onclick="window.confirmApplicationName()">
-                    <span>Initialize Document</span>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    setTimeout(() => document.getElementById('newAppNameInput').focus(), 200);
 };
 window.saveApplication = async function(appId, isDraft) {
     const vestId = document.getElementById('selectedVestId').value;
@@ -3243,7 +3288,7 @@ window.renderFullApplicationPage = async function(appId) {
                     <div style="font-weight: 900; font-size: 1.2rem; border: 2px solid #000; padding: 5px 10px;">SV</div>
                     <div style="text-align: right; color: #999; font-size: 11px; letter-spacing: 1px;">
                         OFFICIAL FUNDING REQUEST<br>
-                        ID: ${appId.toUpperCase()}
+                       
                     </div>
                 </div>
 
