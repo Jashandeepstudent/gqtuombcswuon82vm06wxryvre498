@@ -2478,8 +2478,8 @@ window.saveNewVestAsDraft = async function() {
     btn.innerHTML = 'Saving...';
     
     try {
-        const { deckUrl, videoUrl } = await processNewFiles();
-        const vestData = collectNewVestData(deckUrl, videoUrl);
+      const { deckUrl, videoUrl, thumbUrl } = await processNewFiles();
+      const vestData = collectNewVestData(deckUrl, videoUrl, thumbUrl);
         vestData.status = 'draft'; // Mark as draft
 
         // Save to Firebase under Vests/UID/VestID
@@ -3457,76 +3457,88 @@ window.limitWords = function(element, limit) {
 // 1. ROUTING GATEKEEPER (Strict Custom Check)
 // ==========================================
 function handleHashChange() {
-    // 1. Wait for data
+    // 1. DATA CHECK
     if (!currentUser || !cachedFounderData) {
         console.log("Waiting for data...");
+        // If we have no data, show the loading screen instead of a blank page
+        document.getElementById('loadingScreen').classList.remove('hidden');
         return;
     }
 
     const currentId = cachedFounderData.userId;
     const firebaseUid = currentUser.uid;
 
-    // 2. CHECK: Custom ID Gatekeeper
+    // 2. GATEKEEPER: Ensure User has a Custom ID
+    // Added check: Only show modal if we aren't already looking at it
     if (!currentId || currentId === firebaseUid) {
-        document.getElementById('loadingScreen').classList.add('hidden'); 
-        document.querySelector('.vest-container').style.display = 'none';
-        const dash = document.getElementById('dashboardContainer');
-        if (dash) dash.style.display = 'none';
-        showUserIdSetupModal(); 
+        console.log("Redirecting to ID setup...");
+        if (!document.querySelector('.userid-modal')) {
+            showUserIdSetupModal(); 
+        }
         return; 
     }
 
+    // 3. UI RESET & PREP
     const hash = window.location.hash.slice(1);
     const container = document.getElementById('dashboardContainer');
     const vestStepContainer = document.querySelector('.vest-container');
 
-    // 3. RESET UI STATE (Crucial Fix)
-    // Always hide the "Create Vest" multi-step form when navigating away
-    if (vestStepContainer) vestStepContainer.style.display = 'none';
-    // Ensure dashboard container is visible for all dynamic pages
-    if (container) {
-        container.style.display = 'block';
-        container.innerHTML = ''; // Clear previous view to prevent "ghosting"
-    }
+    // Ensure main loader is hidden once we pass the gatekeeper
+    document.getElementById('loadingScreen').classList.add('hidden');
 
     // 4. ROUTING LOGIC
-    if (hash === 'founder_dashboard' || hash === '') {
-        document.body.style.background = "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)"; // Black
-        showDashboard();
-    } else if (hash === 'edit_founderprofile') {
-        document.body.style.background = "#000";
-        showEditProfile();
-    } else if (hash === 'founder_emergence') {
-        document.body.style.background = "#000";
-        showFounderEmergence();
-    } else if (hash === 'manage_vests') {
-        document.body.style.background = "#000";
-        showManageVests();
-    } else if (hash === 'applications') {
-        document.body.style.background = "#000";
-        window.showApplicationsList(); 
-    } 
-    // --- VIEW APPLICATION FIX ---
-    else if (hash.startsWith('view_application_')) {
-        const appId = hash.replace('view_application_', '');
-        // Force background to light grey for the professional sheet
-        document.body.style.background = "#f4f4f4"; 
-        window.renderFullApplicationPage(appId);
-    } 
-    // ----------------------------
-    else if (hash === 'edit_startup') {
-        document.body.style.background = "#000";
-        showEditStartup();
-    } else if (hash.startsWith('vest_step')) {
-        if (vestStepContainer) vestStepContainer.style.display = 'block';
+    if (hash.startsWith('vest_step')) {
+        // --- MULTI-STEP VEST FORM VIEW ---
         if (container) container.style.display = 'none';
-        
-        const stepNum = parseInt(hash.replace('vest_step', ''));
-        currentStep = stepNum;
-        updateStepDisplay();
-        showVestForm();
+        if (vestStepContainer) {
+            vestStepContainer.style.display = 'block';
+            const stepNum = parseInt(hash.replace('vest_step', '')) || 1;
+            currentStep = stepNum;
+            updateStepDisplay();
+        }
     } else {
-        window.location.hash = 'founder_dashboard';
+        // --- DYNAMIC DASHBOARD VIEWS ---
+        if (vestStepContainer) vestStepContainer.style.display = 'none';
+        if (container) {
+            container.style.display = 'block';
+            // Only clear if the view is actually changing to prevent flickering
+            container.innerHTML = '<div class="spinner-container" style="text-align:center; padding:50px;"><div class="spinner"></div></div>';
+        }
+
+        // Apply page-specific backgrounds and render functions
+        if (hash === 'founder_dashboard' || hash === '') {
+            document.body.style.background = "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)";
+            showDashboard();
+        } 
+        else if (hash === 'applications') {
+            document.body.style.background = "#000";
+            window.showApplicationsList(); 
+        } 
+        else if (hash.startsWith('view_application_')) {
+            const appId = hash.replace('view_application_', '');
+            document.body.style.background = "#f4f4f4"; // Document feel
+            window.renderFullApplicationPage(appId);
+        }
+        else if (hash === 'edit_founderprofile') {
+            document.body.style.background = "#000";
+            showEditProfile();
+        } 
+        else if (hash === 'founder_emergence') {
+            document.body.style.background = "#000";
+            showFounderEmergence();
+        } 
+        else if (hash === 'manage_vests') {
+            document.body.style.background = "#000";
+            showManageVests();
+        } 
+        else if (hash === 'edit_startup') {
+            document.body.style.background = "#000";
+            showEditStartup();
+        } 
+        else {
+            // Default Fallback
+            window.location.hash = 'founder_dashboard';
+        }
     }
 }
 // ==========================================
@@ -4875,7 +4887,8 @@ async function showUserIdSetupModal() {
 }
 
 window.saveUserId = async function() {
-    const userId = document.getElementById('userIdInput').value.trim();
+    const input = document.getElementById('userIdInput');
+    const userId = input.value.trim();
     
     if (!userId || userId.length < 5) {
         alert('❌ User ID must be at least 5 characters');
@@ -4883,19 +4896,22 @@ window.saveUserId = async function() {
     }
     
     try {
-        // Update founder profile with userId
         await update(ref(db, `founderProfile/${currentUser.uid}`), { userId });
+        
+        // 1. Update the cache so the Gatekeeper sees the new ID
         cachedFounderData.userId = userId;
         
-        // Close modal and navigate
-        document.querySelector('.edit-modal').remove();
-        window.location.hash = 'vest_step1';
+        // 2. Remove the modal
+        const modal = document.querySelector('.edit-modal');
+        if (modal) modal.remove();
+
+        // 3. TRIGGER ROUTER IMMEDIATELY
+        handleHashChange(); 
+        
     } catch (error) {
         console.error('Error saving userId:', error);
-        alert('❌ Failed to save User ID');
     }
 };
-
 async function showEditProfile() {
     document.title = "Edit Profile | ScaleVest";
     document.querySelector('.vest-container').style.display = 'none';
