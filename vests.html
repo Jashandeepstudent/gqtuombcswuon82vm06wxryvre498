@@ -108,7 +108,134 @@
 .emergence-page {
     background: #000 !important; /* Pure Black */
 }
+/* --- SPECIAL WHITE POPUP UI --- */
+.special-app-popup {
+    background: #ffffff;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 2px; /* Sharp, professional edges */
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+    animation: popupSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
 
+@keyframes popupSlideIn {
+    from { opacity: 0; transform: scale(0.9) translateY(30px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.app-popup-header {
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-mini {
+    font-weight: 900;
+    font-size: 1.2rem;
+    color: #000;
+    border: 2px solid #000;
+    padding: 2px 8px;
+}
+
+.close-x {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s;
+}
+
+.close-x:hover { color: #000; }
+
+.app-popup-content {
+    padding: 0 40px 40px 40px;
+    text-align: left;
+}
+
+.app-popup-content h2 {
+    color: #000;
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+.app-popup-content p {
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 30px;
+}
+
+.input-wrapper-op label {
+    font-size: 0.7rem;
+    font-weight: 900;
+    color: #000;
+    letter-spacing: 1.5px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+#newAppNameInput {
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid #eee;
+    background: transparent;
+    padding: 12px 0;
+    font-size: 1.1rem;
+    color: #000;
+    border-radius: 0;
+    transition: border-color 0.3s;
+}
+
+#newAppNameInput:focus {
+    outline: none;
+    border-color: #000;
+}
+
+.app-popup-footer {
+    padding: 20px 40px 40px 40px;
+    display: flex;
+    gap: 15px;
+}
+
+/* Button UI Overhaul */
+.btn-cancel-op {
+    background: #f5f5f5;
+    color: #666;
+    border: none;
+    padding: 15px 25px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.btn-confirm-op {
+    flex: 1;
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 15px 25px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.btn-confirm-op:hover {
+    background: #333;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
 /* Glass Buttons for Dashboard/Shop Nav */
 .shop-nav-btn {
     background: rgba(255, 255, 255, 0.05);
@@ -1205,23 +1332,7 @@
     0%, 100% { transform: translateX(-3px) rotate(-5deg); }
     50% { transform: translateX(3px) rotate(5deg); }
 }
-/* Special Modal Style for App Creation */
-#appNameModal .edit-modal-content {
-    background: #000;
-    box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
-}
 
-#newAppNameInput:focus {
-    border-color: #fff !important;
-    outline: none;
-}
-
-.loading-screen p {
-    font-weight: 800;
-    font-size: 0.9rem;
-    color: #fff;
-    text-transform: uppercase;
-}
 #tokenCountDisplay {
     font-weight: 800;
     font-size: 1.1rem;
@@ -2690,61 +2801,82 @@ window.promptNewApplication = function() {
     const modal = document.createElement('div');
     modal.className = 'edit-modal show';
     modal.id = 'appNameModal';
+    modal.style.background = "rgba(0,0,0,0.85)"; // Deep dark backdrop
     
     modal.innerHTML = `
-        <div class="edit-modal-content" style="border: 1px solid #fff;">
-            <div class="edit-modal-header">
-                <h3>🚀 New Funding Application</h3>
-                <button class="modal-close" onclick="this.parentElement.parentElement.parentElement.remove()">×</button>
+        <div class="special-app-popup">
+            <div class="app-popup-header">
+                <div class="logo-mini">SV</div>
+                <button class="close-x" onclick="this.closest('.edit-modal').remove()">×</button>
             </div>
-            <div class="edit-modal-body">
-                <label style="color:#fff; margin-bottom:15px; display:block;">Give your application a professional name:</label>
-                <input type="text" id="newAppNameInput" placeholder="e.g. Seed Round - Q1 Pitch" 
-                       style="background:#000; border:1px solid #444; color:#fff; padding:15px;">
-                <p style="font-size:0.75rem; color:#666; margin-top:10px;">This name helps you identify the outreach campaign in your dashboard.</p>
+            
+            <div class="app-popup-content">
+                <h2>Application Identity</h2>
+                <p>Assign a professional title to this funding request. This title will be the primary reference for investors.</p>
+                
+                <div class="input-wrapper-op">
+                    <label>APPLICATION NAME</label>
+                    <input type="text" id="newAppNameInput" placeholder="e.g. Series A Equity Proposal - 2026">
+                </div>
             </div>
-            <div class="edit-modal-footer">
-                <button class="buy-btn-premium" onclick="window.confirmApplicationName()">Initialize Application</button>
+
+            <div class="app-popup-footer">
+                <button class="btn-cancel-op" onclick="this.closest('.edit-modal').remove()">Discard</button>
+                <button class="btn-confirm-op" onclick="window.confirmApplicationName()">
+                    <span>Initialize Document</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
-    document.getElementById('newAppNameInput').focus();
+    
+    // Smooth focus delay
+    setTimeout(() => document.getElementById('newAppNameInput').focus(), 200);
 };
-
 // --- CONFIRMATION LOGIC ---
 window.confirmApplicationName = async function() {
-    const appName = document.getElementById('newAppNameInput').value.trim();
-    if (!appName) return alert("Please enter a name for your application.");
+    const input = document.getElementById('newAppNameInput');
+    const appName = input.value.trim();
+    
+    if (!appName) {
+        input.style.borderColor = "#ff006e";
+        return;
+    }
 
-    // Remove modal
+    // Close Modal
     document.getElementById('appNameModal').remove();
 
-    // Show processing state
-    document.getElementById('dashboardContainer').innerHTML = `
-        <div class="loading-screen">
-            <div class="spinner"></div>
-            <p style="margin-top:20px; letter-spacing:2px;">CREATING SECURE NODE...</p>
-        </div>`;
+    // Show High-End Processing UI
+    const container = document.getElementById('dashboardContainer');
+    container.innerHTML = `
+        <div class="loading-screen" style="background:#fff; color:#000;">
+            <div class="spinner" style="border-top-color:#000;"></div>
+            <p style="color:#000; letter-spacing:4px; font-weight:900; margin-top:30px;">AUTHENTICATING DOCUMENT</p>
+        </div>
+    `;
 
     try {
-        // 1. Update Application Count in founderProfile
         const profileRef = ref(db, `founderProfile/${currentUser.uid}`);
         const snap = await get(profileRef);
         const currentCount = (snap.val()?.applicationsCount || 0) + 1;
-        await update(profileRef, { applicationsCount: currentCount });
 
-        // 2. Create entry in Applications node
         const newAppRef = push(ref(db, `Applications/${currentUser.uid}`));
         const appId = newAppRef.key;
 
-        // 3. Open the White Paper Form
-        window.renderApplicationForm(appId, appName);
+        await update(profileRef, { applicationsCount: currentCount });
+        
+        // Short delay for effect
+        setTimeout(() => {
+            window.renderApplicationForm(appId, appName);
+        }, 1200);
         
     } catch (error) {
-        console.error("Error initializing app:", error);
-        alert("Permission Denied. Please check your Firebase Database Rules.");
-        window.location.hash = 'founder_dashboard';
+        console.error(error);
+        alert("Permission Error. Update your Firebase Rules.");
+        window.location.hash = 'applications';
     }
 };
 // --- 3. INPUT FORM: THE WHITE PAPER INPUT INTERFACE ---
