@@ -2897,7 +2897,6 @@ window.promptNewApplication = function() {
     document.body.appendChild(modal);
     setTimeout(() => document.getElementById('newAppNameInput').focus(), 200);
 };
-// --- CONFIRMATION LOGIC ---
 window.confirmApplicationName = async function() {
     const input = document.getElementById('newAppNameInput');
     const appName = input.value.trim();
@@ -2907,7 +2906,7 @@ window.confirmApplicationName = async function() {
         return;
     }
 
-    // Close the popup immediately
+    // 1. Close the popup
     const modal = document.getElementById('appNameModal');
     if (modal) modal.remove();
 
@@ -2916,28 +2915,24 @@ window.confirmApplicationName = async function() {
         const snap = await get(profileRef);
         const currentCount = (snap.exists() && snap.val().applicationsCount) ? parseInt(snap.val().applicationsCount) : 0;
 
+        // 2. Generate the unique ID for this specific application
         const newAppRef = push(ref(db, `Applications/${currentUser.uid}`));
         const appId = newAppRef.key;
 
-        // Save to Database
+        // 3. Save initial data to Firebase
         await update(ref(db), {
             [`founderProfile/${currentUser.uid}/applicationsCount`]: currentCount + 1,
             [`Applications/${currentUser.uid}/${appId}/appName`]: appName,
             [`Applications/${currentUser.uid}/${appId}/status`]: 'draft'
         });
         
-        // IMMEDIATE REDIRECT - No loading screen
-        window.location.hash = 'applications';
-        
-        // Show success toast after redirect
-        setTimeout(() => {
-            showSuccessToast("Application Created Successfully!");
-        }, 500);
+        // 4. THE FIX: Open the Editor directly instead of redirecting
+        window.showSuccessToast("ID Generated. Opening Editor...");
+        window.renderApplicationForm(appId, appName);
         
     } catch (error) {
         console.error("Database Error:", error);
-        alert("Failed to create application. Check your connection.");
-        window.location.hash = 'applications';
+        alert("Failed to initialize editor. Check Firebase rules.");
     }
 };
 window.showSuccessToast = function(message) {
@@ -3077,29 +3072,92 @@ window.submitApplication = async function(appId) {
 // --- 6. REVIEW: THE "MEGA OP" FINAL DOCUMENT PAGE ---
 window.renderFullApplicationPage = async function(appId) {
     const container = document.getElementById('dashboardContainer');
-    container.style.display = 'block'; // Ensure visibility
+    container.style.display = 'block'; 
+    // Force white background for the professional document feel
+    document.body.style.background = "#f4f4f4";
     
-    // Fetch Data
+    // 1. Fetch Application Data
     const snap = await get(ref(db, `Applications/${currentUser.uid}/${appId}`));
     const app = snap.val();
+    
     if(!app) {
         alert("Application not found");
         window.location.hash = 'applications';
         return;
     }
 
-    const vestSnap = await get(ref(db, `Vests/${currentUser.uid}/${app.vestId}`));
-    const vest = vestSnap.val();
+    // 2. Fetch the Linked Vest Data
+    let vest = null;
+    if (app.vestId) {
+        const vestSnap = await get(ref(db, `Vests/${currentUser.uid}/${app.vestId}`));
+        vest = vestSnap.val();
+    }
 
-    // Render White Sheet
+    // 3. Render the "Mega OP" White Paper
     container.innerHTML = `
-        <div class="full-app-view" style="color:#000; padding: 40px 20px;">
-             <div class="white-paper-card" style="background:#fff; max-width:800px; margin:0 auto; padding:60px; border:1px solid #ddd;">
-                <h1 style="color:#000;">${app.appHook}</h1>
-                <p style="color:#333; font-size:1.1rem; line-height:1.6;">${app.mainContent}</p>
-                <hr style="margin:30px 0; opacity:0.1;">
-                <p><strong>Founder:</strong> ${app.founderName}</p>
-                <button class="buy-btn-premium" onclick="window.location.hash='applications'" style="background:#000; color:#fff; width:200px; margin-top:20px;">Back to List</button>
+        <div class="full-app-view" style="color:#000; padding: 60px 20px; font-family: 'Times New Roman', serif;">
+             <div class="white-paper-card" style="background:#fff; max-width:850px; margin:0 auto; padding:80px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); border-radius: 2px; position: relative;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 50px; font-family: sans-serif;">
+                    <div style="font-weight: 900; font-size: 1.2rem; border: 2px solid #000; padding: 5px 10px;">SV</div>
+                    <div style="text-align: right; color: #999; font-size: 11px; letter-spacing: 1px;">
+                        OFFICIAL FUNDING REQUEST<br>
+                        ID: ${appId.toUpperCase()}
+                    </div>
+                </div>
+
+                <h1 style="font-size: 38px; line-height: 1.2; margin-bottom: 40px; border-left: 5px solid #000; padding-left: 25px; font-family: sans-serif; font-weight: 800;">
+                    ${app.appHook}
+                </h1>
+                
+                <div style="font-size: 19px; line-height: 1.8; color: #333; margin-bottom: 30px; text-align: justify;">
+                    ${app.startingContent}
+                </div>
+
+                <div style="font-size: 19px; line-height: 1.8; color: #333; margin-bottom: 30px; text-align: justify; font-weight: 500;">
+                    ${app.mainContent}
+                </div>
+
+                <div style="font-size: 19px; line-height: 1.8; color: #333; margin-bottom: 50px; text-align: justify; font-style: italic;">
+                    ${app.endingContent}
+                </div>
+
+                <div style="margin-top: 60px; border-top: 1px solid #eee; padding-top: 30px;">
+                    <p style="font-family: sans-serif; font-size: 14px; color: #888; margin-bottom: 5px;">Respectfully submitted by,</p>
+                    <h2 style="font-size: 26px; font-weight: 700; margin: 0;">${app.founderName}</h2>
+                </div>
+
+                ${vest ? `
+                <div style="margin-top: 70px; background: #000; color: #fff; padding: 40px; border-radius: 4px; font-family: sans-serif;">
+                    <p style="font-size: 10px; letter-spacing: 3px; color: #666; margin-bottom: 15px; text-transform: uppercase;">Linked Startup Identity</p>
+                    <h3 style="font-size: 24px; margin-bottom: 10px;">${vest.MainVest?.hook || 'Startup Vest'}</h3>
+                    <p style="font-size: 14px; color: #aaa; margin-bottom: 25px; line-height: 1.5;">${vest.MainVest?.description?.substring(0, 180)}...</p>
+                    
+                    <div style="display: flex; gap: 40px; border-top: 1px solid #333; padding-top: 20px;">
+                        <div>
+                            <small style="color: #666; display: block; margin-bottom: 5px;">FUNDING ASK</small>
+                            <span style="font-size: 1.2rem; font-weight: 800;">$${vest.MainVest?.fundAsk || '0'}</span>
+                        </div>
+                        <div>
+                            <small style="color: #666; display: block; margin-bottom: 5px;">EQUITY OFFER</small>
+                            <span style="font-size: 1.2rem; font-weight: 800;">${vest.MainVest?.equityOffered || '0'}%</span>
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+
+                <div style="text-align: center; margin-top: 80px; border-top: 1px solid #f0f0f0; padding-top: 20px;">
+                    <p style="font-family: sans-serif; font-size: 12px; color: #bbb;">
+                        <strong>ScaleVest</strong> | UnioraX Private Limited © 2026
+                    </p>
+                </div>
+             </div>
+
+             <div style="text-align: center; margin-top: 40px;">
+                <button class="buy-btn-premium" onclick="window.location.hash='applications'" 
+                        style="background:#000; color:#fff; width:200px; padding: 12px; cursor: pointer;">
+                    Back to Dashboard
+                </button>
              </div>
         </div>
     `;
