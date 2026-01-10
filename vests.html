@@ -903,7 +903,94 @@
     flex-direction: column;
     justify-content: center;
 }
+/* Shop Navigation */
+.shop-nav-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid #333;
+    color: #888;
+    padding: 10px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+.shop-nav-btn.active {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
 
+/* Currency Display */
+.currency-display {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px 15px;
+    border-radius: 50px;
+    border: 1px solid #333;
+    gap: 12px;
+}
+
+.s-logo-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.surfing-bar {
+    width: 24px;
+    height: 3px;
+    background: #fff;
+    border-radius: 10px;
+    margin-top: -2px;
+    box-shadow: 0 0 10px #fff;
+    animation: surf 2s infinite ease-in-out;
+}
+
+@keyframes surf {
+    0%, 100% { transform: translateX(-3px) rotate(-5deg); }
+    50% { transform: translateX(3px) rotate(5deg); }
+}
+
+#tokenCountDisplay {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #fff;
+}
+
+.plus-token-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #fff;
+    color: #000;
+    border: none;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+    padding: 0;
+    flex: none;
+}
+
+.plus-token-btn:hover { transform: scale(1.1); background: #ff006e; color: #fff; }
+
+.token-cost {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #10b981;
+    margin-bottom: 20px;
+}
+
+.token-amount {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #ffb703;
+    margin: 20px 0;
+}
 .pdf-filename {
     font-size: 1.1rem; font-weight: 600; color: #fff;
     margin-bottom: 0.25rem;
@@ -1908,93 +1995,181 @@ window.toggleCoFounders = function(hasCoFounders) {
 };
 
 
+// --- DATABASE HELPERS ---
+async function getLiveTokens() {
+    if (!currentUser) return 0;
+    try {
+        // Fetches scaleTokens directly from the founderProfile node
+        const tokenRef = ref(db, `founderProfile/${currentUser.uid}/scaleTokens`);
+        const snapshot = await get(tokenRef);
+        return snapshot.exists() ? snapshot.val() : 0;
+    } catch (error) {
+        console.error("Error fetching tokens:", error);
+        return 0;
+    }
+}
+
+// --- UI HEADER HELPER ---
+// This builds the dynamic top section with the Surfing "S" logo and Navigation
+function getShopHeaderHTML(tokenCount, activeTab) {
+    return `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
+        <div class="currency-display">
+            <div class="s-logo-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+                <div class="surfing-bar"></div>
+            </div>
+            <span id="tokenCountDisplay">${tokenCount}</span>
+            <button class="plus-token-btn" onclick="showTokenShop()">+</button>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button class="shop-nav-btn ${activeTab === 'emergence' ? 'active' : ''}" onclick="showFounderEmergence()">Emergence Plans</button>
+            <button class="shop-nav-btn ${activeTab === 'scale' ? 'active' : ''}" onclick="showScaleShop()">Scale Shop</button>
+            <button class="shop-nav-btn ${activeTab === 'tokens' ? 'active' : ''}" onclick="showTokenShop()">Buy Scale Tokens</button>
+            <a href="#founder_dashboard" class="back-to-dash" style="margin-bottom:0; background:rgba(255,255,255,0.1); border-color:#444;">
+                Dashboard
+            </a>
+        </div>
+    </div>`;
+}
+// 1. FOUNDER EMERGENCE (CASH SHOP)
 async function showFounderEmergence() {
-    document.title = "Founder Emergence Plans | ScaleVest";
+    const tokens = await getLiveTokens();
     const container = document.getElementById('dashboardContainer');
+    document.title = "Founder Emergence Plans | ScaleVest";
     container.style.display = 'block';
     document.querySelector('.vest-container').style.display = 'none';
 
     container.innerHTML = `
-     
+      
         <div class="emergence-page">
-            <div style="text-align: left; margin-bottom: 20px;">
-                <a href="#founder_dashboard" class="back-to-dash">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="19" y1="12" x2="5" y2="12"></line>
-                        <polyline points="12 19 5 12 12 5"></polyline>
-                    </svg>
-                    Back to Dashboard
-                </a>
-            </div>
-
-        <div class="emergence-page">
+            ${getShopHeaderHTML(tokens, 'emergence')}
+            
             <div class="emergence-header">
-
-                <div class="release-tag">LATEST RELEASE SPECIAL</div>
+                <div class="release-tag">PREMIUM OUTREACH</div>
                 <h1>Founder Emergence Plans</h1>
-                <p>Get your startup in front of the right eyes. Our algorithms match your vest with investors who specialize in your specific category.</p>
+                <p>Get your startup in front of the right eyes. Our algorithms match your Funding Application with investors who specialize in your specific category.</p>
             </div>
 
             <div class="emergence-grid">
                 <div class="emergence-card alpha">
                     <div class="plan-badge">50% OFF</div>
-                    <div class="plan-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                            <path d="M2 17l10 5 10-5" opacity="0.5"></path>
-                            <path d="M2 12l10 5 10-5"></path>
-                        </svg>
-                    </div>
+                    <div class="plan-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg></div>
                     <h2 class="plan-title">Emerge: Alpha</h2>
-                    <p class="plan-desc">The essential entry point. We send your application to <strong>7 interested investors</strong> who actively fund startups in your specific category.</p>
-                    <div class="price-section">
-                        <div class="price-row">
-                            <span class="old-price">₹300</span>
-                            <span class="discount-pill">ScaleVest Launch OFF</span>
-                        </div>
-                        <span class="new-price">₹150</span>
-                    </div>
+                    <p class="plan-desc">Send your application to <strong>7 interested investors</strong> who actively fund startups in your category.</p>
+                    <div class="price-section"><div class="price-row"><span class="old-price">₹300</span><span class="discount-pill">Launch Promo</span></div><span class="new-price">₹150</span></div>
                     <button class="buy-btn">Choose Alpha</button>
                 </div>
 
                 <div class="emergence-card steady featured">
                     <div class="plan-badge">50% OFF</div>
                     <div class="most-popular">MOST POPULAR</div>
-                    <div class="plan-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
-                        </svg>
-                    </div>
+                    <div class="plan-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#8338ec" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg></div>
                     <h2 class="plan-title">Emerge: Steady</h2>
-                    <p class="plan-desc">Our most balanced plan. Take your funding application to <strong>12 interested investors</strong> with high-intent matching.</p>
-                    <div class="price-section">
-                        <div class="price-row">
-                            <span class="old-price">₹400</span>
-                            <span class="discount-pill">ScaleVest Launch OFF</span>
-                        </div>
-                        <span class="new-price">₹200</span>
-                    </div>
+                    <p class="plan-desc">Take your funding application to <strong>12 interested investors</strong> with high-intent matching.</p>
+                    <div class="price-section"><div class="price-row"><span class="old-price">₹400</span><span class="discount-pill">Launch Promo</span></div><span class="new-price">₹200</span></div>
                     <button class="buy-btn">Choose Steady</button>
                 </div>
 
                 <div class="emergence-card critical">
                     <div class="plan-badge">50% OFF</div>
-                    <div class="plan-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                    </div>
+                    <div class="plan-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#3a86ff" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><circle cx="12" cy="12" r="3"></circle></svg></div>
                     <h2 class="plan-title">Emerge: Super Critical</h2>
                     <p class="plan-desc">The ultimate outreach powerhouse. Send your application to <strong>18 top-tier investors</strong> for maximum visibility.</p>
-                    <div class="price-section">
-                        <div class="price-row">
-                            <span class="old-price">₹699</span>
-                            <span class="discount-pill">ScaleVest Launch OFF</span>
-                        </div>
-                        <span class="new-price">₹350</span>
-                    </div>
+                    <div class="price-section"><div class="price-row"><span class="old-price">₹699</span><span class="discount-pill">Launch Promo</span></div><span class="new-price">₹350</span></div>
                     <button class="buy-btn">Go Super Critical</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 2. SCALE SHOP (TOKEN REDEMPTION)
+async function showScaleShop() {
+    const tokens = await getLiveTokens();
+    const container = document.getElementById('dashboardContainer');
+    document.title = "Scale Shop | ScaleVest";
+
+    container.innerHTML = `
+        ${createNavBar()}
+        <div class="emergence-page">
+            ${getShopHeaderHTML(tokens, 'scale')}
+            
+            <div class="emergence-header">
+                <div class="release-tag" style="border-color:#10b981; color:#10b981;">TOKEN REDEMPTION</div>
+                <h1>Scale Shop</h1>
+                <p>Use your Scale Tokens to boost your outreach without spending cash.</p>
+            </div>
+
+            <div class="emergence-grid">
+                <div class="emergence-card">
+                    <div class="plan-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8M8 12h8"/></svg></div>
+                    <h2 class="plan-title">Emergence: Tiny</h2>
+                    <p class="plan-desc">The FREE entry point. We send your application to <strong>3 interested investors</strong> who fund your startup category.</p>
+                    <div class="token-cost">100 Tokens</div>
+                    <button class="buy-btn" style="background:#10b981;" onclick="handleTokenRedeem(100, 'Tiny')">Redeem Tiny</button>
+                </div>
+
+                <div class="emergence-card featured" style="border-color:#10b981;">
+                    <div class="plan-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path></svg></div>
+                    <h2 class="plan-title">Emergence: Small</h2>
+                    <p class="plan-desc">Our most helpful free plan. Take your funding application to <strong>6 interested investors</strong> with high-intent matching.</p>
+                    <div class="token-cost">200 Tokens</div>
+                    <button class="buy-btn" style="background:#10b981;" onclick="handleTokenRedeem(200, 'Small')">Redeem Small</button>
+                </div>
+
+                <div class="emergence-card">
+                    <div class="plan-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></div>
+                    <h2 class="plan-title">Emergence: Medium</h2>
+                    <p class="plan-desc">Strategic boost. Take your funding application to <strong>10 interested investors</strong> matched by your category.</p>
+                    <div class="token-cost">320 Tokens</div>
+                    <button class="buy-btn" style="background:#10b981;" onclick="handleTokenRedeem(320, 'Medium')">Redeem Medium</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 3. TOKEN SHOP (BUY SCALE TOKENS)
+async function showTokenShop() {
+    const tokens = await getLiveTokens();
+    const container = document.getElementById('dashboardContainer');
+    document.title = "Buy Scale Tokens | ScaleVest";
+
+    container.innerHTML = `
+        ${createNavBar()}
+        <div class="emergence-page">
+            ${getShopHeaderHTML(tokens, 'tokens')}
+            
+            <div class="emergence-header">
+                <div class="release-tag" style="border-color:#ffb703; color:#ffb703;">REFILL BALANCE</div>
+                <h1>Token Shop</h1>
+                <p>Refill your Scale Tokens to unlock free outreach plans and platform perks.</p>
+            </div>
+
+            <div class="emergence-grid">
+                <div class="emergence-card">
+                    <h2 class="plan-title">Small Bundle</h2>
+                    <div class="token-amount">80 Tokens</div>
+                    <div class="price-section"><span class="new-price">₹50</span></div>
+                    <button class="buy-btn" style="background:#ffb703;" onclick="addTokensToDB(80)">Buy Now</button>
+                </div>
+
+                <div class="emergence-card featured" style="border-color:#ffb703;">
+                    <h2 class="plan-title">Medium Bundle</h2>
+                    <div class="token-amount">180 Tokens</div>
+                    <div class="price-section"><span class="new-price">₹150</span></div>
+                    <button class="buy-btn" style="background:#ffb703;" onclick="addTokensToDB(180)">Buy Now</button>
+                </div>
+
+                <div class="emergence-card">
+                    <h2 class="plan-title">Large Bundle</h2>
+                    <div class="token-amount">500 Tokens</div>
+                    <div class="price-section"><span class="new-price">₹400</span></div>
+                    <button class="buy-btn" style="background:#ffb703;" onclick="addTokensToDB(500)">Buy Now</button>
                 </div>
             </div>
         </div>
@@ -2062,6 +2237,48 @@ async function showManageVests() {
         </div>
     `;
 }
+
+
+// Buy Tokens Logic
+window.addTokensToDB = async function(amount) {
+    if (!currentUser) return;
+    try {
+        const currentTokens = await getLiveTokens();
+        const newTotal = currentTokens + amount;
+        
+        await update(ref(db, `founderProfile/${currentUser.uid}`), {
+            scaleTokens: newTotal
+        });
+        
+        alert(`✅ Success! Added ${amount} tokens. New balance: ${newTotal}`);
+        showScaleShop(); // Take user to use their new tokens
+    } catch (e) {
+        console.error(e);
+        alert("Transaction failed. Check connection.");
+    }
+};
+
+// Use Tokens Logic
+window.handleTokenRedeem = async function(cost, planName) {
+    const currentTokens = await getLiveTokens();
+    if (currentTokens < cost) {
+        alert("❌ Not enough tokens! Visit the Token Shop to refill.");
+        showTokenShop();
+        return;
+    }
+    
+    if (confirm(`Redeem ${cost} tokens for the ${planName} plan?`)) {
+        try {
+            await update(ref(db, `founderProfile/${currentUser.uid}`), {
+                scaleTokens: currentTokens - cost
+            });
+            alert(`🚀 ${planName} Plan Activated! We are sending your application now.`);
+            showScaleShop(); // Refresh UI balance
+        } catch (e) {
+            alert("Error processing redemption.");
+        }
+    }
+};
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
