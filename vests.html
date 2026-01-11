@@ -65,45 +65,69 @@
             background: #333;
             z-index: 0;
         }
-/* --- NEW CREATE VEST BUTTON STYLE --- */
-.btn-create-white {
-    background: #ffffff;
-    color: #000000;
-    border: none;
-    padding: 16px 32px; /* Generous padding for size */
-    font-size: 1rem;
-    font-weight: 800;   /* Extra bold */
-    border-radius: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 8px 20px rgba(255, 255, 255, 0.15); /* White glow */
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-left: auto; /* Pushes button to the far right */
-}
-
-.btn-create-white:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 15px 40px rgba(255, 255, 255, 0.3); /* Stronger glow on hover */
-    background: #fff;
-}
-
-.btn-create-white svg {
-    stroke-width: 3px;
-    width: 20px;
-    height: 20px;
-}
-
-/* Update header row to handle the push-right alignment */
+/* ===============================
+   HEADER ROW
+================================ */
 .header-row {
     display: flex;
     align-items: center;
     gap: 2rem;
     margin-bottom: 40px;
-    width: 100%; /* Ensure it spans full width */
+    width: 100%;
+}
+
+/* Left content (title / text) */
+.header-row h2,
+.header-row .left-content {
+    flex: 0 1 auto;
+}
+
+/* ===============================
+   CREATE VEST BUTTON
+================================ */
+.btn-create-white {
+    background: #ffffff;
+    color: #000000;
+    border: none;
+
+    padding: 16px 32px;
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+
+    border-radius: 12px;
+    cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+
+    margin-left: auto;
+
+    /* 🔒 CRITICAL FIXES */
+    width: auto;
+    min-width: fit-content;
+    flex: 0 0 auto;
+    white-space: nowrap;
+
+    box-shadow: 0 8px 20px rgba(255, 255, 255, 0.15);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Hover effect */
+.btn-create-white:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(255, 255, 255, 0.3);
+    background: #ffffff;
+}
+
+/* Icon styling */
+.btn-create-white svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 3px;
+    flex-shrink: 0;
 }
         .step-indicator {
             display: flex;
