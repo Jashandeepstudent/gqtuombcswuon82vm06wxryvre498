@@ -65,7 +65,46 @@
             background: #333;
             z-index: 0;
         }
+/* --- NEW CREATE VEST BUTTON STYLE --- */
+.btn-create-white {
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    padding: 16px 32px; /* Generous padding for size */
+    font-size: 1rem;
+    font-weight: 800;   /* Extra bold */
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 8px 20px rgba(255, 255, 255, 0.15); /* White glow */
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-left: auto; /* Pushes button to the far right */
+}
 
+.btn-create-white:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(255, 255, 255, 0.3); /* Stronger glow on hover */
+    background: #fff;
+}
+
+.btn-create-white svg {
+    stroke-width: 3px;
+    width: 20px;
+    height: 20px;
+}
+
+/* Update header row to handle the push-right alignment */
+.header-row {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 40px;
+    width: 100%; /* Ensure it spans full width */
+}
         .step-indicator {
             display: flex;
             flex-direction: column;
@@ -2835,14 +2874,22 @@ async function showManageVests() {
     const draftVests = Object.values(vestsData).filter(v => v.status === 'draft');
 
     container.innerHTML = `
-        
         <div class="manage-vests-page">
             <div class="header-row">
                 <a href="#founder_dashboard" class="back-to-dash">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    Back to Dashboard
+                    Back
                 </a>
-                <h1>Manage Your Vests</h1>
+                
+                <h1 style="margin:0;">Manage Vests</h1>
+
+                <button class="btn-create-white" onclick="window.location.hash='vest_step1'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Create New Vest
+                </button>
             </div>
 
             <div class="vest-stats-grid">
@@ -2876,12 +2923,14 @@ async function showManageVests() {
                         </div>
                     </div>
                 `).join('') 
-                : `<div class="empty-state">No vests found. Start by creating your first vest!</div>`}
+                : `<div class="empty-state" style="grid-column: 1/-1; text-align:center; padding: 40px; color:#666;">
+                        <p>No vests found yet.</p>
+                        <button class="btn-create-white" style="margin: 20px auto;" onclick="window.location.hash='vest_step1'">Create Your First Vest</button>
+                   </div>`}
             </div>
         </div>
     `;
 }
-
 
 // Buy Tokens Logic
 window.addTokensToDB = async function(amount) {
