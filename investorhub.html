@@ -915,6 +915,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+/* 🔐 Firebase config */
 const firebaseConfig = {
   apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
   authDomain: "scalevest-163a0.firebaseapp.com",
@@ -931,22 +932,20 @@ const auth = getAuth(app);
 
 let currentUserUID = null;
 
-/* ✅ AUTH CHECK */
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        currentUserUID = user.uid;
-        loadUserProfile(user.uid);
-    } else {
+/* ✅ AUTH LISTENER */
+onAuthStateChanged(auth, async (user) => {
+    if (!user) {
         window.location.href = "login3.html";
+        return;
     }
+    currentUserUID = user.uid;
+    await loadUserProfile(user.uid);
 });
 
-/* ✅ DEFINE FUNCTION PROPERLY */
+/* ✅ LOAD PROFILE (IMAGE INCLUDED) */
 async function loadUserProfile(uid) {
     try {
-        const userRef = ref(database, "investorProfiles/" + uid);
-        const snapshot = await get(userRef);
-
+        const snapshot = await get(ref(database, "investorProfiles/" + uid));
         if (!snapshot.exists()) return;
 
         const data = snapshot.val();
@@ -956,9 +955,19 @@ async function loadUserProfile(uid) {
             data.netWorth ? `$${data.netWorth}` : "-";
 
         const avatar = document.getElementById("profileAvatar");
-        avatar.innerHTML = data.photoURL
-            ? `<img src="${data.photoURL}" style="width:100%;height:100%;border-radius:50%">`
-            : `<span>${(data.fullName || "U")[0]}</span>`;
+
+        if (data.photoURL && data.photoURL.startsWith("https")) {
+            avatar.innerHTML = `
+                <img 
+                    src="${data.photoURL}" 
+                    alt="Profile"
+                    style="width:100%;height:100%;border-radius:50%;object-fit:cover;"
+                    onerror="this.remove()"
+                >
+            `;
+        } else {
+            avatar.innerHTML = `<span>${(data.fullName || "U")[0]}</span>`;
+        }
 
         if (data.userID) {
             document.getElementById("profileId").innerText = data.userID;
@@ -967,7 +976,7 @@ async function loadUserProfile(uid) {
         }
 
     } catch (err) {
-        console.error("Error loading profile:", err);
+        console.error("Profile load failed:", err);
     }
 }
 
@@ -984,6 +993,7 @@ window.saveUserID = async function () {
     document.getElementById("userIdModal").style.display = "none";
 };
 </script>
+
 
 
 </body>
