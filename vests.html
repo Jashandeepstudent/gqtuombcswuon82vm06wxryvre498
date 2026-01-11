@@ -1124,7 +1124,91 @@
     margin-bottom: 40px;
     min-height: 100px;
 }
+/* --- VEST CARD ACTIONS --- */
+.card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #222;
+}
 
+.action-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Shutdown / Re-Activate Styles */
+.btn-shutdown {
+    background: #222;
+    color: #aaa;
+    border: 1px solid #444;
+}
+.btn-shutdown:hover {
+    background: #333;
+    color: #fff;
+    border-color: #fff;
+}
+
+.btn-reactivate {
+    background: #10b981; /* Green */
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+}
+.btn-reactivate:hover {
+    background: #059669;
+    transform: translateY(-2px);
+}
+
+/* Delete Button Styles */
+.btn-delete {
+    background: rgba(255, 0, 0, 0.05);
+    color: #ff4d4d;
+    border: 1px solid #ff4d4d;
+    max-width: 80px; /* Keep delete button smaller */
+}
+.btn-delete:hover {
+    background: #ff4d4d;
+    color: #fff;
+}
+
+/* Status Badge Styles */
+.status-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #fff;
+    z-index: 10;
+}
+
+.status-active { 
+    background: #10b981; 
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); 
+}
+
+.status-inactive { 
+    background: #ff0000; /* Pure Red */
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); 
+}
+
+.status-draft { 
+    background: #ffb703; 
+    color: #000;
+}
 /* Pricing */
 .price-section {
     margin-bottom: 40px;
@@ -2888,14 +2972,14 @@ async function showManageVests() {
     container.style.display = 'block';
     document.querySelector('.vest-container').style.display = 'none';
 
-    // 1. Fetch real data from Firebase
+    // 1. Fetch Data
     const vestsRef = ref(db, `Vests/${currentUser.uid}`);
     const snapshot = await get(vestsRef);
     const vestsData = snapshot.val() || {};
 
-    // 2. Calculate Counts
+    // 2. Count Stats
     const activeVests = Object.values(vestsData).filter(v => v.status === 'active');
-    const draftVests = Object.values(vestsData).filter(v => v.status === 'draft');
+    const inactiveVests = Object.values(vestsData).filter(v => v.status === 'inactive' || v.status === 'draft');
 
     container.innerHTML = `
         <div class="manage-vests-page">
@@ -2904,14 +2988,9 @@ async function showManageVests() {
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                     Back
                 </a>
-                
                 <h1 style="margin:0;">Manage Vests</h1>
-
                 <button class="btn-create-white" onclick="window.location.hash='vest_step1'">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     Create New Vest
                 </button>
             </div>
@@ -2922,40 +3001,128 @@ async function showManageVests() {
                     <span class="stat-count active-text">${activeVests.length}</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-label">Drafts / Inactive</span>
-                    <span class="stat-count draft-text">${draftVests.length}</span>
+                    <span class="stat-label">Inactive / Drafts</span>
+                    <span class="stat-count draft-text">${inactiveVests.length}</span>
                 </div>
             </div>
 
             <div class="vest-cards-grid">
                 ${Object.keys(vestsData).length > 0 ? 
-                    Object.entries(vestsData).map(([id, vest]) => `
-                    <div class="vest-gig-card" onclick="alert('Manage Vest: ${vest.StartupDetails?.name || 'Vest'}')">
-                        <div class="vest-thumb-wrapper">
-                            <img src="${vest.MainVest?.thumbnailUrl || 'https://via.placeholder.com/400x225?text=No+Thumbnail'}" alt="Thumbnail">
-                            <div class="status-badge ${vest.status === 'active' ? 'status-active' : 'status-draft'}">
-                                ${vest.status === 'active' ? 'Active' : 'Draft'}
+                    Object.entries(vestsData).map(([id, vest]) => {
+                        // Determine Status Logic
+                        let statusClass = 'status-draft';
+                        let statusText = 'Draft';
+                        let toggleBtnText = 'Activate';
+                        let toggleBtnClass = 'btn-reactivate';
+
+                        if (vest.status === 'active') {
+                            statusClass = 'status-active';
+                            statusText = 'Active';
+                            toggleBtnText = 'Shutdown';
+                            toggleBtnClass = 'btn-shutdown';
+                        } else if (vest.status === 'inactive') {
+                            statusClass = 'status-inactive';
+                            statusText = 'Not Active';
+                            toggleBtnText = 'Re-Activate';
+                            toggleBtnClass = 'btn-reactivate';
+                        }
+
+                        return `
+                        <div class="vest-gig-card">
+                            <div class="vest-thumb-wrapper">
+                                <img src="${vest.MainVest?.thumbnailUrl || 'https://via.placeholder.com/400x225?text=No+Thumbnail'}" alt="Thumbnail">
+                                <div class="status-badge ${statusClass}">
+                                    ${statusText}
+                                </div>
+                            </div>
+                            <div class="vest-card-content">
+                                <h3 class="vest-hook-text">${vest.MainVest?.hook || 'No Hook Line'}</h3>
+                                <p class="vest-desc-text">${vest.MainVest?.description?.substring(0, 80) || 'No description...'}...</p>
+                                
+                                <div class="vest-card-footer">
+                                    <span class="startup-label">${vest.StartupDetails?.name || 'Startup'}</span>
+                                    <span class="equity-tag">${vest.MainVest?.equityOffered || '0'}% Equity</span>
+                                </div>
+
+                                <div class="card-actions">
+                                    <button class="action-btn ${toggleBtnClass}" 
+                                        onclick="window.toggleVestStatus('${id}', '${vest.status}')">
+                                        ${toggleBtnText}
+                                    </button>
+                                    
+                                    <button class="action-btn btn-delete" 
+                                        onclick="window.deleteVest('${id}')">
+                                        Delete
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div class="vest-card-content">
-                            <h3 class="vest-hook-text">${vest.MainVest?.hook || 'No Hook Line'}</h3>
-                            <p class="vest-desc-text">${vest.MainVest?.description?.substring(0, 80) || 'No description provided...'}...</p>
-                            <div class="vest-card-footer">
-                                <span class="startup-label">${vest.StartupDetails?.name || 'Startup'}</span>
-                                <span class="equity-tag">${vest.MainVest?.equityOffered || '0'}% Equity</span>
-                            </div>
-                        </div>
-                    </div>
-                `).join('') 
+                        `;
+                    }).join('') 
                 : `<div class="empty-state" style="grid-column: 1/-1; text-align:center; padding: 40px; color:#666;">
-                        <p>No vests found yet.</p>
-                        <button class="btn-create-white" style="margin: 20px auto;" onclick="window.location.hash='vest_step1'">Create Your First Vest</button>
+                        <p>No vests found.</p>
                    </div>`}
             </div>
         </div>
     `;
 }
+// --- DELETE VEST ---
+window.deleteVest = async function(vestId) {
+    if(!currentUser) return;
+    if(!confirm("Are you sure you want to PERMANENTLY delete this vest? This cannot be undone.")) return;
 
+    try {
+        // 1. Remove from Database
+        await set(ref(db, `Vests/${currentUser.uid}/${vestId}`), null);
+        
+        // 2. Refresh UI
+        alert("Vest Deleted.");
+        showManageVests(); // Refresh the list
+    } catch(e) {
+        console.error(e);
+        alert("Error deleting vest.");
+    }
+};
+
+// --- TOGGLE SHUTDOWN / RE-ACTIVATE ---
+window.toggleVestStatus = async function(vestId, currentStatus) {
+    if(!currentUser) return;
+
+    let newStatus = 'active';
+    let message = "Vest Re-Activated!";
+
+    // Logic: If it's active, we shut it down (make it inactive)
+    if (currentStatus === 'active') {
+        newStatus = 'inactive';
+        message = "Vest Shutdown (Not Active).";
+    }
+
+    try {
+        // 1. Update Database Status
+        await update(ref(db, `Vests/${currentUser.uid}/${vestId}`), {
+            status: newStatus
+        });
+
+        // 2. Update Profile Counts (Optional but recommended)
+        // If shutting down, decrement active count. If activating, increment.
+        const profileRef = ref(db, `founderProfile/${currentUser.uid}`);
+        const snap = await get(profileRef);
+        if(snap.exists()) {
+            let count = parseInt(snap.val().activeVestsCount) || 0;
+            if (newStatus === 'inactive') count = Math.max(0, count - 1);
+            else count = count + 1;
+            
+            await update(profileRef, { activeVestsCount: count });
+        }
+        
+        // 3. Refresh UI
+        alert(message);
+        showManageVests(); // Refresh the list
+    } catch(e) {
+        console.error(e);
+        alert("Error updating status.");
+    }
+};
 // Buy Tokens Logic
 window.addTokensToDB = async function(amount) {
     if (!currentUser) return;
