@@ -892,106 +892,99 @@
             }
         });
 <script>
-    function toggleDropdown(id) {
-        const dropdown = document.getElementById(id);
-        dropdown.classList.toggle('show');
-    }
+function toggleDropdown(id) {
+    document.getElementById(id).classList.toggle('show');
+}
 
-    function toggleProfileDropdown() {
-        const dropdown = document.getElementById('profileDropdown');
-        dropdown.classList.toggle('show');
-    }
+function toggleProfileDropdown() {
+    document.getElementById('profileDropdown').classList.toggle('show');
+}
 
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.dropdown')) {
-            document.querySelectorAll('.dropdown-content').forEach(dd => {
-                dd.classList.remove('show');
-            });
-        }
-        if (!e.target.closest('.profile-dropdown')) {
-            const dropdown = document.getElementById('profileDropdown');
-            if (dropdown) dropdown.classList.remove('show');
-        }
-    });
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.dropdown')) {
+        document.querySelectorAll('.dropdown-content').forEach(dd => dd.classList.remove('show'));
+    }
+    if (!e.target.closest('.profile-dropdown')) {
+        document.getElementById('profileDropdown')?.classList.remove('show');
+    }
+});
 </script>
 
-<!-- ✅ NOW start module script -->
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-        authDomain: "scalevest-163a0.firebaseapp.com",
-        databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-        projectId: "scalevest-163a0",
-        storageBucket: "scalevest-163a0.firebasestorage.app",
-        messagingSenderId: "938358950124",
-        appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
-        measurementId: "G-QD3TWBZHR0"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+  authDomain: "scalevest-163a0.firebaseapp.com",
+  databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+  projectId: "scalevest-163a0",
+  storageBucket: "scalevest-163a0.firebasestorage.app",
+  messagingSenderId: "938358950124",
+  appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
-    const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+const auth = getAuth(app);
 
-    let currentUserUID = null;
+let currentUserUID = null;
 
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            currentUserUID = user.uid;
-            loadUserProfile(user.uid);
+/* ✅ AUTH CHECK */
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        currentUserUID = user.uid;
+        loadUserProfile(user.uid);
+    } else {
+        window.location.href = "login3.html";
+    }
+});
+
+/* ✅ DEFINE FUNCTION PROPERLY */
+async function loadUserProfile(uid) {
+    try {
+        const userRef = ref(database, "investorProfiles/" + uid);
+        const snapshot = await get(userRef);
+
+        if (!snapshot.exists()) return;
+
+        const data = snapshot.val();
+
+        document.getElementById("profileName").innerText = data.fullName || "Investor";
+        document.getElementById("profileNetWorth").innerText =
+            data.netWorth ? `$${data.netWorth}` : "-";
+
+        const avatar = document.getElementById("profileAvatar");
+        avatar.innerHTML = data.photoURL
+            ? `<img src="${data.photoURL}" style="width:100%;height:100%;border-radius:50%">`
+            : `<span>${(data.fullName || "U")[0]}</span>`;
+
+        if (data.userID) {
+            document.getElementById("profileId").innerText = data.userID;
         } else {
-            window.location.href = "login3.html";
+            document.getElementById("userIdModal").style.display = "flex";
         }
+
+    } catch (err) {
+        console.error("Error loading profile:", err);
+    }
+}
+
+/* ✅ SAVE USER ID */
+window.saveUserID = async function () {
+    const newId = document.getElementById("newUserIdInput").value.trim().toUpperCase();
+    if (newId.length < 3) return alert("Minimum 3 characters");
+
+    await update(ref(database, "investorProfiles/" + currentUserUID), {
+        userID: newId
     });
 
-try {
-            const userRef = ref(database, 'investorProfiles/' + uid);
-            const snapshot = await get(userRef);
-
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-
-                // A. Update Sidebar UI
-                document.getElementById('profileName').innerText = data.fullName || "Investor";
-                document.getElementById('profileNetWorth').innerText = data.netWorth ? `$${data.netWorth}` : "-";
-                
-                // Handle Photo
-                const avatarDiv = document.getElementById('profileAvatar');
-                if (data.photoURL) {
-                    avatarDiv.innerHTML = `<img src="${data.photoURL}" alt="Profile" style="width:100%; height:100%; border-radius:50%;">`;
-                } else {
-                    const initials = (data.fullName || "U").charAt(0).toUpperCase();
-                    avatarDiv.innerHTML = `<span>${initials}</span>`;
-                }
-
-                // B. CHECK: Does UserID exist?
-                if (data.userID) {
-                    document.getElementById('profileId').innerText = data.userID;
-                } else {
-                    // Show Modal if ID is missing
-                    document.getElementById('userIdModal').style.display = "flex";
-                }
-            }
-        } catch (error) {
-            console.error("Error loading profile:", error);
-        }
-    
-    window.saveUserID = async function () {
-        const newId = document.getElementById('newUserIdInput').value.trim().toUpperCase();
-        if (newId.length < 3) return alert("Minimum 3 characters");
-
-        await update(ref(database, 'investorProfiles/' + currentUserUID), {
-            userID: newId
-        });
-
-        document.getElementById('profileId').innerText = newId;
-        document.getElementById('userIdModal').style.display = "none";
-    };
+    document.getElementById("profileId").innerText = newId;
+    document.getElementById("userIdModal").style.display = "none";
+};
 </script>
+
 
 </body>
 </html>
