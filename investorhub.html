@@ -705,6 +705,26 @@
     </style>
 </head>
 <body>
+
+<div id="loadingScreen" style="
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: #0a2f23; display: flex; flex-direction: column; 
+    align-items: center; justify-content: center; z-index: 10000;
+    transition: opacity 0.8s ease;
+">
+    <div class="logo" style="margin-bottom: 25px; animation: pulse 1.5s infinite;">Platform</div>
+    
+    <div style="width: 250px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; position: relative;">
+        <div id="loadingProgress" style="
+            width: 0%; height: 100%; background: #10b981; 
+            box-shadow: 0 0 15px #10b981; transition: width 0.4s ease;
+        "></div>
+    </div>
+    
+    <p id="loadingStatus" style="margin-top: 15px; color: #a7f3d0; letter-spacing: 2px; font-size: 0.7rem; text-transform: uppercase;">
+       Loading Data...
+    </p>
+</div>
 <div id="userIdModal" class="modal-overlay">
     <div class="modal-box">
         <h2>Identity Verification</h2>
@@ -956,14 +976,45 @@ const auth = getAuth(app);
 
 let currentUserUID = null;
 
+/* ✅ HELPER FOR PROGRESS */
+function updateProgress(percent, status) {
+    const bar = document.getElementById("loadingProgress");
+    const text = document.getElementById("loadingStatus");
+    if (bar) bar.style.width = percent + "%";
+    if (text) text.innerText = status;
+}
+
 /* ✅ AUTH LISTENER */
 onAuthStateChanged(auth, async (user) => {
+    updateProgress(20, "Authenticating User...");
+    
     if (!user) {
         window.location.href = "login3.html";
         return;
     }
-    currentUserUID = user.uid;
-    await loadUserProfile(user.uid);
+
+    try {
+        currentUserUID = user.uid;
+        updateProgress(50, "Fetching Investor Data...");
+        
+        // Wait for all data to load
+        await loadUserProfile(user.uid);
+        
+        updateProgress(100, "Terminal Ready");
+        
+        // Brief delay so the user sees the 100% state
+        setTimeout(() => {
+            const loader = document.getElementById("loadingScreen");
+            loader.style.opacity = "0";
+            setTimeout(() => loader.style.display = "none", 800);
+        }, 500);
+
+    } catch (err) {
+        console.error("Boot Error:", err);
+        updateProgress(100, "Error: Connection Failed");
+        // Hide anyway so the user isn't stuck forever
+        setTimeout(() => document.getElementById("loadingScreen").style.display = "none", 2000);
+    }
 });
 
 async function loadUserProfile(uid) {
@@ -971,7 +1022,7 @@ async function loadUserProfile(uid) {
     
     try {
         const snapshot = await get(ref(database, "investorProfiles/" + uid));
-        
+        updateProgress(80, "Rendering Interface...");
         if (snapshot.exists()) {
             const data = snapshot.val();
             const fullName = data.fullName || "Investor";
