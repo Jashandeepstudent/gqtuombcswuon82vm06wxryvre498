@@ -627,8 +627,8 @@
     </footer>
 
     <div id="successOverlay">
-        <h1 style="font-size: 3.5rem; letter-spacing: -4px;">INITIALIZING <span class="gradient-text">ANGEL FLOOR</span></h1>
-        <p style="color: var(--text-dim);">Configuring your private Investor Command Center...</p>
+        <h1 style="font-size: 3.5rem; letter-spacing: -4px;">INITIALIZING <span class="gradient-text">Profile</span></h1>
+        <p style="color: var(--text-dim);">Configuring Side....</p>
         <div class="full-progress-bar">
             <div class="progress-fill"></div>
         </div>
@@ -641,14 +641,16 @@
         
         <input type="number" id="invAge" placeholder="Age" style="width:100%; padding:15px; margin-bottom:15px; border-radius:10px; border:1px solid var(--border); background:#111; color:white;">
         
-        <select id="invType" style="width:100%; padding:15px; margin-bottom:25px; border-radius:10px; border:1px solid var(--border); background:#111; color:white;">
-            <option value="" disabled selected>Select Investment Type</option>
-            <option value="Angel">Angel Investor</option>
-            <option value="VC">Venture Capitalist</option>
-            <option value="Syndicate">Syndicate Lead</option>
-            <option value="Institutional">Institutional</option>
-        </select>
-
+<select id="invType" style="width:100%; padding:15px; margin-bottom:25px; border-radius:10px; border:1px solid var(--border); background:#111; color:white;">
+    <option value="" disabled selected>Select Investor Type</option>
+    <option value="Individual Investor">Individual Investor (Personal Funds)</option>
+    <option value="Angel Investor">Angel Investor (Early Stage Startups)</option>
+    <option value="Venture Capital">Venture Capital (High Growth Focus & Funds)</option>
+    <option value="Peer-to-Peer Investor">Peer-to-Peer Investor (Direct Lending)</option>
+    <option value="Private Equity">Private Equity (Strategic Guidance)</option>
+    <option value="Institutional Investor">Institutional Investor (Large Scale Fund)</option>
+    <option value="Activist Investor">Activist Investor (Strategic Board Influence)</option>
+</select>
         <button class="btn-hero-start" style="width:100%; margin-top:0;" onclick="saveInvestorProfile()">CREATE PROFILE</button>
         <p onclick="document.getElementById('investorModal').style.display='none'" style="margin-top:20px; color:var(--text-dim); cursor:pointer; font-size:0.8rem;">CANCEL</p>
     </div>
@@ -656,82 +658,105 @@
 <script type="module">
     // 1. Import Firebase Modules
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-  authDomain: "scalevest-163a0.firebaseapp.com",
-  databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-  projectId: "scalevest-163a0",
-  storageBucket: "scalevest-163a0.firebasestorage.app",
-  messagingSenderId: "938358950124",
-  appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
-  measurementId: "G-QD3TWBZHR0"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+        authDomain: "scalevest-163a0.firebaseapp.com",
+        databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+        projectId: "scalevest-163a0",
+        storageBucket: "scalevest-163a0.firebasestorage.app",
+        messagingSenderId: "938358950124",
+        appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
+        measurementId: "G-QD3TWBZHR0"
+    };
+
     // Initialize
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
     const auth = getAuth(app);
 
     let currentUser = null;
+    let authReady = false;
 
-    // Monitor Auth State
+    // Monitor Auth State - Runs on page load
     onAuthStateChanged(auth, (user) => {
         currentUser = user;
+        authReady = true;
+        console.log("Auth System Ready. User Status:", user ? "Logged In" : "Guest");
     });
 
-    // 2. Trigger Logic
-    window.triggerAngelSetup = function() {
+    // 2. Trigger Logic (Attached to window so HTML buttons can access it)
+    window.triggerAngelSetup = async function() {
+        // Guard: Wait for Firebase to check login status
+        if (!authReady) {
+            console.log("Waiting for auth response...");
+            return;
+        }
+
         if (!currentUser) {
-            // Not logged in -> Redirect
+            // Not logged in -> Send to login
             window.location.href = "login3.html";
         } else {
-            // Logged in -> Show Modal
-            document.getElementById('investorModal').style.display = 'flex';
+            // Logged in -> Check if profile exists in Database
+            try {
+                const profileRef = ref(database, 'investorProfiles/' + currentUser.uid);
+                const snapshot = await get(profileRef);
+
+                if (snapshot.exists()) {
+                    // Profile already exists -> Fast track to config
+                    window.location.href = "investorconfig.html";
+                } else {
+                    // New Investor -> Show the collection modal
+                    document.getElementById('investorModal').style.display = 'flex';
+                }
+            } catch (error) {
+                console.error("Database fetch error:", error);
+                // Fallback: Show modal anyway if database check fails
+                document.getElementById('investorModal').style.display = 'flex';
+            }
         }
     };
 
-    // 3. Save Data using UID (Required by your Security Rules)
+    // 3. Save Data (Collecting name, age, and investorType)
     window.saveInvestorProfile = async function() {
         const name = document.getElementById('invName').value;
         const age = document.getElementById('invAge').value;
         const type = document.getElementById('invType').value;
 
         if (!name || !age || !type) {
-            alert("Please fill all fields to initialize the command center.");
+            alert("All fields are required to initialize your command center.");
             return;
         }
 
-        // Hide modal, show cinematic processing overlay
+        // Switch UI to processing mode
         document.getElementById('investorModal').style.display = 'none';
         document.getElementById('successOverlay').style.display = 'flex';
 
         try {
-            // Save to investorProfiles using the user's unique UID
-            // This satisfies your security rule: auth.uid === $uid
+            // Reference: investorProfiles/{UID}
             const profileRef = ref(database, 'investorProfiles/' + currentUser.uid);
 
             await set(profileRef, {
                 fullName: name,
                 age: age,
-                investmentType: type,
+                investorType: type, 
                 uid: currentUser.uid,
                 timestamp: Date.now()
             });
 
-            // Delay for cinematic effect
+            // Cinematic redirect delay
             setTimeout(() => {
                 window.location.href = "investorconfig.html";
             }, 3200);
 
         } catch (error) {
-            console.error("Firebase Error:", error);
-            alert("Permission Denied: Ensure you are logged in correctly.");
+            console.error("Save error:", error);
+            alert("System Error: Check security rules or connection.");
             document.getElementById('successOverlay').style.display = 'none';
         }
     };
 </script>
-
 </body>
 </html>
