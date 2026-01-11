@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+a<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -849,16 +849,18 @@
         <button class="card-btn">Edit Profile</button>
     </div>
 
-    <!-- Profile Progress -->
-    <div class="progress-section">
-        <div class="progress-label">Profile Completion</div>
-        <div class="progress-bar">
-            <div class="progress-fill"></div>
-        </div>
-        <div class="progress-text">75% Complete</div>
+<div class="card" style="aspect-ratio: 1 / 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border: 2px border: 2px solid #10b981;">
+    <div class="progress-label" style="margin-bottom: 15px; font-weight: 700; color: #10b981;">STATUS: READY</div>
+    
+    <div class="progress-bar" style="width: 80%; height: 12px; margin-bottom: 10px;">
+        <div class="progress-fill" style="width: 100%; box-shadow: 0 0 15px #10b981;"></div>
     </div>
+    <div class="progress-text" style="color: #fff; font-weight: 800; margin-bottom: 25px;">100% VERIFIED</div>
 
-    <button class="card-btn">View Profile</button>
+    <button class="card-btn" id="launchBtn" onclick="launchAngelProfile()" style="background: #10b981; color: #fff;">
+        LAUNCH ANGEL PROFILE
+    </button>
+</div>
 
     <!-- ✅ QUICK LINKS MUST BE INSIDE LEFT SECTION -->
     <div class="card">
@@ -1103,6 +1105,45 @@ const firstName = fullName.split(' ')[0];
         avatarDiv.innerHTML = `<span>!</span>`;
     }
 }
+window.launchAngelProfile = async function() {
+    if (!currentUserUID) return alert("Session expired.");
+    
+    const launchBtn = document.getElementById('launchBtn');
+    launchBtn.disabled = true;
+    launchBtn.innerText = "LAUNCHING...";
+
+    try {
+        // 1. Fetch existing data from investorProfiles
+        const oldRef = ref(database, `investorProfiles/${currentUserUID}`);
+        const snapshot = await get(oldRef);
+
+        if (snapshot.exists()) {
+            const userData = snapshot.val();
+
+            // 2. Prepare New Data Node
+            const angelData = {
+                ...userData,              // Copy all existing fields
+                status: "Live",           // Add new status
+                launchedAt: new Date().toISOString(),
+                lastUpdated: new Date().toISOString()
+            };
+
+            // 3. Save to new node: angleProfiles
+            await update(ref(database, `angleProfiles/${currentUserUID}`), angelData);
+
+            alert("CONGRATULATIONS! Your Angel Profile is now LIVE.");
+            launchBtn.innerText = "PROFILE LIVE";
+            launchBtn.style.background = "#3b82f6"; // Change to blue to show success
+        } else {
+            alert("Error: Profile data not found.");
+        }
+    } catch (error) {
+        console.error("Migration Error:", error);
+        alert("Launch failed. Check your database rules.");
+    } finally {
+        launchBtn.disabled = false;
+    }
+};
 /* ✅ SAVE USER ID */
 window.saveUserID = async function () {
     const newId = document.getElementById("newUserIdInput").value.trim().toUpperCase();
