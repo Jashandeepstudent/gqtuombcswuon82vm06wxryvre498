@@ -194,7 +194,37 @@
             backdrop-filter: blur(15px);
             transition: var(--transition);
         }
+/* --- HERO CTA BUTTON --- */
+    .btn-hero-start {
+        margin-top: 2.5rem;
+        padding: 1.2rem 3.5rem;
+        
+        /* Shape & Border */
+        background: rgba(255, 255, 255, 0.03); /* Very subtle glass bg */
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 100px;
+        cursor: pointer;
+        
+        /* Font Styling */
+        font-size: 1.3rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        
+        /* THE GRADIENT TEXT MAGIC (Same as "Investor Side") */
+        background-image: linear-gradient(to right, var(--accent-blue), var(--accent-green));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
+    .btn-hero-start:hover {
+        transform: scale(1.05);
+        border-color: var(--accent-green);
+        box-shadow: 0 0 30px rgba(0, 255, 170, 0.15);
+    }
         .small-box:hover { border-color: var(--accent-blue); transform: translateY(-10px); }
 
         .small-box video {
