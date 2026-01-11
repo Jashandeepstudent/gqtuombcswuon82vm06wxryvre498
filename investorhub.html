@@ -948,37 +948,36 @@
         }
     });
 
-    async function loadUserProfile(uid) {
-        try {
+try {
             const userRef = ref(database, 'investorProfiles/' + uid);
             const snapshot = await get(userRef);
 
             if (snapshot.exists()) {
                 const data = snapshot.val();
 
-                document.getElementById('profileName').innerText =
-                    data.fullName || "Investor";
-
-                document.getElementById('profileNetWorth').innerText =
-                    data.netWorth ? `$${data.netWorth}` : "-";
-
+                // A. Update Sidebar UI
+                document.getElementById('profileName').innerText = data.fullName || "Investor";
+                document.getElementById('profileNetWorth').innerText = data.netWorth ? `$${data.netWorth}` : "-";
+                
+                // Handle Photo
                 const avatarDiv = document.getElementById('profileAvatar');
                 if (data.photoURL) {
-                    avatarDiv.innerHTML =
-                        `<img src="${data.photoURL}" style="width:100%;height:100%;border-radius:50%;">`;
+                    avatarDiv.innerHTML = `<img src="${data.photoURL}" alt="Profile" style="width:100%; height:100%; border-radius:50%;">`;
                 } else {
-                    avatarDiv.innerHTML =
-                        `<span>${(data.fullName || "U")[0]}</span>`;
+                    const initials = (data.fullName || "U").charAt(0).toUpperCase();
+                    avatarDiv.innerHTML = `<span>${initials}</span>`;
                 }
 
+                // B. CHECK: Does UserID exist?
                 if (data.userID) {
                     document.getElementById('profileId').innerText = data.userID;
                 } else {
+                    // Show Modal if ID is missing
                     document.getElementById('userIdModal').style.display = "flex";
                 }
             }
-        } catch (err) {
-            console.error(err);
+        } catch (error) {
+            console.error("Error loading profile:", error);
         }
     }
 
