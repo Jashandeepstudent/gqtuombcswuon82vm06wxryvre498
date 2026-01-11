@@ -979,8 +979,7 @@ try {
         } catch (error) {
             console.error("Error loading profile:", error);
         }
-    }
-
+    
     window.saveUserID = async function () {
         const newId = document.getElementById('newUserIdInput').value.trim().toUpperCase();
         if (newId.length < 3) return alert("Minimum 3 characters");
