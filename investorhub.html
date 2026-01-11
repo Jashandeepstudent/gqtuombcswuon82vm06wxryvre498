@@ -689,7 +689,25 @@
             transition: all 0.3s;
             font-weight: 500;
         }
+.icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(16, 185, 129, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden; /* This clips the image to the circle */
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    transition: all 0.3s;
+}
 
+.icon-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
         .footer-link:hover {
             color: #10b981;
         }
@@ -1070,7 +1088,20 @@ async function loadUserProfile(uid) {
             if (data.userID) document.getElementById("profileId").innerText = data.userID;
 
 const firstName = fullName.split(' ')[0]; 
+document.getElementById("navProfileName").innerText = fullName;
+            document.getElementById("navProfileId").innerText = data.userID || "ID Pending";
 
+            // 2. Update Navigation Icon (Circular Photo or Initial)
+            const navIconBtn = document.querySelector(".profile-dropdown .icon-btn");
+            
+            if (data.photoURL && data.photoURL.trim() !== "") {
+                navIconBtn.innerHTML = `
+                    <img src="${data.photoURL}" 
+                         style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            } else {
+                navIconBtn.innerHTML = `
+                    <div style="font-size:1.2rem; font-weight:600; color:#10b981;">${initials}</div>`;
+            }
         // ✅ UPDATE THE WELCOME TEXT
         const welcomeHeader = document.getElementById("welcomeUser");
         if (welcomeHeader) {
