@@ -1654,7 +1654,45 @@
     margin-bottom: 0.25rem;
     display: flex; align-items: center; gap: 8px;
 }
+/* --- 1. FORCE LOADING SCREEN CENTERING --- */
+#loadingScreen {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #0a0a0a;
+    z-index: 999999;
+}
 
+/* --- 2. COMPACT CREATE BUTTON --- */
+.create-vest-btn {
+    background: linear-gradient(135deg, #ff006e, #8338ec);
+    color: #fff;
+    border: none;
+    /* Small, tight padding */
+    padding: 8px 16px !important; 
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    /* Inline-flex prevents stretching */
+    display: inline-flex !important; 
+    align-items: center;
+    gap: 8px;
+    width: auto !important; /* Forces it to fit content */
+    flex: none !important; /* Prevents flexbox growing */
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(255, 0, 110, 0.3);
+}
+
+.create-vest-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 0, 110, 0.5);
+}
 .pdf-filesize {
     font-size: 0.85rem; color: #888;
 }
@@ -2869,7 +2907,7 @@ window.showManageVests = async function() {
     const container = document.getElementById('dashboardContainer');
     container.style.display = 'block';
     
-    // Ensure vest container is hidden
+    // Hide other containers to prevent overlap
     const vestContainer = document.querySelector('.vest-container');
     if(vestContainer) vestContainer.style.display = 'none';
 
@@ -2884,17 +2922,17 @@ window.showManageVests = async function() {
 
     container.innerHTML = `
         <div class="manage-vests-page">
-            <div class="header-row" style="justify-content: space-between; align-items: center;">
+            <div class="header-row" style="display:flex; justify-content:space-between; align-items:center;">
                 <div style="display:flex; align-items:center; gap:20px;">
                     <a href="#founder_dashboard" class="back-to-dash">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         Back to Dashboard
                     </a>
-                    <h1 style="margin:0;">Manage Your Vests</h1>
+                    <h1 style="margin:0; font-size: 2rem;">Manage Your Vests</h1>
                 </div>
 
                 <button onclick="initiateVestCreation()" class="create-vest-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
@@ -2938,53 +2976,28 @@ window.showManageVests = async function() {
         </div>
     `;
 }
-// Function to handle smooth transition to Create Vest Step 1
 window.initiateVestCreation = function() {
-    // 1. Show the Global Centered Loading Screen
+    // 1. Show Loading Screen (Centered via CSS above)
     const loader = document.getElementById('loadingScreen');
-    loader.innerHTML = '<div class="center-spinner"></div>'; // Ensure standard spinner
     loader.classList.remove('hidden');
 
-    // 2. Hide Dashboard
-    document.getElementById('dashboardContainer').style.display = 'none';
-
-    // 3. Clear any previous form data (Optional, but good UX for "New" vest)
+    // 2. Clear old data (Optional but recommended)
     if(window.clearFormStorage) {
         window.clearFormStorage();
     }
 
-    // 4. Navigate after small delay (smoothness)
+    // 3. Navigate after small delay to show animation
     setTimeout(() => {
-        // Force reset step counter
+        // Reset step counter
         if(typeof currentStep !== 'undefined') currentStep = 1;
         
-        // Navigate
+        // Change URL Hash -> Triggers routing -> Hides Loader
         window.location.hash = 'vest_step1';
         
-        // Hide loader
-        loader.classList.add('hidden');
-    }, 800);
+        // Force scroll to top
+        window.scrollTo(0, 0);
+    }, 600);
 };
-
-// Buy Tokens Logic
-window.addTokensToDB = async function(amount) {
-    if (!currentUser) return;
-    try {
-        const currentTokens = await getLiveTokens();
-        const newTotal = currentTokens + amount;
-        
-        await update(ref(db, `founderProfile/${currentUser.uid}`), {
-            scaleTokens: newTotal
-        });
-        
-        alert(`✅ Success! Added ${amount} tokens. New balance: ${newTotal}`);
-        showScaleShop(); // Take user to use their new tokens
-    } catch (e) {
-        console.error(e);
-        alert("Transaction failed. Check connection.");
-    }
-};
-
 // Use Tokens Logic
 window.handleTokenRedeem = async function(cost, planName) {
     const currentTokens = await getLiveTokens();
