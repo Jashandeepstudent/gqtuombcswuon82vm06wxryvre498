@@ -1,1056 +1,617 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>ScaleVest – Business & Investment Intelligence</title>
-  <script>
-    (function() {
-      // Check for different user types
-      const isBusiness = localStorage.getItem("businessProfileCreated");
-      const isStartup = localStorage.getItem("startupProfileCreated");
-      const isInvestor = localStorage.getItem("investorProfileCreated");
-
-      if (isBusiness === "true") {
-        window.location.replace("mainbusinesshub.html");
-      } else if (isStartup === "true") {
-        window.location.replace("vests.html"); 
-      } else if (isInvestor === "true") {
-        window.location.replace("maininvestorhub.html");
-      }
-    })();
-  </script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: Inter, Arial, sans-serif;
-      background: #0e1117;
-      color: #ffffff;
-    }
-
-   /* HEADER / NAVBAR */
-header {
-  position: relative;
-  width: 100%;
-  background: #ffffff;
-  padding: 16px 60px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-header .left {
-  display: flex;
-  align-items: center;
-}
-
-header img {
-  height: 34px;
-}
-.investor-icon img {
-  width: 40px;
-  height: 40px;
-  display: block;
-}
-.purpose-card:hover .investor-icon img {
-  transform: scale(1.08);
-}
-
-/* RIGHT NAV */
-header .right {
-  display: flex;
-  align-items: center;
-  gap: 22px;
-}
-/* RIGHT NAV */
-header .right {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-/* MODAL OVERLAY */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 100;
-}
-
-/* MODAL CONTAINER */
-.modal {
-  width: 900px;
-  height: 520px;
-  background: white;
-  border-radius: 14px;
-  display: flex;
-  overflow: hidden;
-}
-
-/* LEFT SIDE */
-.modal-left {
-  width: 50%;
-  background: url("join-bg.jpg") center/cover no-repeat;
-  position: relative;
-}
-
-.modal-left::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.65);
-}
-
-.overlay-text {
-  position: relative;
-  z-index: 2;
-  padding: 40px;
-  color: white;
-}
-
-.overlay-text h2 {
-  font-size: 32px;
-  margin-bottom: 20px;
-}
-
-.overlay-text ul {
-  list-style: none;
-  padding: 0;
-}
-
-.overlay-text li {
-  margin-bottom: 12px;
-  font-size: 16px;
-}
-
-.overlay-text li::before {
-  content: "✓";
-  margin-right: 10px;
-  color: white;
-  font-weight: bold;
-}
-
-/* RIGHT SIDE */
-.modal-right {
-  width: 50%;
-  padding: 40px;
-  position: relative;
-}
-
-.close-btn {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  cursor: pointer;
-  font-size: 18px;
-}
-
-.modal-right h3 {
-  font-size: 26px;
-  margin-bottom: 10px;
-}
-
-.small-text {
-  font-size: 14px;
-  color: #475569;
-  margin-bottom: 20px;
-}
-
-.link {
-  color: #2563eb;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-/* AUTH BUTTONS */
-.auth-btn {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid #e5e7eb;
-  background: white;
-}
-
-.auth-btn:hover {
-  background: #f8fafc;
-}
-
-.google { }
-.email { }
-.apple { }
-.facebook { }
-
-.terms {
-  font-size: 12px;
-  color: #64748b;
-  margin-top: 20px;
-}
-
-/* TEXT LINKS */
-.nav-link {
-  font-family: 'Inter', sans-serif;
-  font-size: 14.5px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  color: #0f172a;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.nav-link:hover {
-  color: #2563eb;
-}
-
-/* JOIN BUTTON */
-.join-btn {
-  font-family: 'Inter', sans-serif;
-  padding: 8px 18px;
-  background: #2563eb;
-  color: #ffffff;
-  border: none;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.join-btn:hover {
-  background: #1e4fd8;
-}
-.nav-link {
-  font-weight: 400;
-}
-
-/* TEXT LINKS */
-.nav-link {
-  font-size: 15px;
-  font-weight: 500;
-  color: #0e1117;
-  cursor: pointer;
-}
-
-.nav-link:hover {
-  text-decoration: underline;
-}
-
-/* JOIN BUTTON */
-.join-btn {
-  padding: 8px 18px;
-  background: #2563eb;
-  color: #ffffff;
-  border: none;
-  border-radius: 999px; /* pill style */
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.join-btn:hover {
-  background: #1e4fd8;
-}
-
-
-    /* HERO SECTION */
-    .hero {
-      position: relative;
-      height: 70vh;
-      min-height: 600px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-    }
-
-    .hero video {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      min-width: 100%;
-      min-height: 100%;
-      transform: translate(-50%, -50%);
-      object-fit: cover;
-      z-index: 1;
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: rgba(8, 12, 20, 0.75);
-      z-index: 2;
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 3;
-      padding: 0 60px;
-      max-width: 900px;
-    }
-
-    .hero-content h1 {
-      font-size: 48px;
-      line-height: 1.2;
-      margin-bottom: 16px;
-    }
-
-    .hero-content p {
-      font-size: 18px;
-      color: #cbd5e1;
-      max-width: 650px;
-      line-height: 1.6;
-    }
-
-    .hero-buttons {
-      margin-top: 30px;
-    }
-
-    .hero-buttons button {
-      padding: 14px 26px;
-      margin-right: 12px;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-    }
-
-    .primary {
-      background: #2563eb;
-      color: white;
-    }
-.icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.icon img {
-  width: 40px;
-  height: 40px;
-  display: block;
-}
-
-    .secondary {
-      background: transparent;
-      color: #e5e7eb;
-      border: 1px solid #334155;
-    }
-@media (max-width: 768px) {
-  header {
-    padding: 14px 24px;
-  }
-
-  .nav-link {
-    display: none; /* hides text links on mobile */
-  }
-
-  .join-btn {
-    padding: 8px 14px;
-  }
-}
-
-    /* CONTENT SECTION */
-    .sections {
-      background: #0b0f14;
-      padding: 80px 60px;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 24px;
-      max-width: 1100px;
-      margin: auto;
-    }
-
-    .card {
-      background: #0e1117;
-      border: 1px solid #1f2933;
-      border-radius: 12px;
-      padding: 28px;
-    }
-
-    .card h3 {
-      margin-top: 0;
-      margin-bottom: 10px;
-    }
-
-    .card p {
-      color: #9ca3af;
-      line-height: 1.5;
-    }
-.modal-left {
-  width: 50%;
-  background: url("scalevestauth.jpg") center/cover no-repeat;
-  position: relative;
-}
-.modal-right h3 {
-  font-size: 24px;
-  margin-bottom: 22px;
-}
-/* RIGHT PANEL BASE */
-.modal-right {
-  background: #ffffff;
-  color: #0f172a;
-}
-/* PURPOSE MODAL */
-.purpose-modal {
-  width: 720px;
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 40px;
-  position: relative;
-  text-align: center;
-}
-
-.purpose-modal h2 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.purpose-sub {
-  color: #64748b;
-  font-size: 15px;
-  margin-top: 8px;
-}
-
-.purpose-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
-  margin-top: 36px;
-}
-
-.purpose-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 28px 20px;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  background: #ffffff;
-}
-
-.purpose-card:hover {
-  transform: translateY(-6px);
-  border-color: #2563eb;
-  box-shadow: 0 20px 40px rgba(37,99,235,0.15);
-}
-
-.purpose-card h3 {
-  margin-top: 16px;
-  font-size: 18px;
-  color: #0f172a;
-}
-
-.purpose-card p {
-  font-size: 14px;
-  color: #6b7280;
-  margin-top: 8px;
-  line-height: 1.5;
-}
-
-.purpose-card .icon {
-  font-size: 36px;
-}
-
-/* MOBILE */
-@media (max-width: 768px) {
-  .purpose-modal {
-    width: 92%;
-  }
-
-  .purpose-cards {
-    grid-template-columns: 1fr;
-  }
-}
-/* CARD ROW */
-.purpose-cards {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  margin-top: 24px;
-}
-
-/* CARD STYLE */
-.purpose-card {
-  width: 220px;
-  padding: 20px 16px;
-  border-radius: 16px;
-  border: 1px solid #e5e7eb;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.purpose-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 28px rgba(0,0,0,0.08);
-}
-
-/* ICON */
-.purpose-card .icon {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 12px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 14px;
-  background: #f1f5f9;
-}
-
-.purpose-card .icon img {
-  width: 36px;
-  height: 36px;
-}
-
-/* TEXT */
-.purpose-card h3 {
-  margin: 8px 0 6px;
-  font-size: 16px;
-}
-
-.purpose-card p {
-  margin: 0;
-  font-size: 13px;
-  color: #6b7280;
-}
-@media (max-width: 768px) {
-  .purpose-cards {
-    flex-direction: column;
-    align-items: center;
-  }
-}
-
-/* CLOSE BUTTON */
-.close-btn {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  font-size: 18px;
-  color: #000;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-/* HEADING */
-.auth-heading {
-  font-size: 24px;
-  font-weight: 700;
-  color: #000;
-  margin-bottom: 22px;
-}
-
-.sub-heading {
-  display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
-  margin-top: 6px;
-}
-
-/* AUTH BUTTONS – CLEAN BLACK STYLE */
-.auth-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 13px 14px;
-  margin-bottom: 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  background: #ffffff;
-  color: #000;
-  border: 1px solid #d1d5db;
-}
-
-.auth-btn:hover {
-  background: #f9fafb;
-}
-
-/* ICONS */
-.auth-btn img {
-  width: 18px;
-  height: 18px;
-}
-
-/* DIVIDER */
-.divider {
-  text-align: center;
-  margin: 20px 0;
-  position: relative;
-}
-
-.divider span {
-  background: #fff;
-  padding: 0 10px;
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.divider::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: #e5e7eb;
-  z-index: -1;
-}
-/* VIDEO CARDS */
-.video-card {
-  position: relative;
-  height: 320px;
-  border-radius: 16px;
-  overflow: hidden;
-  border: none;
-}
-
-/* VIDEO */
-.video-card video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 1;
-}
-
-/* DARK OVERLAY */
-.card-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0,0,0,0.65),
-    rgba(0,0,0,0.85)
-  );
-  z-index: 2;
-}
-
-/* CONTENT */
-.card-content {
-  position: relative;
-  z-index: 3;
-  padding: 28px;
-  color: #ffffff;
-}
-
-.card-content h3 {
-  margin-top: 0;
-  font-size: 22px;
-  font-weight: 700;
-}
-
-.card-content p {
-  color: #e5e7eb;
-  line-height: 1.6;
-  margin-top: 10px;
-}
-
-/* HOVER EFFECT (OPTIONAL BUT 🔥) */
-.video-card:hover video {
-  transform: scale(1.05);
-  transition: transform 0.6s ease;
-}
-
-/* TERMS */
-.terms {
-  font-size: 12px;
-  color: #6b7280;
-  margin-top: 16px;
-  text-align: center;
-}
-
-.terms .link {
-  color: #2563eb;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.sub-heading {
-  display: block;
-  font-size: 14px;
-  font-weight: 400;
-  color: #64748b;
-  margin-top: 4px;
-}
-
-/* AUTH BUTTONS WITH LOGOS */
-.auth-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 12px 14px;
-  margin-bottom: 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid #e5e7eb;
-  background: white;
-}
-
-.auth-btn img {
-  width: 18px;
-  height: 18px;
-}
-
-/* DIVIDER */
-.divider {
-  text-align: center;
-  margin: 18px 0;
-  position: relative;
-}
-
-.divider span {
-  background: white;
-  padding: 0 10px;
-  font-size: 12px;
-  color: #64748b;
-}
-
-.divider::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: #e5e7eb;
-  z-index: -1;
-}
-
-/* LOGO BOTTOM */
-.auth-logo {
-  margin-top: 24px;
-  text-align: center;
-}
-
-.auth-logo img {
-  height: 28px;
-  opacity: 0.9;
-}
-/* DESCRIPTION UNDER HEADING */
-.auth-desc {
-  font-size: 14px;
-  color: #6b7280;
-  margin-bottom: 24px;
-}
-
-.auth-link {
-  color: #2563eb;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.auth-link:hover {
-  text-decoration: underline;
-}
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScaleVest | Investor Command Center</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-black: #050505;
+            --surface: rgba(10, 10, 11, 0.85);
+            --accent-blue: #007bff;
+            --accent-green: #00ffaa;
+            --text-main: #ffffff;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-black);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* --- GLOBAL CINEMATIC BACKGROUND --- */
+        .video-bg-container {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -2;
+            overflow: hidden;
+        }
+
+        .video-bg-element {
+            min-width: 100%; min-height: 100%;
+            width: auto; height: auto;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+            filter: saturate(0.6) brightness(0.2) blur(5px);
+        }
+
+        .video-overlay-filter {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, 
+                rgba(5, 5, 5, 0.95) 0%, 
+                rgba(5, 5, 5, 0.4) 50%, 
+                rgba(5, 5, 5, 0.95) 100%);
+            z-index: -1;
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            position: fixed;
+            top: 0; width: 100%; z-index: 1000;
+            padding: 1.5rem 5%;
+            background: rgba(5, 5, 5, 0.7);
+            backdrop-filter: blur(30px);
+            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .nav-logo { font-weight: 900; font-size: 1.5rem; letter-spacing: -1.5px; display: flex; align-items: center; }
+        .logo-icon { background: linear-gradient(135deg, var(--accent-blue), var(--accent-green)); color: #000; padding: 4px 10px; border-radius: 8px; margin-right: 12px; font-weight: 900; }
+
+        .btn-nav {
+            padding: 0.8rem 1.8rem; border-radius: 50px; border: 1px solid var(--accent-blue);
+            background: transparent; color: #fff; font-weight: 700; cursor: pointer; transition: var(--transition);
+        }
+        .btn-nav:hover { background: var(--accent-blue); box-shadow: 0 0 20px var(--accent-blue); }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            padding: 15rem 5% 10rem;
+            text-align: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            background: rgba(0,255,170,0.1); border: 1px solid var(--accent-green);
+            padding: 8px 20px; border-radius: 50px; display: inline-block;
+            color: var(--accent-green); font-size: 0.8rem; font-weight: 700; margin-bottom: 2rem;
+            letter-spacing: 2px;
+        }
+
+        h1 {
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            font-weight: 900;
+            line-height: 0.95;
+            margin-bottom: 2rem;
+            letter-spacing: -4px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, var(--accent-blue), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle { color: var(--text-dim); font-size: 1.4rem; max-width: 850px; margin: 0 auto; font-weight: 500; }
+
+        /* --- FULL SCREEN VIDEO CONTENT STACK --- */
+        .content-stack-full { width: 100vw; margin-top: 5rem; }
+
+        .section-header {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            margin-bottom: 4rem;
+            text-align: center;
+            letter-spacing: -2px;
+            text-transform: uppercase;
+        }
+
+        .massive-video-card {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .massive-video-card video {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0.5;
+            z-index: 1;
+        }
+
+        .video-overlay-text {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            width: 90%;
+        }
+
+        .video-overlay-text h2 {
+            font-size: clamp(2rem, 7vw, 6rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -3px;
+            line-height: 0.9;
+        }
+
+        /* --- HANDSHAKE ACTION UI --- */
+        .response-row { display: flex; gap: 15px; justify-content: center; margin-top: 40px; }
+        .btn-reply {
+            padding: 18px 45px; border-radius: 100px; border: 2px solid #fff;
+            background: rgba(255,255,255,0.05); color: #fff; font-weight: 800; cursor: pointer;
+            text-transform: uppercase; transition: 0.3s;
+        }
+        .btn-yes { border-color: var(--accent-green); color: var(--accent-green); }
+        .btn-yes:hover { background: var(--accent-green); color: #000; box-shadow: 0 0 40px var(--accent-green); }
+        .btn-no:hover { border-color: #ff4d4d; color: #ff4d4d; }
+
+        .rep-boost {
+            margin-top: 35px; font-weight: 800; color: var(--accent-blue);
+            letter-spacing: 3px; font-size: 0.8rem; text-transform: uppercase;
+        }
+
+        /* --- "WHAT IS?" MATRIX GRID --- */
+        .what-is-section {
+            padding: 10rem 5%;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .what-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .small-box {
+            position: relative;
+            height: 450px;
+            border-radius: 40px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            background: rgba(255,255,255,0.02);
+            backdrop-filter: blur(15px);
+            transition: var(--transition);
+        }
+
+        .small-box:hover { border-color: var(--accent-blue); transform: translateY(-10px); }
+
+        .small-box video {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: -1; opacity: 0.25;
+        }
+
+        .small-box h3 { font-size: 2.5rem; color: var(--accent-green); margin-bottom: 20px; font-weight: 900; letter-spacing: -1px; }
+        .small-box p { color: var(--text-dim); font-size: 1.2rem; line-height: 1.5; font-weight: 500; }
+
+        /* --- STEPS SECTION (SHORT CARDS) --- */
+        .steps-section {
+            padding: 5rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .steps-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 60px; /* Gap for arrows */
+            margin-top: 50px;
+        }
+
+        .step-card {
+            position: relative;
+            flex: 0 1 280px; /* Fixed width */
+            height: 220px; /* SHORT HEIGHT */
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            overflow: visible; /* Visible for arrows */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #000;
+            transition: var(--transition);
+        }
+
+        .step-card video {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 20px;
+            object-fit: cover;
+            opacity: 0.3;
+            z-index: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-green);
+            box-shadow: 0 10px 30px rgba(0, 255, 170, 0.15);
+        }
+        
+        .step-card:hover video { opacity: 0.5; }
+
+        .step-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-number {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--accent-green);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .step-desc {
+            font-size: 0.95rem;
+            color: #ddd;
+            line-height: 1.3;
+            font-weight: 600;
+        }
+
+        /* ARROW STYLING */
+        .arrow-icon {
+            position: absolute;
+            z-index: 10;
+            font-size: 2.5rem;
+            color: var(--accent-blue);
+            text-shadow: 0 0 10px var(--accent-blue);
+            right: -45px; /* Outside card */
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .step-card:last-child .arrow-icon { display: none; }
+
+        @media (max-width: 1000px) {
+            .steps-grid { flex-direction: column; align-items: center; gap: 50px; }
+            .arrow-icon {
+                right: auto; left: 50%; top: auto; bottom: -45px;
+                transform: translateX(-50%) rotate(90deg);
+            }
+        }
+
+        /* --- FINAL CTA SECTION --- */
+        .final-cta-section {
+            width: 100vw;
+            height: 80vh; /* Big full screen feel */
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            cursor: pointer;
+            transition: 0.3s;
+            overflow: hidden;
+        }
+
+        .final-cta-section:hover {
+            opacity: 0.9;
+        }
+        
+        /* Scale text on hover slightly */
+        .final-cta-section:hover h2 { transform: scale(1.05); transition: 0.5s; }
+
+        .final-cta-section video {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0.6;
+            z-index: 0;
+        }
+
+        /* --- FOOTER & SUCCESS --- */
+/* --- FOOTER --- */
     footer {
-      padding: 40px;
-      text-align: center;
-      color: #64748b;
-      border-top: 1px solid #1f2933;
+        background: #020202; /* Very dark background */
+        border-top: 1px solid rgba(0, 255, 170, 0.15); /* Greenish top border */
+        padding: 6rem 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
     }
 
-    @media (max-width: 768px) {
-      header, .hero-content, .sections {
-        padding: 24px;
-      }
-
-      .hero-content h1 {
-        font-size: 34px;
-      }
+    /* The "Strong" ScaleVest Text */
+    .footer-brand {
+        font-size: clamp(3rem, 6vw, 5rem);
+        font-weight: 900;
+        letter-spacing: -3px;
+        margin-bottom: 1.5rem;
+        display: inline-block;
+        /* The Blue-Green Gradient */
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        /* The Glow Effect */
+        filter: drop-shadow(0 0 25px rgba(0, 255, 170, 0.3));
     }
-  </style>
+
+    /* The UnioraX Subtitle */
+    .footer-legal {
+        color: var(--text-dim);
+        font-size: 0.8rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        font-weight: 700;
+        opacity: 0.7;
+    }
+
+        #successOverlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-black); z-index: 10000; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
+        }
+
+        .full-progress-bar { width: 350px; height: 2px; background: rgba(255,255,255,0.1); margin-top: 30px; border-radius: 10px; overflow: hidden; }
+        .progress-fill { width: 0%; height: 100%; background: var(--accent-green); box-shadow: 0 0 20px var(--accent-green); animation: fillProgress 3s forwards; }
+        @keyframes fillProgress { to { width: 100%; } }
+
+        @media (max-width: 900px) {
+            .what-grid { grid-template-columns: 1fr; }
+            .massive-video-card { height: 60vh; }
+        }
+    </style>
 </head>
-<script>
-if (localStorage.getItem("businessProfileCreated") === "true") {
-  window.location.replace("mainbusinesshub.html");
-}
-</script>
 <body>
 
-<header>
-  <div class="left">
-    <!-- TEMP LOGO -->
-    <img src="https://dummyimage.com/120x40/000/fff&text=ScaleVest "ScaleVest Logo">
-  </div>
+    <div class="video-bg-container">
+        <video autoplay muted loop playsinline class="video-bg-element">
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-data-processing-blue-and-green-44147-large.mp4" type="video/mp4">
+        </video>
+        <div class="video-overlay-filter"></div>
+    </div>
 
-  <div class="right">
-    <span class="nav-link">English</span>
-    <span class="nav-link">Sign in</span>
-    <span class="nav-link">Explore</span>
-    <button class="join-btn" onclick="openModal()">Join</button>
-
-  </div>
-</header>
-
+    <nav>
+        <div class="nav-logo">
+            <div class="logo-icon">SV</div>
+            <div>ScaleVest</div>
+        </div>
+           </nav>
 
 <section class="hero">
-  <video id="bgVideo" autoplay muted playsinline></video>
-
-  <div class="hero-content">
-    <h1>Where real business data becomes clear decisions</h1>
-    <p>
-      ScaleVest connects small businesses, startups, and investors through
-      verified operational data — not assumptions or pitch decks.
-    </p>
-
-    <div class="hero-buttons">
-      <button class="primary" onclick="openPurposeModal()">Get Started</button>
-
-      <button class="secondary" onclick="window.location.href='Scalevest-documentation.html'">
-  See how it works
-</button>
-
-    </div>
-  </div>
-</section>
-<!-- JOIN MODAL -->
-<div class="modal-overlay" id="joinModal">
-  <div class="modal">
-
-
-<div class="modal-left">
-  <div class="overlay-text">
-    <h2>Your business grows here</h2>
-    <ul>
-      <li>All-in-one business setup</li>
-      <li>Scale and grow</li>
-      <li>Analyze from here</li>
-    </ul>
-  </div>
-</div>
-
-
-<!-- RIGHT SIDE (FORM) -->
-<div class="modal-right">
-  <span class="close-btn" onclick="closeModal()">✕</span>
-
-<h3 class="auth-heading">
-  New to ScaleVest?
-  <span class="sub-heading">Create a new account</span>
-</h3>
-
-<p class="auth-desc">
-  Already have an account?
-  <span class="auth-link" onclick="openSignIn()">Sign in</span>
-</p>
-
-  <!-- PRIMARY AUTH -->
-  <button class="auth-btn google">
-    <img src="google.svg"> Continue with Google
-  </button>
-
-  <button class="auth-btn email">
-    <img src="email.svg"> Continue with Email
-  </button>
-
-  <div class="divider">
-    <span>or</span>
-  </div>
-
-  <!-- SECONDARY AUTH -->
-  <button class="auth-btn apple">
-    <img src="apple.svg"> Continue with Apple
-  </button>
-
-  <button class="auth-btn facebook">
-    <img src="facebook.svg"> Continue with Facebook
-  </button>
-
-
-
-  <p class="terms">
-    By registering, you agree to
-    <span class="link">ScaleVest Terms & Conditions</span>
-  </p>
-</div>
-
-
-  </div>
-</div>
-
-<section class="sections">
-  <div class="cards">
-
-    <!-- SMALL BUSINESS -->
-    <div class="card video-card">
-      <video autoplay muted loop playsinline>
-        <source src="business.mp4" type="video/mp4">
-      </video>
-      <div class="card-overlay"></div>
-      <div class="card-content">
-        <h3>For Small Businesses</h3>
-        <p>
-          Track inventory, sales,records,cashflow, and growth etc. in one place.
-          Understand what truly drives profit.
+        <div class="hero-badge">The ScaleVest | 2026</div>
+        <h1>ScaleVest <br><span class="gradient-text">Investor Side</span></h1>
+        <p class="hero-subtitle">
+            The first Next-Gen Investor-Founders Connecting Platform
         </p>
-      </div>
+        
+        <button class="btn-hero-start" onclick="triggerAngelSetup()">GET STARTED</button>
+    </section>
+
+    <div class="content-stack-full">
+        <h2 class="section-header">Inside ScaleVest Investor-Side</h2>
+
+        <div class="massive-video-card">
+            <video autoplay muted loop playsinline>
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay-text">
+                <h2>Browse Verified<br><span class="gradient-text">Startups Vests</span></h2>
+            </div>
+        </div>
+
+        <div class="massive-video-card">
+            <video autoplay muted loop playsinline>
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay-text">
+                <h2>Schedule In-App Q&A<br>& <span class="gradient-text">Meetings with Founders</span></h2>
+            </div>
+        </div>
+
+        <div class="massive-video-card">
+            <video autoplay muted loop playsinline>
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay-text">
+                <h2>Make Angel Profile<br>& Let Founders <span class="gradient-text">Directly Pitch You</span></h2>
+            </div>
+        </div>
+
+        <div class="massive-video-card">
+            <video autoplay muted loop playsinline>
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay-text">
+                <h2>Receive Applications<br>with <span class="gradient-text">Vests Attached</span></h2>
+                
+                <div class="response-row">
+                    <button class="btn-reply btn-yes" onclick="alert('Handshake Initiated...')">YES</button>
+                    <button class="btn-reply" onclick="alert('Signal Declined.')">NO</button>
+                    <button class="btn-reply" onclick="alert('Saved to Queue.')">LATER</button>
+                </div>
+                
+                <p class="rep-boost">Boost Angel Reputation with Every Response</p>
+            </div>
+        </div>
+
+        <div class="massive-video-card">
+            <video autoplay muted loop playsinline>
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay-text">
+                <h2>Set Daily Application Limits<br>or <span style="color: #ff4d4d;">Unavailability Mode</span></h2>
+            </div>
+        </div>
     </div>
 
-    <!-- STARTUPS -->
-    <div class="card video-card">
-      <video autoplay muted loop playsinline>
-        <source src="startup.mp4" type="video/mp4">
-      </video>
-      <div class="card-overlay"></div>
-      <div class="card-content">
-        <h3>For Startups</h3>
-        <p>
-          Show real traction, not slides.
-          Let investors see verified performance , pitch for direct answer or meeting.
-        </p>
-      </div>
+  <div class="massive-video-card">
+            <video autoplay muted loop playsinline>
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay-text">
+                <h2>AND MANY MORE! <br> <span style="color: #ff4d4d;"></span></h2>
+            </div>
+        </div>
     </div>
 
-    <!-- INVESTORS -->
-    <div class="card video-card">
-      <video autoplay muted loop playsinline>
-        <source src="investor.mp4" type="video/mp4">
-      </video>
-      <div class="card-overlay"></div>
-      <div class="card-content">
-        <h3>For Investors</h3>
-        <p>
-          Discover promising companies early through real data signals and pitches,
-          not cold outreach.
-        </p>
-      </div>
+
+    <section class="what-is-section">
+        <h2 class="section-header" style="text-align: left;">What Is?</h2>
+        <div class="what-grid">
+            <div class="small-box">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4" type="video/mp4">
+                </video>
+                <h3>What is a Vest?</h3>
+                <p>A Vest is a visual representative of the founders and their startup logic, bundling audited bank data and code repositories into a decision-ready asset.</p>
+            </div>
+
+            <div class="small-box">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4" type="video/mp4">
+                </video>
+                <h3>What is Application?</h3>
+                <p>Funding Applications are a founder's humble request for an investor to view their specific startup Vest and initiate a secure funding handshake.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="steps-section">
+        <h2 class="section-header">Getting Started Steps</h2>
+        
+        <div class="steps-grid">
+            
+            <div class="step-card">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" type="video/mp4">
+                </video>
+                <div class="step-content">
+                    <span class="step-number">Step 1</span>
+                    <p class="step-desc">Create Angel Profile & Thesis.</p>
+                </div>
+               
+            </div>
+
+            <div class="step-card">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4" type="video/mp4">
+                </video>
+                <div class="step-content">
+                    <span class="step-number">Step 2</span>
+                    <p class="step-desc">AI Filters Incoming Vests.</p>
+                </div>
+               
+            </div>
+
+            <div class="step-card">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" type="video/mp4">
+                </video>
+                <div class="step-content">
+                    <span class="step-number">Step 3</span>
+                    <p class="step-desc">Receive Application Alerts.</p>
+                </div>
+               
+            </div>
+
+            <div class="step-card">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4" type="video/mp4">
+                </video>
+                <div class="step-content">
+                    <span class="step-number">Step 4</span>
+                    <p class="step-desc">Review Audited Data.</p>
+                </div>
+               
+            </div>
+
+            <div class="step-card">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4" type="video/mp4">
+                </video>
+                <div class="step-content">
+                    <span class="step-number">Step 5</span>
+                    <p class="step-desc">Accept Handshake.</p>
+                </div>
+             
+            </div>
+
+            <div class="step-card">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4" type="video/mp4">
+                </video>
+                <div class="step-content">
+                    <span class="step-number">Step 6</span>
+                    <p class="step-desc">Q&A and Meetings.</p>
+                </div>
+          
+            </div>
+
+            <div class="step-card">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4" type="video/mp4">
+                </video>
+                <div class="step-content">
+                    <span class="step-number">Step 7</span>
+                    <p class="step-desc">Transfer Capital.</p>
+                </div>
+                </div>
+
+        </div>
+    </section>
+
+    <div class="final-cta-section" onclick="alert('CLICKED')">
+        <video autoplay muted loop playsinline>
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" type="video/mp4">
+        </video>
+        <div class="video-overlay-text">
+            <h2 style="font-size: 5rem;">ARE YOU AN <br><span class="gradient-text">INVESTOR?</span></h2>
+        </div>
     </div>
-
-  </div>
-</section>
-
 
 <footer>
-  © 2025 ScaleVest. Building clarity between business and capital.
-</footer>
-<script>
-  const modal = document.getElementById("joinModal");
+        <div class="footer-brand">ScaleVest</div>
+        <div class="footer-legal">
+            UNIORAX PRIVATE LIMITED &copy; ALL RIGHTS RESERVED
+        </div>
+    </footer>
 
-  function openModal() {
-    modal.style.display = "flex";
-  }
-
-  function closeModal() {
-    modal.style.display = "none";
-  }
-</script>
-
-<script>
-  const videos = [
-    "hero1.mp4"
-  ];
-
-  const video = document.getElementById("bgVideo");
-  let index = 0;
-
-  function setVideo(src) {
-    video.src = src;
-    video.muted = true;
-    video.playsInline = true;
-
-    const playPromise = video.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        // Autoplay fallback (mobile safety)
-        video.setAttribute("controls", "controls");
-      });
-    }
-  }
-
-  video.addEventListener("ended", () => {
-    index = (index + 1) % videos.length;
-    setVideo(videos[index]);
-  });
-
-  // Start first video after page load
-  window.addEventListener("load", () => {
-    setVideo(videos[index]);
-  });
-</script>
-<!-- PURPOSE MODAL -->
-<div class="modal-overlay" id="purposeModal" style="z-index:200">
-  <div class="purpose-modal">
-
-    <span class="close-btn" onclick="closePurposeModal()">✕</span>
-
-    <h2>What brings you to ScaleVest?</h2>
-    <p class="purpose-sub">
-      Choose one to personalize your experience
-    </p>
-
-    <div class="purpose-cards">
-  <!-- INVESTOR -->
-  <div class="purpose-card" onclick="goTo('investor-side.html')">
-    <div class="icon">
-      <img src="investor.svg" alt="Investor">
+    <div id="successOverlay">
+        <h1 style="font-size: 3.5rem; letter-spacing: -4px;">INITIALIZING <span class="gradient-text">ANGEL FLOOR</span></h1>
+        <p style="color: var(--text-dim);">Configuring your private Investor Command Center...</p>
+        <div class="full-progress-bar">
+            <div class="progress-fill"></div>
+        </div>
     </div>
-    <h3>Investor</h3>
-    <p>Discover verified businesses & data-backed opportunities</p>
-  </div>
 
-  <!-- STARTUP -->
-  <div class="purpose-card" onclick="goTo('startup-side.html')">
-    <div class="icon">
-      <img src="startup.svg" alt="Startup Founder">
-    </div>
-    <h3>Startup Founder</h3>
-    <p>Show traction, raise capital & grow faster</p>
-  </div>
-
-  <!-- BUSINESS -->
-  <div class="purpose-card" onclick="goTo('business-side.html')">
-    <div class="icon">
-      <img src="shop.svg" alt="Business Owner">
-    </div>
-    <h3>Business Owner</h3>
-    <p>Track operations, profit & performance clearly</p>
-  </div>
-</div>
-
-</div>
-<script>
-  function openPurposeModal() {
-    document.getElementById("purposeModal").style.display = "flex";
-  }
-
-  function closePurposeModal() {
-    document.getElementById("purposeModal").style.display = "none";
-  }
-</script>
-
-<script>
-  function goTo(page) {
-    window.location.href = page;
-  }
-</script>
-
+    <script>
+        function triggerAngelSetup() {
+            document.getElementById('successOverlay').style.display = 'flex';
+            setTimeout(() => {
+                window.location.href = "investordashboard.html"; 
+            }, 3200);
+        }
+    </script>
 </body>
 </html>
