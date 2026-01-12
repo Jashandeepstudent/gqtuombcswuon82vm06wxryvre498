@@ -28,9 +28,6 @@
             text-align: center;
             margin-bottom: 40px;
         }
-body {
-    padding-bottom: env(safe-area-inset-bottom);
-}
 
         .header h1 {
             font-size: 2.5rem;
@@ -44,135 +41,6 @@ body {
             justify-content: center;
             gap: 15px;
         }
-
-
-:root {
-    /* Core scaling */
-    --ui-radius: clamp(12px, 3vw, 18px);
-    --ui-padding: clamp(12px, 4vw, 20px);
-    --ui-gap: clamp(10px, 3vw, 18px);
-    --ui-font: clamp(14px, 3.8vw, 16px);
-}
-
-/* -------- RESET -------- */
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-    max-width: 100%;
-}
-
-html {
-    font-size: var(--ui-font);
-    -webkit-text-size-adjust: 100%;
-}
-
-body {
-    margin: 0;
-    min-height: 100svh;
-    overflow-x: hidden;
-    background: #0b0b0b;
-    color: #fff;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
-}
-
-/* -------- GLOBAL CONTAINER AUTO-CENTER -------- */
-section, main, .container, .wrapper {
-    width: 100%;
-    max-width: 1200px;
-    margin-inline: auto;
-    padding: var(--ui-padding);
-}
-
-/* -------- AUTO FIX FLEX & GRID -------- */
-.flex, .row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--ui-gap);
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--ui-gap);
-}
-
-/* -------- GLOBAL INPUT / SELECT / TEXTAREA -------- */
-input,
-select,
-textarea {
-    width: 100%;
-    min-height: 48px;
-    padding: 14px 16px;
-    font-size: 1rem;
-    border-radius: var(--ui-radius);
-    border: 1px solid rgba(255,255,255,0.15);
-    background: #111;
-    color: #fff;
-    outline: none;
-}
-
-/* Prevent mobile zoom */
-input, textarea, select {
-    font-size: 16px;
-}
-
-/* -------- BUTTON AUTO FIX -------- */
-button {
-    width: 100%;
-    min-height: 48px;
-    padding: 14px;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: var(--ui-radius);
-    border: none;
-    cursor: pointer;
-}
-
-/* -------- CARD AUTO FIX -------- */
-.card, .box, .panel {
-    width: 100%;
-    border-radius: calc(var(--ui-radius) + 4px);
-    padding: var(--ui-padding);
-    background: rgba(255,255,255,0.04);
-    backdrop-filter: blur(14px);
-}
-
-/* -------- MODAL AUTO FIT -------- */
-.modal {
-    width: 100%;
-    max-width: min(92vw, 520px);
-    margin: auto;
-    border-radius: calc(var(--ui-radius) + 6px);
-}
-
-/* -------- IMAGES & MEDIA -------- */
-img, video, canvas {
-    max-width: 100%;
-    height: auto;
-    border-radius: var(--ui-radius);
-}
-
-/* -------- TABLE AUTO SCROLL -------- */
-table {
-    width: 100%;
-    display: block;
-    overflow-x: auto;
-    border-collapse: collapse;
-}
-
-/* -------- DESKTOP SCALE UP -------- */
-@media (min-width: 768px) {
-    .grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (min-width: 1024px) {
-    .grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
 
         .header h1 svg {
             width: 50px;
@@ -4271,7 +4139,7 @@ window.limitWords = function(element, limit) {
     if (user) {
         currentUser = user;
         isInitialLoad = false;
-        
+        startNotificationListener();
         document.getElementById('loadingScreen').classList.remove('hidden');
         
         try {
@@ -4429,6 +4297,10 @@ function handleHashChange() {
             document.body.style.background = "#000";
             showEditProfile();
         } 
+else if (hash === 'investor_chatlist') {
+        document.body.style.background = "#000";
+        showInvestorChatList();
+    }
         else if (hash === 'founder_emergence') {
             document.body.style.background = "#000";
             showFounderEmergence();
@@ -4691,7 +4563,109 @@ async function saveStartupProfile(vestData) {
         .dropdown {
             position: relative;
         }
+/* --- NOTIFICATION BADGE --- */
+.nav-icon-wrapper {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
 
+.notif-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    background-color: #ff006e;
+    border-radius: 50%;
+    border: 2px solid #0a0a0a;
+    display: none; /* Hidden by default */
+    z-index: 10;
+}
+
+.notif-badge.active {
+    display: block;
+}
+
+/* --- INBOX / CHAT LIST SCREEN --- */
+.chat-list-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+    color: #fff;
+}
+
+.chat-item {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: #111;
+    border: 1px solid #222;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.chat-item:hover {
+    background: #161616;
+    border-color: #444;
+    transform: translateX(5px);
+}
+
+.chat-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #fff;
+    border: 2px solid #000;
+}
+
+.chat-info {
+    flex: 1;
+}
+
+.chat-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chat-preview {
+    color: #888;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 500px;
+}
+
+.time-ago {
+    color: #555;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.unread-pill {
+    background: #10b981;
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
 .dropdown-content {
     display: none;
     position: absolute;
@@ -5455,24 +5429,16 @@ max-width: 1100px;
     </div>
 </div>
     </div>
-
-    <div class="top-nav-right">
+<div class="top-nav-right">
+    <div class="nav-icon-wrapper" onclick="window.location.hash='investor_chatlist'">
         <div class="icon-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
         </div>
-
-        <div class="icon-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5
-                         a2 2 0 0 1 2-2h14
-                         a2 2 0 0 1 2 2z"></path>
-            </svg>
-        </div>
+        <div class="notif-badge" id="navBellBadge"></div>
+    </div>
 
         <div class="profile-dropdown">
 <div class="icon-btn" onclick="toggleDashProfileDropdown()">
@@ -9297,7 +9263,140 @@ window.closeFullScreenPDF = function() {
         setTimeout(() => viewer.remove(), 300);
     }
 };
+// --- 1. SHOW CHAT LIST SCREEN ---
+window.showInvestorChatList = async function() {
+    const container = document.getElementById('dashboardContainer');
+    container.style.display = 'block';
+    document.querySelector('.vest-container').style.display = 'none';
 
+    // Show Loader
+    container.innerHTML = `<div class="loading-box"><div class="spinner"></div><p style="color:#888;">Syncing with Investor Network...</p></div>`;
+
+    try {
+        const chatsRef = ref(db, 'Chats');
+        const snapshot = await get(chatsRef);
+        const allChats = snapshot.val() || {};
+        
+        let myChats = [];
+
+        // Filter chats that belong to current user
+        // Room Key Format is Alphabetical: uid1_uid2
+        Object.keys(allChats).forEach(roomKey => {
+            if (roomKey.includes(currentUser.uid)) {
+                const messages = Object.values(allChats[roomKey]);
+                const lastMsg = messages[messages.length - 1]; // Get latest
+                
+                // Identify the "Other" person (The Investor)
+                const otherUid = roomKey.replace(currentUser.uid, '').replace('_', '');
+                
+                myChats.push({
+                    roomKey: roomKey,
+                    otherUid: otherUid,
+                    lastMessage: lastMsg.text,
+                    timestamp: lastMsg.timestamp,
+                    isUnread: (lastMsg.sender !== currentUser.uid) // Simple unread logic
+                });
+            }
+        });
+
+        // Sort by newest first
+        myChats.sort((a, b) => b.timestamp - a.timestamp);
+
+        // Render HTML
+        let listHtml = `
+            ${createNavBar()} <div class="chat-list-container">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                    <h1 style="font-size:2rem; font-weight:800;">Investor Inbox</h1>
+                    <span style="color:#666;">${myChats.length} Conversations</span>
+                </div>
+        `;
+
+        if (myChats.length === 0) {
+            listHtml += `
+                <div class="empty-state" style="padding:4rem; border:1px dashed #333;">
+                    <p style="color:#666;">No messages yet. Launch a vest to start conversations!</p>
+                </div>
+            `;
+        } else {
+            // We need to fetch names for these UIDs. 
+            // For now, we render placeholders and update them async if needed, 
+            // or just use generic "Investor" to save reads.
+            
+            listHtml += myChats.map(chat => {
+                const date = new Date(chat.timestamp).toLocaleDateString();
+                const time = new Date(chat.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                return `
+                <div class="chat-item" onclick="window.location.href='chat.html?recipient=${chat.otherUid}'">
+                    <div class="chat-avatar">INV</div>
+                    <div class="chat-info">
+                        <div class="chat-name">
+                            Investor 
+                            ${chat.isUnread ? '<span class="unread-pill">NEW MESSAGE</span>' : ''}
+                        </div>
+                        <div class="chat-preview">${chat.lastMessage}</div>
+                    </div>
+                    <div class="time-ago">
+                        <div>${time}</div>
+                        <div style="font-size:0.7rem; opacity:0.6;">${date}</div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        listHtml += `</div>`; // Close container
+        container.innerHTML = listHtml;
+
+        // Clear Badge when viewing list
+        updateNotificationBadge(0);
+
+    } catch (e) {
+        console.error("Chat Error", e);
+        container.innerHTML = `<p style="text-align:center; padding:2rem; color:red;">Error loading messages.</p>`;
+    }
+};
+
+// --- 2. GLOBAL NOTIFICATION LISTENER ---
+// Call this function inside your onAuthStateChanged, right after 'isInitialLoad = false;'
+function startNotificationListener() {
+    const chatsRef = ref(db, 'Chats');
+    
+    // Listen for changes in real-time
+    onValue(chatsRef, (snapshot) => {
+        if (!snapshot.exists()) return;
+        const allChats = snapshot.val();
+        let unreadCount = 0;
+
+        Object.keys(allChats).forEach(roomKey => {
+            if (roomKey.includes(currentUser.uid)) {
+                const messages = Object.values(allChats[roomKey]);
+                const lastMsg = messages[messages.length - 1];
+                
+                // If last message was NOT sent by me, count it as potential unread
+                // (In a real app, you'd check a 'read' status flag in DB)
+                if (lastMsg.sender !== currentUser.uid) {
+                    unreadCount++;
+                }
+            }
+        });
+
+        updateNotificationBadge(unreadCount);
+    });
+}
+
+function updateNotificationBadge(count) {
+    const bell = document.getElementById('navBellBadge');
+    const msg = document.getElementById('navMsgBadge');
+    
+    if (count > 0) {
+        if(bell) { bell.classList.add('active'); bell.innerText = ''; } // Just a dot
+        if(msg) { msg.classList.add('active'); msg.innerText = ''; }
+    } else {
+        if(bell) bell.classList.remove('active');
+        if(msg) msg.classList.remove('active');
+    }
+}
 
 </script>
 <!-- FOUNDER DASHBOARD -->
