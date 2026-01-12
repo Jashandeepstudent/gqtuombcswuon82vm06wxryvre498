@@ -378,12 +378,11 @@
 
         // --- TOKEN & MEETING LOGIC ---
         
-        window.generateJitsiToken = function(roomName) {
-            const appId = "vpaas-magic-cookie-0fd84653e8f44399aba55f69eaf1f6fe"; 
-            const kid = "e06cc7"; 
+window.generateJitsiToken = function(roomName) {
+    const appId = "vpaas-magic-cookie-0fd84653e8f44399aba55f69eaf1f6fe"; 
+    const kid = "e06cc7"; 
 
-            // Multiline template for the private key
-            const prvKey = `-----BEGIN RSA PRIVATE KEY-----
+    const prvKey = `-----BEGIN RSA PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCytntDVcixIfHE
 9WsWkCSbuX1Dyemm0beZCSXhvCesqNP0sdUP8gSskZzLPsRlH4iLJIOIg/m6nYcK
 hDGUTivM1HLEb5pf3c38b1qDYGpjm67UFfv2l2/YeGuPkutUSjos90M3l0lHxeLR
@@ -412,142 +411,80 @@ M7yVbIhkAg9PuZwxpYEaAW6lOU1aYh2xYfZigalUY45ivIbNmk/czaFJ8dXIe7M0
 b3jwupOm6VFUtDOi4xuQ8VI=
 -----END RSA PRIVATE KEY-----`;
 
-            const header = { alg: 'RS256', typ: 'JWT', kid: kid };
-            const now = Math.floor(Date.now() / 1000);
-            
-            const payload = {
-                aud: "jitsi",
-                iss: "chat",
-                sub: appId,
-                room: roomName,
-                iat: now,
-                exp: now + 7200, 
-                context: {
-                    user: {
-                        name: userDisplayName,
-                        avatar: userAvatar,
-                        email: currentUser.email,
-                        moderator: isInvestor ? true : false 
-                    },
-                    features: {
-                        livestreaming: true,
-                        recording: true,
-                        transcription: true
-                    }
-                }
-            };
-
-            return KJUR.jws.JWS.sign("RS256", JSON.stringify(header), JSON.stringify(payload), prvKey);
-        };
-
-        window.openMeetingModal = () => {
-            document.getElementById('meetingSetupModal').style.display = 'flex';
-        };
-        window.closeMeetingModal = () => {
-            document.getElementById('meetingSetupModal').style.display = 'none';
-        };
-
-        window.createMeeting = async () => {
-            const title = document.getElementById('meetingTitle').value || "Quick Sync";
-            const dateVal = document.getElementById('meetingDate').value;
-            const timeVal = document.getElementById('meetingTime').value;
-            
-            let scheduledTime = 'now';
-            let meetingId = `meet_${Date.now()}_${Math.floor(Math.random()*1000)}`;
-
-            if (dateVal && timeVal) {
-                scheduledTime = new Date(`${dateVal}T${timeVal}`).getTime();
-            }
-
-            await push(ref(db, `Chats/${chatRoomID}`), {
-                sender: currentUser.uid,
-                type: 'meeting',
-                title: title,
-                meetingId: meetingId,
-                scheduledTime: scheduledTime,
-                timestamp: Date.now(),
-                recipient: recipientUID
-            });
-
-            closeMeetingModal();
-        };
-
-        window.tryJoinMeeting = async (meetingId, scheduledTime) => {
-            console.log("Trying to join meeting:", meetingId, scheduledTime);
-            const now = Date.now();
-
-            if (scheduledTime !== 'now' && now < (scheduledTime - 5 * 60 * 1000)) {
-                const dateObj = new Date(scheduledTime);
-                document.getElementById('waitDisplayTime').textContent = dateObj.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                document.getElementById('waitDisplayDate').textContent = dateObj.toLocaleDateString();
-                document.getElementById('waitingRoomModal').style.display = 'flex';
-                return;
-            }
-
-            const fullRoomName = "ScaleVest_" + meetingId;
-            const token = generateJitsiToken(fullRoomName);
-
-            document.getElementById('videoConferenceContainer').style.display = 'flex';
-            document.getElementById('meetingLoader').style.display = 'flex';
-
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-                stream.getTracks().forEach(track => track.stop()); 
-                
-                loadJitsi(fullRoomName, token);
-            } catch (err) {
-                console.error("Media permission error:", err);
-                document.getElementById('videoConferenceContainer').style.display = 'none';
-                alert("Camera and Microphone access is required to join the meeting.");
-            }
-        };
-
-        function loadJitsi(roomName, token) {
-            console.log("Loading Secure 8x8 Room:", roomName);
-
-            const domain = "8x8.vc";
-            const appId = "vpaas-magic-cookie-0fd84653e8f44399aba55f69eaf1f6fe";
-
-            const options = {
-                roomName: appId + "/" + roomName,
-                jwt: token, 
-                width: "100%",
-                height: "100%",
-                parentNode: document.querySelector('#jitsiFrame'),
-                configOverwrite: {
-                    startWithAudioMuted: false,
-                    startWithVideoMuted: false,
-                    prejoinPageEnabled: false,
-                    disableDeepLinking: true,
-                    enableLobby: false, 
-                    p2p: { enabled: true }
-                },
-                interfaceConfigOverwrite: {
-                    SHOW_JITSI_WATERMARK: false,
-                    SHOW_WATERMARK_FOR_GUESTS: false,
-                    TOOLBAR_BUTTONS: [
-                        'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
-                        'fodeviceselection', 'hangup', 'profile', 'chat', 'settings', 
-                        'raisehand', 'videoquality', 'filmstrip', 'tileview', 'security'
-                    ],
-                }
-            };
-
-            try {
-                jitsiAPI = new JitsiMeetExternalAPI(domain, options);
-
-                jitsiAPI.addEventListener('videoConferenceJoined', () => {
-                    document.getElementById('meetingLoader').style.display = 'none';
-                });
-
-                jitsiAPI.addEventListener('videoConferenceLeft', () => closeVideoInterface());
-                jitsiAPI.addEventListener('readyToClose', () => closeVideoInterface());
-
-            } catch (err) {
-                console.error("Jitsi initialization error:", err);
-                closeVideoInterface();
+    const header = { alg: 'RS256', typ: 'JWT', kid: kid };
+    const now = Math.floor(Date.now() / 1000);
+    
+    const payload = {
+        aud: "jitsi",
+        iss: "chat",
+        sub: appId, // Ensure this is the full AppID
+        room: roomName,
+        iat: now,
+        exp: now + 7200, 
+        context: {
+            user: {
+                name: userDisplayName,
+                avatar: userAvatar,
+                email: currentUser.email,
+                moderator: isInvestor ? true : false 
+            },
+            features: {
+                livestreaming: true,
+                recording: true,
+                transcription: true
             }
         }
+    };
+
+    return KJUR.jws.JWS.sign("RS256", JSON.stringify(header), JSON.stringify(payload), prvKey);
+};
+
+function loadJitsi(roomName, token) {
+    const domain = "8x8.vc";
+    const appId = "vpaas-magic-cookie-0fd84653e8f44399aba55f69eaf1f6fe";
+
+    const options = {
+        // Correct format: "AppID/RoomName"
+        roomName: appId + "/" + roomName,
+        jwt: token, 
+        width: "100%",
+        height: "100%",
+        parentNode: document.querySelector('#jitsiFrame'),
+        configOverwrite: {
+            startWithAudioMuted: false,
+            startWithVideoMuted: false,
+            prejoinPageEnabled: false,
+            disableDeepLinking: true,
+            enableLobby: false, 
+            p2p: { enabled: true }
+        },
+        interfaceConfigOverwrite: {
+            SHOW_JITSI_WATERMARK: false,
+            SHOW_WATERMARK_FOR_GUESTS: false,
+            TOOLBAR_BUTTONS: [
+                'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
+                'fodeviceselection', 'hangup', 'profile', 'chat', 'settings', 
+                'raisehand', 'videoquality', 'filmstrip', 'tileview', 'security'
+            ],
+        }
+    };
+
+    try {
+        // Ensure you use the domain "8x8.vc"
+        jitsiAPI = new JitsiMeetExternalAPI(domain, options);
+
+        jitsiAPI.addEventListener('videoConferenceJoined', () => {
+            document.getElementById('meetingLoader').style.display = 'none';
+        });
+
+        jitsiAPI.addEventListener('videoConferenceLeft', () => closeVideoInterface());
+        jitsiAPI.addEventListener('readyToClose', () => closeVideoInterface());
+
+    } catch (err) {
+        console.error("Jitsi initialization error:", err);
+        closeVideoInterface();
+    }
+}
 
         // --- VIDEO CONTROLS ---
         window.toggleAudio = () => {
