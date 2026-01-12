@@ -773,18 +773,7 @@ async function loadVestData() {
             if (targetSection) targetSection.classList.add('active');
         });
     });
-/* In your vests.html script section */
 
-window.scheduleCall = function() {
-    // Check if the variables exist (they are defined at the top of your script)
-    if (!ownerUID || !vestID) {
-        alert("Error: Missing founder information.");
-        return;
-    }
-
-    // Redirect to chat.html passing the founder's ID and the context (Vest ID)
-    window.location.href = `chat.html?recipient=${ownerUID}&refVest=${vestID}`;
-};
     /* --- 5. MEDIA TERMINAL LOGIC --- */
     window.openPitchDeck = (url) => {
         if (!url || url === "" || url === "#") return alert("No Pitch Deck available for this vest.");
@@ -836,10 +825,16 @@ window.scheduleCall = function() {
         document.getElementById('fundModal').classList.remove('active');
     };
 
-    window.scheduleCall = function() {
-        alert('Call scheduling feature coming soon!');
-        closeModal();
-    };
+window.scheduleCall = function() {
+    // Check if the variables exist (they are defined at the top of your script)
+    if (!ownerUID || !vestID) {
+        alert("Error: Missing founder information.");
+        return;
+    }
+
+    // Redirect to chat.html passing the founder's ID and the context (Vest ID)
+    window.location.href = `chat.html?recipient=${ownerUID}&refVest=${vestID}`;
+};
 
     window.inviteMeeting = function() {
         alert('Meeting invitation feature coming soon!');
