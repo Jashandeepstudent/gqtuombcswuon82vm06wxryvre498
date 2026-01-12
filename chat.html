@@ -382,7 +382,8 @@ window.generateJitsiToken = function(roomName) {
     const appId = "vpaas-magic-cookie-0fd84653e8f44399aba55f69eaf1f6fe"; 
     const kid = "e06cc7"; 
 
-    const prvKey = `-----BEGIN RSA PRIVATE KEY-----
+    // 1. Ensure the key has NO leading spaces on each line from your code's indentation
+    const prvKeyPEM = `-----BEGIN RSA PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCytntDVcixIfHE
 9WsWkCSbuX1Dyemm0beZCSXhvCesqNP0sdUP8gSskZzLPsRlH4iLJIOIg/m6nYcK
 hDGUTivM1HLEb5pf3c38b1qDYGpjm67UFfv2l2/YeGuPkutUSjos90M3l0lHxeLR
@@ -411,13 +412,16 @@ M7yVbIhkAg9PuZwxpYEaAW6lOU1aYh2xYfZigalUY45ivIbNmk/czaFJ8dXIe7M0
 b3jwupOm6VFUtDOi4xuQ8VI=
 -----END RSA PRIVATE KEY-----`;
 
+    // 2. We use KEYUTIL to safely parse the PEM string
+    const keyObj = KEYUTIL.getKey(prvKeyPEM);
+
     const header = { alg: 'RS256', typ: 'JWT', kid: kid };
     const now = Math.floor(Date.now() / 1000);
     
     const payload = {
         aud: "jitsi",
         iss: "chat",
-        sub: appId, // Ensure this is the full AppID
+        sub: appId,
         room: roomName,
         iat: now,
         exp: now + 7200, 
@@ -436,9 +440,9 @@ b3jwupOm6VFUtDOi4xuQ8VI=
         }
     };
 
-    return KJUR.jws.JWS.sign("RS256", JSON.stringify(header), JSON.stringify(payload), prvKey);
+    // 3. Sign using the keyObj instead of the raw string
+    return KJUR.jws.JWS.sign("RS256", JSON.stringify(header), JSON.stringify(payload), keyObj);
 };
-
 function loadJitsi(roomName, token) {
     const domain = "8x8.vc";
     const appId = "vpaas-magic-cookie-0fd84653e8f44399aba55f69eaf1f6fe";
