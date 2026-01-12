@@ -441,101 +441,74 @@
             }
         };
 
-        function loadJitsi(roomName) {
-            console.log("Loading Jitsi for room:", roomName);
+       function loadJitsi(roomName) {
+    console.log("Loading Jitsi for room:", roomName);
 
-            const domain = "meet.jit.si";
-            const options = {
-                roomName: "ScaleVest_" + roomName,
-                width: "100%",
-                height: "100%",
-                parentNode: document.querySelector('#jitsiFrame'),
-                userInfo: {
-                    displayName: userDisplayName,
-                    avatarURL: userAvatar,
-                    email: currentUser.email || `${currentUser.uid}@scalevest.app`
-                },
-                configOverwrite: {
-                    startWithAudioMuted: false,
-                    startWithVideoMuted: false,
-                    prejoinPageEnabled: false,
-                    disableDeepLinking: true,
-                    enableWelcomePage: false,
-                    enableClosePage: false,
-                    // MAKE EVERYONE MODERATOR - NO WAITING ROOM
-                    startSilent: false,
-                    requireDisplayName: false,
-                    enableLobbyChat: false,
-                    lobby: {
-                        autoKnock: true,
-                        enableChat: false
-                    },
-                    // Disable moderator-only features
-                    disableModeratorIndicator: true,
-                    moderatedRoomServiceUrl: undefined,
-                    resolution: 720,
-                    constraints: {
-                        video: {
-                            height: { ideal: 720, max: 1080, min: 360 }
-                        }
-                    },
-                    p2p: { enabled: true },
-                    enableLayerSuspension: true,
-                    toolbarButtons: []
-                },
-                interfaceConfigOverwrite: {
-                    SHOW_JITSI_WATERMARK: false,
-                    SHOW_WATERMARK_FOR_GUESTS: false,
-                    TOOLBAR_ALWAYS_VISIBLE: false,
-                    DISABLE_VIDEO_BACKGROUND: false,
-                    MOBILE_APP_PROMO: false
-                }
-            };
+    const domain = "meet.jit.si";
+    const options = {
+        roomName: "ScaleVest_" + roomName,
+        width: "100%",
+        height: "100%",
+        parentNode: document.querySelector('#jitsiFrame'),
+        userInfo: {
+            displayName: userDisplayName,
+            avatarURL: userAvatar,
+            email: currentUser.email || `${currentUser.uid}@scalevest.app`
+        },
+        configOverwrite: {
+            /* CORE FIXES FOR MODERATION */
+            disableInviteFunctions: true,
+            prejoinPageEnabled: false,
+            // If the investor is the one joining, Jitsi public makes the first person moderator.
+            // These flags ensure the founder isn't stuck if they arrive first:
+            enableUserRolesBasedOnToken: false, 
+            
+            /* ALLOW MEETING TO START WITHOUT AUTH */
+            disableRemoteMute: false,
+            remoteVideoMenu: {
+                disableKick: !isInvestor // Only investor can kick
+            },
 
-            try {
-                jitsiAPI = new JitsiMeetExternalAPI(domain, options);
-                console.log("Jitsi API initialized");
-                
-                // Auto-grant moderator to investor
-                jitsiAPI.addEventListener('participantRoleChanged', (event) => {
-                    console.log("Participant role changed:", event);
-                });
-
-                jitsiAPI.addEventListener('videoConferenceJoined', () => {
-                    console.log("Conference joined successfully");
-                    document.getElementById('meetingLoader').style.display = 'none';
-                    
-                    // If investor, grant moderator rights
-                    if(isInvestor) {
-                        console.log("Granting moderator rights to investor");
-                        // Jitsi automatically makes first person moderator in public rooms
-                    }
-                });
-
-                jitsiAPI.addEventListener('videoConferenceLeft', () => {
-                    console.log("Conference left");
-                    closeVideoInterface();
-                });
-
-                jitsiAPI.addEventListener('readyToClose', () => {
-                    console.log("Ready to close");
-                    closeVideoInterface();
-                });
-
-                // Hide loader after 5 seconds as fallback
-                setTimeout(() => {
-                    if(document.getElementById('meetingLoader').style.display !== 'none') {
-                        console.log("Hiding loader (timeout)");
-                        document.getElementById('meetingLoader').style.display = 'none';
-                    }
-                }, 5000);
-
-            } catch (err) {
-                console.error("Jitsi initialization error:", err);
-                alert("Failed to start meeting. Please try again.");
-                closeVideoInterface();
-            }
+            startWithAudioMuted: false,
+            startWithVideoMuted: false,
+            toolbarButtons: [
+                'microphone', 'camera', 'desktop', 'fullscreen',
+                'fodeviceselection', 'hangup', 'profile', 'chat',
+                'settings', 'videoquality', 'tileview', 'download', 'help'
+            ]
+        },
+        interfaceConfigOverwrite: {
+            SHOW_JITSI_WATERMARK: false,
+            SHOW_WATERMARK_FOR_GUESTS: false,
+            DEFAULT_REMOTE_DISPLAY_NAME: 'Partner',
+            TOOLBAR_BUTTONS: [] // We use our own custom buttons anyway
         }
+    };
+
+    try {
+        jitsiAPI = new JitsiMeetExternalAPI(domain, options);
+
+        jitsiAPI.addEventListener('videoConferenceJoined', () => {
+            document.getElementById('meetingLoader').style.display = 'none';
+            
+            // Logic to handle "Moderator" status visually
+            if (isInvestor) {
+                console.log("Investor joined as primary host.");
+                // Note: On public meet.jit.si, the first person to join 
+                // is automatically granted moderator rights.
+            }
+        });
+
+        jitsiAPI.on('passwordRequired', () => {
+            // If the room somehow gets locked, this prevents a hang
+            jitsiAPI.executeCommand('password', 'scalevest123');
+        });
+
+    } catch (err) {
+        console.error("Jitsi Error:", err);
+        closeVideoInterface();
+    }
+}
 
         // --- VIDEO CONTROLS ---
         window.toggleAudio = () => {
