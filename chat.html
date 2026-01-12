@@ -221,300 +221,466 @@
     </div>
 
     <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    // CONFIG
-    const firebaseConfig = {
-        apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-        authDomain: "scalevest-163a0.firebaseapp.com",
-        databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-        projectId: "scalevest-163a0",
-        storageBucket: "scalevest-163a0.firebasestorage.app",
-        messagingSenderId: "938358950124",
-        appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
-    };
+        // CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+            authDomain: "scalevest-163a0.firebaseapp.com",
+            databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+            projectId: "scalevest-163a0",
+            storageBucket: "scalevest-163a0.firebasestorage.app",
+            messagingSenderId: "938358950124",
+            appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
+        };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const storage = getStorage(app);
-    const auth = getAuth(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const storage = getStorage(app);
+        const auth = getAuth(app);
 
-    // GLOBAL VARS
-    const params = new URLSearchParams(window.location.search);
-    const recipientUID = params.get('recipient');
-    let currentUser = null;
-    let chatRoomID = null;
-    let jitsiAPI = null;
-    let isInvestor = false;
-    let userDisplayName = "User";
-    let userAvatar = "";
-    let typingTimeout = null;
-    let audioMuted = false;
-    let videoMuted = false;
+        // GLOBAL VARS
+        const params = new URLSearchParams(window.location.search);
+        const recipientUID = params.get('recipient');
+        let currentUser = null;
+        let chatRoomID = null;
+        let jitsiAPI = null;
+        let isInvestor = false;
+        let userDisplayName = "User";
+        let userAvatar = "";
+        let typingTimeout = null;
+        let audioMuted = false;
+        let videoMuted = false;
 
-    // AUTH
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            currentUser = user;
-            if(!recipientUID) { window.location.href = "dashboard.html"; return; }
-            await identifyUserRole();
-            initializeChat();
-        } else {
-            window.location.href = "login3.html";
+        // AUTH
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                if(!recipientUID) { window.location.href = "dashboard.html"; return; }
+                
+                await identifyUserRole();
+                initializeChat();
+            } else {
+                window.location.href = "login3.html";
+            }
+        });
+
+        // 1. IDENTIFY ROLE & GET MY DETAILS
+        async function identifyUserRole() {
+            try {
+                const invSnap = await get(ref(db, `investorProfiles/${currentUser.uid}`));
+                if (invSnap.exists()) {
+                    isInvestor = true;
+                    document.getElementById('meetingBtn').style.display = 'flex';
+                    document.getElementById('btnEndAll').style.display = 'flex';
+                    const data = invSnap.val();
+                    userDisplayName = data.fullName || "Investor";
+                    userAvatar = data.photoURL || data.logo || "";
+                    return;
+                }
+            } catch(e) {}
+
+            try {
+                const fndSnap = await get(ref(db, `founderProfile/${currentUser.uid}`));
+                if (fndSnap.exists()) {
+                    const data = fndSnap.val();
+                    userDisplayName = data.founderUsername || "Founder";
+                    userAvatar = data.photoURL || "";
+                }
+            } catch(e) {}
         }
-    });
 
-    // 1. IDENTIFY ROLE & GET DETAILS
-    async function identifyUserRole() {
-        try {
-            const invSnap = await get(ref(db, `investorProfiles/${currentUser.uid}`));
-            if (invSnap.exists()) {
-                isInvestor = true;
-                document.getElementById('meetingBtn').style.display = 'flex';
-                document.getElementById('btnEndAll').style.display = 'flex';
-                const data = invSnap.val();
-                userDisplayName = data.fullName || "Investor";
-                userAvatar = data.photoURL || data.logo || "";
-                return;
+        async function initializeChat() {
+            const participantIDs = [currentUser.uid, recipientUID].sort();
+            chatRoomID = `chat_${participantIDs[0]}_${participantIDs[1]}`;
+
+            let chatTitle = "Chat";
+            try {
+                const fSnap = await get(ref(db, `founderProfile/${recipientUID}`));
+                if (fSnap.exists()) chatTitle = fSnap.val().firstName || "Founder";
+                else {
+                    const iSnap = await get(ref(db, `investorProfiles/${recipientUID}`));
+                    if (iSnap.exists()) chatTitle = iSnap.val().fullName || "Investor";
+                }
+            } catch (e) {}
+            document.getElementById('chatTitle').textContent = chatTitle;
+            document.getElementById('initialLoader').style.display = 'none';
+
+            const messagesRef = ref(db, `Chats/${chatRoomID}`);
+            onChildAdded(messagesRef, (snapshot) => {
+                const msg = snapshot.val();
+                if(msg.sender) renderMessage(msg);
+            });
+            
+            const typingRef = ref(db, `Chats/${chatRoomID}/typing/${recipientUID}`);
+            onValue(typingRef, (snapshot) => {
+                const isTyping = snapshot.val();
+                const bubble = document.getElementById('typingBubble');
+                const container = document.getElementById('chatContainer');
+                
+                if (isTyping) {
+                    bubble.style.display = 'flex';
+                    container.appendChild(bubble); 
+                    container.scrollTop = container.scrollHeight;
+                } else {
+                    bubble.style.display = 'none';
+                }
+            });
+        }
+
+        // --- RENDER MESSAGES ---
+        function renderMessage(msg) {
+            const container = document.getElementById('chatContainer');
+            const isMine = msg.sender === currentUser.uid;
+            const div = document.createElement('div');
+            div.className = `message-bubble ${isMine ? 'msg-mine' : 'msg-theirs'}`;
+            
+            const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            let contentHtml = "";
+            if (msg.fileType === 'image') {
+                contentHtml = `<img src="${msg.fileUrl}" style="max-width:100%; border-radius:8px; cursor:pointer;" onclick="window.open('${msg.fileUrl}')">`;
+            } else if (msg.fileType === 'video') {
+                contentHtml = `<video src="${msg.fileUrl}" style="max-width:100%; border-radius:8px;" controls></video>`;
+            } else if (msg.fileType === 'document') {
+                contentHtml = `<a href="${msg.fileUrl}" target="_blank" style="color:inherit; text-decoration:underline;">📄 ${msg.fileName || 'Document'}</a>`;
             }
-            const fndSnap = await get(ref(db, `founderProfile/${currentUser.uid}`));
-            if (fndSnap.exists()) {
-                const data = fndSnap.val();
-                userDisplayName = data.founderUsername || "Founder";
-                userAvatar = data.photoURL || "";
+
+            if (msg.text) {
+                contentHtml += `<div>${msg.text}</div>`;
             }
-        } catch(e) { console.error("Role Check Error", e); }
-    }
+            else if (msg.type === 'meeting') {
+                const isScheduled = msg.scheduledTime && msg.scheduledTime !== 'now';
+                const dateObj = isScheduled ? new Date(msg.scheduledTime) : new Date();
+                const displayTime = isScheduled ? dateObj.toLocaleString() : "Happening Now";
 
-    async function initializeChat() {
-        const participantIDs = [currentUser.uid, recipientUID].sort();
-        chatRoomID = `chat_${participantIDs[0]}_${participantIDs[1]}`;
-
-        try {
-            const fSnap = await get(ref(db, `founderProfile/${recipientUID}`));
-            if (fSnap.exists()) document.getElementById('chatTitle').textContent = fSnap.val().firstName || "Founder";
-            else {
-                const iSnap = await get(ref(db, `investorProfiles/${recipientUID}`));
-                if (iSnap.exists()) document.getElementById('chatTitle').textContent = iSnap.val().fullName || "Investor";
-            }
-        } catch (e) {}
-        document.getElementById('initialLoader').style.display = 'none';
-
-        const messagesRef = ref(db, `Chats/${chatRoomID}`);
-        onChildAdded(messagesRef, (snapshot) => {
-            const msg = snapshot.val();
-            if(msg.sender) renderMessage(msg);
-        });
-        
-        onValue(ref(db, `Chats/${chatRoomID}/typing/${recipientUID}`), (snapshot) => {
-            const bubble = document.getElementById('typingBubble');
-            bubble.style.display = snapshot.val() ? 'flex' : 'none';
-        });
-    }
-
-    // --- RENDER MESSAGES ---
-    function renderMessage(msg) {
-        const container = document.getElementById('chatContainer');
-        const isMine = msg.sender === currentUser.uid;
-        const div = document.createElement('div');
-        div.className = `message-bubble ${isMine ? 'msg-mine' : 'msg-theirs'}`;
-        const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        
-        let contentHtml = "";
-        if (msg.fileType === 'image') contentHtml = `<img src="${msg.fileUrl}" style="max-width:100%; border-radius:8px; cursor:pointer;" onclick="window.open('${msg.fileUrl}')">`;
-        else if (msg.fileType === 'video') contentHtml = `<video src="${msg.fileUrl}" style="max-width:100%; border-radius:8px;" controls></video>`;
-        else if (msg.fileType === 'document') contentHtml = `<a href="${msg.fileUrl}" target="_blank" style="color:inherit; text-decoration:underline;">📄 ${msg.fileName || 'Document'}</a>`;
-
-        if (msg.text) contentHtml += `<div>${msg.text}</div>`;
-        else if (msg.type === 'meeting') {
-            const isScheduled = msg.scheduledTime && msg.scheduledTime !== 'now';
-            const displayTime = isScheduled ? new Date(msg.scheduledTime).toLocaleString() : "Happening Now";
-            contentHtml = `
-                <div class="meeting-card">
-                    <span style="font-size:2rem">📹</span>
-                    <div style="flex:1">
-                        <div style="font-weight:700; font-size:1rem;">${msg.title}</div>
-                        <div style="font-size:0.85rem; opacity:0.8;">${displayTime}</div>
-                        <button class="join-btn" onclick="window.tryJoinMeeting('${msg.meetingId}', ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime})">JOIN MEETING</button>
+                contentHtml = `
+                    <div class="meeting-card" onclick="event.stopPropagation(); window.tryJoinMeeting(
+    '${msg.meetingId}',
+    ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime},
+    '${msg.createdBy}'
+)">
+                        <span style="font-size:2rem">📹</span>
+                        <div style="flex:1">
+                            <div style="font-weight:700; font-size:1rem;">${msg.title}</div>
+                            <div style="font-size:0.85rem; opacity:0.8;">${displayTime}</div>
+                            <button class="join-btn" onclick="event.stopPropagation(); window.tryJoinMeeting(
+    '${msg.meetingId}',
+    ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime},
+    '${msg.createdBy}'
+)">JOIN MEETING</button>
+                        </div>
                     </div>
-                </div>`;
-        }
-        div.innerHTML = `${contentHtml}<span class="timestamp">${time}</span>`;
-        container.appendChild(div);
-        container.scrollTop = container.scrollHeight;
-    }
-
-    // --- MEETING LOGIC ---
-    window.openMeetingModal = () => document.getElementById('meetingSetupModal').style.display = 'flex';
-    window.closeMeetingModal = () => document.getElementById('meetingSetupModal').style.display = 'none';
-
-    window.createMeeting = async () => {
-        const title = document.getElementById('meetingTitle').value || "Quick Sync";
-        const dateVal = document.getElementById('meetingDate').value;
-        const timeVal = document.getElementById('meetingTime').value;
-        let scheduledTime = (dateVal && timeVal) ? new Date(`${dateVal}T${timeVal}`).getTime() : 'now';
-        let meetingId = `SV_${Date.now()}`;
-
-        await push(ref(db, `Chats/${chatRoomID}`), {
-            sender: currentUser.uid, type: 'meeting', title: title,
-            meetingId: meetingId, scheduledTime: scheduledTime,
-            timestamp: Date.now(), recipient: recipientUID
-        });
-        closeMeetingModal();
-    };
-
-    window.tryJoinMeeting = async (meetingId, scheduledTime) => {
-        if (scheduledTime !== 'now' && Date.now() < (scheduledTime - 300000)) {
-            const dateObj = new Date(scheduledTime);
-            document.getElementById('waitDisplayTime').textContent = dateObj.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            document.getElementById('waitDisplayDate').textContent = dateObj.toLocaleDateString();
-            document.getElementById('waitingRoomModal').style.display = 'flex';
-            return;
-        }
-        document.getElementById('videoConferenceContainer').style.display = 'flex';
-        document.getElementById('meetingLoader').style.display = 'flex';
-
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-            stream.getTracks().forEach(track => track.stop());
-            loadJitsi(meetingId);
-        } catch (err) {
-            alert("Camera/Mic access required.");
-            document.getElementById('videoConferenceContainer').style.display = 'none';
-        }
-    };
-
-    function loadJitsi(roomName) {
-    console.log("Starting Jitsi session for room:", roomName);
-
-    const frame = document.querySelector('#jitsiFrame');
-    // Ensure the frame is empty except for the loader
-    const loaderHTML = document.getElementById('meetingLoader').outerHTML;
-    frame.innerHTML = loaderHTML; 
-
-    const domain = "meet.jit.si";
-    const options = {
-        roomName: roomName,
-        width: "100%",
-        height: "100%",
-        parentNode: frame,
-        userInfo: { 
-            displayName: userDisplayName, 
-            avatarURL: userAvatar 
-        },
-        configOverwrite: {
-            // === MODERATOR & CONNECTION FIXES ===
-            prejoinPageEnabled: false,          // Skips the 'Join' button screen
-            disableLobby: true,                 // Disables the waiting room/knock feature
-            enableUserRolesBasedOnToken: false, // Don't wait for official Jitsi JWT moderator
-            disableRemoteMute: false,           // Allows muting others
-            
-            // Allow the first person (Investor) to be the de-facto moderator
-            remoteVideoMenu: {
-                disableKick: !isInvestor,       // Only Investor can kick
-                disableGrantModerator: true
-            },
-            
-            // === MEETING PERMISSIONS ===
-            startWithAudioMuted: false,
-            startWithVideoMuted: false,
-            requireDisplayName: false,
-            
-            // === UI SETTINGS ===
-            disableDeepLinking: true,           // Prevents mobile app redirects
-            toolbarButtons: []                  // Keeps UI clean for your custom buttons
-        },
-        interfaceConfigOverwrite: {
-            SHOW_JITSI_WATERMARK: false,
-            SHOW_WATERMARK_FOR_GUESTS: false,
-            MOBILE_APP_PROMO: false,
-            DEFAULT_REMOTE_DISPLAY_NAME: 'Partner'
-        }
-    };
-
-    // Initialize the API
-    jitsiAPI = new JitsiMeetExternalAPI(domain, options);
-
-    // Event Listeners
-    jitsiAPI.addEventListener('videoConferenceJoined', () => {
-        console.log("Local user joined the conference.");
-        document.getElementById('meetingLoader').style.display = 'none';
-        
-        // Investor sets the room password automatically to secure the line
-        if (isInvestor) {
-            console.log("Setting room password as Investor.");
-            jitsiAPI.executeCommand('password', 'SV_Secure_Line_2024');
-        }
-    });
-
-    // Handle the case where the founder joins and needs to enter the password set by Investor
-    jitsiAPI.on('passwordRequired', () => {
-        console.log("Room is locked, applying auto-password.");
-        jitsiAPI.executeCommand('password', 'SV_Secure_Line_2024');
-    });
-
-    jitsiAPI.addEventListener('videoConferenceLeft', () => {
-        console.log("Conference left.");
-        closeVideoInterface();
-    });
-
-    jitsiAPI.addEventListener('readyToClose', () => {
-        console.log("Jitsi instance ready to dispose.");
-        closeVideoInterface();
-    });
-
-    // Fallback: If after 10 seconds it's still "loading", hide the loader anyway
-    setTimeout(() => {
-        const loader = document.getElementById('meetingLoader');
-        if (loader && loader.style.display !== 'none') {
-            loader.style.display = 'none';
-        }
-    }, 10000);
-}
-
-    // --- FILE UPLOAD ---
-    const fileInput = document.getElementById('fileInput');
-    document.getElementById('attachBtn').onclick = () => fileInput.click();
-    fileInput.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const progressBar = document.getElementById('uploadProgress');
-        const storagePath = `chat_uploads/${chatRoomID}/${Date.now()}_${file.name}`;
-        const uploadTask = uploadBytesResumable(storageRef(storage, storagePath), file);
-
-        uploadTask.on('state_changed', 
-            (s) => progressBar.style.width = (s.bytesTransferred / s.totalBytes) * 100 + '%',
-            (e) => { alert("Upload failed"); progressBar.style.width = '0%'; },
-            async () => {
-                const url = await getDownloadURL(uploadTask.snapshot.ref);
-                let type = file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'document';
-                await push(ref(db, `Chats/${chatRoomID}`), { sender: currentUser.uid, fileUrl: url, fileType: type, fileName: file.name, timestamp: Date.now(), recipient: recipientUID });
-                progressBar.style.width = '0%';
-                fileInput.value = '';
+                `;
             }
-        );
-    };
+            
+            div.innerHTML = `${contentHtml}<span class="timestamp">${time}</span>`;
 
-    // --- TEXT SEND ---
-    async function sendMessage() {
-        const input = document.getElementById('msgInput');
-        const text = input.value.trim();
-        if (!text) return;
-        await push(ref(db, `Chats/${chatRoomID}`), { sender: currentUser.uid, text: text, timestamp: Date.now(), recipient: recipientUID });
-        input.value = "";
-        set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false);
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // --- MEETING LOGIC ---
+
+        window.openMeetingModal = () => {
+            document.getElementById('meetingSetupModal').style.display = 'flex';
+        };
+        window.closeMeetingModal = () => {
+            document.getElementById('meetingSetupModal').style.display = 'none';
+        };
+
+        window.createMeeting = async () => {
+            const title = document.getElementById('meetingTitle').value || "Quick Sync";
+            const dateVal = document.getElementById('meetingDate').value;
+            const timeVal = document.getElementById('meetingTime').value;
+            
+            let scheduledTime = 'now';
+            let meetingId = `meet_${Date.now()}_${Math.floor(Math.random()*1000)}`;
+
+            if (dateVal && timeVal) {
+                scheduledTime = new Date(`${dateVal}T${timeVal}`).getTime();
+            }
+
+            await push(ref(db, `Chats/${chatRoomID}`), {
+                sender: currentUser.uid,
+                type: 'meeting',
+                title: title,
+                meetingId: meetingId,
+                scheduledTime: scheduledTime,
+                timestamp: Date.now(),
+                recipient: recipientUID
+            });
+
+            closeMeetingModal();
+        };
+
+        window.tryJoinMeeting = async (meetingId, scheduledTime, createdBy) => {
+    const now = Date.now();
+
+    // ⏳ Too early → waiting room
+    if (scheduledTime !== 'now' && now < scheduledTime) {
+        const dateObj = new Date(scheduledTime);
+        document.getElementById('waitDisplayTime').textContent =
+            dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('waitDisplayDate').textContent =
+            dateObj.toLocaleDateString();
+        document.getElementById('waitingRoomModal').style.display = 'flex';
+        return;
     }
 
-    document.getElementById('sendBtn').onclick = sendMessage;
-    document.getElementById('msgInput').onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
-    document.getElementById('msgInput').oninput = () => {
-        set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), true);
-        if (typingTimeout) clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false), 2000);
-    };
-</script>
+    // 🚨 HOST MUST JOIN FIRST
+    if (currentUser.uid !== createdBy) {
+        alert("Waiting for host to start the meeting.");
+        return;
+    }
+
+    // Show video UI
+    document.getElementById('videoConferenceContainer').style.display = 'flex';
+    document.getElementById('meetingLoader').style.display = 'flex';
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+        stream.getTracks().forEach(t => t.stop());
+        loadJitsi(meetingId);
+    } catch (err) {
+        alert("Camera/Microphone permission required.");
+        document.getElementById('videoConferenceContainer').style.display = 'none';
+    }
+};
+
+
+        function loadJitsi(roomName) {
+            console.log("Loading Jitsi for room:", roomName);
+
+            const domain = "meet.jit.si";
+            const options = {
+                roomName: "ScaleVest_" + roomName,
+                width: "100%",
+                height: "100%",
+                parentNode: document.querySelector('#jitsiFrame'),
+                userInfo: {
+                    displayName: userDisplayName,
+                    avatarURL: userAvatar,
+                    email: currentUser.email || `${currentUser.uid}@scalevest.app`
+                },
+               configOverwrite: {
+    startWithAudioMuted: false,
+    startWithVideoMuted: false,
+
+    prejoinPageEnabled: false,
+    enableWelcomePage: false,
+    enableClosePage: false,
+
+    // 🔥 DISABLE LOBBY COMPLETELY
+    enableLobby: false,
+    enableLobbyChat: false,
+    moderatedRoomServiceUrl: null,
+
+    requireDisplayName: false,
+    startSilent: false,
+
+    p2p: { enabled: true },
+    resolution: 720,
+                    constraints: {
+                        video: {
+                            height: { ideal: 720, max: 1080, min: 360 }
+                        }
+                    },
+                    p2p: { enabled: true },
+                    enableLayerSuspension: true,
+                    toolbarButtons: []
+                },
+                interfaceConfigOverwrite: {
+                    SHOW_JITSI_WATERMARK: false,
+                    SHOW_WATERMARK_FOR_GUESTS: false,
+                    TOOLBAR_ALWAYS_VISIBLE: false,
+                    DISABLE_VIDEO_BACKGROUND: false,
+                    MOBILE_APP_PROMO: false
+                }
+            };
+
+            try {
+                jitsiAPI = new JitsiMeetExternalAPI(domain, options);
+                console.log("Jitsi API initialized");
+                
+                // Auto-grant moderator to investor
+                jitsiAPI.addEventListener('participantRoleChanged', (event) => {
+                    console.log("Participant role changed:", event);
+                });
+
+jitsiAPI.addEventListener('videoConferenceJoined', () => {
+    console.log("Conference joined");
+    document.getElementById('meetingLoader').style.display = 'none';
+});
+
+
+                jitsiAPI.addEventListener('videoConferenceLeft', () => {
+                    console.log("Conference left");
+                    closeVideoInterface();
+                });
+
+                jitsiAPI.addEventListener('readyToClose', () => {
+                    console.log("Ready to close");
+                    closeVideoInterface();
+                });
+
+                // Hide loader after 5 seconds as fallback
+                setTimeout(() => {
+                    if(document.getElementById('meetingLoader').style.display !== 'none') {
+                        console.log("Hiding loader (timeout)");
+                        document.getElementById('meetingLoader').style.display = 'none';
+                    }
+                }, 5000);
+
+            } catch (err) {
+                console.error("Jitsi initialization error:", err);
+                alert("Failed to start meeting. Please try again.");
+                closeVideoInterface();
+            }
+        }
+
+        // --- VIDEO CONTROLS ---
+        window.toggleAudio = () => {
+            if(jitsiAPI) {
+                jitsiAPI.executeCommand('toggleAudio');
+                audioMuted = !audioMuted;
+                document.getElementById('btnMic').classList.toggle('active', audioMuted);
+            }
+        };
+
+        window.toggleVideo = () => {
+            if(jitsiAPI) {
+                jitsiAPI.executeCommand('toggleVideo');
+                videoMuted = !videoMuted;
+                document.getElementById('btnCam').classList.toggle('active', videoMuted);
+            }
+        };
+
+        window.leaveMeeting = () => {
+            if(jitsiAPI) {
+                jitsiAPI.executeCommand('hangup');
+                jitsiAPI.dispose();
+            }
+            closeVideoInterface();
+        };
+
+        window.endMeetingForAll = () => {
+            if(!confirm("End meeting for everyone?")) return;
+            if(jitsiAPI) {
+                jitsiAPI.executeCommand('hangup');
+                jitsiAPI.dispose();
+            }
+            closeVideoInterface();
+        };
+
+        function closeVideoInterface() {
+            document.getElementById('videoConferenceContainer').style.display = 'none';
+            document.querySelector('#jitsiFrame').innerHTML = `
+                <div id="meetingLoader">
+                    <div class="loader-spinner"></div>
+                    <div class="loader-text">Connecting to meeting...</div>
+                </div>
+            `;
+            jitsiAPI = null;
+            audioMuted = false;
+            videoMuted = false;
+            document.getElementById('btnMic').classList.remove('active');
+            document.getElementById('btnCam').classList.remove('active');
+        }
+
+        // --- FILE UPLOAD ---
+        const fileInput = document.getElementById('fileInput');
+        const attachBtn = document.getElementById('attachBtn');
+
+        attachBtn.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const progressBar = document.getElementById('uploadProgress');
+            progressBar.style.width = '10%';
+
+            try {
+                const storagePath = `chat_uploads/${chatRoomID}/${Date.now()}_${file.name}`;
+                const fileRef = storageRef(storage, storagePath);
+                const uploadTask = uploadBytesResumable(fileRef, file);
+
+                uploadTask.on('state_changed', 
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        progressBar.style.width = progress + '%';
+                    }, 
+                    (error) => {
+                        console.error("Upload failed", error);
+                        alert("File upload failed.");
+                        progressBar.style.width = '0%';
+                    }, 
+                    async () => {
+                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                        
+                        let type = 'document';
+                        if (file.type.startsWith('image/')) type = 'image';
+                        else if (file.type.startsWith('video/')) type = 'video';
+
+                        await push(ref(db, `Chats/${chatRoomID}`), {
+                            sender: currentUser.uid,
+                            text: "", 
+                            fileUrl: downloadURL,
+                            fileType: type,
+                            fileName: file.name,
+                            timestamp: Date.now(),
+                            recipient: recipientUID
+                        });
+
+                        progressBar.style.width = '0%';
+                        fileInput.value = '';
+                    }
+                );
+            } catch (error) {
+                console.error("Error", error);
+                progressBar.style.width = '0%';
+            }
+        });
+
+        // --- TEXT SEND ---
+        const input = document.getElementById('msgInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        async function sendMessage() {
+            const text = input.value.trim();
+            if (!text || !chatRoomID) return;
+
+            const badWords = ["abuse", "scam", "fraud", "kill", "idiot"];
+            let cleanText = text;
+            badWords.forEach(w => { cleanText = cleanText.replace(new RegExp(`\\b${w}\\b`,'gi'), '####'); });
+
+            await push(ref(db, `Chats/${chatRoomID}`), {
+                sender: currentUser.uid,
+                text: cleanText,
+                 createdBy: currentUser.uid,
+                timestamp: Date.now(),
+                recipient: recipientUID
+            });
+            input.value = "";
+            set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false);
+        }
+        
+        input.addEventListener('input', () => {
+            if (!chatRoomID) return;
+            set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), true);
+            if (typingTimeout) clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false);
+            }, 2000);
+        });
+
+        sendBtn.addEventListener('click', sendMessage);
+        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+    </script>
 </body>
 </html>
