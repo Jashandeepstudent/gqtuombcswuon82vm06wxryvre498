@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Browse Vests | ScaleVest</title>
+    <title>Browse Vests | ScaleVest Terminal</title>
     <style>
+        /* --- GLOBAL STYLES --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'SF Pro Display', -apple-system, sans-serif;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #0a2f23 0%, #0f172a 100%);
             color: #fff;
             min-height: 100vh;
@@ -17,127 +18,179 @@
 
         .container { max-width: 1400px; margin: 0 auto; }
 
-        .header-area { margin-bottom: 50px; text-align: center; }
+        .header-area { 
+            margin-bottom: 50px; 
+            text-align: center; 
+            animation: fadeInDown 0.8s ease;
+        }
+        
         .header-area h1 { 
             font-size: 3rem; 
             font-weight: 800;
             background: linear-gradient(90deg, #10b981, #3b82f6); 
             -webkit-background-clip: text; 
             -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
+            letter-spacing: -1px;
         }
 
         .cards-wrapper {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 45px;
         }
 
-        /* VEST CARD DESIGN */
-        .vest-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
+        /* --- MODERN TECH VEST CARD (CARD 2 DESIGN) --- */
+        .card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 540px;
             display: flex;
             flex-direction: column;
-            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .vest-card:hover {
-            transform: translateY(-12px);
-            border-color: #10b981;
-            box-shadow: 0 30px 60px rgba(16, 185, 129, 0.15);
+        .card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 30px 80px rgba(102, 126, 234, 0.5);
         }
 
-        /* Top Thumbnail Section */
-        .card-thumbnail {
-            height: 240px;
+        /* Ambient background circles */
+        .card::before {
+            content: ''; position: absolute; top: -20%; right: -20%;
+            width: 200px; height: 200px; background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%; z-index: 0; transition: 0.6s ease;
+        }
+        .card:hover::before { transform: scale(1.2); }
+
+        /* 1. THUMBNAIL SECTION */
+        .thumbnail-area {
+            height: 220px;
             width: 100%;
             position: relative;
             background: #1a1a1a;
+            z-index: 1;
         }
 
-        .card-thumbnail img {
+        .thumbnail-area img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        /* High-Contrast White Hook Banner */
+        /* 2. WHITE HOOK BANNER */
         .hook-banner {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
-            background: #ffffff;
-            padding: 18px 25px;
-            border-top: 4px solid #10b981;
+            background: white;
+            padding: 15px 25px;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
         }
 
-        .hook-text {
-            color: #000000; /* Big Black Text */
-            font-size: 1.2rem;
+        .hook-banner h2 {
+            color: #000000; /* BIG BLACK TEXT */
+            font-size: 1.15rem;
             font-weight: 900;
             text-transform: uppercase;
-            line-height: 1.2;
             letter-spacing: -0.5px;
+            line-height: 1.2;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
+        /* 3. CONTENT SECTION */
         .content-section {
-            padding: 30px;
+            padding: 25px;
             flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            z-index: 1;
+            position: relative;
         }
 
         .startup-name {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #10b981;
-            margin-bottom: 20px;
+            font-size: 26px;
             font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
         }
 
-        .details-grid {
+        .category-tag {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        /* 4. FINANCIALS (BOTTOM SECTION) */
+        .bottom-section {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .data-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 25px;
+            gap: 20px;
         }
 
-        .detail-box {
-            background: rgba(255,255,255,0.05);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.08);
+        .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 5px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
 
-        .detail-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px; font-weight: 600; }
-        .detail-val { font-size: 1rem; font-weight: 700; color: #f8fafc; }
+        .value {
+            font-size: 16px;
+            color: white;
+            font-weight: 600;
+        }
 
         .view-btn {
-            width: 100%;
-            padding: 16px;
-            border-radius: 14px;
+            margin-top: 20px;
+            background: white;
+            color: #764ba2;
             border: none;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
         .view-btn:hover {
-            filter: brightness(1.1);
-            transform: scale(1.02);
+            background: #f8fafc;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
 
-        #noVests { text-align: center; width: 100%; padding: 100px; color: #64748b; font-size: 1.2rem; }
+        /* --- UTILS --- */
+        #noVests { text-align: center; width: 100%; padding: 100px; color: #a7f3d0; font-size: 1.2rem; display: none; }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -145,121 +198,133 @@
 <div class="container">
     <div class="header-area">
         <h1>Investment Terminal</h1>
-        <p style="color: #94a3b8;">Direct access to verified high-growth startup equity.</p>
+        <p style="color: #94a3b8; margin-top: 10px;">Explore and acquire equity in verified high-growth startups.</p>
     </div>
 
-    <div id="noVests" style="display: none;">Searching for active vests...</div>
-    <div class="cards-wrapper" id="vestsContainer"></div>
+    <div id="noVests">Searching for active opportunities...</div>
+    
+    <div class="cards-wrapper" id="vestsContainer">
+        </div>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-    authDomain: "scalevest-163a0.firebaseapp.com",
-    databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-    projectId: "scalevest-163a0",
-    storageBucket: "scalevest-163a0.firebasestorage.app",
-    messagingSenderId: "938358950124",
-    appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
-};
+    /* 🔐 Firebase config */
+    const firebaseConfig = {
+        apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+        authDomain: "scalevest-163a0.firebaseapp.com",
+        databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+        projectId: "scalevest-163a0",
+        storageBucket: "scalevest-163a0.firebasestorage.app",
+        messagingSenderId: "938358950124",
+        appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
+    };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
 
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        loadVests();
-    } else {
-        window.location.href = "login3.html";
-    }
-});
-
-async function loadVests() {
-    const container = document.getElementById('vestsContainer');
-    const noVestsMsg = document.getElementById('noVests');
-    
-    try {
-        const vestRef = ref(db, "Vests");
-        const snapshot = await get(vestRef);
-
-        if (!snapshot.exists()) {
-            noVestsMsg.innerText = "No opportunities available at this time.";
-            noVestsMsg.style.display = "block";
-            return;
+    // Ensure user is authenticated before loading
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            loadVests();
+        } else {
+            window.location.href = "login3.html";
         }
+    });
 
-        container.innerHTML = "";
-        let activeCount = 0;
+    async function loadVests() {
+        const container = document.getElementById('vestsContainer');
+        const noVestsMsg = document.getElementById('noVests');
+        
+        try {
+            const vestRef = ref(db, "Vests");
+            const snapshot = await get(vestRef);
 
-        snapshot.forEach((userNode) => {
-            userNode.forEach((vest) => {
-                const data = vest.val();
+            if (!snapshot.exists()) {
+                noVestsMsg.innerText = "Terminal Empty: No active vests found.";
+                noVestsMsg.style.display = "block";
+                return;
+            }
+
+            container.innerHTML = "";
+            let activeCount = 0;
+
+            // Iterate through UserIDs
+            snapshot.forEach((userNode) => {
+                const ownerUID = userNode.key;
                 
-                // Only load if status is 'active'
-                if (data.status === "active") {
-                    activeCount++;
-                    const details = data.StartupDetails || {};
-                    const main = data.MainVest || {};
-                    const vestId = vest.key;
-                    const ownerId = userNode.key;
+                // Iterate through VestIDs under that user
+                userNode.forEach((vest) => {
+                    const data = vest.val();
+                    const vestID = vest.key;
 
-                    const cardHtml = `
-                        <div class="vest-card">
-                            <div class="card-thumbnail">
-                                <img src="${details.thumbnailURL || 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800'}" alt="Startup">
-                                <div class="hook-banner">
-                                    <div class="hook-text">${details.hook || 'Next Gen Innovation'}</div>
-                                </div>
-                            </div>
-                            
-                            <div class="content-section">
-                                <div class="startup-name">${details.startupName || 'Premium Startup'}</div>
-                                
-                                <div class="details-grid">
-                                    <div class="detail-box">
-                                        <div class="detail-label">Valuation</div>
-                                        <div class="detail-val">$${main.valuation || 'TBD'}</div>
-                                    </div>
-                                    <div class="detail-box">
-                                        <div class="detail-label">Asking</div>
-                                        <div class="detail-val">$${main.askingPrice || 'TBD'}</div>
-                                    </div>
-                                    <div class="detail-box">
-                                        <div class="detail-label">Equity</div>
-                                        <div class="detail-val">${main.equityOffer || '---'}%</div>
-                                    </div>
-                                    <div class="detail-box">
-                                        <div class="detail-label">Stage</div>
-                                        <div class="detail-val">${details.stage || 'Seed'}</div>
+                    // Filter: Only show "active" status
+                    if (data.status === "active") {
+                        activeCount++;
+                        
+                        // Data Mapping based on your structure
+                        const main = data.MainVest || {};
+                        const details = data.StartupDetails || {};
+
+                        const cardHtml = `
+                            <div class="card">
+                                <div class="thumbnail-area">
+                                    <img src="${main.thumbnailUrl || 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800'}" alt="Startup Preview">
+                                    <div class="hook-banner">
+                                        <h2>${main.hook || 'Next-Gen Startup Opportunity'}</h2>
                                     </div>
                                 </div>
 
-                                <button class="view-btn" onclick="window.location.href='vest-details.html?id=${vestId}&owner=${ownerId}'">
-                                    ANALYZE OPPORTUNITY
-                                </button>
+                                <div class="content-section">
+                                    <h1 class="startup-name">${details.name || 'Unnamed Startup'}</h1>
+                                    <span class="category-tag">${details.category || 'Technology'} • ${details.stage || 'Seed'}</span>
+                                    
+                                    <div class="data-grid" style="margin-bottom: 10px;">
+                                        <div class="data-item">
+                                            <p class="label">Current Stage</p>
+                                            <p class="value">${details.stage || 'N/A'}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="bottom-section">
+                                        <div class="data-grid">
+                                            <div class="data-item">
+                                                <p class="label">Equity Offered</p>
+                                                <p class="value">${main.equityOffered || '0'}%</p>
+                                            </div>
+                                            <div class="data-item">
+                                                <p class="label">Fund Ask</p>
+                                                <p class="value">$${Number(main.fundAsk).toLocaleString() || '0'}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <button class="view-btn" onclick="window.location.href='vest-details.html?id=${vestID}&owner=${ownerUID}'">
+                                            Analyze Opportunity
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    `;
-                    container.innerHTML += cardHtml;
-                }
+                        `;
+                        container.innerHTML += cardHtml;
+                    }
+                });
             });
-        });
 
-        if (activeCount === 0) {
-            noVestsMsg.innerText = "No active opportunities found.";
-            noVestsMsg.style.display = "block";
+            if (activeCount === 0) {
+                noVestsMsg.innerText = "No active opportunities available right now.";
+                noVestsMsg.style.display = "block";
+            }
+
+        } catch (err) {
+            console.error("Load Error:", err);
+            container.innerHTML = `<p style="color:#ef4444; text-align:center; grid-column: 1/-1;">Database Error: Please check security rules.</p>`;
         }
-
-    } catch (err) {
-        console.error("Load Error:", err);
-        container.innerHTML = `<p style="color:#ef4444; text-align:center;">Security Error: Verify Database Rules.</p>`;
     }
-}
 </script>
+
 </body>
 </html>
