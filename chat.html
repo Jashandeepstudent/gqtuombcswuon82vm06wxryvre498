@@ -658,13 +658,17 @@ jitsiAPI.addEventListener('videoConferenceJoined', () => {
             let cleanText = text;
             badWords.forEach(w => { cleanText = cleanText.replace(new RegExp(`\\b${w}\\b`,'gi'), '####'); });
 
-            await push(ref(db, `Chats/${chatRoomID}`), {
-                sender: currentUser.uid,
-                text: cleanText,
-                 createdBy: currentUser.uid,
-                timestamp: Date.now(),
-                recipient: recipientUID
-            });
+await push(ref(db, `Chats/${chatRoomID}`), {
+    sender: currentUser.uid,
+    type: 'meeting',
+    title: title,
+    meetingId: meetingId,
+    scheduledTime: scheduledTime,
+    createdBy: currentUser.uid, // ✅ THIS WAS MISSING
+    timestamp: Date.now(),
+    recipient: recipientUID
+});
+
             input.value = "";
             set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false);
         }
