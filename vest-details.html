@@ -546,6 +546,68 @@ onAuthStateChanged(auth, (user) => {
         window.location.href = "login3.html";
     }
 });
+/* --- MEDIA TERMINAL LOGIC --- */
+
+window.openPitchDeck = (url) => {
+    if (!url || url === "#") return alert("No Pitch Deck available for this vest.");
+    const viewport = document.getElementById('mediaViewport');
+    const terminal = document.getElementById('mediaTerminal');
+    const externalBtn = document.getElementById('externalOpenBtn');
+
+    // Use Google Docs Viewer to render PDFs/PPTs inside the iframe if they are direct links
+    const viewerUrl = url.endsWith('.pdf') 
+        ? `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true` 
+        : url;
+
+    viewport.innerHTML = `<iframe src="${viewerUrl}" style="width:100%; height:100%; border:none;"></iframe>`;
+    externalBtn.href = url;
+    terminal.classList.add('active');
+};
+
+window.openDemoVideo = (url) => {
+    if (!url || url === "#") return alert("No Demo Video available for this vest.");
+    const viewport = document.getElementById('mediaViewport');
+    const terminal = document.getElementById('mediaTerminal');
+    const externalBtn = document.getElementById('externalOpenBtn');
+
+    let videoHtml = "";
+    
+    // Check if it's a YouTube link
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        const videoId = url.split('v=')[1] || url.split('/').pop();
+        videoHtml = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" style="width:100%; height:100%; border:none;" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    } else {
+        // Direct MP4 link
+        videoHtml = `<video src="${url}" controls autoplay style="width:100%; height:100%;"></video>`;
+    }
+
+    viewport.innerHTML = videoHtml;
+    externalBtn.href = url;
+    terminal.classList.add('active');
+};
+
+window.closeMediaTerminal = () => {
+    const viewport = document.getElementById('mediaViewport');
+    viewport.innerHTML = ""; // Stop video/audio playback
+    document.getElementById('mediaTerminal').classList.remove('active');
+};
+
+/* --- UPDATE YOUR loadVestData to use these functions --- */
+// Inside your loadVestData try block, find the link updates and replace them with these:
+
+// For Pitch Deck Link:
+const pitchLink = document.getElementById('pitchDeckLink');
+pitchLink.onclick = (e) => {
+    e.preventDefault();
+    openPitchDeck(details.pitchDeckUrl);
+};
+
+// For Demo Video Link:
+const videoLink = document.getElementById('demoVideoLink');
+videoLink.onclick = (e) => {
+    e.preventDefault();
+    openDemoVideo(founder.demoVideoUrl);
+};
     // Get URL parameters
     const params = new URLSearchParams(window.location.search);
     const vestID = params.get('id');
@@ -685,6 +747,17 @@ onAuthStateChanged(auth, (user) => {
         closeModal();
     };
 </script>
+<div id="mediaTerminal" class="modal" style="background: rgba(0,0,0,0.95); backdrop-filter: blur(10px);">
+    <div style="width: 90%; height: 85%; position: relative; display: flex; flex-direction: column; align-items: center;">
+        
+        <div id="mediaViewport" style="width: 100%; height: 100%; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,1);">
+            </div>
 
+        <div style="margin-top: 20px; display: flex; gap: 20px; width: 100%; justify-content: center;">
+            <button class="modal-btn" style="max-width: 200px; background: #ef4444; color: white; border: none;" onclick="closeMediaTerminal()">CLOSE VIEWER</button>
+            <a id="externalOpenBtn" href="#" target="_blank" class="modal-btn" style="max-width: 200px; text-decoration: none; text-align: center; line-height: 1.5;">OPEN IN NEW TAB</a>
+        </div>
+    </div>
+</div>
 </body>
 </html>
