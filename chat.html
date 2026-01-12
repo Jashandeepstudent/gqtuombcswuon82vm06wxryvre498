@@ -430,12 +430,15 @@ window.tryJoinMeeting = async (meetingId) => {
 
 await push(ref(db, `Chats/${chatRoomID}`), {
     sender: currentUser.uid,
-    fileType: type,
-    fileUrl: downloadURL,
-    fileName: file.name,
+    type: 'meeting',
+    title: title,
+    meetingId: meetingId,
+    scheduledTime: scheduledTime,
+    createdBy: currentUser.uid,
     timestamp: Date.now(),
     recipient: recipientUID
 });
+
 
 
 
