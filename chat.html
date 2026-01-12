@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Session | ScaleVest</title>
-
+    <script src='https://8x8.vc/external_api.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.27/jsrsasign-all-min.js"></script>
     <style>
         /* Reusing your ScaleVest Theme */
         body { font-family: 'SF Pro Display', -apple-system, sans-serif; background: #f8f9fa; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -79,19 +80,7 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 3000; display: none; flex-direction: column;
         }
         #jitsiFrame { flex: 1; width: 100%; border: none; position: relative; }
-        .leave-btn {
-    position:absolute;
-    bottom:20px;
-    left:50%;
-    transform:translateX(-50%);
-    background:#ef4444;
-    color:white;
-    border:none;
-    padding:12px 26px;
-    border-radius:30px;
-    font-weight:700;
-}
-
+        
         /* MEETING LOADER */
         #meetingLoader {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111;
@@ -217,14 +206,19 @@
         </div>
     </div>
 
-<div id="videoConferenceContainer">
-    <iframe
-        id="dailyFrame"
-        allow="camera; microphone; fullscreen; speaker; display-capture"
-        style="width:100%; height:100%; border:none;"
-    ></iframe>
-
-
+    <div id="videoConferenceContainer">
+        <div id="jitsiFrame">
+            <div id="meetingLoader">
+                <div class="loader-spinner"></div>
+                <div class="loader-text">Connecting to meeting...</div>
+            </div>
+        </div>
+        <div class="video-controls">
+            <button class="control-btn" onclick="toggleAudio()" id="btnMic">🎤</button>
+            <button class="control-btn" onclick="toggleVideo()" id="btnCam">📷</button>
+            <button class="control-btn btn-leave" onclick="leaveMeeting()">Leave</button>
+            <button class="control-btn btn-end" id="btnEndAll" style="display:none;" onclick="endMeetingForAll()">End Meeting</button>
+        </div>
     </div>
 
     <script type="module">
@@ -254,7 +248,7 @@
         const recipientUID = params.get('recipient');
         let currentUser = null;
         let chatRoomID = null;
-      
+        let jitsiAPI = null;
         let isInvestor = false;
         let userDisplayName = "User";
         let userAvatar = "";
@@ -365,20 +359,12 @@
                 const displayTime = isScheduled ? dateObj.toLocaleString() : "Happening Now";
 
                 contentHtml = `
-                    <div class="meeting-card" onclick="event.stopPropagation(); window.tryJoinMeeting(
-    '${msg.meetingId}',
-    ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime},
-    '${msg.createdBy}'
-)">
+                    <div class="meeting-card" onclick="event.stopPropagation(); window.tryJoinMeeting('${msg.meetingId}', ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime})">
                         <span style="font-size:2rem">📹</span>
                         <div style="flex:1">
                             <div style="font-weight:700; font-size:1rem;">${msg.title}</div>
                             <div style="font-size:0.85rem; opacity:0.8;">${displayTime}</div>
-                            <button class="join-btn" onclick="event.stopPropagation(); window.tryJoinMeeting(
-    '${msg.meetingId}',
-    ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime},
-    '${msg.createdBy}'
-)">JOIN MEETING</button>
+                            <button class="join-btn" onclick="event.stopPropagation(); window.tryJoinMeeting('${msg.meetingId}', ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime})">JOIN MEETING</button>
                         </div>
                     </div>
                 `;
@@ -389,24 +375,70 @@
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
-function startDailyMeeting(meetingId) {
-    const iframe = document.getElementById("dailyFrame");
 
-    // 🔥 Replace with YOUR Daily subdomain
-    iframe.src = `https://scalevest.daily.co/${meetingId}?t=${Date.now()}`;
+        // --- TOKEN & MEETING LOGIC ---
+        
+        window.generateJitsiToken = function(roomName) {
+            const appId = "vpaas-magic-cookie-0fd84653e8f44399aba55f69eaf1f6fe"; 
+            const kid = "e06cc7"; 
 
-    document.getElementById('videoConferenceContainer').style.display = 'flex';
-}
-window.tryJoinMeeting = async (meetingId) => {
-    try {
-        await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-        startDailyMeeting(meetingId);
-    } catch {
-        alert("Camera & microphone permission required.");
-    }
-};
+            // Multiline template for the private key
+            const prvKey = `-----BEGIN RSA PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCytntDVcixIfHE
+9WsWkCSbuX1Dyemm0beZCSXhvCesqNP0sdUP8gSskZzLPsRlH4iLJIOIg/m6nYcK
+hDGUTivM1HLEb5pf3c38b1qDYGpjm67UFfv2l2/YeGuPkutUSjos90M3l0lHxeLR
+YIxpbFCm8nYEBIvGHU6ifCODsfnvN9neR527ipf8rwUxm1TSPtWzr+EfI/+s9f/3
+7DM+iXWD2lQLCQVOxBNlUOTCCkEzaIV8N2kwhHzCs1l3I7pQxEvQTxqZIeP12i2r
+40/30IBeLAnfOHY3XeG6Y00typKHU6B1xqR8MCD8O2ALEb/9xGMEfRYQTSNCq6ve
+9iGIGJ2fAgMBAAECggEAaiOc46nwLtuVJsAHYPgs9dvdfMRPo8cMPrTDLeU8vvvq
+Hnr7qqO3iPJWaBOYOuLWiqUeBZc0W1QxntpSQ92Ff/pxSx9pVSR7sUBFRp+dsBkH
+ZWjFI3hfcfZbE4NThtUq5gfYgQy19g2eH3IzEm3FHNIFq28zwG8pg7EsuouagCru
+k3KpI/VxiYJ3YKpJpxOkdMw1Wce1bKGZdGcLi5Wsww/R0E2tpBVcqoJgYGUajQd5
+LvJskxXpHbIfMZKuHt5wghLB0rZGla6bPrM4yb3r5uZf1qtBDHBFqfrQgL+yougG
+JHbY7Z63HtQIl02tVowWJR8RZL0vd6kvwbYO4JfX6QKBgQD/DbudQU+kkQnmGFWv
+ZQQITbSe32x+Ma5uyXfCV8UHsmXqBdXieIrHLJGmxYp++S3eMvPEjmZCO9TJFge3
+/s79NL/ricMQVGP9cVCQQZAmIy0Nl1vgD1O5mBO9+KgfCJyXKBznCJPx34J4MCgE
+hAoVQqKn/hVIFx2HaHpfD9WiGwKBgQCzYDwm8wjNyxQaoBxzqXr/bxfLuSfhbQbf
+0t2YiZM5N2OjBeuEvrKTBl3DjHtEU/Vh1gDbHVEgm+8qT78pjjGwVv3N90qCEzls
+VAYEBZRdK+0VmHumEYLTcG/WKf+M828pXrsMYVJRhso7yip+IShrW/4TC6gysUUM
+auwQ7h5KzQKBgAo4QKZCcbCEZ0MjAnvurkSu6GfdR/megADMbdIJtkliqpa/+RwD
+/HuSm5t1GuGPlnjqzb24fvx0bUhJa7HBsgWPUYlckcZbu03ydmnxVpdQnYOH5xSJ
+SK+NGm1oQ0RLEgs0fkP7ogH1FMNAGrpjmAvWCbJ1ieDDnFlKpGyes861AoGAE0pe
+LbIlWDxmxRZC+Q1Y9O91l6sp5sxa2OdMfYMOGjEivf18/qGjgrxEiSsqdoaw9PyW
+yvm0J9WdOueon0dzgItacDQQBz0aB9RhcT1IX1zB+niTk6B+eU62OEn7+aSUZ9aQ
+NxygRbRBO3zaZQYb2q/h+xpd1FXMHzHAgXGaQGECgYEArNdypdZIWNH8DmcH+vq3
+J+gTaaH62Ipqts4l9mUsFvto2HVfA8Hcgsi2aNN+MBF6cytYVwVks99w1/hVOBe2
+M7yVbIhkAg9PuZwxpYEaAW6lOU1aYh2xYfZigalUY45ivIbNmk/czaFJ8dXIe7M0
+b3jwupOm6VFUtDOi4xuQ8VI=
+-----END RSA PRIVATE KEY-----`;
 
-        // --- MEETING LOGIC ---
+            const header = { alg: 'RS256', typ: 'JWT', kid: kid };
+            const now = Math.floor(Date.now() / 1000);
+            
+            const payload = {
+                aud: "jitsi",
+                iss: "chat",
+                sub: appId,
+                room: roomName,
+                iat: now,
+                exp: now + 7200, 
+                context: {
+                    user: {
+                        name: userDisplayName,
+                        avatar: userAvatar,
+                        email: currentUser.email,
+                        moderator: isInvestor ? true : false 
+                    },
+                    features: {
+                        livestreaming: true,
+                        recording: true,
+                        transcription: true
+                    }
+                }
+            };
+
+            return KJUR.jws.JWS.sign("RS256", JSON.stringify(header), JSON.stringify(payload), prvKey);
+        };
 
         window.openMeetingModal = () => {
             document.getElementById('meetingSetupModal').style.display = 'flex';
@@ -421,35 +453,152 @@ window.tryJoinMeeting = async (meetingId) => {
             const timeVal = document.getElementById('meetingTime').value;
             
             let scheduledTime = 'now';
-            let meetingId = `scalevest_${chatRoomID}`;
-
+            let meetingId = `meet_${Date.now()}_${Math.floor(Math.random()*1000)}`;
 
             if (dateVal && timeVal) {
                 scheduledTime = new Date(`${dateVal}T${timeVal}`).getTime();
             }
 
-await push(ref(db, `Chats/${chatRoomID}`), {
-    sender: currentUser.uid,
-    type: 'meeting',
-    title: title,
-    meetingId: meetingId,
-    scheduledTime: scheduledTime,
-    createdBy: currentUser.uid,
-    timestamp: Date.now(),
-    recipient: recipientUID
-});
-
-
-
+            await push(ref(db, `Chats/${chatRoomID}`), {
+                sender: currentUser.uid,
+                type: 'meeting',
+                title: title,
+                meetingId: meetingId,
+                scheduledTime: scheduledTime,
+                timestamp: Date.now(),
+                recipient: recipientUID
+            });
 
             closeMeetingModal();
         };
 
+        window.tryJoinMeeting = async (meetingId, scheduledTime) => {
+            console.log("Trying to join meeting:", meetingId, scheduledTime);
+            const now = Date.now();
 
+            if (scheduledTime !== 'now' && now < (scheduledTime - 5 * 60 * 1000)) {
+                const dateObj = new Date(scheduledTime);
+                document.getElementById('waitDisplayTime').textContent = dateObj.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                document.getElementById('waitDisplayDate').textContent = dateObj.toLocaleDateString();
+                document.getElementById('waitingRoomModal').style.display = 'flex';
+                return;
+            }
 
+            const fullRoomName = "ScaleVest_" + meetingId;
+            const token = generateJitsiToken(fullRoomName);
 
+            document.getElementById('videoConferenceContainer').style.display = 'flex';
+            document.getElementById('meetingLoader').style.display = 'flex';
 
-       
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                stream.getTracks().forEach(track => track.stop()); 
+                
+                loadJitsi(fullRoomName, token);
+            } catch (err) {
+                console.error("Media permission error:", err);
+                document.getElementById('videoConferenceContainer').style.display = 'none';
+                alert("Camera and Microphone access is required to join the meeting.");
+            }
+        };
+
+        function loadJitsi(roomName, token) {
+            console.log("Loading Secure 8x8 Room:", roomName);
+
+            const domain = "8x8.vc";
+            const appId = "vpaas-magic-cookie-0fd84653e8f44399aba55f69eaf1f6fe";
+
+            const options = {
+                roomName: appId + "/" + roomName,
+                jwt: token, 
+                width: "100%",
+                height: "100%",
+                parentNode: document.querySelector('#jitsiFrame'),
+                configOverwrite: {
+                    startWithAudioMuted: false,
+                    startWithVideoMuted: false,
+                    prejoinPageEnabled: false,
+                    disableDeepLinking: true,
+                    enableLobby: false, 
+                    p2p: { enabled: true }
+                },
+                interfaceConfigOverwrite: {
+                    SHOW_JITSI_WATERMARK: false,
+                    SHOW_WATERMARK_FOR_GUESTS: false,
+                    TOOLBAR_BUTTONS: [
+                        'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
+                        'fodeviceselection', 'hangup', 'profile', 'chat', 'settings', 
+                        'raisehand', 'videoquality', 'filmstrip', 'tileview', 'security'
+                    ],
+                }
+            };
+
+            try {
+                jitsiAPI = new JitsiMeetExternalAPI(domain, options);
+
+                jitsiAPI.addEventListener('videoConferenceJoined', () => {
+                    document.getElementById('meetingLoader').style.display = 'none';
+                });
+
+                jitsiAPI.addEventListener('videoConferenceLeft', () => closeVideoInterface());
+                jitsiAPI.addEventListener('readyToClose', () => closeVideoInterface());
+
+            } catch (err) {
+                console.error("Jitsi initialization error:", err);
+                closeVideoInterface();
+            }
+        }
+
+        // --- VIDEO CONTROLS ---
+        window.toggleAudio = () => {
+            if(jitsiAPI) {
+                jitsiAPI.executeCommand('toggleAudio');
+                audioMuted = !audioMuted;
+                document.getElementById('btnMic').classList.toggle('active', audioMuted);
+            }
+        };
+
+        window.toggleVideo = () => {
+            if(jitsiAPI) {
+                jitsiAPI.executeCommand('toggleVideo');
+                videoMuted = !videoMuted;
+                document.getElementById('btnCam').classList.toggle('active', videoMuted);
+            }
+        };
+
+        window.leaveMeeting = () => {
+            if(jitsiAPI) {
+                jitsiAPI.executeCommand('hangup');
+            }
+            closeVideoInterface();
+        };
+
+        window.endMeetingForAll = () => {
+            if(!confirm("End meeting for everyone?")) return;
+            if(jitsiAPI) {
+                jitsiAPI.executeCommand('hangup');
+            }
+            closeVideoInterface();
+        };
+
+        function closeVideoInterface() {
+            if (jitsiAPI) {
+                jitsiAPI.dispose();
+                jitsiAPI = null;
+            }
+            document.getElementById('videoConferenceContainer').style.display = 'none';
+            document.querySelector('#jitsiFrame').innerHTML = `
+                <div id="meetingLoader">
+                    <div class="loader-spinner"></div>
+                    <div class="loader-text">Connecting to meeting...</div>
+                </div>
+            `;
+            audioMuted = false;
+            videoMuted = false;
+            document.getElementById('btnMic').classList.remove('active');
+            document.getElementById('btnCam').classList.remove('active');
+        }
+
         // --- FILE UPLOAD ---
         const fileInput = document.getElementById('fileInput');
         const attachBtn = document.getElementById('attachBtn');
@@ -485,16 +634,15 @@ await push(ref(db, `Chats/${chatRoomID}`), {
                         if (file.type.startsWith('image/')) type = 'image';
                         else if (file.type.startsWith('video/')) type = 'video';
 
-await push(ref(db, `Chats/${chatRoomID}`), {
-    sender: currentUser.uid,
-    fileType: type,
-    fileUrl: downloadURL,
-    fileName: file.name,
-    timestamp: Date.now(),
-    recipient: recipientUID
-});
-
-
+                        await push(ref(db, `Chats/${chatRoomID}`), {
+                            sender: currentUser.uid,
+                            text: "", 
+                            fileUrl: downloadURL,
+                            fileType: type,
+                            fileName: file.name,
+                            timestamp: Date.now(),
+                            recipient: recipientUID
+                        });
 
                         progressBar.style.width = '0%';
                         fileInput.value = '';
@@ -518,15 +666,12 @@ await push(ref(db, `Chats/${chatRoomID}`), {
             let cleanText = text;
             badWords.forEach(w => { cleanText = cleanText.replace(new RegExp(`\\b${w}\\b`,'gi'), '####'); });
 
-await push(ref(db, `Chats/${chatRoomID}`), {
-    sender: currentUser.uid,
-    text: cleanText,
-    timestamp: Date.now(),
-    recipient: recipientUID
-});
-
-
-
+            await push(ref(db, `Chats/${chatRoomID}`), {
+                sender: currentUser.uid,
+                text: cleanText,
+                timestamp: Date.now(),
+                recipient: recipientUID
+            });
             input.value = "";
             set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false);
         }
