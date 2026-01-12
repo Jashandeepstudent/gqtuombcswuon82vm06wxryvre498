@@ -113,18 +113,40 @@
             }
         });
 
-        async function initializeChat() {
-            // 1. Get Founder Name for Header
-            const founderRef = ref(db, `users/${recipientUID}`); // Assuming you keep user names here
-            // Fallback if users node isn't set up yet, use "Founder"
-            document.getElementById('chatTitle').textContent = "Chat with Founder"; 
-
-            // 2. Create Unique Room ID (Alphabetical Sort ensures UserA+UserB always = same Room)
-            // This means conversations are persistent.
+async function initializeChat() {
+            // 1. Create Unique Room ID (Alphabetical Sort ensures UserA+UserB always = same Room)
             const participantIDs = [currentUser.uid, recipientUID].sort();
             chatRoomID = `chat_${participantIDs[0]}_${participantIDs[1]}`;
 
             document.getElementById('loadingMsg').style.display = 'none';
+
+            // 2. FETCH REAL NAME OF RECIPIENT
+            // We check both profile tables because we don't know if the recipient is a Founder or Investor
+            let chatTitle = "Chat";
+            
+            try {
+                // Try fetching as Founder first
+                const founderSnap = await get(ref(db, `founderProfile/${recipientUID}`));
+                if (founderSnap.exists()) {
+                    const data = founderSnap.val();
+                    chatTitle = data.founderUsername || data.firstName || "Founder";
+                } else {
+                    // If not founder, try fetching as Investor
+                    const investorSnap = await get(ref(db, `investorProfiles/${recipientUID}`));
+                    if (investorSnap.exists()) {
+                        const data = investorSnap.val();
+                        // Adjust these fields based on your actual investor profile structure
+                        chatTitle = data.fullName || data.name || "Investor"; 
+                    }
+                }
+            } catch (e) {
+                console.error("Error fetching name:", e);
+                chatTitle = "User"; // Fallback
+            }
+
+            // Update Header UI
+            document.getElementById('chatTitle').textContent = chatTitle;
+
 
             // 3. Listen for Messages
             const messagesRef = ref(db, `Chats/${chatRoomID}`);
