@@ -131,10 +131,10 @@
                 <small style="color:#999">Messages are end-to-end encrypted.</small>
             </div>
         </div>
-    </div>
 
-    <div class="typing-indicator" id="typingBubble">
-        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="typing-indicator" id="typingBubble">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
     </div>
 
     <div class="input-area">
@@ -213,13 +213,12 @@
             const messagesRef = ref(db, `Chats/${chatRoomID}`);
             onChildAdded(messagesRef, (snapshot) => {
                 const msg = snapshot.val();
-                if(msg && msg.text) { // Ensure it's a real message
+                if(msg && msg.text) { 
                     renderMessage(msg);
                 }
             });
 
             // 3. LISTEN FOR TYPING INDICATOR (From the *other* user)
-            // We listen to: Chats/{roomID}/typing/{recipientUID}
             const typingRef = ref(db, `Chats/${chatRoomID}/typing/${recipientUID}`);
             onValue(typingRef, (snapshot) => {
                 const isTyping = snapshot.val();
@@ -228,7 +227,8 @@
                 
                 if (isTyping) {
                     bubble.style.display = 'flex';
-                    container.appendChild(bubble); // Move to bottom
+                    // Move bubble to the very bottom visually
+                    container.appendChild(bubble); 
                     container.scrollTop = container.scrollHeight;
                 } else {
                     bubble.style.display = 'none';
@@ -236,12 +236,13 @@
             });
         }
 
-        // RENDER UI
+        // RENDER UI - FIX APPLIED HERE
         function renderMessage(msg) {
             const container = document.getElementById('chatContainer');
             const warning = document.getElementById('safetyWarning');
+            const bubble = document.getElementById('typingBubble');
             
-            // Hide the safety warning once a message appears
+            // Hide safety warning
             if (warning) warning.style.display = 'none';
 
             const isMine = msg.sender === currentUser.uid;
@@ -256,9 +257,12 @@
                 <span class="timestamp">${time}</span>
             `;
             
-            // Insert before the typing bubble if it exists
-            const bubble = document.getElementById('typingBubble');
-            container.insertBefore(div, bubble); 
+            // SAFETY CHECK: Only use insertBefore if bubble is actually a child of container
+            if (bubble && container.contains(bubble)) {
+                container.insertBefore(div, bubble);
+            } else {
+                container.appendChild(div);
+            }
             
             // Auto scroll to bottom
             container.scrollTop = container.scrollHeight;
@@ -288,17 +292,14 @@
             set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false);
         }
 
-        // TYPING LOGIC (Set my status)
+        // TYPING LOGIC
         input.addEventListener('input', () => {
             if (!chatRoomID) return;
 
-            // Set my status to true
             set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), true);
 
-            // Clear previous timeout
             if (typingTimeout) clearTimeout(typingTimeout);
 
-            // Set back to false after 2 seconds of inactivity
             typingTimeout = setTimeout(() => {
                 set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false);
             }, 2000);
