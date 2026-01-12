@@ -7,7 +7,6 @@
     <script src='https://8x8.vc/external_api.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.27/jsrsasign-all-min.js"></script>
     <style>
-        /* Reusing your ScaleVest Theme */
         body { font-family: 'SF Pro Display', -apple-system, sans-serif; background: #f8f9fa; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
         /* HEADER */
@@ -15,7 +14,6 @@
             background: white; padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             display: flex; align-items: center; justify-content: space-between; z-index: 100;
         }
-        
         .header-left { display: flex; align-items: center; gap: 15px; }
         .header-logo { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb; }
         .header-title { font-weight: 800; font-size: 1.2rem; color: #1a1a1a; }
@@ -25,10 +23,9 @@
         .action-btn {
             background: #f3f4f6; border: 1px solid #e5e7eb; padding: 8px 14px; border-radius: 8px;
             cursor: pointer; font-size: 0.85rem; font-weight: 600; color: #374151;
-            display: flex; align-items: center; gap: 6px; transition: 0.2s; text-decoration: none; height: 38px;
+            display: flex; align-items: center; gap: 6px; transition: 0.2s; text-decoration: none;
         }
         .meeting-btn { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; display: none; }
-        .action-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
         /* CHAT AREA */
         #chatContainer {
@@ -42,87 +39,38 @@
         .msg-theirs { background: white; color: #374151; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .timestamp { font-size: 10px; opacity: 0.7; margin-top: 5px; display: block; text-align: right; }
         
-        /* MEETING CARD */
-        .meeting-card {
-            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 15px; margin-top: 5px; cursor: pointer; transition: 0.2s;
-        }
-        .meeting-card:hover { background: rgba(255,255,255,0.25); }
+        .meeting-card { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 15px; margin-top: 5px; cursor: pointer; transition: 0.2s; }
         .msg-theirs .meeting-card { background: #f0fdf4; border-color: #10b981; color: #064e3b; }
         .join-btn { background: #fff; color: #10b981; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; margin-top: 10px; cursor: pointer; width: 100%; }
 
         /* INPUT AREA */
         .input-area { background: white; padding: 15px 20px; display: flex; gap: 12px; border-top: 1px solid #e5e7eb; align-items: center; }
-        #attachBtn { background: #f3f4f6; color: #6b7280; border: none; padding: 10px; border-radius: 50%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; }
-        #attachBtn:hover { background: #e5e7eb; color: #1a1a1a; }
-        #msgInput { flex: 1; padding: 15px; border: 2px solid #e5e7eb; border-radius: 12px; outline: none; font-size: 16px; transition: 0.3s; }
-        #msgInput:focus { border-color: #10b981; }
-        #sendBtn { background: #10b981; color: white; border: none; padding: 0 25px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; height: 50px; }
-        #sendBtn:hover { transform: scale(1.05); }
+        #msgInput { flex: 1; padding: 15px; border: 2px solid #e5e7eb; border-radius: 12px; outline: none; font-size: 16px; }
+        #sendBtn { background: #10b981; color: white; border: none; padding: 0 25px; border-radius: 12px; font-weight: 700; cursor: pointer; height: 50px; }
 
-        /* MODALS (Meeting Setup & Waiting Room) */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
-            z-index: 2000; display: none; align-items: center; justify-content: center;
-        }
-        .modal-box {
-            background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-        }
-        .modal-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; color: #111; }
-        .modal-input { width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 8px; margin-bottom: 15px; font-size: 1rem; box-sizing: border-box;}
-        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .modal-btn { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; transition: 0.2s; width: 100%; }
+        /* MODALS */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-box { background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+        .modal-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; }
+        .modal-input { width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; }
+        .modal-btn { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; width: 100%; }
         .btn-primary { background: #10b981; color: white; }
-        .btn-secondary { background: #f3f4f6; color: #333; }
-        .btn-danger { background: #ef4444; color: white; }
 
-        /* VIDEO CONFERENCE INTERFACE */
-        #videoConferenceContainer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 3000; display: none; flex-direction: column;
-        }
-        #jitsiFrame { flex: 1; width: 100%; border: none; position: relative; }
-        
-        /* MEETING LOADER */
-        #meetingLoader {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 3001; color: white;
-        }
-        .loader-spinner {
-            width: 60px; height: 60px; border: 4px solid #333; border-top: 4px solid #10b981;
-            border-radius: 50%; animation: spin 1s linear infinite;
-        }
-        .loader-text { margin-top: 20px; font-size: 1rem; color: #999; }
-        
-        .video-controls {
-            height: 80px; background: #111; display: flex; align-items: center; justify-content: center; gap: 20px;
-        }
-        .control-btn {
-            width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            background: #333; color: white; transition: 0.2s;
-        }
-        .control-btn.active { background: #ef4444; color: white; } /* Red for muted/off */
-        .control-btn:hover { transform: scale(1.1); }
-        .btn-leave { background: #ef4444 !important; }
-        .btn-end { background: #b91c1c !important; width: auto; padding: 0 20px; border-radius: 25px; }
+        /* VIDEO CONFERENCE */
+        #videoConferenceContainer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 3000; display: none; flex-direction: column; }
+        #jitsiFrame { flex: 1; width: 100%; border: none; }
+        #meetingLoader { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 3001; color: white; }
+        .loader-spinner { width: 60px; height: 60px; border: 4px solid #333; border-top: 4px solid #10b981; border-radius: 50%; animation: spin 1s linear infinite; }
+        .video-controls { height: 80px; background: #111; display: flex; align-items: center; justify-content: center; gap: 20px; }
+        .control-btn { width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer; background: #333; color: white; }
 
-        /* WAITING ROOM */
-        .waiting-room { text-align: center; color: #333; }
-        .waiting-time { font-size: 2rem; font-weight: 800; color: #10b981; margin: 20px 0; }
-
-        /* UTILS */
-        #uploadProgress { position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: #10b981; z-index: 200; transition: width 0.3s; }
-        .typing-indicator { align-self: flex-start; background: white; padding: 10px 15px; border-radius: 20px; border-bottom-left-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: none; align-items: center; gap: 5px; margin-bottom: 10px; }
-        .dot { width: 6px; height: 6px; background: #bbb; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
-        .dot:nth-child(1) { animation-delay: -0.32s; }
-        .dot:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-        @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <div id="uploadProgress"></div>
+    <div id="uploadProgress" style="position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: #10b981; z-index: 200;"></div>
 
     <div class="chat-header">
         <div class="header-left">
@@ -132,47 +80,23 @@
                 <div class="header-sub">ScaleVest Secure Line</div>
             </div>
         </div>
-        
         <div class="header-actions">
-            <button class="action-btn meeting-btn" id="meetingBtn" onclick="openMeetingModal()">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-                Arrange Meeting
-            </button>
+            <button class="action-btn meeting-btn" id="meetingBtn" onclick="openMeetingModal()">Arrange Meeting</button>
             <button class="action-btn" onclick="history.back()">Back</button>
         </div>
     </div>
 
     <div id="chatContainer">
         <div id="initialLoader" style="position: absolute; top:0; left:0; width:100%; height:100%; background:#f8f9fa; z-index:50; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-            <div style="width: 40px; height: 40px; border: 4px solid #ddd; border-top: 4px solid #10b981; border-radius: 50%; animation: spin 1s infinite linear;"></div>
-            <div style="margin-top:10px; color:#888; font-size:0.9rem;">Syncing...</div>
+            <div class="loader-spinner"></div>
+            <div style="margin-top:10px; color:#888;">Syncing Secure Line...</div>
         </div>
-
-        <div id="safetyWarning" class="safety-warning" style="display:none;">
-            <span class="safety-icon">🛡️</span>
-            <div class="safety-text">
-                <strong>ScaleVest has your back.</strong><br>
-                Please do not open any suspicious links or share sensitive passwords.
-                <br><br>
-                <small style="color:#999">Messages are end-to-end encrypted.</small>
-            </div>
-        </div>
-
-        <div class="typing-indicator" id="typingBubble">
-            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-        </div>
+        <div class="typing-indicator" id="typingBubble" style="display:none; align-self:flex-start; padding:10px; background:white; border-radius:10px;">Typing...</div>
     </div>
 
     <div class="input-area">
-        <button id="attachBtn" title="Attach File">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
-            </svg>
-        </button>
+        <button id="attachBtn" style="background:none; border:none; font-size:24px; cursor:pointer;">📎</button>
         <input type="file" id="fileInput" style="display: none;">
-
         <input type="text" id="msgInput" placeholder="Type a message..." autocomplete="off">
         <button id="sendBtn">SEND</button>
     </div>
@@ -180,29 +104,15 @@
     <div id="meetingSetupModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-title">Arrange Meeting</div>
-            <input type="text" id="meetingTitle" class="modal-input" placeholder="Meeting Title (e.g. Funding Discussion)">
-            
-            <div style="margin-bottom:10px; font-weight:600; font-size:0.9rem;">Schedule (Optional)</div>
-            <div class="modal-grid">
-                <input type="date" id="meetingDate" class="modal-input" style="margin:0;">
-                <input type="time" id="meetingTime" class="modal-input" style="margin:0;">
+            <input type="text" id="meetingTitle" class="modal-input" placeholder="Meeting Title (e.g. Portfolio Review)">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <input type="date" id="meetingDate" class="modal-input">
+                <input type="time" id="meetingTime" class="modal-input">
             </div>
-
             <div style="display:flex; gap:10px; margin-top:20px;">
-                <button class="modal-btn btn-secondary" onclick="closeMeetingModal()">Cancel</button>
+                <button class="modal-btn" onclick="closeMeetingModal()">Cancel</button>
                 <button class="modal-btn btn-primary" onclick="createMeeting()">Generate Link</button>
             </div>
-        </div>
-    </div>
-
-    <div id="waitingRoomModal" class="modal-overlay">
-        <div class="modal-box waiting-room">
-            <div style="font-size:3rem;">⏳</div>
-            <div class="modal-title">Meeting Scheduled</div>
-            <p>This meeting is scheduled for:</p>
-            <div class="waiting-time" id="waitDisplayTime">--:--</div>
-            <p id="waitDisplayDate" style="color:#666; margin-bottom:20px;">--/--/----</p>
-            <button class="modal-btn btn-secondary" onclick="document.getElementById('waitingRoomModal').style.display='none'">Okay, I'll wait</button>
         </div>
     </div>
 
@@ -210,31 +120,28 @@
         <div id="jitsiFrame">
             <div id="meetingLoader">
                 <div class="loader-spinner"></div>
-                <div class="loader-text">Connecting to meeting...</div>
+                <div class="loader-text">Configuring Secure Session...</div>
             </div>
         </div>
         <div class="video-controls">
             <button class="control-btn" onclick="toggleAudio()" id="btnMic">🎤</button>
             <button class="control-btn" onclick="toggleVideo()" id="btnCam">📷</button>
-            <button class="control-btn btn-leave" onclick="leaveMeeting()">Leave</button>
-            <button class="control-btn btn-end" id="btnEndAll" style="display:none;" onclick="endMeetingForAll()">End Meeting</button>
+            <button class="control-btn" style="background:#ef4444;" onclick="leaveMeeting()">Leave</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, onChildAdded, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
             authDomain: "scalevest-163a0.firebaseapp.com",
             databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
             projectId: "scalevest-163a0",
             storageBucket: "scalevest-163a0.firebasestorage.app",
-            messagingSenderId: "938358950124",
             appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
         };
 
@@ -243,147 +150,42 @@
         const storage = getStorage(app);
         const auth = getAuth(app);
 
-        // GLOBAL VARS
+        let currentUser, chatRoomID, jitsiAPI, isInvestor = false, userDisplayName = "User", userAvatar = "";
+        let audioMuted = false, videoMuted = false;
+
         const params = new URLSearchParams(window.location.search);
         const recipientUID = params.get('recipient');
-        let currentUser = null;
-        let chatRoomID = null;
-        let jitsiAPI = null;
-        let isInvestor = false;
-        let userDisplayName = "User";
-        let userAvatar = "";
-        let typingTimeout = null;
-        let audioMuted = false;
-        let videoMuted = false;
 
-        // AUTH
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
-                if(!recipientUID) { window.location.href = "dashboard.html"; return; }
-                
                 await identifyUserRole();
                 initializeChat();
-            } else {
-                window.location.href = "login3.html";
-            }
+            } else { window.location.href = "login3.html"; }
         });
 
-        // 1. IDENTIFY ROLE & GET MY DETAILS
         async function identifyUserRole() {
-            try {
-                const invSnap = await get(ref(db, `investorProfiles/${currentUser.uid}`));
-                if (invSnap.exists()) {
-                    isInvestor = true;
-                    document.getElementById('meetingBtn').style.display = 'flex';
-                    document.getElementById('btnEndAll').style.display = 'flex';
-                    const data = invSnap.val();
-                    userDisplayName = data.fullName || "Investor";
-                    userAvatar = data.photoURL || data.logo || "";
-                    return;
-                }
-            } catch(e) {}
-
-            try {
+            const invSnap = await get(ref(db, `investorProfiles/${currentUser.uid}`));
+            if (invSnap.exists()) {
+                isInvestor = true;
+                document.getElementById('meetingBtn').style.display = 'block';
+                userDisplayName = invSnap.val().fullName || "Investor";
+                userAvatar = invSnap.val().photoURL || "";
+            } else {
                 const fndSnap = await get(ref(db, `founderProfile/${currentUser.uid}`));
                 if (fndSnap.exists()) {
-                    const data = fndSnap.val();
-                    userDisplayName = data.founderUsername || "Founder";
-                    userAvatar = data.photoURL || "";
+                    userDisplayName = fndSnap.val().founderUsername || "Founder";
+                    userAvatar = fndSnap.val().photoURL || "";
                 }
-            } catch(e) {}
+            }
         }
 
-        async function initializeChat() {
-            const participantIDs = [currentUser.uid, recipientUID].sort();
-            chatRoomID = `chat_${participantIDs[0]}_${participantIDs[1]}`;
-
-            let chatTitle = "Chat";
-            try {
-                const fSnap = await get(ref(db, `founderProfile/${recipientUID}`));
-                if (fSnap.exists()) chatTitle = fSnap.val().firstName || "Founder";
-                else {
-                    const iSnap = await get(ref(db, `investorProfiles/${recipientUID}`));
-                    if (iSnap.exists()) chatTitle = iSnap.val().fullName || "Investor";
-                }
-            } catch (e) {}
-            document.getElementById('chatTitle').textContent = chatTitle;
-            document.getElementById('initialLoader').style.display = 'none';
-
-            const messagesRef = ref(db, `Chats/${chatRoomID}`);
-            onChildAdded(messagesRef, (snapshot) => {
-                const msg = snapshot.val();
-                if(msg.sender) renderMessage(msg);
-            });
+        // --- 1. JITSI TOKEN GENERATION ---
+        window.generateJitsiToken = function(roomName) {
+            const appId = "vpaas-magic-cookie-0fd84653e8f44399aba55f69eaf1f6fe";
+            const kid = "e06cc7";
             
-            const typingRef = ref(db, `Chats/${chatRoomID}/typing/${recipientUID}`);
-            onValue(typingRef, (snapshot) => {
-                const isTyping = snapshot.val();
-                const bubble = document.getElementById('typingBubble');
-                const container = document.getElementById('chatContainer');
-                
-                if (isTyping) {
-                    bubble.style.display = 'flex';
-                    container.appendChild(bubble); 
-                    container.scrollTop = container.scrollHeight;
-                } else {
-                    bubble.style.display = 'none';
-                }
-            });
-        }
-
-        // --- RENDER MESSAGES ---
-        function renderMessage(msg) {
-            const container = document.getElementById('chatContainer');
-            const isMine = msg.sender === currentUser.uid;
-            const div = document.createElement('div');
-            div.className = `message-bubble ${isMine ? 'msg-mine' : 'msg-theirs'}`;
-            
-            const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            let contentHtml = "";
-            if (msg.fileType === 'image') {
-                contentHtml = `<img src="${msg.fileUrl}" style="max-width:100%; border-radius:8px; cursor:pointer;" onclick="window.open('${msg.fileUrl}')">`;
-            } else if (msg.fileType === 'video') {
-                contentHtml = `<video src="${msg.fileUrl}" style="max-width:100%; border-radius:8px;" controls></video>`;
-            } else if (msg.fileType === 'document') {
-                contentHtml = `<a href="${msg.fileUrl}" target="_blank" style="color:inherit; text-decoration:underline;">📄 ${msg.fileName || 'Document'}</a>`;
-            }
-
-            if (msg.text) {
-                contentHtml += `<div>${msg.text}</div>`;
-            }
-            else if (msg.type === 'meeting') {
-                const isScheduled = msg.scheduledTime && msg.scheduledTime !== 'now';
-                const dateObj = isScheduled ? new Date(msg.scheduledTime) : new Date();
-                const displayTime = isScheduled ? dateObj.toLocaleString() : "Happening Now";
-
-                contentHtml = `
-                    <div class="meeting-card" onclick="event.stopPropagation(); window.tryJoinMeeting('${msg.meetingId}', ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime})">
-                        <span style="font-size:2rem">📹</span>
-                        <div style="flex:1">
-                            <div style="font-weight:700; font-size:1rem;">${msg.title}</div>
-                            <div style="font-size:0.85rem; opacity:0.8;">${displayTime}</div>
-                            <button class="join-btn" onclick="event.stopPropagation(); window.tryJoinMeeting('${msg.meetingId}', ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime})">JOIN MEETING</button>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            div.innerHTML = `${contentHtml}<span class="timestamp">${time}</span>`;
-
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        // --- TOKEN & MEETING LOGIC ---
-        
-window.generateJitsiToken = function(roomName) {
-    const appId = "vpaas-magic-cookie-0fd84653e8f44399aba55f69eaf1f6fe"; 
-    const kid = "e06cc7"; 
-
-    // 1. Ensure the key has NO leading spaces on each line from your code's indentation
-    const prvKeyPEM = `-----BEGIN RSA PRIVATE KEY-----
+            const prvKeyPEM = `-----BEGIN RSA PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCytntDVcixIfHE
 9WsWkCSbuX1Dyemm0beZCSXhvCesqNP0sdUP8gSskZzLPsRlH4iLJIOIg/m6nYcK
 hDGUTivM1HLEb5pf3c38b1qDYGpjm67UFfv2l2/YeGuPkutUSjos90M3l0lHxeLR
@@ -412,222 +214,101 @@ M7yVbIhkAg9PuZwxpYEaAW6lOU1aYh2xYfZigalUY45ivIbNmk/czaFJ8dXIe7M0
 b3jwupOm6VFUtDOi4xuQ8VI=
 -----END RSA PRIVATE KEY-----`;
 
-    // 2. We use KEYUTIL to safely parse the PEM string
-    const keyObj = KEYUTIL.getKey(prvKeyPEM);
-
-    const header = { alg: 'RS256', typ: 'JWT', kid: kid };
-    const now = Math.floor(Date.now() / 1000);
-    
-    const payload = {
-        aud: "jitsi",
-        iss: "chat",
-        sub: appId,
-        room: roomName,
-        iat: now,
-        exp: now + 7200, 
-        context: {
-            user: {
-                name: userDisplayName,
-                avatar: userAvatar,
-                email: currentUser.email,
-                moderator: isInvestor ? true : false 
-            },
-            features: {
-                livestreaming: true,
-                recording: true,
-                transcription: true
-            }
-        }
-    };
-
-    // 3. Sign using the keyObj instead of the raw string
-    return KJUR.jws.JWS.sign("RS256", JSON.stringify(header), JSON.stringify(payload), keyObj);
-};
-function loadJitsi(roomName, token) {
-    const domain = "8x8.vc";
-    const appId = "vpaas-magic-cookie-0fd84653e8f44399aba55f69eaf1f6fe";
-
-    const options = {
-        // Correct format: "AppID/RoomName"
-        roomName: appId + "/" + roomName,
-        jwt: token, 
-        width: "100%",
-        height: "100%",
-        parentNode: document.querySelector('#jitsiFrame'),
-        configOverwrite: {
-            startWithAudioMuted: false,
-            startWithVideoMuted: false,
-            prejoinPageEnabled: false,
-            disableDeepLinking: true,
-            enableLobby: false, 
-            p2p: { enabled: true }
-        },
-        interfaceConfigOverwrite: {
-            SHOW_JITSI_WATERMARK: false,
-            SHOW_WATERMARK_FOR_GUESTS: false,
-            TOOLBAR_BUTTONS: [
-                'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
-                'fodeviceselection', 'hangup', 'profile', 'chat', 'settings', 
-                'raisehand', 'videoquality', 'filmstrip', 'tileview', 'security'
-            ],
-        }
-    };
-
-    try {
-        // Ensure you use the domain "8x8.vc"
-        jitsiAPI = new JitsiMeetExternalAPI(domain, options);
-
-        jitsiAPI.addEventListener('videoConferenceJoined', () => {
-            document.getElementById('meetingLoader').style.display = 'none';
-        });
-
-        jitsiAPI.addEventListener('videoConferenceLeft', () => closeVideoInterface());
-        jitsiAPI.addEventListener('readyToClose', () => closeVideoInterface());
-
-    } catch (err) {
-        console.error("Jitsi initialization error:", err);
-        closeVideoInterface();
-    }
-}
-
-        // --- VIDEO CONTROLS ---
-        window.toggleAudio = () => {
-            if(jitsiAPI) {
-                jitsiAPI.executeCommand('toggleAudio');
-                audioMuted = !audioMuted;
-                document.getElementById('btnMic').classList.toggle('active', audioMuted);
-            }
+            const keyObj = KEYUTIL.getKey(prvKeyPEM);
+            const header = { alg: 'RS256', typ: 'JWT', kid: kid };
+            const now = Math.floor(Date.now() / 1000);
+            const payload = {
+                aud: "jitsi", iss: "chat", sub: appId, room: roomName,
+                iat: now, exp: now + 7200,
+                context: { user: { name: userDisplayName, avatar: userAvatar, moderator: isInvestor } }
+            };
+            return KJUR.jws.JWS.sign("RS256", JSON.stringify(header), JSON.stringify(payload), keyObj);
         };
 
-        window.toggleVideo = () => {
-            if(jitsiAPI) {
-                jitsiAPI.executeCommand('toggleVideo');
-                videoMuted = !videoMuted;
-                document.getElementById('btnCam').classList.toggle('active', videoMuted);
-            }
-        };
+        // --- 2. MEETING JOIN LOGIC ---
+        window.tryJoinMeeting = async (meetingId, scheduledTime) => {
+            const room = "ScaleVest_" + meetingId;
+            const token = generateJitsiToken(room);
+            
+            document.getElementById('videoConferenceContainer').style.display = 'flex';
+            document.getElementById('meetingLoader').style.display = 'flex';
 
-        window.leaveMeeting = () => {
-            if(jitsiAPI) {
-                jitsiAPI.executeCommand('hangup');
-            }
-            closeVideoInterface();
-        };
+            const domain = "8x8.vc";
+            const appId = "vpaas-magic-cookie-0fd84653e8f44399aba55f69eaf1f6fe";
 
-        window.endMeetingForAll = () => {
-            if(!confirm("End meeting for everyone?")) return;
-            if(jitsiAPI) {
-                jitsiAPI.executeCommand('hangup');
-            }
-            closeVideoInterface();
-        };
-
-        function closeVideoInterface() {
-            if (jitsiAPI) {
-                jitsiAPI.dispose();
-                jitsiAPI = null;
-            }
-            document.getElementById('videoConferenceContainer').style.display = 'none';
-            document.querySelector('#jitsiFrame').innerHTML = `
-                <div id="meetingLoader">
-                    <div class="loader-spinner"></div>
-                    <div class="loader-text">Connecting to meeting...</div>
-                </div>
-            `;
-            audioMuted = false;
-            videoMuted = false;
-            document.getElementById('btnMic').classList.remove('active');
-            document.getElementById('btnCam').classList.remove('active');
-        }
-
-        // --- FILE UPLOAD ---
-        const fileInput = document.getElementById('fileInput');
-        const attachBtn = document.getElementById('attachBtn');
-
-        attachBtn.addEventListener('click', () => fileInput.click());
-
-        fileInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const progressBar = document.getElementById('uploadProgress');
-            progressBar.style.width = '10%';
+            const options = {
+                roomName: appId + "/" + room,
+                jwt: token,
+                width: "100%", height: "100%",
+                parentNode: document.querySelector('#jitsiFrame'),
+                userInfo: { displayName: userDisplayName },
+                configOverwrite: { prejoinPageEnabled: false, enableLobby: false, startWithAudioMuted: false }
+            };
 
             try {
-                const storagePath = `chat_uploads/${chatRoomID}/${Date.now()}_${file.name}`;
-                const fileRef = storageRef(storage, storagePath);
-                const uploadTask = uploadBytesResumable(fileRef, file);
+                jitsiAPI = new JitsiMeetExternalAPI(domain, options);
+                jitsiAPI.addEventListener('videoConferenceJoined', () => {
+                    document.getElementById('meetingLoader').style.display = 'none';
+                });
+                jitsiAPI.addEventListener('videoConferenceLeft', () => window.leaveMeeting());
+            } catch (e) { console.error(e); window.leaveMeeting(); }
+        };
 
-                uploadTask.on('state_changed', 
-                    (snapshot) => {
-                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                        progressBar.style.width = progress + '%';
-                    }, 
-                    (error) => {
-                        console.error("Upload failed", error);
-                        alert("File upload failed.");
-                        progressBar.style.width = '0%';
-                    }, 
-                    async () => {
-                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                        
-                        let type = 'document';
-                        if (file.type.startsWith('image/')) type = 'image';
-                        else if (file.type.startsWith('video/')) type = 'video';
+        // --- 3. UI CONTROLS ---
+        window.openMeetingModal = () => document.getElementById('meetingSetupModal').style.display = 'flex';
+        window.closeMeetingModal = () => document.getElementById('meetingSetupModal').style.display = 'none';
 
-                        await push(ref(db, `Chats/${chatRoomID}`), {
-                            sender: currentUser.uid,
-                            text: "", 
-                            fileUrl: downloadURL,
-                            fileType: type,
-                            fileName: file.name,
-                            timestamp: Date.now(),
-                            recipient: recipientUID
-                        });
+        window.toggleAudio = () => {
+            if(jitsiAPI) { jitsiAPI.executeCommand('toggleAudio'); audioMuted = !audioMuted; document.getElementById('btnMic').classList.toggle('active', audioMuted); }
+        };
+        window.toggleVideo = () => {
+            if(jitsiAPI) { jitsiAPI.executeCommand('toggleVideo'); videoMuted = !videoMuted; document.getElementById('btnCam').classList.toggle('active', videoMuted); }
+        };
+        window.leaveMeeting = () => {
+            if(jitsiAPI) jitsiAPI.dispose();
+            document.getElementById('videoConferenceContainer').style.display = 'none';
+            location.reload(); // Refresh to clean up state
+        };
 
-                        progressBar.style.width = '0%';
-                        fileInput.value = '';
-                    }
-                );
-            } catch (error) {
-                console.error("Error", error);
-                progressBar.style.width = '0%';
-            }
-        });
-
-        // --- TEXT SEND ---
-        const input = document.getElementById('msgInput');
-        const sendBtn = document.getElementById('sendBtn');
-
-        async function sendMessage() {
-            const text = input.value.trim();
-            if (!text || !chatRoomID) return;
-
-            const badWords = ["abuse", "scam", "fraud", "kill", "idiot"];
-            let cleanText = text;
-            badWords.forEach(w => { cleanText = cleanText.replace(new RegExp(`\\b${w}\\b`,'gi'), '####'); });
-
-            await push(ref(db, `Chats/${chatRoomID}`), {
-                sender: currentUser.uid,
-                text: cleanText,
-                timestamp: Date.now(),
-                recipient: recipientUID
-            });
-            input.value = "";
-            set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false);
+        // --- 4. CHAT SYSTEM ---
+        function initializeChat() {
+            const ids = [currentUser.uid, recipientUID].sort();
+            chatRoomID = `chat_${ids[0]}_${ids[1]}`;
+            onChildAdded(ref(db, `Chats/${chatRoomID}`), (snap) => renderMessage(snap.val()));
+            document.getElementById('initialLoader').style.display = 'none';
         }
-        
-        input.addEventListener('input', () => {
-            if (!chatRoomID) return;
-            set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), true);
-            if (typingTimeout) clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => {
-                set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false);
-            }, 2000);
-        });
 
-        sendBtn.addEventListener('click', sendMessage);
-        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+        function renderMessage(msg) {
+            if(!msg.sender) return;
+            const container = document.getElementById('chatContainer');
+            const div = document.createElement('div');
+            div.className = `message-bubble ${msg.sender === currentUser.uid ? 'msg-mine' : 'msg-theirs'}`;
+            
+            if (msg.type === 'meeting') {
+                div.innerHTML = `<div class="meeting-card"><strong>📹 Meeting: ${msg.title}</strong><br><button class="join-btn" onclick="tryJoinMeeting('${msg.meetingId}', 'now')">JOIN NOW</button></div>`;
+            } else {
+                div.textContent = msg.text;
+            }
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        window.createMeeting = async () => {
+            const mId = `meet_${Date.now()}`;
+            const title = document.getElementById('meetingTitle').value || "ScaleVest Call";
+            await push(ref(db, `Chats/${chatRoomID}`), {
+                sender: currentUser.uid, type: 'meeting', title: title,
+                meetingId: mId, timestamp: Date.now()
+            });
+            closeMeetingModal();
+        };
+
+        document.getElementById('sendBtn').onclick = async () => {
+            const val = document.getElementById('msgInput').value;
+            if(!val) return;
+            await push(ref(db, `Chats/${chatRoomID}`), { sender: currentUser.uid, text: val, timestamp: Date.now() });
+            document.getElementById('msgInput').value = "";
+        };
 
     </script>
 </body>
