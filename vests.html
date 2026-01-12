@@ -264,7 +264,39 @@
 
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
+/* --- ONLINE STATUS & UI FIXES --- */
+.status-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 2px solid #111; /* Cutout effect */
+    z-index: 5;
+}
 
+.status-online {
+    background-color: #10b981; /* Green */
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+.status-offline {
+    background-color: #666; /* Gray */
+    border: 2px solid #111;
+}
+
+.chat-preview {
+    color: #bbb; /* Lighter gray for better visibility */
+    font-size: 0.95rem;
+    max-width: 85%;
+}
+
+/* Fix for the weird attachment text */
+.attachment-text {
+    font-style: italic;
+    color: #888;
+}
 .btn-save-draft:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(0,0,0,0.22);
@@ -4312,77 +4344,87 @@ window.showInvestorChatList = async function() {
         const snapshot = await get(chatsRef);
         const allChats = snapshot.val() || {};
         
-        let myChats = [];
-        let uniqueUserIds = new Set();
+        // Map to store unique chats by User ID (avoids duplicates)
+        const chatMap = new Map();
 
         // --- 1. FILTER & PROCESS CHATS ---
         Object.keys(allChats).forEach(roomKey => {
             // Check if I am a participant
             if (roomKey.includes(currentUser.uid)) {
                 
-                // Get all data in the room
+                // Get messages and filter out 'typing' or empty nodes
                 const rawData = Object.values(allChats[roomKey]);
-
-                // FIX: Filter out the 'typing' node and ensure it's a real message
-                // A real message must have a 'sender' and 'timestamp'
                 const messages = rawData.filter(msg => msg.sender && msg.timestamp);
                 
-                // SAFETY CHECK: Skip if no actual messages found
+                // Skip empty rooms
                 if (messages.length === 0) return;
 
-                // Sort messages to find the last one
+                // Sort messages to find the true last one
                 messages.sort((a, b) => a.timestamp - b.timestamp);
                 const lastMsg = messages[messages.length - 1]; 
                 
-                // Identify the Investor (The other ID)
+                // Identify the Other User (Investor)
                 const otherUid = roomKey.replace(currentUser.uid, '').replace('_', '');
                 
-                // Determine message text (Fallback if text is empty)
-                let displayMsg = "Media / Attachment";
-                if (lastMsg.text && String(lastMsg.text).trim() !== "") {
+                // FIX: Better Text Detection
+                let displayMsg = "Sent an attachment";
+                let isAttachment = true;
+
+                if (lastMsg.text && String(lastMsg.text).trim().length > 0) {
                     displayMsg = lastMsg.text;
+                    isAttachment = false;
                 }
 
-                if(otherUid) {
-                    uniqueUserIds.add(otherUid);
-                    
-                    myChats.push({
-                        roomKey: roomKey,
-                        otherUid: otherUid,
-                        lastMessage: displayMsg,
-                        timestamp: lastMsg.timestamp || Date.now(),
-                        isUnread: (lastMsg.sender !== currentUser.uid)
-                    });
+                const chatData = {
+                    roomKey: roomKey,
+                    otherUid: otherUid,
+                    lastMessage: displayMsg,
+                    isAttachment: isAttachment,
+                    timestamp: lastMsg.timestamp,
+                    isUnread: (lastMsg.sender !== currentUser.uid)
+                };
+
+                // DEDUPLICATION LOGIC:
+                // If we already found a chat with this user, only keep the NEWER one.
+                if (chatMap.has(otherUid)) {
+                    const existing = chatMap.get(otherUid);
+                    if (chatData.timestamp > existing.timestamp) {
+                        chatMap.set(otherUid, chatData);
+                    }
+                } else {
+                    chatMap.set(otherUid, chatData);
                 }
             }
         });
 
-        // --- 2. FETCH INVESTOR PROFILES & STATUS ---
+        // Convert Map to Array
+        const myChats = Array.from(chatMap.values());
+
+        // --- 2. FETCH INVESTOR PROFILES ---
         const profileMap = {};
-        const fetchPromises = Array.from(uniqueUserIds).map(async (uid) => {
+        const fetchPromises = myChats.map(async (chat) => {
+            const uid = chat.otherUid;
             try {
                 // Fetch from investorProfiles
                 const snap = await get(ref(db, `investorProfiles/${uid}`));
                 if (snap.exists()) {
                     profileMap[uid] = snap.val();
                 } else {
-                    // Fallback to basic info
-                    profileMap[uid] = { fullName: "Investor", photoURL: null, status: 'offline' };
+                    profileMap[uid] = { fullName: "Investor", photoURL: null, status: "offline" };
                 }
             } catch (err) {
                 console.warn(`Could not fetch profile for ${uid}`, err);
-                profileMap[uid] = { fullName: "Investor", photoURL: null, status: 'offline' };
+                profileMap[uid] = { fullName: "Investor", photoURL: null, status: "offline" };
             }
         });
 
         await Promise.all(fetchPromises);
 
         // --- 3. SORT & RENDER ---
-        myChats.sort((a, b) => b.timestamp - a.timestamp); // Sort chats by newest activity
+        myChats.sort((a, b) => b.timestamp - a.timestamp);
 
         let listHtml = `
-            
-            <div class="chat-list-container">
+                       <div class="chat-list-container">
                 <div class="chat-header-row">
                     <div>
                         <h1 style="font-size:2rem; font-weight:800; margin:0; letter-spacing:-1px;">Investor Inbox</h1>
@@ -4406,17 +4448,17 @@ window.showInvestorChatList = async function() {
             `;
         } else {
             listHtml += myChats.map(chat => {
-                const profile = profileMap[chat.otherUid] || { fullName: 'Unknown Investor' };
+                const profile = profileMap[chat.otherUid] || { fullName: 'Unknown' };
                 
-                // Get Name
+                // Name & Photo
                 const displayName = profile.fullName || profile.name || "Investor";
                 const displayPhoto = profile.photoURL || profile.logo; 
                 
-                // Status Logic (Checks for 'online' string or boolean true)
+                // Status Logic
                 const isOnline = profile.status === 'online' || profile.isOnline === true;
                 const statusClass = isOnline ? 'status-online' : 'status-offline';
 
-                // Time Formatting
+                // Time
                 const msgDate = new Date(chat.timestamp);
                 const isToday = new Date().toDateString() === msgDate.toDateString();
                 const timeDisplay = isToday 
@@ -4437,9 +4479,9 @@ window.showInvestorChatList = async function() {
                         <div class="chat-name">
                             ${displayName}
                         </div>
-                        <div class="chat-preview ${chat.isUnread ? 'unread-text' : ''}">
+                        <div class="chat-preview ${chat.isUnread ? 'unread-text' : ''} ${chat.isAttachment ? 'attachment-text' : ''}">
                             ${chat.isUnread ? '<span style="color:#10b981; margin-right:4px;">●</span>' : ''}
-                            ${chat.lastMessage}
+                            ${chat.isAttachment ? '📎 ' : ''}${chat.lastMessage}
                         </div>
                     </div>
                     
