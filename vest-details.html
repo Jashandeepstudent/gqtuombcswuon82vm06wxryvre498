@@ -577,76 +577,92 @@ onAuthStateChanged(auth, (user) => {
     }
 
     // Load vest data
-    async function loadVestData() {
-        if (!vestID || !ownerUID) {
-            alert('Invalid vest ID');
+   async function loadVestData() {
+    if (!vestID || !ownerUID) {
+        alert('Invalid vest ID');
+        return;
+    }
+
+    try {
+        // 1. Fetch main Vest data
+        const vestRef = ref(db, `Vests/${ownerUID}/${vestID}`);
+        const snapshot = await get(vestRef);
+
+        if (!snapshot.exists()) {
+            alert('Vest not found');
             return;
         }
 
-        try {
-            const vestRef = ref(db, `Vests/${ownerUID}/${vestID}`);
-            const snapshot = await get(vestRef);
+        const vestData = snapshot.val();
+        
+        // --- CORRECT PATH MAPPING ---
+        const main = vestData.MainVest || {};
+        const details = vestData.StartupDetails || {};
+        const audit = vestData.Audit || {};
+        const roadmap = vestData.Roadmap || {};
+        const founder = vestData.FounderPresence || {}; // Matches your FounderPresence node
 
-            if (!snapshot.exists()) {
-                alert('Vest not found');
-                return;
-            }
+        // Header
+        document.getElementById('hookTitle').textContent = main.hook || 'Investment Opportunity';
+        document.getElementById('description').textContent = main.description || 'No description available';
 
-            const vestData = snapshot.val();
-            const main = vestData.MainVest || {};
-            const details = vestData.StartupDetails || {};
-            const audit = vestData.Audit || {};
-            const roadmap = vestData.Roadmap || {};
-            const founder = vestData.Founder || {};
+        // Main Details
+        document.getElementById('problem').textContent = main.problem || 'Not specified';
+        document.getElementById('solution').textContent = main.solution || 'Not specified';
+        document.getElementById('advantage').textContent = main.advantage || 'Not specified';
+        document.getElementById('fundAsk').textContent = '$' + (main.fundAsk || '0');
+        document.getElementById('equityOffered').textContent = (main.equityOffered || '0');
 
-            // Header
-            document.getElementById('hookTitle').textContent = main.hook || 'Investment Opportunity';
-            document.getElementById('description').textContent = main.description || 'No description available';
+        // Startup Details (Correcting keys to match common structures)
+        const startupName = details.startupName || details.name || 'Startup';
+        document.getElementById('startupName').textContent = startupName;
+        document.getElementById('modalStartupName').textContent = startupName;
+        document.getElementById('startupDescription').textContent = details.description || 'No description';
+        document.getElementById('stage').textContent = details.stage || 'N/A';
+        document.getElementById('category').textContent = details.category || 'N/A';
+        document.getElementById('revenue').textContent = main.annualRevenue || 'N/A';
+        document.getElementById('valuation').textContent = main.valuation || 'N/A';
+        document.getElementById('pitchDeckLink').href = details.pitchDeckUrl || '#';
 
-            // Main Details
-            document.getElementById('problem').textContent = main.problem || 'Not specified';
-            document.getElementById('solution').textContent = main.solution || 'Not specified';
-            document.getElementById('advantage').textContent = main.advantage || 'Not specified';
-            document.getElementById('fundAsk').textContent = '$' + (main.fundAsk || '0');
-            document.getElementById('equityOffered').textContent = (main.equityOffered || '0') + '%';
+        // Audit
+        document.getElementById('scalability').textContent = audit.scalability || 'Not specified';
+        document.getElementById('marketShare').textContent = audit.marketShare || 'Not specified';
+        document.getElementById('competitors').textContent = audit.competitors || 'Not specified';
+        document.getElementById('monetization').textContent = audit.monetization || 'Not specified';
+        document.getElementById('differentiation').textContent = audit.differentiation || 'Not specified';
 
-            // Startup Details
-            const startupName = details.name || 'Startup';
-            document.getElementById('startupName').textContent = startupName;
-            document.getElementById('modalStartupName').textContent = startupName;
+        // Roadmap
+        document.getElementById('fundedPlan').textContent = roadmap.fundedPlan || 'Not specified';
+        document.getElementById('fundUtilization').textContent = roadmap.fundUsage || 'Not specified'; // Matches your 'fundUsage' key
+        document.getElementById('yearGoal').textContent = roadmap.yearGoal || 'Not specified';
+        document.getElementById('threeYearVision').textContent = roadmap.threeYearVision || 'Not specified';
+
+        // Founder
+        document.getElementById('founderName').textContent = founder.founderName || 'Not specified';
+        document.getElementById('coFounders').textContent = founder.coFounders || 'Not specified';
+        document.getElementById('responsibilities').textContent = founder.responsibilities || 'Not specified';
+        document.getElementById('demoVideoLink').href = founder.demoVideoUrl || '#';
+
+        // --- 2. FETCH STARTUP LOGO FROM startupProfile ---
+        // This looks under the owner's UID in the startupProfile node
+        const logoRef = ref(db, `startupProfile/${ownerUID}`);
+        const logoSnap = await get(logoRef);
+        
+        const logoContainer = document.getElementById('logoInitials');
+        if (logoSnap.exists() && logoSnap.val().logo) {
+            // If logo exists, replace initials with image
+            logoContainer.innerHTML = `<img src="${logoSnap.val().logo}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+        } else {
+            // Fallback to initials
             const initials = startupName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-            document.getElementById('logoInitials').textContent = initials;
-            document.getElementById('startupDescription').textContent = details.description || 'No description';
-            document.getElementById('stage').textContent = details.stage || 'N/A';
-            document.getElementById('category').textContent = details.category || 'N/A';
-            document.getElementById('revenue').textContent = details.revenue || 'N/A';
-            document.getElementById('valuation').textContent = details.valuation || 'N/A';
-            document.getElementById('pitchDeckLink').href = details.pitchDeckUrl || '#';
-
-            // Audit
-            document.getElementById('scalability').textContent = audit.scalability || 'Not specified';
-            document.getElementById('marketShare').textContent = audit.marketShare || 'Not specified';
-            document.getElementById('competitors').textContent = audit.competitors || 'Not specified';
-            document.getElementById('monetization').textContent = audit.monetization || 'Not specified';
-            document.getElementById('differentiation').textContent = audit.differentiation || 'Not specified';
-
-            // Roadmap
-            document.getElementById('fundedPlan').textContent = roadmap.fundedPlan || 'Not specified';
-            document.getElementById('fundUtilization').textContent = roadmap.fundUtilization || 'Not specified';
-            document.getElementById('yearGoal').textContent = roadmap.yearGoal || 'Not specified';
-            document.getElementById('threeYearVision').textContent = roadmap.threeYearVision || 'Not specified';
-
-            // Founder
-            document.getElementById('founderName').textContent = founder.name || 'Not specified';
-            document.getElementById('coFounders').textContent = founder.coFounders || 'Not specified';
-            document.getElementById('responsibilities').textContent = founder.responsibilities || 'Not specified';
-            document.getElementById('demoVideoLink').href = founder.demoVideoUrl || '#';
-
-        } catch (error) {
-            console.error('Error loading vest:', error);
-            alert('Failed to load vest data');
+            logoContainer.textContent = initials;
         }
+
+    } catch (error) {
+        console.error('Error loading vest:', error);
+        alert('Failed to load vest data');
     }
+}
 
     loadVestData();
 
