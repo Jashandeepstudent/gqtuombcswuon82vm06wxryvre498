@@ -1401,7 +1401,125 @@
     box-shadow:
         0 10px 25px rgba(0,0,0,0.25);
 }
+/* --- CHAT INBOX STYLES --- */
+.chat-list-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    color: #fff;
+    min-height: 80vh;
+}
 
+.chat-header-row {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #222;
+}
+
+.chat-item {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: #0f0f0f;
+    border: 1px solid #222;
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.chat-item:hover {
+    background: #161616;
+    border-color: #444;
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.chat-avatar {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #333, #555);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #fff;
+    border: 2px solid #000;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.chat-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.chat-info {
+    flex: 1;
+    min-width: 0; /* Prevents text overflow issues */
+}
+
+.chat-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chat-preview {
+    color: #888;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90%;
+}
+
+.chat-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+    min-width: 80px;
+}
+
+.time-text {
+    color: #555;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.unread-pill {
+    background: #ff006e; /* ScaleVest Pink */
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 5px rgba(255, 0, 110, 0.4);
+}
+
+.empty-state-box {
+    text-align: center;
+    padding: 4rem 2rem;
+    border: 2px dashed #222;
+    border-radius: 20px;
+    color: #666;
+    margin-top: 2rem;
+}
 /* ===============================
    STATUS BADGES (LUXURY)
 ================================ */
@@ -4135,82 +4253,131 @@ window.limitWords = function(element, limit) {
         alert(`Professional Guard: Maximum ${limit} words allowed per section.`);
     }
 };
-// --- 1. SHOW CHAT LIST SCREEN ---
 window.showInvestorChatList = async function() {
     const container = document.getElementById('dashboardContainer');
+    
+    // Ensure container is visible
+    if(document.querySelector('.vest-container')) {
+        document.querySelector('.vest-container').style.display = 'none';
+    }
     container.style.display = 'block';
-    document.querySelector('.vest-container').style.display = 'none';
 
     // Show Loader
-    container.innerHTML = `<div class="loading-box"><div class="spinner"></div><p style="color:#888;">Syncing with Investor Network...</p></div>`;
+    container.innerHTML = `
+        <div class="loading-box">
+            <div class="spinner"></div>
+            <p style="color:#888;">Syncing with Investor Network...</p>
+        </div>`;
 
     try {
+        // 1. Get All Chats
         const chatsRef = ref(db, 'Chats');
         const snapshot = await get(chatsRef);
         const allChats = snapshot.val() || {};
         
         let myChats = [];
+        let uniqueUserIds = new Set();
 
-        // Filter chats that belong to current user
-        // Room Key Format is Alphabetical: uid1_uid2
+        // 2. Filter Chats & Identify Users
         Object.keys(allChats).forEach(roomKey => {
             if (roomKey.includes(currentUser.uid)) {
                 const messages = Object.values(allChats[roomKey]);
-                const lastMsg = messages[messages.length - 1]; // Get latest
+                // Sort messages to find the true last one
+                messages.sort((a, b) => a.timestamp - b.timestamp);
+                const lastMsg = messages[messages.length - 1]; 
                 
-                // Identify the "Other" person (The Investor)
+                // Extract the "Other" ID (The Investor)
                 const otherUid = roomKey.replace(currentUser.uid, '').replace('_', '');
                 
-                myChats.push({
-                    roomKey: roomKey,
-                    otherUid: otherUid,
-                    lastMessage: lastMsg.text,
-                    timestamp: lastMsg.timestamp,
-                    isUnread: (lastMsg.sender !== currentUser.uid) // Simple unread logic
-                });
+                if(otherUid) {
+                    uniqueUserIds.add(otherUid);
+                    
+                    myChats.push({
+                        roomKey: roomKey,
+                        otherUid: otherUid,
+                        lastMessage: lastMsg.text,
+                        timestamp: lastMsg.timestamp,
+                        isUnread: (lastMsg.sender !== currentUser.uid)
+                    });
+                }
             }
         });
 
-        // Sort by newest first
+        // 3. Fetch Investor Profiles (Names/Photos)
+        const profileMap = {};
+        const fetchPromises = Array.from(uniqueUserIds).map(async (uid) => {
+            try {
+                // Try fetching from investorProfiles
+                const snap = await get(ref(db, `investorProfiles/${uid}`));
+                if (snap.exists()) {
+                    profileMap[uid] = snap.val();
+                } else {
+                    // Fallback to basic info if profile missing
+                    profileMap[uid] = { fullName: "Investor", photoURL: null };
+                }
+            } catch (err) {
+                console.warn(`Could not fetch profile for ${uid}`, err);
+                profileMap[uid] = { fullName: "Investor", photoURL: null };
+            }
+        });
+
+        await Promise.all(fetchPromises);
+
+        // 4. Sort by Newest Message
         myChats.sort((a, b) => b.timestamp - a.timestamp);
 
-        // Render HTML
+        // 5. Generate HTML
         let listHtml = `
-           <div class="chat-list-container">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
-                    <h1 style="font-size:2rem; font-weight:800;">Investor Inbox</h1>
-                    <span style="color:#666;">${myChats.length} Conversations</span>
+            ${typeof createNavBar === 'function' ? createNavBar() : ''} 
+            <div class="chat-list-container">
+                <div class="chat-header-row">
+                    <h1 style="font-size:2rem; font-weight:800; margin:0;">Investor Inbox</h1>
+                    <span style="color:#666; font-weight:600;">${myChats.length} Active Conversations</span>
                 </div>
         `;
 
         if (myChats.length === 0) {
             listHtml += `
-                <div class="empty-state" style="padding:4rem; border:1px dashed #333;">
-                    <p style="color:#666;">No messages yet. Launch a vest to start conversations!</p>
+                <div class="empty-state-box">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" style="margin-bottom:1rem;">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <p>No messages yet.</p>
+                    <small>Investors will appear here when they contact you.</small>
                 </div>
             `;
         } else {
-            // We need to fetch names for these UIDs. 
-            // For now, we render placeholders and update them async if needed, 
-            // or just use generic "Investor" to save reads.
-            
             listHtml += myChats.map(chat => {
-                const date = new Date(chat.timestamp).toLocaleDateString();
-                const time = new Date(chat.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const profile = profileMap[chat.otherUid] || { fullName: 'Unknown Investor' };
+                const displayName = profile.fullName || profile.founderUsername || "Investor";
+                const displayPhoto = profile.photoURL || profile.logo; // Handle different image fields
                 
+                // Format Date
+                const msgDate = new Date(chat.timestamp);
+                const dateStr = msgDate.toLocaleDateString();
+                const timeStr = msgDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const timeDisplay = (Date.now() - chat.timestamp < 86400000) ? timeStr : dateStr; // Show time if today, else date
+
                 return `
                 <div class="chat-item" onclick="window.location.href='chat.html?recipient=${chat.otherUid}'">
-                    <div class="chat-avatar">INV</div>
+                    <div class="chat-avatar">
+                        ${displayPhoto 
+                            ? `<img src="${displayPhoto}" alt="${displayName}">` 
+                            : displayName.charAt(0).toUpperCase()}
+                    </div>
+                    
                     <div class="chat-info">
                         <div class="chat-name">
-                            Investor 
-                            ${chat.isUnread ? '<span class="unread-pill">NEW MESSAGE</span>' : ''}
+                            ${displayName}
                         </div>
-                        <div class="chat-preview">${chat.lastMessage}</div>
+                        <div class="chat-preview" style="${chat.isUnread ? 'color:#fff; font-weight:600;' : ''}">
+                            ${chat.isUnread ? '• ' : ''}${chat.lastMessage}
+                        </div>
                     </div>
-                    <div class="time-ago">
-                        <div>${time}</div>
-                        <div style="font-size:0.7rem; opacity:0.6;">${date}</div>
+                    
+                    <div class="chat-meta">
+                        <div class="time-text">${timeDisplay}</div>
+                        ${chat.isUnread ? '<div class="unread-pill">NEW</div>' : ''}
                     </div>
                 </div>
                 `;
@@ -4220,15 +4387,19 @@ window.showInvestorChatList = async function() {
         listHtml += `</div>`; // Close container
         container.innerHTML = listHtml;
 
-        // Clear Badge when viewing list
-        updateNotificationBadge(0);
+        // Clear Badge since we are viewing the list
+        if(typeof updateNotificationBadge === 'function') updateNotificationBadge(0);
 
     } catch (e) {
-        console.error("Chat Error", e);
-        container.innerHTML = `<p style="text-align:center; padding:2rem; color:red;">Error loading messages.</p>`;
+        console.error("Inbox Load Error:", e);
+        container.innerHTML = `
+            ${typeof createNavBar === 'function' ? createNavBar() : ''}
+            <div style="text-align:center; padding:4rem; color:#ff4d4d;">
+                <h3>Unable to load messages</h3>
+                <p>Please check your internet connection or permissions.</p>
+            </div>`;
     }
 };
-
 // --- 2. GLOBAL NOTIFICATION LISTENER ---
 // Call this function inside your onAuthStateChanged, right after 'isInitialLoad = false;'
 function startNotificationListener() {
