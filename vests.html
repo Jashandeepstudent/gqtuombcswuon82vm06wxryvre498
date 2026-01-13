@@ -5502,12 +5502,10 @@ async function saveStartupProfile(vestData) {
     // SECTION 4: UPDATE createDashboard FUNCTION
     // ========================================
     
-  async function createDashboard() {
+ async function createDashboard() {
     if (!currentUser) return;
-const chatsRef = ref(db, 'Chats');
-    const chatSnap = await get(chatsRef);
-    
-// --- 1. FETCH LATEST MESSAGE FOR INBOX PREVIEW (Safely) ---
+
+    // --- 1. FETCH LATEST MESSAGE FOR INBOX PREVIEW (Safely) ---
     let latestPreview = { 
         text: "Start connecting with investors today.", 
         title: "Welcome to ScaleVest!" 
@@ -5522,23 +5520,20 @@ const chatsRef = ref(db, 'Chats');
             let newestMsg = null;
 
             Object.keys(allChats).forEach(roomKey => {
-                // Check if user is part of this specific chat room
+                // Only process rooms involving the current user
                 if (roomKey.includes(currentUser.uid)) {
                     const roomData = allChats[roomKey];
                     
-                    // CRITICAL FIX: Check if roomData exists and is an object before getting values
                     if (roomData && typeof roomData === 'object') {
-                        const msgs = Object.values(roomData);
+                        // Filter out metadata like 'typing' or empty values
+                        const msgs = Object.values(roomData).filter(m => m && typeof m === 'object' && m.timestamp);
                         
-                        // CRITICAL FIX: Ensure there is at least one message in the array
                         if (msgs.length > 0) {
-                            const last = msgs[msgs.length - 1];
+                            // Sort locally to ensure we truly get the latest by time, not just position
+                            const last = msgs.reduce((prev, current) => (prev.timestamp > current.timestamp) ? prev : current);
                             
-                            // Check if 'last' exists and has a timestamp
-                            if (last && last.timestamp) {
-                                if (!newestMsg || last.timestamp > newestMsg.timestamp) {
-                                    newestMsg = last;
-                                }
+                            if (!newestMsg || last.timestamp > newestMsg.timestamp) {
+                                newestMsg = last;
                             }
                         }
                     }
@@ -5547,6 +5542,8 @@ const chatsRef = ref(db, 'Chats');
 
             if (newestMsg && newestMsg.text) {
                 latestPreview.title = newestMsg.sender === currentUser.uid ? "You sent:" : "Investor sent:";
+                
+                // CRITICAL FIX: Ensure newestMsg.text exists before checking length
                 latestPreview.text = newestMsg.text.length > 45 
                     ? newestMsg.text.substring(0, 42) + "..." 
                     : newestMsg.text;
