@@ -558,15 +558,27 @@
 <!-- MODAL -->
 <div class="modal" id="fundModal">
     <div class="modal-content">
-        <div class="modal-title">Interested in Funding</div>
-        <div class="modal-text" id="modalText">
-            You are interested in funding <strong id="modalStartupName"></strong>. 
-            Would you like to call them for a short chat session first, or invite them directly for a meeting?
+        <div id="initialFundView">
+            <div class="modal-title">Interested in Funding</div>
+            <div class="modal-text">
+                You are interested in funding <strong id="modalStartupName"></strong>. 
+                Choose how you want to proceed.
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="scheduleCall()">Chat Session</button>
+                <button class="modal-btn primary" onclick="showInviteOptions()">Invite Meeting Directly</button>
+            </div>
         </div>
-        <div class="modal-buttons">
-            <button class="modal-btn" onclick="closeModal()">Cancel</button>
-            <button class="modal-btn primary" onclick="scheduleCall()">Schedule Call</button>
-            <button class="modal-btn primary" onclick="inviteMeeting()">Invite Meeting</button>
+
+        <div id="inviteOptionsView" style="display:none;">
+            <div class="modal-title">Meeting Type</div>
+            <div class="modal-text">Would you like to start the meeting now or schedule it for later?</div>
+            <div class="modal-buttons">
+                <button class="modal-btn" onclick="resetFundModal()">Back</button>
+                <button class="modal-btn primary" onclick="autoMeeting('now')">Meet Now</button>
+                <button class="modal-btn primary" onclick="autoMeeting('schedule')">Schedule</button>
+            </div>
         </div>
     </div>
 </div>
@@ -622,7 +634,33 @@
         // Save state locally
         localStorage.setItem(storageKey, JSON.stringify(Array.from(viewedSections)));
     }
+/* --- UPDATED FUNDING MODAL LOGIC --- */
 
+window.showInviteOptions = function() {
+    document.getElementById('initialFundView').style.display = 'none';
+    document.getElementById('inviteOptionsView').style.display = 'block';
+};
+
+window.resetFundModal = function() {
+    document.getElementById('initialFundView').style.display = 'block';
+    document.getElementById('inviteOptionsView').style.display = 'none';
+};
+
+window.autoMeeting = function(type) {
+    if (!ownerUID || !vestID) return alert("Missing context.");
+
+    // Redirect to chat with specific instructions
+    // triggerMeeting: tells chat.html to create a meeting immediately
+    // meetingType: 'now' or 'schedule'
+    window.location.href = `chat.html?recipient=${ownerUID}&refVest=${vestID}&triggerMeeting=true&meetingType=${type}`;
+};
+
+// Ensure your close modal function also resets the view for next time
+const originalCloseModal = window.closeModal;
+window.closeModal = function() {
+    originalCloseModal();
+    setTimeout(resetFundModal, 300);
+};
     /* --- 2. AUTH GUARD & INITIALIZATION --- */
     onAuthStateChanged(auth, (user) => {
         if (user) {
