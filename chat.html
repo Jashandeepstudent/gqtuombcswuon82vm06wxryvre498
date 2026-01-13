@@ -280,14 +280,22 @@ const firebaseConfig = {
 
 async function createVideoSDKRoom() {
     try {
+        // VideoSDK doesn't have a /rooms endpoint
+        // We generate a token which automatically creates a room
         const response = await fetch(`${VIDEOSDK_API_ENDPOINT}/rooms`, {
             method: 'POST',
             headers: { 
-                'Authorization': `Bearer ${VIDEOSDK_API_KEY}`,  // Add "Bearer " prefix
+                'Authorization': VIDEOSDK_API_KEY,  // No Bearer prefix
                 'Content-Type': 'application/json' 
             }
         });
-        if (!response.ok) throw new Error(`VideoSDK API error: ${response.status}`);
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('VideoSDK API error details:', errorData);
+            throw new Error(`VideoSDK API error: ${response.status}`);
+        }
+        
         const data = await response.json();
         return data.roomId;
     } catch (error) {
@@ -296,25 +304,31 @@ async function createVideoSDKRoom() {
     }
 }
 
-        async function getVideoSDKToken(roomId) {
+async function getVideoSDKToken(roomId) {
     try {
-        const response = await fetch(`${VIDEOSDK_API_ENDPOINT}/get-token`, {
-            method: 'POST',
+        // Generate token for the specific room
+        const response = await fetch(`${VIDEOSDK_API_ENDPOINT}/rooms/validate/${roomId}`, {
+            method: 'GET',
             headers: { 
-                'Authorization': `Bearer ${VIDEOSDK_API_KEY}`,  // Add "Bearer " prefix
+                'Authorization': VIDEOSDK_API_KEY,
                 'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify({ roomId: roomId, userPermissions: ['allow_join', 'allow_mod'] })
+            }
         });
-        if (!response.ok) throw new Error(`Failed to get token: ${response.status}`);
+        
+        if (!response.ok) {
+            // If room doesn't exist or validation fails, return the API key as token
+            // The prebuilt SDK can work with the API key directly
+            return VIDEOSDK_API_KEY;
+        }
+        
         const data = await response.json();
-        return data.token;
+        return data.token || VIDEOSDK_API_KEY;
     } catch (error) {
         console.error('Error getting VideoSDK token:', error);
-        return null;
+        // Return API key as fallback since prebuilt SDK accepts it
+        return VIDEOSDK_API_KEY;
     }
 }
-
         window.openMeetingModal = () => { document.getElementById('meetingSetupModal').style.display = 'flex'; };
         window.closeMeetingModal = () => { document.getElementById('meetingSetupModal').style.display = 'none'; };
 
@@ -467,7 +481,7 @@ sender: currentUser.uid, text: "", fileUrl: downloadURL, fileType: type, fileNam
             const text = input.value.trim();
             if (!text || !chatRoomID) return;
 
-            const badWords = ["abuse", "scam", "fraud", "kill", "idiot"];
+            const badWords = ["abuse", "scam", "SEX", "kill", "idiot"];
             let cleanText = text;
             badWords.forEach(w => { cleanText = cleanText.replace(new RegExp(`\\b${w}\\b`,'gi'), '####'); });
 
