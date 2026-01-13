@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Session | ScaleVest</title>
     <style>
-        body { font-family: 'SF Pro Display', -apple-system, sans-serif; background: #f8f9fa; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        body { font-family: 'SF Pro Display', -apple-system, sans-serif; background: #f8f9fa; margin: 0; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
         .chat-header { background: white; padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
         .header-left { display: flex; align-items: center; gap: 15px; }
         .header-logo { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb; }
@@ -15,7 +15,7 @@
         .action-btn { background: #f3f4f6; border: 1px solid #e5e7eb; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 6px; transition: 0.2s; text-decoration: none; height: 38px; }
         .meeting-btn { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; display: none; }
         .action-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        #chatContainer { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; position: relative; background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 20px 20px; }
+        #chatContainer { flex: 1; overflow-y: auto; padding-bottom: 90px; padding: 20px; display: flex; flex-direction: column; gap: 15px; position: relative; background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 20px 20px; }
         .message-bubble { max-width: 70%; padding: 12px 18px; border-radius: 18px; font-size: 15px; line-height: 1.5; position: relative; animation: popIn 0.3s ease; word-wrap: break-word; }
         .msg-mine { background: #10b981; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
         .msg-theirs { background: white; color: #374151; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -24,7 +24,24 @@
         .meeting-card:hover { background: rgba(255,255,255,0.25); }
         .msg-theirs .meeting-card { background: #f0fdf4; border-color: #10b981; color: #064e3b; }
         .join-btn { background: #fff; color: #10b981; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; margin-top: 10px; cursor: pointer; width: 100%; }
-        .input-area { background: white; padding: 15px 20px; display: flex; gap: 12px; border-top: 1px solid #e5e7eb; align-items: center; }
+.input-area {
+  position: sticky;
+  bottom: 0;
+  z-index: 150;
+  background: white;
+}
+@media (max-width: 768px) {
+  .chat-header {
+    padding: 10px 14px;
+  }
+  .header-title {
+    font-size: 1rem;
+  }
+  #msgInput {
+    font-size: 16px; /* stops iOS zoom */
+  }
+}
+
         #attachBtn { background: #f3f4f6; color: #6b7280; border: none; padding: 10px; border-radius: 50%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; }
         #attachBtn:hover { background: #e5e7eb; color: #1a1a1a; }
         #msgInput { flex: 1; padding: 15px; border: 2px solid #e5e7eb; border-radius: 12px; outline: none; font-size: 16px; transition: 0.3s; }
@@ -195,6 +212,27 @@ const firebaseConfig = {
                 if(!recipientUID) { window.location.href = "dashboard.html"; return; }
                 await identifyUserRole();
                 initializeChat();
+async function loadChatHeaderUser() {
+  let name = "User";
+  let photo = "https://via.placeholder.com/45?text=SV";
+
+  const founderSnap = await get(ref(db, `founderProfile/${recipientUID}`));
+  if (founderSnap.exists()) {
+    const d = founderSnap.val();
+    name = d.firstName || d.founderUsername || "Founder";
+    photo = d.photoURL || photo;
+  } else {
+    const investorSnap = await get(ref(db, `investorProfiles/${recipientUID}`));
+    if (investorSnap.exists()) {
+      const d = investorSnap.val();
+      name = d.fullName || "Investor";
+      photo = d.photoURL || d.logo || photo;
+    }
+  }
+
+  document.getElementById("chatTitle").textContent = name;
+  document.querySelector(".header-logo").src = photo;
+}
 
 const triggerMeeting = params.get('triggerMeeting');
 const meetingType = params.get('meetingType');
@@ -246,6 +284,8 @@ if (triggerMeeting === 'true') {
         }
 
         async function initializeChat() {
+await loadChatHeaderUser();
+
             const participantIDs = [currentUser.uid, recipientUID].sort();
             chatRoomID = `chat_${participantIDs[0]}_${participantIDs[1]}`;
             let chatTitle = "Chat";
@@ -409,9 +449,13 @@ window.closeMeetingModal = () => {
         webcamEnabled: true,
         participantCanToggleSelfWebcam: true,
         participantCanToggleSelfMic: true,
-        raiseHandEnabled: true,
-        screenShareEnabled: true,
-        chatEnabled: true,
+raiseHandEnabled: false,
+screenShareEnabled: true,
+chatEnabled: false,
+pollEnabled: false,
+participantName: userDisplayName,
+participantAvatar: userAvatar || undefined,
+
         whiteboardEnabled: false,
         recordingEnabled: false,
         brandingEnabled: false,
