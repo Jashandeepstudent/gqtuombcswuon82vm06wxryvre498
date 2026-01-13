@@ -104,6 +104,128 @@
     gap: 12px;
 
     margin-left: auto;
+.chat-list-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.chat-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.inbox-count {
+  background: #111827;
+  color: #9ca3af;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.chat-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.chat-item:hover {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.chat-avatar {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.chat-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.status-indicator {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.status-online {
+  background: #10b981;
+}
+
+.status-offline {
+  background: #9ca3af;
+}
+
+.chat-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-name {
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.chat-preview {
+  font-size: 0.9rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.unread-text {
+  color: #111827;
+  font-weight: 600;
+}
+
+.chat-meta {
+  text-align: right;
+  min-width: 70px;
+}
+
+.time-text {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.unread-pill {
+  background: #10b981;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  margin-top: 6px;
+  display: inline-block;
+}
 
     /* 🔒 CRITICAL FIXES */
     width: auto;
@@ -4432,18 +4554,38 @@ window.showInvestorChatList = async function() {
         // --- 3. SORT & RENDER ---
         myChats.sort((a, b) => b.timestamp - a.timestamp); // Newest first
 
-        let listHtml = `
-                        <div class="chat-list-container">
-                <div class="chat-header-row">
-                    <div>
-                        <h1 style="font-size:2rem; font-weight:800; margin:0; letter-spacing:-1px;">Investor Inbox</h1>
-                        <p style="color:#666; margin:5px 0 0 0; font-size:0.9rem;">Manage your funding conversations</p>
-                    </div>
-                    <div style="background:#111; padding:5px 12px; border-radius:20px; border:1px solid #333; font-size:0.8rem; color:#888;">
-                        ${myChats.length} Active
-                    </div>
-                </div>
-        `;
+       let listHtml = `
+<div class="chat-list-container">
+
+  <div class="chat-header-row">
+    <div style="display:flex; align-items:center; gap:12px;">
+      
+      <button onclick="window.location.hash='founder_dashboard'" 
+        style="
+          background:#f3f4f6;
+          border:1px solid #e5e7eb;
+          border-radius:10px;
+          padding:8px 12px;
+          cursor:pointer;
+          font-weight:600;
+        ">
+        ← Back
+      </button>
+
+      <div>
+        <h1 style="font-size:1.9rem; font-weight:800; margin:0;">Investor Inbox</h1>
+        <p style="color:#6b7280; margin:4px 0 0; font-size:0.9rem;">
+          Manage your funding conversations
+        </p>
+      </div>
+    </div>
+
+    <div class="inbox-count">
+      ${myChats.length} Active
+    </div>
+  </div>
+`;
+
 
         if (myChats.length === 0) {
             listHtml += `
