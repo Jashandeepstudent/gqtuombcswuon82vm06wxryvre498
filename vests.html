@@ -5675,13 +5675,13 @@ async function createDashboard() {
             const allChats = snapshot.val();
             let newestInvestorMsg = null;
 
+            // Loop through chats to find the latest incoming message
             Object.keys(allChats).forEach(roomKey => {
                 if (roomKey.includes(currentUser.uid)) {
                     const roomData = allChats[roomKey];
                     const msgs = Object.values(roomData).filter(m => m && typeof m === 'object' && m.timestamp);
                     
                     if (msgs.length > 0) {
-                        // Find latest message NOT sent by you
                         const investorMsgs = msgs.filter(m => m.sender !== currentUser.uid);
                         if (investorMsgs.length > 0) {
                             const lastInRoom = investorMsgs.reduce((prev, curr) => (prev.timestamp > curr.timestamp) ? prev : curr);
@@ -5694,18 +5694,23 @@ async function createDashboard() {
             });
 
             if (newestInvestorMsg) {
-                // --- NAME LOOKUP STEP ---
-                // We fetch the sender's actual username from their profile
-                const senderSnap = await get(ref(db, `founderProfile/${newestInvestorMsg.sender}`));
-                const senderName = senderSnap.exists() ? senderSnap.val().founderUsername : "An Investor";
+                try {
+                    // --- TARGETED NAME FETCHING ---
+                    // Look up the hsi id under 'investorProfiles' to get the 'fullName'
+                    const investorSnap = await get(ref(db, `investorProfiles/${newestInvestorMsg.sender}`));
+                    
+                    const senderName = investorSnap.exists() ? investorSnap.val().fullName : "An Investor";
 
-                latestPreview.title = `${senderName} has sent you a new message:`;
-                latestPreview.text = newestInvestorMsg.text;
-                latestPreview.timeAgo = timeSince(newestInvestorMsg.timestamp);
+                    latestPreview.title = `${senderName} has sent you a new message:`;
+                    latestPreview.text = newestInvestorMsg.text;
+                    latestPreview.timeAgo = timeSince(newestInvestorMsg.timestamp);
+                } catch (e) {
+                    console.error("Error fetching investor name:", e);
+                }
             }
         }
 
-        // --- UPDATE UI IMMEDIATELY ---
+        // --- INSTANT UI UPDATE ---
         const inboxElement = document.getElementById('inbox-preview-content');
         if (inboxElement) {
             inboxElement.innerHTML = `
