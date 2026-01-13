@@ -5342,7 +5342,21 @@ window.saveWorkExperience = async function() {
     }
 };
 
+function timeSince(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    let interval = seconds / 31536000;
 
+    if (interval > 1) return Math.floor(interval) + "y ago";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + "mo ago";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + "d ago";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + "h ago";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + "m ago";
+    return "Just now";
+}
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -5647,37 +5661,33 @@ async function saveStartupProfile(vestData) {
 async function createDashboard() {
     if (!currentUser) return;
 
-    // --- 1. FETCH LATEST INVESTOR MESSAGE ---
-    let latestPreview = { 
-        text: "Start connecting with investors today.", 
-        title: "Welcome to ScaleVest!" 
-    };
+    // --- 1. REAL-TIME INBOX LISTENER ---
+    const chatsRef = ref(db, 'Chats');
+    
+    // Use onValue for real-time updates without reloading
+    onValue(chatsRef, (snapshot) => {
+        let latestPreview = { 
+            text: "Start connecting with investors today.", 
+            title: "Welcome to ScaleVest!",
+            timeAgo: ""
+        };
 
-    try {
-        const chatsRef = ref(db, 'Chats');
-        const chatSnap = await get(chatsRef);
-        
-        if (chatSnap.exists()) {
-            const allChats = chatSnap.val();
+        if (snapshot.exists()) {
+            const allChats = snapshot.val();
             let newestInvestorMsg = null;
 
-            // Iterate through all chat rooms
             Object.keys(allChats).forEach(roomKey => {
-                // Ensure the room belongs to the current user
                 if (roomKey.includes(currentUser.uid)) {
                     const roomData = allChats[roomKey];
-                    // Filter out non-message metadata and ensure timestamp exists
                     const msgs = Object.values(roomData).filter(m => m && typeof m === 'object' && m.timestamp);
                     
                     if (msgs.length > 0) {
-                        // FILTER: Find only messages NOT sent by the current user (Investor messages)
+                        // Find the absolute latest message sent by an INVESTOR (not you)
                         const investorMsgs = msgs.filter(m => m.sender !== currentUser.uid);
                         
                         if (investorMsgs.length > 0) {
-                            // Find the most recent message in this specific room
                             const lastInRoom = investorMsgs.reduce((prev, curr) => (prev.timestamp > curr.timestamp) ? prev : curr);
                             
-                            // Compare across all rooms to find the absolute latest overall
                             if (!newestInvestorMsg || lastInRoom.timestamp > newestInvestorMsg.timestamp) {
                                 newestInvestorMsg = lastInRoom;
                             }
@@ -5686,18 +5696,33 @@ async function createDashboard() {
                 }
             });
 
-            // Update the preview if an investor message was found
-            if (newestInvestorMsg && newestInvestorMsg.text) {
-                latestPreview.title = "Message from Investor";
-                // Truncate long messages to prevent card overflow
+            if (newestInvestorMsg) {
+                // If your database has a senderName field, use it; otherwise, use a generic tag
+                const senderDisplay = newestInvestorMsg.senderName || "Investor";
+                latestPreview.title = `${senderDisplay} sent you a message:`;
                 latestPreview.text = newestInvestorMsg.text.length > 45 
                     ? newestInvestorMsg.text.substring(0, 42) + "..." 
                     : newestInvestorMsg.text;
+                
+                // Calculate "Time Ago"
+                latestPreview.timeAgo = timeSince(newestInvestorMsg.timestamp);
             }
         }
-    } catch (e) {
-        console.error("Error fetching inbox preview:", e);
-    }
+
+        // Update the UI element directly if it exists
+        const inboxElement = document.getElementById('inbox-preview-content');
+        if (inboxElement) {
+            inboxElement.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <strong style="color: #fff; font-size: 0.9rem;">${latestPreview.title}</strong>
+                    <span style="color: #ff006e; font-size: 0.7rem; font-weight: 800;">${latestPreview.timeAgo}</span>
+                </div>
+                <p style="color: #888; font-size: 0.85rem; margin-top: 6px; line-height: 1.4; font-style: italic;">
+                    "${latestPreview.text}"
+                </p>
+            `;
+        }
+    });
     // Use cached data if available, otherwise fetch
     let founderData = cachedFounderData;
     let startupData = cachedStartupData;
@@ -6810,11 +6835,8 @@ max-width: 1100px;
         Inbox
     </div>
 
-    <div class="inbox-message" style="border-left: 3px solid #ff006e; padding: 12px; background: rgba(255, 255, 255, 0.03);">
-        <strong style="color: #fff; font-size: 0.9rem;">${latestPreview.title}</strong>
-        <p style="color: #888; font-size: 0.85rem; margin-top: 6px; line-height: 1.4; font-style: italic;">
-            "${latestPreview.text}"
-        </p>
+    <div id="inbox-preview-content" class="inbox-message" style="border-left: 3px solid #ff006e; padding: 12px; background: rgba(255, 255, 255, 0.03);">
+        <p style="color:#666; font-style:italic;">Loading messages...</p>
     </div>
 </div>
  </div>
