@@ -166,7 +166,7 @@ const firebaseConfig = {
   appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
   measurementId: "G-QD3TWBZHR0"
 };
-        const VIDEOSDK_API_KEY = "7ff9b156-9fd9-40bb-8cc3-ce75e47441ef";
+        const VIDEOSDK_API_KEY = "b177e40f-0265-4488-9695-80d63d012463";
         const VIDEOSDK_API_ENDPOINT = "https://api.videosdk.live/v2";
         // ==================================================
 
@@ -279,55 +279,16 @@ const firebaseConfig = {
         }
 
 async function createVideoSDKRoom() {
-    try {
-        // VideoSDK doesn't have a /rooms endpoint
-        // We generate a token which automatically creates a room
-        const response = await fetch(`${VIDEOSDK_API_ENDPOINT}/rooms`, {
-            method: 'POST',
-            headers: { 
-                'Authorization': VIDEOSDK_API_KEY,  // No Bearer prefix
-                'Content-Type': 'application/json' 
-            }
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            console.error('VideoSDK API error details:', errorData);
-            throw new Error(`VideoSDK API error: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        return data.roomId;
-    } catch (error) {
-        console.error('Error creating VideoSDK room:', error);
-        return null;
-    }
+    // Generate a unique room ID locally - no API call needed
+    const roomId = `scalevest-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.log('Created room ID:', roomId);
+    return roomId;
 }
 
 async function getVideoSDKToken(roomId) {
-    try {
-        // Generate token for the specific room
-        const response = await fetch(`${VIDEOSDK_API_ENDPOINT}/rooms/validate/${roomId}`, {
-            method: 'GET',
-            headers: { 
-                'Authorization': VIDEOSDK_API_KEY,
-                'Content-Type': 'application/json' 
-            }
-        });
-        
-        if (!response.ok) {
-            // If room doesn't exist or validation fails, return the API key as token
-            // The prebuilt SDK can work with the API key directly
-            return VIDEOSDK_API_KEY;
-        }
-        
-        const data = await response.json();
-        return data.token || VIDEOSDK_API_KEY;
-    } catch (error) {
-        console.error('Error getting VideoSDK token:', error);
-        // Return API key as fallback since prebuilt SDK accepts it
-        return VIDEOSDK_API_KEY;
-    }
+    // VideoSDK Prebuilt accepts API key directly as token
+    console.log('Using API key as token for room:', roomId);
+    return VIDEOSDK_API_KEY;
 }
         window.openMeetingModal = () => { document.getElementById('meetingSetupModal').style.display = 'flex'; };
         window.closeMeetingModal = () => { document.getElementById('meetingSetupModal').style.display = 'none'; };
@@ -481,7 +442,7 @@ sender: currentUser.uid, text: "", fileUrl: downloadURL, fileType: type, fileNam
             const text = input.value.trim();
             if (!text || !chatRoomID) return;
 
-            const badWords = ["abuse", "scam", "SEX", "kill", "idiot"];
+            const badWords = ["abuse", "scam", "fraud", "kill", "idiot"];
             let cleanText = text;
             badWords.forEach(w => { cleanText = cleanText.replace(new RegExp(`\\b${w}\\b`,'gi'), '####'); });
 
