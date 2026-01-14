@@ -10057,16 +10057,19 @@ async function removeInvestorChat(otherUid) {
 function setupPresence() {
   const statusRef = ref(db, `status/${currentUser.uid}`);
 
+  // When online
   set(statusRef, {
     state: "online",
-    lastChanged: serverTimestamp()
+    lastChanged: Date.now()
   });
 
+  // When disconnected (NO serverTimestamp here)
   onDisconnect(statusRef).set({
     state: "offline",
-    lastChanged: serverTimestamp()
+    lastChanged: Date.now()
   });
 }
+
 
 
 </script>
