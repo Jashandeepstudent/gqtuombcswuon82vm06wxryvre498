@@ -2937,70 +2937,7 @@ import {
     const db = getDatabase(app);
     const storage = getStorage(app);
     const auth = getAuth(app);
-// --- 1. GLOBAL STATE ---
-let globalHasNotifications = false;
 
-// --- 2. THE CLICK HANDLER ---
-window.handleBellClick = function() {
-    // Mark as checked
-    localStorage.setItem('scaleVest_lastNotificationCheck', Date.now());
-    globalHasNotifications = false;
-    
-    // Immediate UI update
-    const badge = document.getElementById('navBellBadge');
-    if (badge) badge.classList.remove('visible-dot');
-    
-    // Route to inbox
-    window.location.hash = 'investor_chatlist';
-};
-
-// --- 3. THE PERSISTENT UI UPDATER ---
-// Because your dashboard re-renders HTML constantly, we must check for the element existence
-function syncNotificationUI() {
-    const badge = document.getElementById('navBellBadge');
-    if (badge) {
-        if (globalHasNotifications) {
-            badge.classList.add('visible-dot');
-        } else {
-            badge.classList.remove('visible-dot');
-        }
-    }
-}
-
-// Run sync every 500ms to catch "innerHTML" resets
-setInterval(syncNotificationUI, 500);
-
-// --- 4. THE REAL-TIME LISTENER ---
-function startNotificationListener() {
-    if (!currentUser) return;
-    const chatsRef = ref(db, 'Chats');
-    
-    onValue(chatsRef, (snapshot) => {
-        if (!snapshot.exists()) return;
-        
-        const allChats = snapshot.val();
-        let foundNew = false;
-        const lastChecked = parseInt(localStorage.getItem('scaleVest_lastNotificationCheck') || '0');
-
-        Object.keys(allChats).forEach(roomKey => {
-            if (roomKey.includes(currentUser.uid)) {
-                const messages = Object.values(allChats[roomKey]);
-                if (messages.length === 0) return;
-
-                // Find newest message timestamp
-                const newestMsg = messages.reduce((prev, curr) => (prev.timestamp > curr.timestamp) ? prev : curr);
-
-                // If sent by someone else AND newer than our last bell click
-                if (newestMsg.sender !== currentUser.uid && newestMsg.timestamp > lastChecked) {
-                    foundNew = true;
-                }
-            }
-        });
-
-        globalHasNotifications = foundNew;
-        syncNotificationUI();
-    });
-}
     let currentUser = null;
 const STORAGE_KEY = 'vestFormData';
 // Helper function to create reusable navbar
@@ -3023,15 +2960,11 @@ function createNavBar() {
                 </div>
             </div>
             <div class="top-nav-right">
-               <div class="nav-icon-wrapper" onclick="handleBellClick()">
-    <div class="icon-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-        </svg>
-    </div>
-    <div id="navBellBadge"></div> 
-</div>
+                <div class="icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
                 </div>
                 <div class="icon-btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -4790,13 +4723,46 @@ window.deleteConversation = async function(roomKey, event) {
         console.error("Error deleting chat:", err);
     }
 }
-// ============================================
-// NOTIFICATION PERSISTENCE FIX
-// ============================================
+// --- 2. GLOBAL NOTIFICATION LISTENER ---
+// Call this function inside your onAuthStateChanged, right after 'isInitialLoad = false;'
+function startNotificationListener() {
+    const chatsRef = ref(db, 'Chats');
+    
+    // Listen for changes in real-time
+    onValue(chatsRef, (snapshot) => {
+        if (!snapshot.exists()) return;
+        const allChats = snapshot.val();
+        let unreadCount = 0;
 
+        Object.keys(allChats).forEach(roomKey => {
+            if (roomKey.includes(currentUser.uid)) {
+                const messages = Object.values(allChats[roomKey]);
+                const lastMsg = messages[messages.length - 1];
+                
+                // If last message was NOT sent by me, count it as potential unread
+                // (In a real app, you'd check a 'read' status flag in DB)
+                if (lastMsg.sender !== currentUser.uid) {
+                    unreadCount++;
+                }
+            }
+        });
 
+        updateNotificationBadge(unreadCount);
+    });
+}
 
-        // Update the UI
+function updateNotificationBadge(count) {
+    const bell = document.getElementById('navBellBadge');
+    const msg = document.getElementById('navMsgBadge');
+    
+    if (count > 0) {
+        if(bell) { bell.classList.add('active'); bell.innerText = ''; } // Just a dot
+        if(msg) { msg.classList.add('active'); msg.innerText = ''; }
+    } else {
+        if(bell) bell.classList.remove('active');
+        if(msg) msg.classList.remove('active');
+    }
+}
 
 // Ensure this variable exists globally
 let currentEditAction = null;
@@ -6027,28 +5993,30 @@ async function createDashboard() {
         z-index: 10001; /* High Z-index */
     }
 }
-/* --- NOTIFICATION BADGE FIXED --- */
+/* --- NOTIFICATION BADGE --- */
 .nav-icon-wrapper {
-    position: relative !important;
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
 }
 
-#navBellBadge {
-    position: absolute !important;
-    top: 0px !important;
-    right: 0px !important;
-    width: 12px !important;
-    height: 12px !important;
-    background-color: #ff0000 !important; /* Pure Red */
-    border-radius: 50% !important;
-    border: 2px solid #0a0a0a !important;
-    z-index: 999999 !important;
+.notif-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    background-color: #ff006e;
+    border-radius: 50%;
+    border: 2px solid #0a0a0a;
     display: none; /* Hidden by default */
+    z-index: 10;
 }
 
-/* Force show when this class is present */
-#navBellBadge.visible-dot {
-    display: block !important;
+.notif-badge.active {
+    display: block;
 }
+
 /* --- INBOX / CHAT LIST SCREEN --- */
 .chat-list-container {
     max-width: 900px;
@@ -6902,15 +6870,15 @@ max-width: 1100px;
 </div>
     </div>
 <div class="top-nav-right">
-<div class="nav-icon-wrapper" onclick="handleBellClick()">
-    <div class="icon-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-        </svg>
+    <div class="nav-icon-wrapper" onclick="window.location.hash='investor_chatlist'">
+        <div class="icon-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+        </div>
+        <div class="notif-badge" id="navBellBadge"></div>
     </div>
-    <div class="notif-badge" id="navBellBadge"></div>
-</div>
 
 
 
