@@ -4723,7 +4723,7 @@ window.deleteConversation = async function(roomKey, event) {
         console.error("Error deleting chat:", err);
     }
 }
-function startNotificationListener() {
+function startNotificationListener(myUid) {
     const chatsRef = ref(db, "Chats");
 
     onValue(chatsRef, (snapshot) => {
@@ -4733,12 +4733,10 @@ function startNotificationListener() {
             chatSnap.forEach(messageSnap => {
                 const msg = messageSnap.val();
 
-                // Only messages meant for me
-                if (msg.recipient === currentUser.uid) {
+                if (msg.recipient === myUid) {
                     const readBy = msg.readBy || {};
 
-                    // ✅ UNREAD if entry is missing
-                    if (readBy[currentUser.uid] !== true) {
+                    if (readBy[myUid] !== true) {
                         hasUnread = true;
                     }
                 }
@@ -5477,8 +5475,10 @@ function openBellNotifications() {
         currentUser = user;
           setUserPresence(user);
         isInitialLoad = false;
-        startNotificationListener();
-        document.getElementById('loadingScreen').classList.remove('hidden');
+ setTimeout(() => {
+        startNotificationListener(user.uid);
+    }, 0);
+               document.getElementById('loadingScreen').classList.remove('hidden');
         
         try {
             const [vestsSnapshot, founderSnapshot, startupSnapshot] = await Promise.all([
