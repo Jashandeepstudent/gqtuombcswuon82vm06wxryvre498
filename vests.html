@@ -4509,7 +4509,7 @@ window.showInvestorChatList = async function () {
             document.querySelector('.vest-container').style.display = 'none';
         }
         container.style.display = 'block';
-
+updateNotificationBadge(0);
         // Loader
         container.innerHTML = `
             <div class="loading-box">
@@ -4687,10 +4687,11 @@ window.openChat = async function(uid, roomKey, element) {
     // 1. UI cleanup (Instant visual feedback)
     if (element) {
         element.querySelector('.unread-pill')?.remove();
+        element.querySelector('.status-indicator')?.classList.remove('status-online');
         element.querySelector('.chat-preview')?.classList.remove('unread-text');
     }
 
-    // 2. Mark messages as READ in Firebase
+    // 2. 🔥 MARK MESSAGES AS READ IN FIREBASE
     const roomRef = ref(db, `Chats/${roomKey}`);
     
     try {
@@ -4703,14 +4704,18 @@ window.openChat = async function(uid, roomKey, element) {
             Object.keys(messages).forEach((msgId) => {
                 const msg = messages[msgId];
                 
-                // Only mark messages sent TO me that are currently unread
-                if (msg.recipient === currentUser.uid && msg.read === false) {
-                    updates[`${msgId}/read`] = true;
+                // ✅ CRITICAL FIX: Check if message object exists and has required fields
+                if (msg && typeof msg === 'object' && msg.recipient && msg.sender) {
+                    // Only mark messages sent TO me that are currently unread
+                    if (msg.recipient === currentUser.uid && msg.read === false) {
+                        updates[`${msgId}/read`] = true;
+                    }
                 }
             });
 
-            // Send update to Database
+            // 3. ✅ Send update to Database (this will trigger the listener)
             if (Object.keys(updates).length > 0) {
+                console.log(`Marking ${Object.keys(updates).length} messages as read`); // Debug log
                 await update(roomRef, updates);
             }
         }
@@ -4718,7 +4723,7 @@ window.openChat = async function(uid, roomKey, element) {
         console.error("Error marking messages as read:", error);
     }
 
-    // 3. Navigate to chat page
+    // 4. Navigate to chat page
     window.location.href = `chat.html?recipient=${uid}`;
 };
 window.deleteConversation = async function(roomKey, event) {
@@ -4737,7 +4742,7 @@ function startNotificationListener() {
     // Reference to the entire Chats node
     const chatsRef = ref(db, 'Chats');
     
-    // Listen for real-time updates
+    // Listen for real-time updates (this fires on page load + whenever data changes)
     onValue(chatsRef, (snapshot) => {
         if (!snapshot.exists()) {
             updateNotificationBadge(0);
@@ -4749,37 +4754,49 @@ function startNotificationListener() {
 
         // Iterate through all chat rooms
         Object.keys(allChats).forEach(roomKey => {
-            // Only look at chats relevant to the current user
+            // 1. Only look at chats relevant to the current user
             if (roomKey.includes(currentUser.uid)) {
+                
                 const messages = allChats[roomKey];
                 
-                // Count unread messages
+                // 2. Iterate through every message in the room
                 Object.values(messages).forEach(msg => {
-                    // Check if message is for ME and is unread
-                    if (msg.recipient === currentUser.uid && msg.read === false) {
-                        unreadCount++;
+                    // ✅ CRITICAL FIX: Validate message structure
+                    if (msg && typeof msg === 'object' && msg.recipient && msg.sender && msg.hasOwnProperty('read')) {
+                        // 3. Count ONLY if:
+                        // - Message is for ME
+                        // - read field is explicitly false (not undefined, not null)
+                        if (msg.recipient === currentUser.uid && msg.read === false) {
+                            unreadCount++;
+                        }
                     }
                 });
             }
         });
 
-        // Update the badge
+        // 4. Update the red dot based on the final count
+        console.log(`Total unread messages: ${unreadCount}`); // Debug log
         updateNotificationBadge(unreadCount);
     });
 }
 function updateNotificationBadge(count) {
     const bell = document.getElementById('navBellBadge');
     
-    if (!bell) return; // Safety check
+    if (!bell) {
+        console.warn('Badge element not found!');
+        return;
+    }
+    
+    console.log(`Updating badge to: ${count}`); // Debug log
     
     if (count > 0) {
         bell.classList.add('active');
-        bell.innerText = count > 99 ? '99+' : count; // Show "99+" if over 99
-        bell.style.display = 'flex'; // Force visible
+        bell.innerText = count > 99 ? '99+' : count;
+        bell.style.display = 'flex';
     } else {
         bell.classList.remove('active');
         bell.innerText = '';
-        bell.style.display = 'none'; // Force hidden
+        bell.style.display = 'none';
     }
 }
 // Ensure this variable exists globally
