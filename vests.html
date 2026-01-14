@@ -81,6 +81,17 @@
 .header-row .left-content {
     flex: 0 1 auto;
 }
+.status-online { background: #10b981; }
+.status-offline { background: #ef4444; }
+
+.remove-chat-btn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
 
 /* ===============================
    CREATE VEST BUTTON
@@ -4445,20 +4456,17 @@ window.limitWords = function(element, limit) {
         alert(`Professional Guard: Maximum ${limit} words allowed per section.`);
     }
 };
-// --- 1. FULLY COMBINED INVESTOR CHAT LIST SCREEN ---
 window.showInvestorChatList = async function() {
-    // Hide the global notification badge number as we are now in the inbox
-    if(typeof updateNotificationBadge === 'function') updateNotificationBadge(0);
-    
+updateNotificationBadge(0);
     const container = document.getElementById('dashboardContainer');
     
-    // Toggle main visibility
+    // Toggle containers
     if(document.querySelector('.vest-container')) {
         document.querySelector('.vest-container').style.display = 'none';
     }
     container.style.display = 'block';
 
-    // Show themed loader
+    // Show Loader
     container.innerHTML = `
         <div class="loading-box">
             <div class="spinner"></div>
@@ -4470,200 +4478,269 @@ window.showInvestorChatList = async function() {
         const snapshot = await get(chatsRef);
         const allChats = snapshot.val() || {};
         
-        // Map to ensure one entry per investor, keeping only the latest message
+        // Use a Map to prevent duplicates (Key: InvestorID, Value: ChatData)
         const chatMap = new Map();
+        const hiddenSnap = await get(ref(db, `HiddenChats/${currentUser.uid}`));
+const hiddenChats = hiddenSnap.val() || {};
 
         // --- 1. FILTER & PROCESS CHATS ---
         Object.keys(allChats).forEach(roomKey => {
+            // Check if I am a participant
             if (roomKey.includes(currentUser.uid)) {
-                const roomData = allChats[roomKey];
-                const msgKeys = Object.keys(roomData);
-                const rawMessages = Object.values(roomData);
                 
-                // Filter actual message objects (ignore typing nodes etc)
-                const messages = rawMessages.filter(msg => msg && msg.sender && msg.timestamp);
+                // Get messages and filter out 'typing' or invalid nodes
+                const rawData = Object.values(allChats[roomKey]);
+                const messages = rawData.filter(msg => msg && msg.sender && msg.timestamp);
                 
+                // Skip empty rooms
                 if (messages.length === 0) return;
 
-                // Sort messages within this room to find the absolute latest one
+                // Sort messages to find the true last one
                 messages.sort((a, b) => a.timestamp - b.timestamp);
                 const lastMsg = messages[messages.length - 1]; 
                 
-                // Identify the specific Firebase ID (key) of that last message to use for "Seen" logic
-                const lastMsgKey = msgKeys.find(key => roomData[key].timestamp === lastMsg.timestamp);
-
-                // Identify the "Other" person (The Investor)
+                // ROBUST ID EXTRACTION: Split by '_' and find the ID that isn't mine and isn't 'chat'
                 const parts = roomKey.split('_');
                 const otherUid = parts.find(part => part !== 'chat' && part !== currentUser.uid);
 
-                if (!otherUid) return;
+                if (!otherUid) return; // Skip if we can't find the other user
+                if (hiddenChats[otherUid]) return;
+
+                // DETERMINE MESSAGE CONTENT
+                let displayMsg = "Sent an attachment";
+                let isAttachment = true;
                 
-                let displayMsg = lastMsg.text || "Sent an attachment";
-                let isAttachment = !lastMsg.text;
+                // Check if text exists and is not just whitespace
+                if (lastMsg.text && String(lastMsg.text).trim().length > 0) {
+                    displayMsg = lastMsg.text;
+                    isAttachment = false;
+                }
 
                 const chatData = {
                     roomKey: roomKey,
                     otherUid: otherUid,
-                    lastMsgKey: lastMsgKey,
                     lastMessage: displayMsg,
                     isAttachment: isAttachment,
                     timestamp: lastMsg.timestamp,
-                    // NEW TAG PERSISTENCE LOGIC: 
-                    // Show if sender is investor AND hasn't been marked 'seenByFounder' in DB
-                    isUnread: (lastMsg.sender !== currentUser.uid && lastMsg.seenByFounder !== true)
+                    isUnread: (lastMsg.sender !== currentUser.uid && !lastMsg.read)
+
                 };
 
-                // Deduplicate: If multiple rooms involve this user, keep only the most recent one
-                if (!chatMap.has(otherUid) || chatData.timestamp > chatMap.get(otherUid).timestamp) {
+                // DEDUPLICATION: Only keep the chat with the most recent message for this user
+                if (chatMap.has(otherUid)) {
+                    const existing = chatMap.get(otherUid);
+                    if (chatData.timestamp > existing.timestamp) {
+                        chatMap.set(otherUid, chatData);
+                    }
+                } else {
                     chatMap.set(otherUid, chatData);
                 }
             }
         });
 
-        // Convert deduplicated map to array for sorting
+        // Convert Map to Array
         const myChats = Array.from(chatMap.values());
 
-        // --- 2. FETCH INVESTOR PROFILES & ONLINE STATUS ---
-        const profileMap = {};
-        const fetchPromises = myChats.map(async (chat) => {
-            const uid = chat.otherUid;
-            try {
-                const snap = await get(ref(db, `investorProfiles/${uid}`));
-                if (snap.exists()) {
-                    profileMap[uid] = snap.val();
-                } else {
-                    // Check founderProfile just in case cross-chatting
-                    const founderSnap = await get(ref(db, `founderProfile/${uid}`));
-                    profileMap[uid] = founderSnap.exists() ? founderSnap.val() : { fullName: "Investor", status: "offline" };
-                }
-            } catch (err) {
-                profileMap[uid] = { fullName: "Investor", status: "offline" };
-            }
-        });
+        // --- 2. FETCH INVESTOR PROFILES ---
+        // --- 2. FETCH INVESTOR PROFILES + PRESENCE ---
+const profileMap = {};
+const fetchPromises = myChats.map(async (chat) => {
+  const uid = chat.otherUid;
+
+  try {
+    // 1️⃣ Fetch profile
+    let profileData = null;
+
+    const snap = await get(ref(db, `investorProfiles/${uid}`));
+    if (snap.exists()) {
+      profileData = snap.val();
+    } else {
+      const founderSnap = await get(ref(db, `founderProfile/${uid}`));
+      if (founderSnap.exists()) {
+        profileData = founderSnap.val();
+      }
+    }
+
+    if (!profileData) {
+      profileData = { fullName: "Investor", photoURL: null };
+    }
+
+    // 2️⃣ FETCH ONLINE / OFFLINE STATUS  ← ✅ THIS IS WHERE
+    const statusSnap = await get(ref(db, `status/${uid}`));
+    profileData.presence = statusSnap.val() || { state: "offline" };
+
+    // 3️⃣ Save final profile
+    profileMap[uid] = profileData;
+
+  } catch (err) {
+    profileMap[uid] = {
+      fullName: "Investor",
+      photoURL: null,
+      presence: { state: "offline" }
+    };
+  }
+});
+
 
         await Promise.all(fetchPromises);
 
         // --- 3. SORT & RENDER ---
-        myChats.sort((a, b) => b.timestamp - a.timestamp); // Newest conversations at top
+        myChats.sort((a, b) => b.timestamp - a.timestamp); // Newest first
 
-        // Calculate accurate "Active Online" count based on profile status
-        const onlineCount = Object.values(profileMap).filter(p => p.status === 'online').length;
+       let listHtml = `
+<div class="chat-list-container">
 
-        let listHtml = `
-            <div class="chat-list-container">
-                <div class="chat-header-row">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <button onclick="window.location.hash='founder_dashboard'" style="background:#f3f4f6; border:1px solid #e5e7eb; border-radius:10px; padding:8px 12px; cursor:pointer; font-weight:600; color:#000;">← Back</button>
-                        <h1 style="font-size:1.9rem; font-weight:800; margin:0;">Investor Inbox</h1>
-                    </div>
-                    <div class="inbox-count" style="background:#10b981; color:#fff;">${onlineCount} Online</div>
-                </div>
-        `;
+  <div class="chat-header-row">
+    <div style="display:flex; align-items:center; gap:12px;">
+      
+      <button onclick="window.location.hash='founder_dashboard'" 
+        style="
+          background:#f3f4f6;
+          border:1px solid #e5e7eb;
+          border-radius:10px;
+          padding:8px 12px;
+          cursor:pointer;
+          font-weight:600;
+        ">
+        ← Back
+      </button>
+
+      <div>
+        <h1 style="font-size:1.9rem; font-weight:800; margin:0;">Investor Inbox</h1>
+        <p style="color:#6b7280; margin:4px 0 0; font-size:0.9rem;">
+          Manage your funding conversations
+        </p>
+      </div>
+    </div>
+
+    <div class="inbox-count">
+      ${myChats.length} Active
+    </div>
+  </div>
+`;
+
 
         if (myChats.length === 0) {
             listHtml += `
-                <div class="empty-state-box" style="text-align:center; padding:5rem; border:1px dashed #333; border-radius:16px;">
-                    <p style="color:#666;">No messages found. Start outreach to see conversations here!</p>
-                </div>`;
+                <div class="empty-state-box">
+                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.5" style="margin-bottom:1rem;">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+
+
+                    </svg>
+                    <p style="margin:0; font-weight:600;">No messages yet</p>
+                    <small>Investors will appear here once they contact you.</small>
+                </div>
+            `;
         } else {
             listHtml += myChats.map(chat => {
-                const profile = profileMap[chat.otherUid] || { fullName: 'Investor' };
-                const isOnline = profile.status === 'online';
-                const displayName = profile.fullName || profile.founderUsername || "Investor";
+                const profile = profileMap[chat.otherUid] || { fullName: 'Unknown' };
+                
+                // Name & Photo
+                const displayName = profile.fullName || profile.founderUsername || profile.name || "Investor";
+                const displayPhoto = profile.photoURL || profile.logo; 
+                
+                // Status Logic (Check for 'online' string OR boolean true)
+                const presence = profile.presence || {};
+const isOnline = presence.state === 'online';
+
+                const statusClass = isOnline ? 'status-online' : 'status-offline';
+
+                // Time Formatting
+                const msgDate = new Date(chat.timestamp);
+                const isToday = new Date().toDateString() === msgDate.toDateString();
+                const timeDisplay = isToday 
+                    ? msgDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                    : msgDate.toLocaleDateString();
 
                 return `
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:1rem;">
-                    <div class="chat-item" style="flex:1; margin-bottom:0;" onclick="window.openInvestorChat('${chat.otherUid}', '${chat.roomKey}', '${chat.lastMsgKey}')">
-                        <div class="chat-avatar">
-                            ${profile.photoURL ? `<img src="${profile.photoURL}" style="width:100%;height:100%;object-fit:cover;">` : displayName.charAt(0).toUpperCase()}
-                            <div class="status-indicator" style="background:${isOnline ? '#10b981' : '#ff4d4d'}; border:2px solid #111;"></div>
+<div class="chat-item" onclick="openChat('${chat.otherUid}', '${chat.roomKey}')">
+
+                    <div class="chat-avatar">
+                        ${displayPhoto 
+                            ? `<img src="${displayPhoto}" alt="${displayName}" onerror="this.style.display='none'">` 
+                            : displayName.charAt(0).toUpperCase()}
+                        
+                        <div class="status-indicator ${statusClass}"></div>
+                    </div>
+                    
+                    <div class="chat-info">
+                        <div class="chat-name">
+                            ${displayName}
                         </div>
-                        <div class="chat-info">
-                            <div class="chat-name">${displayName}</div>
-                            <div class="chat-preview ${chat.isUnread ? 'unread-text' : ''}" style="${chat.isUnread ? 'color:#fff; font-weight:600;' : ''}">
-                                ${chat.isUnread ? '<span style="color:#10b981; margin-right:4px;">●</span>' : ''}
-                                ${chat.isAttachment ? '📎 Sent an attachment' : chat.lastMessage}
-                            </div>
-                        </div>
-                        <div class="chat-meta" style="text-align:right;">
-                            <div class="time-text">${new Date(chat.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-                            ${chat.isUnread ? '<div class="unread-pill" style="margin-top:5px;">NEW</div>' : ''}
+                        <div class="chat-preview ${chat.isUnread ? 'unread-text' : ''} ${chat.isAttachment ? 'attachment-text' : ''}">
+                            ${chat.isUnread ? '<span style="color:#10b981; margin-right:4px;">●</span>' : ''}
+                            ${chat.isAttachment ? '📎 ' : ''}${chat.lastMessage}
                         </div>
                     </div>
                     
-                    <button class="icon-btn" onclick="event.stopPropagation(); window.removeInvestorCard('${chat.roomKey}')" 
-                            style="background:rgba(255, 77, 77, 0.1); border:1px solid #ff4d4d; color:#ff4d4d; height:80px; width:50px; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                    </button>
-                </div>`;
+<div class="chat-meta">
+  <div class="time-text">${timeDisplay}</div>
+
+  ${chat.isUnread ? '<div class="unread-pill">NEW</div>' : ''}
+
+  <button 
+    class="remove-chat-btn"
+    onclick="event.stopPropagation(); removeInvestorChat('${chat.otherUid}')">
+    Remove
+  </button>
+</div>
+
+                </div>
+                `;
             }).join('');
         }
 
-        container.innerHTML = listHtml + `</div>`;
+        listHtml += `</div>`; 
+        container.innerHTML = listHtml;
+
+        if(typeof updateNotificationBadge === 'function') updateNotificationBadge(0);
 
     } catch (e) {
-        console.error("Combined Inbox Error:", e);
-        container.innerHTML = `<p style="text-align:center; padding:2rem; color:red;">Critical error loading inbox. Please refresh.</p>`;
+        console.error("Inbox Error:", e);
+        container.innerHTML = `
+            ${typeof createNavBar === 'function' ? createNavBar() : ''}
+            <div style="text-align:center; padding:4rem; color:#ff4d4d;">
+                <h3>Unable to load messages</h3>
+                <p>Please check your connection.</p>
+            </div>`;
     }
 };
-
-// --- 2. LOGIC TO CLEAR "NEW" TAG PERMANENTLY (Marks DB) ---
-window.openInvestorChat = async function(otherUid, roomKey, lastMsgKey) {
-    if (lastMsgKey && lastMsgKey !== "undefined") {
-        try {
-            // Update specific last message in Firebase to seenByFounder: true
-            const lastMsgRef = ref(db, `Chats/${roomKey}/${lastMsgKey}`);
-            await update(lastMsgRef, { seenByFounder: true });
-        } catch (e) { 
-            console.warn("Could not update seen status", e); 
-        }
-    }
-    // Navigate to chat interface
-    window.location.href = `chat.html?recipient=${otherUid}`;
-};
-
-// --- 3. REMOVE INVESTOR CONVERSATION FUNCTION ---
-window.removeInvestorCard = async function(roomKey) {
-    if (confirm("Permanently remove this conversation from your list? Message history will be deleted.")) {
-        try {
-            const chatRef = ref(db, `Chats/${roomKey}`);
-            await set(chatRef, null); // Wipe the room from DB
-            window.showInvestorChatList(); // Refresh view
-        } catch (e) { 
-            alert("Error deleting conversation."); 
-        }
-    }
-};
-
-// --- 4. UPDATED GLOBAL NOTIFICATION LISTENER ---
-// Ensures Nav Bar badge only counts messages that haven't been 'seen'
 function startNotificationListener() {
     const chatsRef = ref(db, 'Chats');
+    
     onValue(chatsRef, (snapshot) => {
         if (!snapshot.exists()) {
             updateNotificationBadge(0);
             return;
         }
+        
         const allChats = snapshot.val();
         let unreadRoomsCount = 0;
 
         Object.keys(allChats).forEach(roomKey => {
+            // 1. Only look at rooms I am part of
             if (roomKey.includes(currentUser.uid)) {
-                const messages = Object.values(allChats[roomKey]).filter(m => m && m.sender && m.timestamp);
+                const messagesObj = allChats[roomKey];
+                
+                // 2. Convert room messages to an array and filter out metadata/typing
+                const messages = Object.values(messagesObj).filter(m => m && m.sender && m.timestamp);
+                
                 if (messages.length > 0) {
+                    // 3. Sort to get the absolute latest message
                     messages.sort((a, b) => a.timestamp - b.timestamp);
                     const lastMsg = messages[messages.length - 1];
                     
-                    // Only increment count if investor sent it AND seenByFounder flag isn't true
-                    if (lastMsg.sender !== currentUser.uid && lastMsg.seenByFounder !== true) {
+                    // 4. CRITICAL FIX: 
+                    // Only count this room if the last message came from the INVESTOR.
+                    // If the last message is from YOU, it means you have replied, so it's not "unread".
+                    if (lastMsg.sender !== currentUser.uid) {
                         unreadRoomsCount++;
                     }
                 }
             }
         });
+
         updateNotificationBadge(unreadRoomsCount);
     });
 }
@@ -5344,6 +5421,8 @@ function timeSince(date) {
         currentUser = user;
         isInitialLoad = false;
         startNotificationListener();
+        setupPresence();
+
         document.getElementById('loadingScreen').classList.remove('hidden');
         
         try {
@@ -9934,6 +10013,56 @@ window.closeFullScreenPDF = function() {
         setTimeout(() => viewer.remove(), 300);
     }
 };
+// -----------------------------
+// CHAT READ / OPEN HANDLER
+// -----------------------------
+function openChat(otherUid, roomKey) {
+  markChatAsRead(roomKey);
+  window.location.href = `chat.html?recipient=${otherUid}`;
+}
+
+// -----------------------------
+// MARK CHAT AS READ
+// -----------------------------
+async function markChatAsRead(roomKey) {
+  const roomRef = ref(db, `Chats/${roomKey}`);
+  const snap = await get(roomRef);
+  if (!snap.exists()) return;
+
+  const updates = {};
+  Object.entries(snap.val()).forEach(([key, msg]) => {
+    if (msg.sender !== currentUser.uid && !msg.read) {
+      updates[`${key}/read`] = true;
+    }
+  });
+
+  if (Object.keys(updates).length > 0) {
+    await update(roomRef, updates);
+  }
+}
+
+// -----------------------------
+// REMOVE INVESTOR CHAT
+// -----------------------------
+async function removeInvestorChat(otherUid) {
+  if (!confirm("Remove this investor chat?")) return;
+
+  await set(ref(db, `HiddenChats/${currentUser.uid}/${otherUid}`), true);
+  window.showInvestorChatList();
+}
+function setupPresence() {
+  const statusRef = ref(db, `status/${currentUser.uid}`);
+
+  set(statusRef, {
+    state: "online",
+    lastChanged: serverTimestamp()
+  });
+
+  onDisconnect(statusRef).set({
+    state: "offline",
+    lastChanged: serverTimestamp()
+  });
+}
 
 
 </script>
