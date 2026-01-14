@@ -4727,64 +4727,62 @@ window.deleteConversation = async function(roomKey, event) {
 // NOTIFICATION PERSISTENCE FIX
 // ============================================
 
-// 1. Handle Bell Click: Clears dot & saves timestamp locally
+// 1. Function to handle clicking the bell
 window.handleBellClick = function() {
-    // Save the current time as the "Last Checked" time
+    // Record the exact time the user looked at their inbox
     localStorage.setItem('scaleVest_lastNotificationCheck', Date.now());
     
-    // Visually remove the dot immediately
-    updateNotificationBadge(false);
+    // Hide the dot immediately
+    const badge = document.getElementById('navBellBadge');
+    if (badge) badge.classList.remove('active');
 
-    // Navigate to chat list
+    // Go to the chat list
     window.location.hash = 'investor_chatlist';
 };
 
-// 2. Updated Listener: Compares timestamps instead of just counting
+// 2. Real-time listener for new messages
 function startNotificationListener() {
+    if (!currentUser) return;
+    
     const chatsRef = ref(db, 'Chats');
     
     onValue(chatsRef, (snapshot) => {
         if (!snapshot.exists()) return;
         
         const allChats = snapshot.val();
-        let hasNewNotifications = false;
-        
-        // Get the last time the user clicked the bell (default to 0 if never clicked)
-        const lastCheckedTime = parseInt(localStorage.getItem('scaleVest_lastNotificationCheck') || '0');
+        let hasNewUnseenMessage = false;
+
+        // Get the last time the user cleared their notifications
+        const lastChecked = parseInt(localStorage.getItem('scaleVest_lastNotificationCheck') || '0');
 
         Object.keys(allChats).forEach(roomKey => {
-            // Only look at chats involving the current user
+            // Check if this chat room belongs to the current user
             if (roomKey.includes(currentUser.uid)) {
                 const messages = Object.values(allChats[roomKey]);
-                // Sort messages by timestamp
-                messages.sort((a, b) => a.timestamp - b.timestamp);
-                
-                const lastMsg = messages[messages.length - 1];
-                
-                // CRITICAL CHECK:
-                // 1. Message was NOT sent by me
-                // 2. Message is NEWER than the last time I clicked the bell
-                if (lastMsg.sender !== currentUser.uid && lastMsg.timestamp > lastCheckedTime) {
-                    hasNewNotifications = true;
+                if (messages.length === 0) return;
+
+                // Get the very last message in this room
+                const lastMsg = messages.sort((a, b) => a.timestamp - b.timestamp)[messages.length - 1];
+
+                // Show dot ONLY if:
+                // 1. The message is NOT from the current user
+                // 2. The message timestamp is NEWER than the last time the bell was clicked
+                if (lastMsg.sender !== currentUser.uid && lastMsg.timestamp > lastChecked) {
+                    hasNewUnseenMessage = true;
                 }
             }
         });
 
-        updateNotificationBadge(hasNewNotifications);
-    });
-}
-
-// 3. Updated UI Updater
-function updateNotificationBadge(show) {
-    const bell = document.getElementById('navBellBadge');
-    
-    if (bell) {
-        if (show) {
-            bell.classList.add('active'); // Show Red Dot
-        } else {
-            bell.classList.remove('active'); // Hide Red Dot
+        // Update the UI
+        const badge = document.getElementById('navBellBadge');
+        if (badge) {
+            if (hasNewUnseenMessage) {
+                badge.classList.add('active');
+            } else {
+                badge.classList.remove('active');
+            }
         }
-    }
+    });
 }
 // Ensure this variable exists globally
 let currentEditAction = null;
