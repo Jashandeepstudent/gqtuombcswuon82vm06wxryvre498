@@ -585,7 +585,8 @@ sender: currentUser.uid, text: "", fileUrl: downloadURL, fileType: type, fileNam
                 sender: currentUser.uid,
                 text: cleanText,
                 timestamp: Date.now(),
-                recipient: recipientUID
+                recipient: recipientUID,
+                 read: false
             });
             input.value = "";
             set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false);
