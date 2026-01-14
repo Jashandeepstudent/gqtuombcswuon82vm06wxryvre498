@@ -5474,10 +5474,10 @@ function openBellNotifications() {
         currentUser = user;
           setUserPresence(user);
         isInitialLoad = false;
- if (window.__bellListenerStarted) return;
-    window.__bellListenerStarted = true;
+    if (window.__bellStarted) return;
+    window.__bellStarted = true;
 
-    startNotificationListener(user.uid);
+    startBellListener(user.uid);
                document.getElementById('loadingScreen').classList.remove('hidden');
         
         try {
@@ -5557,6 +5557,16 @@ function openBellNotifications() {
         }
     }
 });
+function startBellListener(uid) {
+    const unreadRef = ref(db, `UserUnread/${uid}`);
+
+    onValue(unreadRef, (snap) => {
+        const badge = document.getElementById("navBellBadge");
+        if (!badge) return;
+
+        badge.style.display = snap.val() === true ? "block" : "none";
+    });
+}
 
     // ========================================
     // SECTION 2: PLACE HASH CHANGE HANDLER HERE
