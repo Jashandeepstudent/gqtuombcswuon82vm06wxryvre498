@@ -5452,24 +5452,6 @@ function setUserPresence(user) {
         lastSeen: serverTimestamp()
     });
 }
-document.addEventListener("DOMContentLoaded", () => {
-    const hasUnread = localStorage.getItem("hasUnreadNotifications");
-    if (hasUnread === "true") {
-        document.getElementById("navBellBadge")?.style.display = "block";
-    }
-});
-function showBellNotification() {
-    localStorage.setItem("hasUnreadNotifications", "true");
-    document.getElementById("navBellBadge")?.style.display = "block";
-}
-function openBellNotifications() {
-    // navigate
-    window.location.hash = "investor_chatlist";
-
-    // clear notification state
-    localStorage.removeItem("hasUnreadNotifications");
-    document.getElementById("navBellBadge")?.style.display = "none";
-}
 
    onAuthStateChanged(auth, async (user) => {
     if (user) {
