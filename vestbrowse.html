@@ -198,6 +198,11 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  set,
+  onDisconnect,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
@@ -212,9 +217,23 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const auth = getAuth(app);
+function setUserPresence(user) {
+    const presenceRef = ref(db, `presence/${user.uid}`);
+
+    set(presenceRef, {
+        online: true,
+        lastSeen: serverTimestamp()
+    });
+
+    onDisconnect(presenceRef).set({
+        online: false,
+        lastSeen: serverTimestamp()
+    });
+}
 
     onAuthStateChanged(auth, (user) => {
         if (user) {
+             setUserPresence(user);
             loadVests();
         } else {
             window.location.href = "login3.html";
