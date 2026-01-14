@@ -200,7 +200,40 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* Status Dots */
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+.status-online {
+    background-color: #10b981; /* Green */
+}
+.status-offline {
+    background-color: #ef4444; /* Red */
+}
 
+/* Delete Button */
+.delete-chat-btn {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.delete-chat-btn:hover {
+    background-color: #fee2e2;
+    color: #ef4444; /* Red on hover */
+}
 .unread-text {
   color: #111827;
   font-weight: 600;
@@ -2859,7 +2892,7 @@
 
    <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getDatabase, ref, set, push, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+import { getDatabase, ref, set, push, get, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
     import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 // Locate your existing import and add 'update' to the list
@@ -4466,7 +4499,7 @@ window.showInvestorChatList = async function() {
         const snapshot = await get(chatsRef);
         const allChats = snapshot.val() || {};
         
-        // Use a Map to prevent duplicates (Key: InvestorID, Value: ChatData)
+        // Use a Map to prevent duplicates
         const chatMap = new Map();
 
         // --- 1. FILTER & PROCESS CHATS ---
@@ -4474,35 +4507,33 @@ window.showInvestorChatList = async function() {
             // Check if I am a participant
             if (roomKey.includes(currentUser.uid)) {
                 
-                // Get messages and filter out 'typing' or invalid nodes
                 const rawData = Object.values(allChats[roomKey]);
                 const messages = rawData.filter(msg => msg && msg.sender && msg.timestamp);
                 
                 // Skip empty rooms
                 if (messages.length === 0) return;
 
-                // Sort messages to find the true last one
+                // Sort messages
                 messages.sort((a, b) => a.timestamp - b.timestamp);
                 const lastMsg = messages[messages.length - 1]; 
                 
-                // ROBUST ID EXTRACTION: Split by '_' and find the ID that isn't mine and isn't 'chat'
+                // ROBUST ID EXTRACTION
                 const parts = roomKey.split('_');
                 const otherUid = parts.find(part => part !== 'chat' && part !== currentUser.uid);
 
-                if (!otherUid) return; // Skip if we can't find the other user
+                if (!otherUid) return; 
                 
                 // DETERMINE MESSAGE CONTENT
                 let displayMsg = "Sent an attachment";
                 let isAttachment = true;
                 
-                // Check if text exists and is not just whitespace
                 if (lastMsg.text && String(lastMsg.text).trim().length > 0) {
                     displayMsg = lastMsg.text;
                     isAttachment = false;
                 }
 
                 const chatData = {
-                    roomKey: roomKey,
+                    roomKey: roomKey, // Important for deletion
                     otherUid: otherUid,
                     lastMessage: displayMsg,
                     isAttachment: isAttachment,
@@ -4510,7 +4541,7 @@ window.showInvestorChatList = async function() {
                     isUnread: (lastMsg.sender !== currentUser.uid)
                 };
 
-                // DEDUPLICATION: Only keep the chat with the most recent message for this user
+                // DEDUPLICATION
                 if (chatMap.has(otherUid)) {
                     const existing = chatMap.get(otherUid);
                     if (chatData.timestamp > existing.timestamp) {
@@ -4525,24 +4556,33 @@ window.showInvestorChatList = async function() {
         // Convert Map to Array
         const myChats = Array.from(chatMap.values());
 
-        // --- 2. FETCH INVESTOR PROFILES ---
+        // --- 2. FETCH PROFILES & COUNT ONLINE USERS ---
         const profileMap = {};
+        let onlineCount = 0; // NEW: Counter for header
+
         const fetchPromises = myChats.map(async (chat) => {
             const uid = chat.otherUid;
             try {
                 // Fetch from investorProfiles
-                const snap = await get(ref(db, `investorProfiles/${uid}`));
+                let snap = await get(ref(db, `investorProfiles/${uid}`));
+                
+                // Fallback to founderProfile if not found
+                if (!snap.exists()) {
+                    snap = await get(ref(db, `founderProfile/${uid}`));
+                }
+
                 if (snap.exists()) {
                     profileMap[uid] = snap.val();
                 } else {
-                    // Check founderProfile just in case
-                    const founderSnap = await get(ref(db, `founderProfile/${uid}`));
-                    if(founderSnap.exists()){
-                         profileMap[uid] = founderSnap.val();
-                    } else {
-                        profileMap[uid] = { fullName: "Investor", photoURL: null, status: "offline" };
-                    }
+                    profileMap[uid] = { fullName: "Investor", photoURL: null, status: "offline" };
                 }
+
+                // Check Status for Header Counter
+                const p = profileMap[uid];
+                if (p.status === 'online' || p.isOnline === true) {
+                    onlineCount++;
+                }
+
             } catch (err) {
                 console.warn(`Could not fetch profile for ${uid}`, err);
                 profileMap[uid] = { fullName: "Investor", photoURL: null, status: "offline" };
@@ -4555,36 +4595,37 @@ window.showInvestorChatList = async function() {
         myChats.sort((a, b) => b.timestamp - a.timestamp); // Newest first
 
        let listHtml = `
-<div class="chat-list-container">
+        <div class="chat-list-container">
 
-  <div class="chat-header-row">
-    <div style="display:flex; align-items:center; gap:12px;">
-      
-      <button onclick="window.location.hash='founder_dashboard'" 
-        style="
-          background:#f3f4f6;
-          border:1px solid #e5e7eb;
-          border-radius:10px;
-          padding:8px 12px;
-          cursor:pointer;
-          font-weight:600;
-        ">
-        ← Back
-      </button>
+          <div class="chat-header-row">
+            <div style="display:flex; align-items:center; gap:12px;">
+              
+              <button onclick="window.location.hash='founder_dashboard'" 
+                style="
+                  background:#f3f4f6;
+                  border:1px solid #e5e7eb;
+                  border-radius:10px;
+                  padding:8px 12px;
+                  cursor:pointer;
+                  font-weight:600;
+                ">
+                ← Back
+              </button>
 
-      <div>
-        <h1 style="font-size:1.9rem; font-weight:800; margin:0;">Investor Inbox</h1>
-        <p style="color:#6b7280; margin:4px 0 0; font-size:0.9rem;">
-          Manage your funding conversations
-        </p>
-      </div>
-    </div>
+              <div>
+                <h1 style="font-size:1.9rem; font-weight:800; margin:0;">Investor Inbox</h1>
+                <p style="color:#6b7280; margin:4px 0 0; font-size:0.9rem;">
+                  Manage your funding conversations
+                </p>
+              </div>
+            </div>
 
-    <div class="inbox-count">
-      ${myChats.length} Active
-    </div>
-  </div>
-`;
+            <div class="inbox-count">
+              <span style="color:${onlineCount > 0 ? '#10b981' : '#6b7280'}; font-size:1.2rem;">●</span> 
+              ${onlineCount} Online
+            </div>
+          </div>
+        `;
 
 
         if (myChats.length === 0) {
@@ -4605,7 +4646,7 @@ window.showInvestorChatList = async function() {
                 const displayName = profile.fullName || profile.founderUsername || profile.name || "Investor";
                 const displayPhoto = profile.photoURL || profile.logo; 
                 
-                // Status Logic (Check for 'online' string OR boolean true)
+                // Status Logic (Green vs Red)
                 const isOnline = profile.status === 'online' || profile.isOnline === true;
                 const statusClass = isOnline ? 'status-online' : 'status-offline';
 
@@ -4617,7 +4658,7 @@ window.showInvestorChatList = async function() {
                     : msgDate.toLocaleDateString();
 
                 return `
-                <div class="chat-item" onclick="window.location.href='chat.html?recipient=${chat.otherUid}'">
+                <div class="chat-item" onclick="openChat('${chat.otherUid}', this)">
                     <div class="chat-avatar">
                         ${displayPhoto 
                             ? `<img src="${displayPhoto}" alt="${displayName}" onerror="this.style.display='none'">` 
@@ -4631,14 +4672,21 @@ window.showInvestorChatList = async function() {
                             ${displayName}
                         </div>
                         <div class="chat-preview ${chat.isUnread ? 'unread-text' : ''} ${chat.isAttachment ? 'attachment-text' : ''}">
-                            ${chat.isUnread ? '<span style="color:#10b981; margin-right:4px;">●</span>' : ''}
+                            ${chat.isUnread ? '<span class="unread-dot" style="color:#10b981; margin-right:4px;">●</span>' : ''}
                             ${chat.isAttachment ? '📎 ' : ''}${chat.lastMessage}
                         </div>
                     </div>
                     
-                    <div class="chat-meta">
+                    <div class="chat-meta" style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
                         <div class="time-text">${timeDisplay}</div>
                         ${chat.isUnread ? '<div class="unread-pill">NEW</div>' : ''}
+                        
+                        <button class="delete-chat-btn" onclick="deleteConversation('${chat.roomKey}', event)" title="Delete Conversation">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
                     </div>
                 </div>
                 `;
@@ -4660,6 +4708,46 @@ window.showInvestorChatList = async function() {
             </div>`;
     }
 };
+
+// --- HELPER 1: Handle Chat Navigation (Removes Badges Visually) ---
+window.openChat = function(uid, element) {
+    // 1. Visually hide the "NEW" pill and the green dot immediately
+    const pill = element.querySelector('.unread-pill');
+    const dot = element.querySelector('.unread-dot');
+    const text = element.querySelector('.chat-preview');
+    
+    if(pill) pill.style.display = 'none';
+    if(dot) dot.style.display = 'none';
+    if(text) text.classList.remove('unread-text');
+
+    // 2. Navigate
+    window.location.href = `chat.html?recipient=${uid}`;
+}
+
+// --- HELPER 2: Handle Deletion ---
+window.deleteConversation = async function(roomKey, event) {
+    // 1. Stop the card click event (prevents opening chat)
+    event.stopPropagation(); 
+    
+    // 2. Confirm
+    if(!confirm("Are you sure you want to delete this conversation? This cannot be undone.")) {
+        return;
+    }
+
+    // 3. Delete from Firebase
+    try {
+        const chatRef = ref(db, `Chats/${roomKey}`);
+        await remove(chatRef);
+        
+        // 4. Reload list to reflect changes
+        window.showInvestorChatList();
+        
+    } catch(err) {
+        console.error("Error deleting chat:", err);
+        alert("Could not delete conversation. Check console.");
+    }
+}
+
 // --- 2. GLOBAL NOTIFICATION LISTENER ---
 // Call this function inside your onAuthStateChanged, right after 'isInitialLoad = false;'
 function startNotificationListener() {
