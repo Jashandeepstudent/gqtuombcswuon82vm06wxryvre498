@@ -66,21 +66,65 @@
             z-index: 0;
         }
 
+/* --- CRITICAL MOBILE FIXES --- */
+
+/* 1. Prevent white background showing behind the scaled body */
+html {
+    background: #0a0a0a; 
+    overflow-x: hidden;
+}
+
 @media screen and (max-width: 768px) {
+    /* YOUR SCALING LOGIC */
     body {
-        /* 0.85 = 85% size. Adjust this number until it fits perfectly */
         transform: scale(0.85);
-        
-        /* This anchors the zoom to the top-left corner so it doesn't center weirdly */
         transform-origin: top left; 
-        
-        /* This tells the body to take up more space to compensate for the shrink */
-        width: 117.6%; /* (100 divided by 0.85 is roughly 117.6) */
-        
+        width: 117.6%;
         overflow-x: hidden;
-        position: absolute; /* Sometimes needed to make the transform stick */
+        position: absolute; 
         top: 0;
         left: 0;
+        min-height: 100vh; /* Ensures the black color stretches down */
+    }
+
+    /* --- COMPACT NAVBAR FOR MOBILE --- */
+    .top-nav {
+        padding: 8px 12px !important; /* Much tighter padding */
+        min-height: 50px; /* Force it to be shorter */
+        align-items: center;
+    }
+
+    .logo {
+        font-size: 1.2rem !important; /* Smaller logo text */
+    }
+
+    /* Shrink the circle buttons */
+    .icon-btn {
+        width: 32px !important; 
+        height: 32px !important;
+    }
+
+    /* Shrink the icons inside the buttons */
+    .icon-btn svg {
+        width: 16px !important;
+        height: 16px !important;
+    }
+
+    /* Adjust the spacing between right-side icons */
+    .top-nav-right {
+        gap: 8px !important;
+    }
+
+    /* Navbar links scrollable row (from previous fix) */
+    .nav-links {
+        margin-top: 5px;
+        padding-top: 5px;
+        border-top: 1px solid #222;
+        gap: 12px;
+    }
+
+    .nav-link {
+        font-size: 0.75rem !important; /* Smaller link text */
     }
 }
 /* ===============================
@@ -4707,6 +4751,18 @@ function startNotificationListener() {
     });
 }
 
+function updateNotificationBadge(count) {
+    const bell = document.getElementById('navBellBadge');
+    const msg = document.getElementById('navMsgBadge');
+    
+    if (count > 0) {
+        if(bell) { bell.classList.add('active'); bell.innerText = ''; } // Just a dot
+        if(msg) { msg.classList.add('active'); msg.innerText = ''; }
+    } else {
+        if(bell) bell.classList.remove('active');
+        if(msg) msg.classList.remove('active');
+    }
+}
 
 // Ensure this variable exists globally
 let currentEditAction = null;
@@ -5386,44 +5442,6 @@ function setUserPresence(user) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const savedCount = localStorage.getItem('scaleVestMsgCount');
-    if (savedCount && parseInt(savedCount) > 0) {
-        // Pass 'false' to avoid re-saving what we just read
-        updateNotificationBadge(savedCount, false);
-    }
-});
-
-// 2. UPDATE FUNCTION: Updates the UI and saves to Local Storage
-function updateNotificationBadge(count, saveToStorage = true) {
-    const bell = document.getElementById('navBellBadge');
-    const num = parseInt(count) || 0;
-
-    if (num > 0) {
-        // Update text (cap at 99+)
-        bell.innerText = num > 99 ? '99+' : num;
-        bell.classList.add('active');
-        
-        // Save to browser memory so it survives reload
-        if(saveToStorage) localStorage.setItem('scaleVestMsgCount', num);
-    } else {
-        // Hide badge
-        bell.classList.remove('active');
-        if(saveToStorage) localStorage.setItem('scaleVestMsgCount', '0');
-    }
-}
-
-// 3. CLICK HANDLER: Clears the count and redirects
-window.handleBellClick = function() {
-    // 1. Visually clear the badge
-    updateNotificationBadge(0);
-    
-    // 2. Clear the browser memory
-    localStorage.removeItem('scaleVestMsgCount');
-    
-    // 3. Go to chat list
-    window.location.hash = 'investor_chatlist';
-};
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -5984,40 +6002,19 @@ async function createDashboard() {
 
 .notif-badge {
     position: absolute;
-    top: -6px;
-    right: -6px;
-    
-    /* Shape & Color */
-    background-color: #ef4444; /* Red */
-    color: white;
-    border: 2px solid #0a0a0a; /* Border matches background to make it pop */
-    border-radius: 10px;       /* Pill shape */
-    
-    /* Size & Layout */
-    min-width: 18px;           /* Minimum width for single digit */
-    height: 18px;
-    padding: 0 4px;            /* Padding for double digits (e.g. 12) */
-    
-    /* Text Styling */
-    font-size: 10px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    /* Visibility defaults */
-    opacity: 0;
-    transform: scale(0);
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy pop effect */
-    pointer-events: none;      /* Ensures clicks pass through to the button */
+    top: -5px;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    background-color: #ff006e;
+    border-radius: 50%;
+    border: 2px solid #0a0a0a;
+    display: none; /* Hidden by default */
     z-index: 10;
 }
 
-/* Class added via JS when count > 0 */
 .notif-badge.active {
-    opacity: 1;
-    transform: scale(1);
-    display: flex; /* Force flex display */
+    display: block;
 }
 
 /* --- INBOX / CHAT LIST SCREEN --- */
@@ -6873,16 +6870,18 @@ max-width: 1100px;
 </div>
     </div>
 <div class="top-nav-right">
-    <div class="nav-icon-wrapper" onclick="handleBellClick()">
+    <div class="nav-icon-wrapper" onclick="window.location.hash='investor_chatlist'">
         <div class="icon-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
         </div>
-        <div class="notif-badge" id="navBellBadge">0</div>
+        <div class="notif-badge" id="navBellBadge"></div>
     </div>
-</div>
+
+
+
         <div class="profile-dropdown">
 <div class="icon-btn" onclick="toggleDashProfileDropdown()">
     ${founderData?.photoURL 
