@@ -5441,6 +5441,24 @@ function setUserPresence(user) {
         lastSeen: serverTimestamp()
     });
 }
+document.addEventListener("DOMContentLoaded", () => {
+    const hasUnread = localStorage.getItem("hasUnreadNotifications");
+    if (hasUnread === "true") {
+        document.getElementById("navBellBadge")?.style.display = "block";
+    }
+});
+function showBellNotification() {
+    localStorage.setItem("hasUnreadNotifications", "true");
+    document.getElementById("navBellBadge")?.style.display = "block";
+}
+function openBellNotifications() {
+    // navigate
+    window.location.hash = "investor_chatlist";
+
+    // clear notification state
+    localStorage.removeItem("hasUnreadNotifications");
+    document.getElementById("navBellBadge")?.style.display = "none";
+}
 
    onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -5993,25 +6011,21 @@ async function createDashboard() {
         z-index: 10001; /* High Z-index */
     }
 }
-/* --- NOTIFICATION BADGE --- */
 .nav-icon-wrapper {
     position: relative;
-    display: inline-block;
-    cursor: pointer;
 }
 
 .notif-badge {
     position: absolute;
-    top: -5px;
-    right: -5px;
-    width: 10px;
-    height: 10px;
-    background-color: #ff006e;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    background: #ef4444;
     border-radius: 50%;
-    border: 2px solid #0a0a0a;
-    display: none; /* Hidden by default */
-    z-index: 10;
+    display: none; /* default hidden */
 }
+
 
 .notif-badge.active {
     display: block;
@@ -6870,7 +6884,7 @@ max-width: 1100px;
 </div>
     </div>
 <div class="top-nav-right">
-    <div class="nav-icon-wrapper" onclick="window.location.hash='investor_chatlist'">
+   <div class="nav-icon-wrapper" onclick="openBellNotifications()">
         <div class="icon-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
