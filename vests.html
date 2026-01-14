@@ -4446,6 +4446,7 @@ window.limitWords = function(element, limit) {
     }
 };
 window.showInvestorChatList = async function() {
+updateNotificationBadge(0);
     const container = document.getElementById('dashboardContainer');
     
     // Toggle containers
@@ -4665,20 +4666,24 @@ window.showInvestorChatList = async function() {
 function startNotificationListener() {
     const chatsRef = ref(db, 'Chats');
     
-    // Listen for changes in real-time
     onValue(chatsRef, (snapshot) => {
-        if (!snapshot.exists()) return;
+        if (!snapshot.exists()) {
+            updateNotificationBadge(0);
+            return;
+        }
+        
         const allChats = snapshot.val();
         let unreadCount = 0;
 
+        // Loop through all chat rooms to find those belonging to current user
         Object.keys(allChats).forEach(roomKey => {
             if (roomKey.includes(currentUser.uid)) {
                 const messages = Object.values(allChats[roomKey]);
                 const lastMsg = messages[messages.length - 1];
                 
-                // If last message was NOT sent by me, count it as potential unread
-                // (In a real app, you'd check a 'read' status flag in DB)
-                if (lastMsg.sender !== currentUser.uid) {
+                // If the last message in a room was NOT sent by the current user,
+                // it counts as an unread conversation.
+                if (lastMsg && lastMsg.sender !== currentUser.uid) {
                     unreadCount++;
                 }
             }
@@ -4687,7 +4692,6 @@ function startNotificationListener() {
         updateNotificationBadge(unreadCount);
     });
 }
-
 function updateNotificationBadge(count) {
     const bell = document.getElementById('navBellBadge');
     const msg = document.getElementById('navMsgBadge');
@@ -5357,6 +5361,26 @@ function timeSince(date) {
     if (interval > 1) return Math.floor(interval) + "m ago";
     return "Just now";
 }
+
+function updateNotificationBadge(count) {
+    const msgBadge = document.getElementById('navMsgBadge');
+    const bellBadge = document.getElementById('navBellBadge'); // If you have two
+
+    if (count > 0) {
+        if (msgBadge) {
+            msgBadge.style.display = 'block';
+            msgBadge.innerText = count;
+        }
+        if (bellBadge) {
+            bellBadge.style.display = 'block';
+            bellBadge.innerText = count;
+        }
+    } else {
+        if (msgBadge) msgBadge.style.display = 'none';
+        if (bellBadge) bellBadge.style.display = 'none';
+    }
+}
+
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -5862,22 +5886,17 @@ async function createDashboard() {
 }
 
 .notif-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  background: #ff3b3b;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    background-color: #ff006e;
+    border-radius: 50%;
+    border: 2px solid #0a0a0a;
+    display: none; /* Hidden by default */
+    z-index: 10;
 }
-
 
 .notif-badge.active {
     display: block;
@@ -6739,20 +6758,15 @@ max-width: 1100px;
 </div>
     </div>
 <div class="top-nav-right">
-  <div class="nav-icon-wrapper" id="bellBtn">
+<div class="nav-icon-wrapper" onclick="window.location.hash='investor_chatlist'">
     <div class="icon-btn">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-      </svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
     </div>
-
-    <!-- numeric badge -->
-    <div class="notif-badge" id="navBellBadge" style="display:none;">0</div>
-  </div>
+    <div class="notif-badge" id="navMsgBadge" style="display:none; position:absolute; top:-5px; right:-5px; background:#ff006e; color:white; border-radius:50%; padding:2px 6px; font-size:10px; font-weight:bold; min-width:18px; text-align:center; border:2px solid #0a0a0a;">0</div>
 </div>
-
 
 
 
@@ -9938,49 +9952,7 @@ window.closeFullScreenPDF = function() {
 };
 
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-
-  const badge = document.getElementById("navBellBadge");
-  const bellBtn = document.getElementById("bellBtn");
-
-  if (!badge || !bellBtn) return; // safety for pages without bell
-
-  // Load unread count from localStorage
-  let unreadCount = parseInt(localStorage.getItem("unreadCount")) || 0;
-  updateBadge();
-
-  function updateBadge() {
-    if (unreadCount > 0) {
-      badge.textContent = unreadCount;
-      badge.style.display = "flex";
-    } else {
-      badge.style.display = "none";
-    }
-  }
-
-  function saveUnreadCount() {
-    localStorage.setItem("unreadCount", unreadCount);
-  }
-
-  // 🔔 WHEN USER CLICKS BELL → CLEAR
-  bellBtn.addEventListener("click", () => {
-    window.location.hash = "investor_chatlist";
-    unreadCount = 0;
-    saveUnreadCount();
-    updateBadge();
-  });
-
-  // 🌐 EXPOSE FUNCTION FOR FIREBASE / SOCKET
-  window.onNewMessageReceived = function () {
-    unreadCount++;
-    saveUnreadCount();
-    updateBadge();
-  };
-
-});
 </script>
-
 <!-- FOUNDER DASHBOARD -->
 <div id="dashboardContainer" style="display: none;"></div>
 
