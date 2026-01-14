@@ -4786,16 +4786,7 @@ function startNotificationListener() {
 }
 
         // Update the UI
-        const badge = document.getElementById('navBellBadge');
-        if (badge) {
-            if (hasNewUnseenMessage) {
-                badge.classList.add('active');
-            } else {
-                badge.classList.remove('active');
-            }
-        }
-    });
-}
+
 // Ensure this variable exists globally
 let currentEditAction = null;
 
