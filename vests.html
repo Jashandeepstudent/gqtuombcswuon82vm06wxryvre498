@@ -4661,8 +4661,6 @@ updateNotificationBadge(0);
             </div>`;
     }
 };
-// --- 2. GLOBAL NOTIFICATION LISTENER ---
-// Call this function inside your onAuthStateChanged, right after 'isInitialLoad = false;'
 function startNotificationListener() {
     const chatsRef = ref(db, 'Chats');
     
@@ -4673,31 +4671,32 @@ function startNotificationListener() {
         }
         
         const allChats = snapshot.val();
-        let unreadCount = 0;
+        let unreadRoomsCount = 0;
 
         Object.keys(allChats).forEach(roomKey => {
             // 1. Only look at rooms I am part of
             if (roomKey.includes(currentUser.uid)) {
-                const messages = Object.values(allChats[roomKey]);
+                const messagesObj = allChats[roomKey];
                 
-                // 2. Filter out non-message data (like 'typing' indicators)
-                const actualMessages = messages.filter(m => m && m.sender && m.timestamp);
+                // 2. Convert room messages to an array and filter out metadata/typing
+                const messages = Object.values(messagesObj).filter(m => m && m.sender && m.timestamp);
                 
-                if (actualMessages.length > 0) {
-                    // 3. Sort to find the absolute latest message
-                    actualMessages.sort((a, b) => a.timestamp - b.timestamp);
-                    const lastMsg = actualMessages[actualMessages.length - 1];
+                if (messages.length > 0) {
+                    // 3. Sort to get the absolute latest message
+                    messages.sort((a, b) => a.timestamp - b.timestamp);
+                    const lastMsg = messages[messages.length - 1];
                     
-                    // 4. CRITICAL: Only count if the LAST message was from the OTHER person
-                    // This prevents the badge from showing 5 just because you have 5 investors.
+                    // 4. CRITICAL FIX: 
+                    // Only count this room if the last message came from the INVESTOR.
+                    // If the last message is from YOU, it means you have replied, so it's not "unread".
                     if (lastMsg.sender !== currentUser.uid) {
-                        unreadCount++;
+                        unreadRoomsCount++;
                     }
                 }
             }
         });
 
-        updateNotificationBadge(unreadCount);
+        updateNotificationBadge(unreadRoomsCount);
     });
 }
 function updateNotificationBadge(count) {
@@ -4705,10 +4704,10 @@ function updateNotificationBadge(count) {
     
     if (msgBadge) {
         if (count > 0) {
-            msgBadge.style.display = 'flex'; // Show the badge
-            msgBadge.innerText = count;      // Set the number (1, 2, etc)
+            msgBadge.style.display = 'flex'; 
+            msgBadge.innerText = count;      
         } else {
-            msgBadge.style.display = 'none'; // Hide if 0
+            msgBadge.style.display = 'none'; 
             msgBadge.innerText = '';
         }
     }
