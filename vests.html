@@ -5466,7 +5466,10 @@ function openBellNotifications() {
           setUserPresence(user);
         isInitialLoad = false;
         startNotificationListener();
-        document.getElementById('loadingScreen').classList.remove('hidden');
+                document
+          .getElementById('loadingScreen')
+          ?.classList.remove('hidden');
+    }
         
         try {
             const [vestsSnapshot, founderSnapshot, startupSnapshot] = await Promise.all([
