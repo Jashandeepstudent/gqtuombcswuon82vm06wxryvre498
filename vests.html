@@ -5362,24 +5362,7 @@ function timeSince(date) {
     return "Just now";
 }
 
-function updateNotificationBadge(count) {
-    const msgBadge = document.getElementById('navMsgBadge');
-    const bellBadge = document.getElementById('navBellBadge'); // If you have two
 
-    if (count > 0) {
-        if (msgBadge) {
-            msgBadge.style.display = 'block';
-            msgBadge.innerText = count;
-        }
-        if (bellBadge) {
-            bellBadge.style.display = 'block';
-            bellBadge.innerText = count;
-        }
-    } else {
-        if (msgBadge) msgBadge.style.display = 'none';
-        if (bellBadge) bellBadge.style.display = 'none';
-    }
-}
 
    onAuthStateChanged(auth, async (user) => {
     if (user) {
