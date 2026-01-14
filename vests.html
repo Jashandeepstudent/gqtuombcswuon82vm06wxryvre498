@@ -4733,11 +4733,12 @@ function startNotificationListener() {
             chatSnap.forEach(messageSnap => {
                 const msg = messageSnap.val();
 
-                // only messages meant for me
+                // Only messages meant for me
                 if (msg.recipient === currentUser.uid) {
                     const readBy = msg.readBy || {};
 
-                    if (!readBy[currentUser.uid]) {
+                    // ✅ UNREAD if entry is missing
+                    if (readBy[currentUser.uid] !== true) {
                         hasUnread = true;
                     }
                 }
