@@ -202,6 +202,7 @@
 }
 /* Status Dots */
 /* --- Status Dots --- */
+/* --- Status Dots --- */
 .status-indicator {
     width: 12px;
     height: 12px;
@@ -211,33 +212,42 @@
     bottom: 0;
     right: 0;
     z-index: 10;
+    transition: background-color 0.3s ease; /* Smooth color change */
 }
-.status-online { background-color: #10b981; }
-.status-offline { background-color: #ef4444; }
+.status-online { background-color: #10b981; } /* Green */
+.status-offline { background-color: #ef4444; } /* Red */
 
-/* --- Tiny Red Delete Button --- */
+/* --- Delete Button (Transparent with Red Icon) --- */
 .delete-chat-btn {
-    background-color: #ef4444; /* Red Background */
-    color: white;              /* White Icon */
-    border: none;
+    background-color: transparent; /* No background color by default */
+    color: #ef4444;                /* Red Icon */
+    border: 1px solid #fee2e2;     /* Faint red border */
     cursor: pointer;
-    width: 22px;               /* Very small fixed width */
-    height: 22px;              /* Very small fixed height */
-    border-radius: 50%;        /* Perfect Circle */
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
     margin-top: 5px;
-    transition: transform 0.2s ease, background-color 0.2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
 }
 
 .delete-chat-btn:hover {
-    background-color: #dc2626; /* Darker Red */
-    transform: scale(1.1);     /* Slight pop effect */
+    background-color: #fee2e2;     /* Light red background on hover */
+    transform: scale(1.1);
+    border-color: #ef4444;
 }
-.unread-text {
+
+/* --- Helper to hide badge on click --- */
+.chat-item.clicked .unread-pill,
+.chat-item.clicked .unread-dot {
+    display: none !important;
+}
+.chat-item.clicked .unread-text {
+    font-weight: normal !important;
+    color: #6b7280 !important;
+}.unread-text {
   color: #111827;
   font-weight: 600;
 }
@@ -310,27 +320,52 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 /* --- ONLINE STATUS INDICATOR --- */
+/* --- Status Dots --- */
 .status-indicator {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    border: 2px solid #111; /* Matches background to cut out circle */
-    z-index: 5;
+    border: 2px solid white;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    z-index: 10;
+    transition: background-color 0.3s ease; /* Smooth color change */
+}
+.status-online { background-color: #10b981; } /* Green */
+.status-offline { background-color: #ef4444; } /* Red */
+
+/* --- Delete Button (Transparent with Red Icon) --- */
+.delete-chat-btn {
+    background-color: transparent; /* No background color by default */
+    color: #ef4444;                /* Red Icon */
+    border: 1px solid #fee2e2;     /* Faint red border */
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 5px;
+    transition: all 0.2s ease;
 }
 
-.status-online {
-    background-color: #10b981; /* Green */
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+.delete-chat-btn:hover {
+    background-color: #fee2e2;     /* Light red background on hover */
+    transform: scale(1.1);
+    border-color: #ef4444;
 }
 
-.status-offline {
-    background-color: #666; /* Gray */
-    border: 2px solid #111;
+/* --- Helper to hide badge on click --- */
+.chat-item.clicked .unread-pill,
+.chat-item.clicked .unread-dot {
+    display: none !important;
 }
-
+.chat-item.clicked .unread-text {
+    font-weight: normal !important;
+    color: #6b7280 !important;
+}
 /* Fix chat preview text color */
 .chat-preview {
     color: #888;
@@ -423,28 +458,52 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 /* --- ONLINE STATUS & UI FIXES --- */
+/* --- Status Dots --- */
 .status-indicator {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 13px;
-    height: 13px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    border: 2px solid #111; /* Cutout effect */
-    z-index: 5;
+    border: 2px solid white;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    z-index: 10;
+    transition: background-color 0.3s ease; /* Smooth color change */
+}
+.status-online { background-color: #10b981; } /* Green */
+.status-offline { background-color: #ef4444; } /* Red */
+
+/* --- Delete Button (Transparent with Red Icon) --- */
+.delete-chat-btn {
+    background-color: transparent; /* No background color by default */
+    color: #ef4444;                /* Red Icon */
+    border: 1px solid #fee2e2;     /* Faint red border */
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 5px;
+    transition: all 0.2s ease;
 }
 
-.status-online {
-    background-color: #10b981; /* Green */
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+.delete-chat-btn:hover {
+    background-color: #fee2e2;     /* Light red background on hover */
+    transform: scale(1.1);
+    border-color: #ef4444;
 }
 
-.status-offline {
-    background-color: #666; /* Gray */
-    border: 2px solid #111;
+/* --- Helper to hide badge on click --- */
+.chat-item.clicked .unread-pill,
+.chat-item.clicked .unread-dot {
+    display: none !important;
 }
-
-.chat-preview {
+.chat-item.clicked .unread-text {
+    font-weight: normal !important;
+    color: #6b7280 !important;
+}.chat-preview {
     color: #bbb; /* Lighter gray for better visibility */
     font-size: 0.95rem;
     max-width: 85%;
@@ -4481,23 +4540,28 @@ window.limitWords = function(element, limit) {
         alert(`Professional Guard: Maximum ${limit} words allowed per section.`);
     }
 };
-// Ensure 'remove' is imported if using modules
-// import { remove } from "firebase/database"; 
+// Global variable to track active listeners so we can turn them off when reloading
+window.activeProfileListeners = window.activeProfileListeners || [];
 
 window.showInvestorChatList = async function() {
     const container = document.getElementById('dashboardContainer');
     
-    // Toggle containers
+    // 1. Reset Container
     if(document.querySelector('.vest-container')) {
         document.querySelector('.vest-container').style.display = 'none';
     }
     container.style.display = 'block';
 
-    // Show Loader
+    // 2. Clear previous listeners to prevent memory leaks/duplicate updates
+    if (window.activeProfileListeners.length > 0) {
+        window.activeProfileListeners.forEach(unsubscribe => unsubscribe());
+        window.activeProfileListeners = [];
+    }
+
     container.innerHTML = `
         <div class="loading-box">
             <div class="spinner"></div>
-            <p style="color:#888;">Syncing with Investor Network...</p>
+            <p style="color:#888;">Syncing Inbox...</p>
         </div>`;
 
     try {
@@ -4507,10 +4571,9 @@ window.showInvestorChatList = async function() {
         
         const chatMap = new Map();
 
-        // --- 1. FILTER & PROCESS CHATS ---
+        // --- A. PROCESS CHAT LIST ---
         Object.keys(allChats).forEach(roomKey => {
             if (roomKey.includes(currentUser.uid)) {
-                
                 const rawData = Object.values(allChats[roomKey]);
                 const messages = rawData.filter(msg => msg && msg.sender && msg.timestamp);
                 
@@ -4524,9 +4587,8 @@ window.showInvestorChatList = async function() {
 
                 if (!otherUid) return; 
                 
-                let displayMsg = "Sent an attachment";
+                let displayMsg = "Attachment";
                 let isAttachment = true;
-                
                 if (lastMsg.text && String(lastMsg.text).trim().length > 0) {
                     displayMsg = lastMsg.text;
                     isAttachment = false;
@@ -4541,6 +4603,7 @@ window.showInvestorChatList = async function() {
                     isUnread: (lastMsg.sender !== currentUser.uid)
                 };
 
+                // Deduplicate
                 if (chatMap.has(otherUid)) {
                     const existing = chatMap.get(otherUid);
                     if (chatData.timestamp > existing.timestamp) {
@@ -4553,40 +4616,12 @@ window.showInvestorChatList = async function() {
         });
 
         const myChats = Array.from(chatMap.values());
-
-        // --- 2. FETCH PROFILES ---
-        const profileMap = {};
-        let onlineCount = 0; 
-
-        const fetchPromises = myChats.map(async (chat) => {
-            const uid = chat.otherUid;
-            try {
-                let snap = await get(ref(db, `investorProfiles/${uid}`));
-                if (!snap.exists()) snap = await get(ref(db, `founderProfile/${uid}`));
-                
-                if (snap.exists()) {
-                    profileMap[uid] = snap.val();
-                } else {
-                    profileMap[uid] = { fullName: "Investor", photoURL: null, status: "offline" };
-                }
-
-                // Count Online
-                const p = profileMap[uid];
-                if (p.status === 'online' || p.isOnline === true) {
-                    onlineCount++;
-                }
-
-            } catch (err) {
-                profileMap[uid] = { fullName: "Investor", status: "offline" };
-            }
-        });
-
-        await Promise.all(fetchPromises);
-
-        // --- 3. RENDER ---
         myChats.sort((a, b) => b.timestamp - a.timestamp); 
 
-       let listHtml = `
+        // --- B. RENDER SKELETON (Before fetching profiles) ---
+        // We render the list first, then attach "Live Listeners" to update dots/names
+        
+        let listHtml = `
         <div class="chat-list-container">
           <div class="chat-header-row">
             <div style="display:flex; align-items:center; gap:12px;">
@@ -4600,26 +4635,19 @@ window.showInvestorChatList = async function() {
               </div>
             </div>
             <div class="inbox-count">
-              <span style="color:${onlineCount > 0 ? '#10b981' : '#6b7280'}; font-size:1.2rem;">●</span> 
-              ${onlineCount} Online
+              <span id="header-online-dot" style="color:#6b7280; font-size:1.2rem;">●</span> 
+              <span id="header-online-count">0</span> Online
             </div>
           </div>
         `;
 
         if (myChats.length === 0) {
-            listHtml += `
-                <div class="empty-state-box">
-                    <p style="margin:0; font-weight:600;">No messages yet</p>
-                </div>`;
+            listHtml += `<div class="empty-state-box"><p>No messages yet</p></div>`;
         } else {
             listHtml += myChats.map(chat => {
-                const profile = profileMap[chat.otherUid] || { fullName: 'Unknown' };
-                const displayName = profile.fullName || profile.founderUsername || profile.name || "Investor";
-                const displayPhoto = profile.photoURL || profile.logo; 
-                const isOnline = profile.status === 'online' || profile.isOnline === true;
-                const statusClass = isOnline ? 'status-online' : 'status-offline';
-
-                // Time
+                const uid = chat.otherUid;
+                
+                // Time Formatting
                 const msgDate = new Date(chat.timestamp);
                 const isToday = new Date().toDateString() === msgDate.toDateString();
                 const timeDisplay = isToday 
@@ -4627,16 +4655,16 @@ window.showInvestorChatList = async function() {
                     : msgDate.toLocaleDateString();
 
                 return `
-                <div class="chat-item" onclick="openChat('${chat.otherUid}', this)">
+                <div class="chat-item" id="card-${uid}" onclick="openChat('${uid}', this)">
                     <div class="chat-avatar">
-                        ${displayPhoto 
-                            ? `<img src="${displayPhoto}" alt="${displayName}" onerror="this.style.display='none'">` 
-                            : displayName.charAt(0).toUpperCase()}
-                        <div class="status-indicator ${statusClass}"></div>
+                        <img id="img-${uid}" src="" style="display:none;" alt="Avatar">
+                        <div id="initial-${uid}" style="display:flex; width:100%; height:100%; align-items:center; justify-content:center; background:#eee; border-radius:50%; font-weight:bold; color:#555;">?</div>
+                        
+                        <div id="dot-${uid}" class="status-indicator status-offline"></div>
                     </div>
                     
                     <div class="chat-info">
-                        <div class="chat-name">${displayName}</div>
+                        <div class="chat-name" id="name-${uid}">Loading...</div>
                         <div class="chat-preview ${chat.isUnread ? 'unread-text' : ''} ${chat.isAttachment ? 'attachment-text' : ''}">
                             ${chat.isUnread ? '<span class="unread-dot" style="color:#10b981; margin-right:4px;">●</span>' : ''}
                             ${chat.isAttachment ? '📎 ' : ''}${chat.lastMessage}
@@ -4648,7 +4676,7 @@ window.showInvestorChatList = async function() {
                         ${chat.isUnread ? '<div class="unread-pill">NEW</div>' : ''}
                         
                         <button class="delete-chat-btn" onclick="deleteConversation('${chat.roomKey}', event)" title="Delete Conversation">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                 <polyline points="3 6 5 6 21 6"></polyline>
                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                             </svg>
@@ -4662,7 +4690,62 @@ window.showInvestorChatList = async function() {
         listHtml += `</div>`; 
         container.innerHTML = listHtml;
 
-        if(typeof updateNotificationBadge === 'function') updateNotificationBadge(0);
+        // --- C. ACTIVATE REAL-TIME LISTENERS ---
+        // This object tracks who is online locally to sum up the total
+        const onlineStatusTracker = {};
+
+        myChats.forEach(chat => {
+            const uid = chat.otherUid;
+            
+            // Try fetching from investorProfiles first, fallback logic inside handled by checking where data exists
+            // We listen to investorProfiles by default as this is "Investor Inbox"
+            const profileRef = ref(db, `investorProfiles/${uid}`);
+            
+            // Create the listener
+            const unsubscribe = onValue(profileRef, (snap) => {
+                let data = snap.val();
+                
+                // If not found in investorProfiles, try founderProfile (one-time fetch or separate listener? 
+                // For simplicity, we assume investors are in investorProfiles. 
+                // If you strictly need both, we'd need complex logic. 
+                // Let's assume data exists or default to offline.)
+                
+                if (!data) {
+                     // Fallback mock data if user doesn't exist
+                     data = { fullName: "User", status: "offline" }; 
+                }
+
+                // 1. Update Name & Photo
+                const nameEl = document.getElementById(`name-${uid}`);
+                const imgEl = document.getElementById(`img-${uid}`);
+                const initEl = document.getElementById(`initial-${uid}`);
+
+                if(nameEl) nameEl.textContent = data.fullName || data.name || "Investor";
+                
+                const photo = data.photoURL || data.logo;
+                if (photo && imgEl && initEl) {
+                    imgEl.src = photo;
+                    imgEl.style.display = 'block';
+                    initEl.style.display = 'none';
+                }
+
+                // 2. Update Status Dot
+                const dotEl = document.getElementById(`dot-${uid}`);
+                const isOnline = data.status === 'online' || data.isOnline === true;
+                
+                if (dotEl) {
+                    dotEl.className = `status-indicator ${isOnline ? 'status-online' : 'status-offline'}`;
+                }
+
+                // 3. Update Global Counter
+                onlineStatusTracker[uid] = isOnline;
+                updateGlobalOnlineCount(onlineStatusTracker);
+
+            });
+
+            // Add to active listeners so we can clear them later
+            window.activeProfileListeners.push(unsubscribe);
+        });
 
     } catch (e) {
         console.error("Inbox Error:", e);
@@ -4670,20 +4753,33 @@ window.showInvestorChatList = async function() {
     }
 };
 
-// --- HELPER FUNCTIONS ---
-
-window.openChat = function(uid, element) {
-    const pill = element.querySelector('.unread-pill');
-    const dot = element.querySelector('.unread-dot');
-    const text = element.querySelector('.chat-preview');
+// --- HELPER: Calculate Total Online ---
+function updateGlobalOnlineCount(tracker) {
+    const count = Object.values(tracker).filter(val => val === true).length;
+    const countEl = document.getElementById('header-online-count');
+    const dotEl = document.getElementById('header-online-dot');
     
-    if(pill) pill.style.display = 'none';
-    if(dot) dot.style.display = 'none';
-    if(text) text.classList.remove('unread-text');
-    
-    window.location.href = `chat.html?recipient=${uid}`;
+    if(countEl) countEl.innerText = count;
+    if(dotEl) dotEl.style.color = count > 0 ? '#10b981' : '#6b7280';
 }
 
+// --- HELPER: Click Handling ---
+window.openChat = function(uid, element) {
+    // 1. Add class to card to forcefully hide elements via CSS
+    element.classList.add('clicked');
+    
+    // 2. Fallback manual style hide (just in case)
+    const pill = element.querySelector('.unread-pill');
+    if(pill) pill.style.display = 'none';
+    
+    // 3. Navigate
+    // setTimeout ensures the visual update renders before the page redirect starts processing
+    setTimeout(() => {
+        window.location.href = `chat.html?recipient=${uid}`;
+    }, 50);
+}
+
+// --- HELPER: Delete ---
 window.deleteConversation = async function(roomKey, event) {
     event.stopPropagation(); 
     if(!confirm("Are you sure you want to delete this conversation?")) return;
@@ -4691,13 +4787,12 @@ window.deleteConversation = async function(roomKey, event) {
     try {
         const chatRef = ref(db, `Chats/${roomKey}`);
         await remove(chatRef);
-        window.showInvestorChatList(); // Refresh
+        // showInvestorChatList will naturally reload, clearing listeners and rebuilding
+        window.showInvestorChatList(); 
     } catch(err) {
         console.error("Error deleting chat:", err);
     }
 }
-// --- 2. GLOBAL NOTIFICATION LISTENER ---
-// Call this function inside your onAuthStateChanged, right after 'isInitialLoad = false;'
 function startNotificationListener() {
     const chatsRef = ref(db, 'Chats');
     
