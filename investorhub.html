@@ -1124,7 +1124,63 @@ let currentUserUID = null;
 let globalUnreadCount = 0;
 let presenceListeners = [];
 let uploadedPhotoURL = "";
+window.loadUserProfile = async function(uid) {
+    const avatarDiv = document.getElementById("profileAvatar");
+    try {
+        const snapshot = await get(ref(db, "investorProfiles/" + uid));
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            const fullName = data.fullName || "Investor";
 
+            document.getElementById("profileName").innerText = fullName;
+            document.getElementById("profileNetWorth").innerText = data.netWorth ? `$${data.netWorth}` : "$0.00";
+            document.getElementById("profileId").innerText = data.userID || "ID Pending";
+            
+            if(document.getElementById("navProfileName")) document.getElementById("navProfileName").innerText = fullName;
+            if(document.getElementById("welcomeUser")) document.getElementById("welcomeUser").innerText = `Welcome, ${fullName.split(' ')[0]}!`;
+
+            if (data.photoURL) {
+                avatarDiv.innerHTML = `<img src="${data.photoURL}" style="width:100%; height:100%; object-fit:cover;">`;
+            } else {
+                avatarDiv.innerHTML = `<span>${fullName.charAt(0).toUpperCase()}</span>`;
+            }
+            if (!data.userID) document.getElementById("userIdModal").style.display = "flex";
+        }
+
+        // --- THE BUTTON SWITCH LOGIC ---
+        const angelSnap = await get(ref(db, `angelProfiles/${uid}`));
+        const launchBtn = document.getElementById('launchBtn');
+        if (angelSnap.exists() && angelSnap.val().status === "Live") {
+            if (launchBtn) {
+                launchBtn.innerText = "VIEW YOUR PROFILE";
+                launchBtn.style.background = "#3b82f6"; // Blue for "View"
+                launchBtn.onclick = () => window.location.hash = 'profile'; 
+            }
+            document.querySelector('.progress-label').innerText = "STATUS: PUBLISHED";
+            document.querySelector('.progress-text').innerText = "LIVE ON MARKET";
+        }
+    } catch (err) { console.error("Load Error:", err); }
+};
+
+window.launchAngelProfile = async () => {
+    const launchBtn = document.getElementById('launchBtn');
+    if(!confirm("Publish your profile to the marketplace?")) return;
+    launchBtn.disabled = true;
+    launchBtn.innerText = "Publishing...";
+    try {
+        const snap = await get(ref(db, `investorProfiles/${currentUserUID}`));
+        if (snap.exists()) {
+            const angelData = { ...snap.val(), status: "Live", launchedAt: new Date().toISOString() };
+            await update(ref(db, `angelProfiles/${currentUserUID}`), angelData);
+            alert("Your Angel Profile is now LIVE!");
+            location.reload(); // Refresh to trigger the button switch
+        }
+    } catch (e) { 
+        console.error(e); 
+        launchBtn.disabled = false; 
+        launchBtn.innerText = "LAUNCH ANGEL PROFILE";
+    }
+};
 // =========================================================
 // 1. NOTIFICATION & BELL LOGIC
 // =========================================================
@@ -1617,45 +1673,6 @@ window.updateProfileSection = async (type) => {
     finally { saveBtn.disabled = false; }
 };
 
-/* ✅ LAUNCH ANGEL PROFILE */
-window.launchAngelProfile = async () => {
-    const launchBtn = document.getElementById('launchBtn');
-    
-    if(!confirm("Are you sure you want to publish your Angel Profile to the marketplace?")) return;
-
-    launchBtn.disabled = true;
-    launchBtn.innerText = "Publishing...";
-
-    try {
-        // Get current investor data
-        const snap = await get(ref(database, `investorProfiles/${currentUserUID}`));
-        
-        if (snap.exists()) {
-            // Create Angel Profile Entry
-            const angelData = { 
-                ...snap.val(), 
-                status: "Live", 
-                launchedAt: new Date().toISOString() 
-            };
-            
-            await update(ref(database, `angelProfiles/${currentUserUID}`), angelData);
-            
-            alert("Success! Your Angel Profile is now LIVE.");
-            
-            // Reload to update the button via loadUserProfile
-            location.reload();
-        } else {
-            alert("Error: Incomplete profile data.");
-            launchBtn.disabled = false;
-            launchBtn.innerText = "LAUNCH ANGEL PROFILE";
-        }
-    } catch (e) { 
-        console.error(e); 
-        alert("Error publishing profile.");
-        launchBtn.disabled = false; 
-        launchBtn.innerText = "LAUNCH ANGEL PROFILE";
-    }
-};
 window.saveUserID = async () => {
     const newId = document.getElementById("newUserIdInput").value.trim().toUpperCase();
     if (newId.length < 3) return alert("Min 3 characters");
