@@ -4781,6 +4781,371 @@ function updateNotificationBadge(count) {
     
     console.log(`📬 Unread messages: ${count}`); // Debug log
 }
+
+function timeSince(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    let interval = seconds / 31536000;
+
+    if (interval > 1) return Math.floor(interval) + "y ago";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + "mo ago";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + "d ago";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + "h ago";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + "m ago";
+    return "Just now";
+}
+
+import {
+  onDisconnect,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+function setUserPresence(user) {
+    const presenceRef = ref(db, `presence/${user.uid}`);
+
+    // Mark online
+    set(presenceRef, {
+        online: true,
+        lastSeen: serverTimestamp()
+    });
+
+    // Auto mark offline
+    onDisconnect(presenceRef).set({
+        online: false,
+        lastSeen: serverTimestamp()
+    });
+}
+window.handleBellClick = async function() {
+    // 1. Instant UI Feedback (Remove the dot immediately)
+    updateNotificationBadge(0);
+    
+    // 2. Navigate to the chat list immediately (for speed)
+    window.location.hash = 'investor_chatlist';
+
+    // 3. Perform Database Cleanup in the background
+    if (!currentUser) return;
+
+    try {
+        // Fetch all chats
+        const chatsRef = ref(db, 'Chats');
+        const snapshot = await get(chatsRef);
+
+        if (snapshot.exists()) {
+            const updates = {};
+            const allChats = snapshot.val();
+
+            // Loop through all rooms
+            Object.keys(allChats).forEach(roomKey => {
+                // Only look at rooms I am part of
+                if (roomKey.includes(currentUser.uid)) {
+                    const messages = allChats[roomKey];
+
+                    // Loop through messages in that room
+                    Object.keys(messages).forEach(msgId => {
+                        const msg = messages[msgId];
+                        
+                        // CONDITION: Message is for ME and is NOT Read
+                        if (msg && 
+                            msg.recipient === currentUser.uid && 
+                            msg.read !== true) {
+                            
+                            // Add to bulk update list
+                            updates[`Chats/${roomKey}/${msgId}/read`] = true;
+                        }
+                    });
+                }
+            });
+
+            // Execute Bulk Update if there are messages to mark
+            if (Object.keys(updates).length > 0) {
+                await update(ref(db), updates);
+                console.log(`✅ Marked ${Object.keys(updates).length} messages as read.`);
+            }
+        }
+    } catch (error) {
+        console.error("Error clearing notifications:", error);
+    }
+};
+// --- FORCE USERNAME SETUP LOGIC ---
+
+// --- FORCE USERNAME SETUP LOGIC (Redesigned) ---
+
+async function showUsernameSetupModal() {
+    // Check if modal already exists
+    if (document.getElementById('usernameSetupModal')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'usernameSetupModal';
+    // We use inline flex style to center it perfectly
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 999999; opacity: 0; transition: opacity 0.4s ease;
+    `;
+
+    // Inject CSS for animations and internal styling
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes modalSlideUp {
+            from { transform: translateY(30px) scale(0.95); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .sv-modal-card {
+            background: #050505;
+            border: 1px solid #222;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 380px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            animation: modalSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: relative;
+        }
+        .sv-modal-icon {
+            width: 50px; height: 50px;
+            background: #fff; color: #000;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: bold;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+        .sv-input-group {
+            margin: 25px 0;
+            text-align: left;
+        }
+        .sv-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #333;
+            color: #fff;
+            font-size: 1.1rem;
+            padding: 10px 5px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            border-radius: 0;
+        }
+        .sv-input:focus {
+            outline: none;
+            border-bottom-color: #fff;
+        }
+        .sv-hint {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 8px;
+            display: block;
+        }
+        .sv-btn-small {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 10px 24px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: auto;
+            display: inline-block;
+        }
+        .sv-btn-small:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,255,255,0.2);
+        }
+        .sv-btn-small:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+    `;
+    document.head.appendChild(style);
+
+    modal.innerHTML = `
+        <div class="sv-modal-card">
+            <div class="sv-modal-icon">SV</div>
+            
+            <h2 style="color: #fff; font-size: 1.5rem; margin-bottom: 10px; font-weight: 700;">Identity Setup</h2>
+            <p style="color: #888; font-size: 0.9rem; line-height: 1.5;">
+                Welcome to the network. Please establish your unique <strong>Founder Username</strong> to continue.
+            </p>
+
+            <div class="sv-input-group">
+                <label style="color: #fff; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Username</label>
+                <input type="text" id="newUsernameInput" class="sv-input" placeholder="Enter username..." autocomplete="off">
+                <span class="sv-hint">Minimum 6 characters. No spaces or symbols.</span>
+            </div>
+
+            <button class="sv-btn-small" onclick="saveNewUsername()">Confirm Identity</button>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Trigger Fade In
+    setTimeout(() => { modal.style.opacity = '1'; }, 10);
+    
+    // Trap focus
+    setTimeout(() => document.getElementById('newUsernameInput').focus(), 100);
+}
+
+window.saveNewUsername = async function() {
+    const input = document.getElementById('newUsernameInput');
+    const btn = document.querySelector('#usernameSetupModal button');
+    const rawName = input.value.trim();
+    
+    // 1. Validation (Strict 6 char limit)
+    if (!rawName || rawName.length < 6) {
+        input.style.borderBottomColor = "#ff4d4d"; // Red error indication
+        alert("❌ Username must be at least 6 characters long.");
+        return;
+    }
+    
+    // Regex: Only letters and numbers allowed
+    if (!/^[a-zA-Z0-9]+$/.test(rawName)) {
+        input.style.borderBottomColor = "#ff4d4d";
+        alert("❌ Usernames can only contain letters and numbers (No spaces).");
+        return;
+    }
+
+    // 2. Processing UI
+    const originalText = btn.innerText;
+    btn.innerText = "Processing...";
+    btn.disabled = true;
+    input.style.borderBottomColor = "#fff"; // Reset color
+
+    try {
+        // 3. Save to Firebase
+        await update(ref(db, `founderProfile/${currentUser.uid}`), {
+            founderUsername: rawName,
+            // Fallback for userId if it doesn't exist
+            userId: cachedFounderData?.userId || `USER_${Date.now()}` 
+        });
+
+        // 4. Update Local Cache
+        if(cachedFounderData) {
+            cachedFounderData.founderUsername = rawName;
+        }
+
+        // 5. Success Animation
+        btn.innerText = "Success ✓";
+        setTimeout(() => {
+             const modal = document.getElementById('usernameSetupModal');
+             if(modal) {
+                 modal.style.opacity = '0'; // Fade out
+                 setTimeout(() => {
+                     modal.remove();
+                     // 6. Reload Dashboard
+                     window.location.reload(); 
+                 }, 400);
+             }
+        }, 800);
+
+    } catch (error) {
+        console.error("Error saving username:", error);
+        alert("Error saving username. Please try again.");
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+};
+   onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        currentUser = user;
+          setUserPresence(user);
+        isInitialLoad = false;
+        startNotificationListener();
+        document.getElementById('loadingScreen').classList.remove('hidden');
+        
+        try {
+            const [vestsSnapshot, founderSnapshot, startupSnapshot] = await Promise.all([
+                get(ref(db, `Vests/${user.uid}`)),
+                get(ref(db, `founderProfile/${user.uid}`)),
+                get(ref(db, `startupProfile/${user.uid}`))
+            ]);
+            
+            // Auto-create founder profile if not exists
+            if (!founderSnapshot.exists()) {
+                const email = user.email || 'user@scalevest.com';
+                const username = email.split('@')[0];
+                const firstLetter = email.charAt(0).toUpperCase();
+                
+                cachedFounderData = {
+                    founderUsername: username,
+                    founderImage: firstLetter,
+                    email: email,
+                    title: '',
+                    about: '',
+                    createdAt: new Date().toISOString()
+                };
+                
+                await update(ref(db, `founderProfile/${user.uid}`), cachedFounderData);
+                
+                // Hide loading screen and show User ID setup
+                document.getElementById('loadingScreen').classList.add('hidden');
+                showUserIdSetupModal();
+                return; // Stop here until userId is set
+            } else {
+                cachedFounderData = founderSnapshot.val();
+                
+if (!cachedFounderData.founderUsername) {
+                console.log("⚠️ No founderUsername found. Triggering setup modal.");
+                document.getElementById('loadingScreen').classList.add('hidden'); // Hide spinner so they see modal
+                showUsernameSetupModal(); 
+                return; // STOP EXECUTION HERE. Do not load dashboard.
+            }
+                // If profile exists but no userId, show popup
+                if (!cachedFounderData.userId) {
+                    document.getElementById('loadingScreen').classList.add('hidden');
+                    showUserIdSetupModal();
+                    return;
+                }
+            }
+            
+            // Cache startup data
+            if (startupSnapshot.exists()) {
+                cachedStartupData = startupSnapshot.val();
+            } else {
+                cachedStartupData = null;
+            }
+            
+            isNewUser = !vestsSnapshot.exists();
+            
+            document.getElementById('loadingScreen').classList.add('hidden');
+            
+            const hash = window.location.hash.slice(1);
+            
+            if (!hash) {
+                if (isNewUser) {
+                    window.location.hash = 'vest_step1';
+                } else {
+                    window.location.hash = 'founder_dashboard';
+                }
+            } else {
+                handleHashChange();
+            }
+            
+        } catch (error) {
+            console.error('Data loading error:', error);
+            document.getElementById('loadingScreen').classList.add('hidden');
+        }
+    } else {
+        if (!isInitialLoad) {
+            window.location.href = 'login2.html';
+        } else {
+            setTimeout(() => {
+                if (!auth.currentUser) window.location.href = 'login2.html';
+            }, 2000);
+            isInitialLoad = false;
+        }
+    }
+});
 // Ensure this variable exists globally
 let currentEditAction = null;
 
@@ -5421,273 +5786,6 @@ window.saveWorkExperience = async function() {
         alert('❌ Failed to add work experience');
     }
 };
-
-function timeSince(date) {
-    const seconds = Math.floor((new Date() - date) / 1000);
-    let interval = seconds / 31536000;
-
-    if (interval > 1) return Math.floor(interval) + "y ago";
-    interval = seconds / 2592000;
-    if (interval > 1) return Math.floor(interval) + "mo ago";
-    interval = seconds / 86400;
-    if (interval > 1) return Math.floor(interval) + "d ago";
-    interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + "h ago";
-    interval = seconds / 60;
-    if (interval > 1) return Math.floor(interval) + "m ago";
-    return "Just now";
-}
-
-import {
-  onDisconnect,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-function setUserPresence(user) {
-    const presenceRef = ref(db, `presence/${user.uid}`);
-
-    // Mark online
-    set(presenceRef, {
-        online: true,
-        lastSeen: serverTimestamp()
-    });
-
-    // Auto mark offline
-    onDisconnect(presenceRef).set({
-        online: false,
-        lastSeen: serverTimestamp()
-    });
-}
-window.handleBellClick = async function() {
-    // 1. Instant UI Feedback (Remove the dot immediately)
-    updateNotificationBadge(0);
-    
-    // 2. Navigate to the chat list immediately (for speed)
-    window.location.hash = 'investor_chatlist';
-
-    // 3. Perform Database Cleanup in the background
-    if (!currentUser) return;
-
-    try {
-        // Fetch all chats
-        const chatsRef = ref(db, 'Chats');
-        const snapshot = await get(chatsRef);
-
-        if (snapshot.exists()) {
-            const updates = {};
-            const allChats = snapshot.val();
-
-            // Loop through all rooms
-            Object.keys(allChats).forEach(roomKey => {
-                // Only look at rooms I am part of
-                if (roomKey.includes(currentUser.uid)) {
-                    const messages = allChats[roomKey];
-
-                    // Loop through messages in that room
-                    Object.keys(messages).forEach(msgId => {
-                        const msg = messages[msgId];
-                        
-                        // CONDITION: Message is for ME and is NOT Read
-                        if (msg && 
-                            msg.recipient === currentUser.uid && 
-                            msg.read !== true) {
-                            
-                            // Add to bulk update list
-                            updates[`Chats/${roomKey}/${msgId}/read`] = true;
-                        }
-                    });
-                }
-            });
-
-            // Execute Bulk Update if there are messages to mark
-            if (Object.keys(updates).length > 0) {
-                await update(ref(db), updates);
-                console.log(`✅ Marked ${Object.keys(updates).length} messages as read.`);
-            }
-        }
-    } catch (error) {
-        console.error("Error clearing notifications:", error);
-    }
-};
-// --- FORCE USERNAME SETUP LOGIC ---
-
-async function showUsernameSetupModal() {
-    // Check if modal already exists to prevent duplicates
-    if (document.getElementById('usernameSetupModal')) return;
-
-    const modal = document.createElement('div');
-    modal.id = 'usernameSetupModal';
-    modal.className = 'edit-modal show'; // Reusing your existing modal styles
-    modal.style.zIndex = '999999'; // Ensure it's on top of everything
-    // Prevent clicking outside to close
-    modal.style.backdropFilter = "blur(10px)";
-    
-    modal.innerHTML = `
-        <div class="edit-modal-content">
-            <div class="edit-modal-header" style="background: linear-gradient(135deg, #ff006e, #8338ec);">
-                <h3 style="color: #fff;">👋 Welcome to ScaleVest!</h3>
-            </div>
-            <div class="edit-modal-body">
-                <p style="color: #ccc; margin-bottom: 1.5rem; line-height: 1.5;">
-                    To continue, please choose a unique <strong>Founder Username</strong>. This will be your identity across the platform.
-                </p>
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Choose Username</label>
-                    <input type="text" id="newUsernameInput" placeholder="e.g. ElonMusk24" 
-                           style="width: 100%; padding: 12px; background: #000; border: 2px solid #333; border-radius: 8px; color: #fff; font-size: 1.1rem;">
-                    <small style="color: #888; display: block; margin-top: 5px;">Min 4 characters, no spaces.</small>
-                </div>
-            </div>
-            <div class="edit-modal-footer">
-                <button class="modal-btn-save" onclick="saveNewUsername()" style="width: 100%; padding: 12px;">Set Username & Continue</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Trap focus in input
-    setTimeout(() => document.getElementById('newUsernameInput').focus(), 100);
-}
-
-window.saveNewUsername = async function() {
-    const input = document.getElementById('newUsernameInput');
-    const btn = document.querySelector('#usernameSetupModal .modal-btn-save');
-    const rawName = input.value.trim();
-    
-    // 1. Validation
-    if (!rawName || rawName.length < 4) {
-        alert("❌ Username must be at least 4 characters long.");
-        return;
-    }
-    if (/\s/.test(rawName)) {
-        alert("❌ Usernames cannot contain spaces.");
-        return;
-    }
-
-    // 2. Processing UI
-    btn.innerHTML = "Saving...";
-    btn.disabled = true;
-
-    try {
-        // 3. Save to Firebase
-        await update(ref(db, `founderProfile/${currentUser.uid}`), {
-            founderUsername: rawName,
-            // Also generate a userId if it doesn't exist, as fallback
-            userId: cachedFounderData?.userId || `USER_${Date.now()}` 
-        });
-
-        // 4. Update Local Cache
-        if(cachedFounderData) {
-            cachedFounderData.founderUsername = rawName;
-        }
-
-        // 5. Success & Cleanup
-        const modal = document.getElementById('usernameSetupModal');
-        if(modal) modal.remove();
-
-        // 6. Reload Dashboard to reflect changes
-        alert("✅ Username Set! Welcome aboard.");
-        window.location.reload(); 
-
-    } catch (error) {
-        console.error("Error saving username:", error);
-        alert("Error saving username. Please try again.");
-        btn.innerHTML = "Set Username & Continue";
-        btn.disabled = false;
-    }
-};
-   onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        currentUser = user;
-          setUserPresence(user);
-        isInitialLoad = false;
-        startNotificationListener();
-        document.getElementById('loadingScreen').classList.remove('hidden');
-        
-        try {
-            const [vestsSnapshot, founderSnapshot, startupSnapshot] = await Promise.all([
-                get(ref(db, `Vests/${user.uid}`)),
-                get(ref(db, `founderProfile/${user.uid}`)),
-                get(ref(db, `startupProfile/${user.uid}`))
-            ]);
-            
-            // Auto-create founder profile if not exists
-            if (!founderSnapshot.exists()) {
-                const email = user.email || 'user@scalevest.com';
-                const username = email.split('@')[0];
-                const firstLetter = email.charAt(0).toUpperCase();
-                
-                cachedFounderData = {
-                    founderUsername: username,
-                    founderImage: firstLetter,
-                    email: email,
-                    title: '',
-                    about: '',
-                    createdAt: new Date().toISOString()
-                };
-                
-                await update(ref(db, `founderProfile/${user.uid}`), cachedFounderData);
-                
-                // Hide loading screen and show User ID setup
-                document.getElementById('loadingScreen').classList.add('hidden');
-                showUserIdSetupModal();
-                return; // Stop here until userId is set
-            } else {
-                cachedFounderData = founderSnapshot.val();
-                
-if (!cachedFounderData.founderUsername) {
-                console.log("⚠️ No founderUsername found. Triggering setup modal.");
-                document.getElementById('loadingScreen').classList.add('hidden'); // Hide spinner so they see modal
-                showUsernameSetupModal(); 
-                return; // STOP EXECUTION HERE. Do not load dashboard.
-            }
-                // If profile exists but no userId, show popup
-                if (!cachedFounderData.userId) {
-                    document.getElementById('loadingScreen').classList.add('hidden');
-                    showUserIdSetupModal();
-                    return;
-                }
-            }
-            
-            // Cache startup data
-            if (startupSnapshot.exists()) {
-                cachedStartupData = startupSnapshot.val();
-            } else {
-                cachedStartupData = null;
-            }
-            
-            isNewUser = !vestsSnapshot.exists();
-            
-            document.getElementById('loadingScreen').classList.add('hidden');
-            
-            const hash = window.location.hash.slice(1);
-            
-            if (!hash) {
-                if (isNewUser) {
-                    window.location.hash = 'vest_step1';
-                } else {
-                    window.location.hash = 'founder_dashboard';
-                }
-            } else {
-                handleHashChange();
-            }
-            
-        } catch (error) {
-            console.error('Data loading error:', error);
-            document.getElementById('loadingScreen').classList.add('hidden');
-        }
-    } else {
-        if (!isInitialLoad) {
-            window.location.href = 'login2.html';
-        } else {
-            setTimeout(() => {
-                if (!auth.currentUser) window.location.href = 'login2.html';
-            }, 2000);
-            isInitialLoad = false;
-        }
-    }
-});
 
     // ========================================
     // SECTION 2: PLACE HASH CHANGE HANDLER HERE
