@@ -4524,9 +4524,31 @@ window.showInvestorChatList = async function () {
         <div class="chat-list-container">
             <div class="chat-header-row">
                 <div style="display:flex; align-items:center; gap:12px;">
-                    <button onclick="window.location.hash='founder_dashboard'"
-                        style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:600;">
-                        ← Back
+<button onclick="window.location.hash='founder_dashboard'"
+                        style="
+                            background: #000;
+                            color: #fff;
+                            border: 1px solid #333;
+                            border-radius: 12px;
+                            padding: 10px 20px;
+                            cursor: pointer;
+                            font-weight: 700;
+                            font-size: 0.9rem;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            margin-right: 25px; /* Moves title more to the right */
+                            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+                            transition: transform 0.2s ease;
+                        "
+                        onmouseover="this.style.transform='translateY(-2px)'"
+                        onmouseout="this.style.transform='translateY(0)'">
+                        
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        Back
                     </button>
                     <div>
                         <h1 style="font-size:1.9rem;font-weight:800;margin:0;">Investor Inbox</h1>
@@ -4581,9 +4603,29 @@ window.showInvestorChatList = async function () {
                             <div class="time-text">${timeDisplay}</div>
                             ${chat.isUnread ? '<div class="unread-pill">NEW</div>' : ''}
                             <button class="delete-chat-btn"
-                                onclick="deleteConversation('${chat.roomKey}', event)"
-                                onkeydown="event.stopPropagation()">
-                                🗑
+                                onclick="deleteConversation('${chat.roomKey}', event)" 
+                                onkeydown="event.stopPropagation()"
+                                title="Delete Conversation"
+                                style="
+                                    background: transparent;
+                                    border: none;
+                                    padding: 0;
+                                    margin-top: 8px;
+                                    cursor: pointer;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    opacity: 0.7;
+                                    transition: opacity 0.2s, transform 0.2s;
+                                    color: #ef4444; /* Bright Red */
+                                "
+                                onmouseover="this.style.opacity='1'; this.style.transform='scale(1.2)'"
+                                onmouseout="this.style.opacity='0.7'; this.style.transform='scale(1)'"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
                             </button>
                         </div>
                     </div>`;
