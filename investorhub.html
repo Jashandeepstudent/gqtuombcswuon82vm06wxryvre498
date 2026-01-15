@@ -1456,6 +1456,7 @@ onAuthStateChanged(auth, async (user) => {
         currentUser = user;
         currentUserUID = user.uid;
         setUserPresence(user);
+         checkAngelStatus()
         startNotificationListener(); 
         startDashboardInboxListener();
         window.addEventListener('hashchange', () => {
@@ -1699,20 +1700,85 @@ window.updateProfileSection = async (type) => {
     finally { saveBtn.disabled = false; }
 };
 
+// Import necessary Firebase functions if using modules
+// import { get, ref } from "firebase/database"; 
+
+// 1. Function to check status and update UI
+window.checkAngelStatus = async () => {
+    const launchBtn = document.getElementById('launchBtn');
+    
+    if (!currentUserUID) return; // Wait for auth
+
+    try {
+        // Check the 'angelProfiles' node to see if they are already live
+        const snap = await get(ref(db, `angelProfiles/${currentUserUID}`));
+        
+        if (snap.exists()) {
+            const data = snap.val();
+            
+            // Check if status is Live
+            if (data.status === "Live") {
+                convertToViewButton(launchBtn);
+            }
+        }
+    } catch (e) {
+        console.error("Error checking status:", e);
+    }
+};
+
+// 2. Helper function to change the button appearance and behavior
+function convertToViewButton(btn) {
+    btn.innerText = "View Profile";
+    btn.classList.add("btn-success"); // Optional: Change color to green/different style
+    btn.disabled = false;
+    
+    // Override the onclick to navigate instead of launch
+    btn.onclick = () => {
+        // REPLACE THIS with your actual profile view URL
+        window.location.href = `/angel-profile.html?id=${currentUserUID}`;
+    };
+}
+
+// 3. Your existing launch function (kept mostly the same)
 window.launchAngelProfile = async () => {
     const launchBtn = document.getElementById('launchBtn');
     launchBtn.disabled = true;
+    launchBtn.innerText = "Launching..."; // specific feedback
+
     try {
         const snap = await get(ref(db, `investorProfiles/${currentUserUID}`));
+        
         if (snap.exists()) {
-            const angelData = { ...snap.val(), status: "Live", launchedAt: new Date().toISOString() };
+            const angelData = { 
+                ...snap.val(), 
+                status: "Live", 
+                launchedAt: new Date().toISOString() 
+            };
+            
             await update(ref(db, `angelProfiles/${currentUserUID}`), angelData);
+            
             alert("Your Angel Profile is LIVE!");
-            location.reload();
+            
+            // RELOAD isn't strictly necessary if we update the UI immediately, 
+            // but if you keep reload(), the checkAngelStatus() will run on refresh.
+            // If you remove reload, call this:
+            convertToViewButton(launchBtn); 
+            
+            // location.reload(); // Optional: Keep if you prefer a full refresh
         }
-    } catch (e) { console.error(e); launchBtn.disabled = false; }
+    } catch (e) { 
+        console.error(e); 
+        launchBtn.disabled = false;
+        launchBtn.innerText = "Launch Angel Profile"; // Reset text on error
+    }
 };
 
+// 4. IMPORTANT: Call the check function on load
+// Ensure this runs AFTER currentUserUID is defined (e.g., inside onAuthStateChanged)
+document.addEventListener('DOMContentLoaded', () => {
+    // If currentUserUID is already set globally:
+    if(typeof currentUserUID !== 'undefined') checkAngelStatus();
+});
 window.saveUserID = async () => {
     const newId = document.getElementById("newUserIdInput").value.trim().toUpperCase();
     if (newId.length < 3) return alert("Min 3 characters");
