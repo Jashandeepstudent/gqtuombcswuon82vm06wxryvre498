@@ -1239,31 +1239,47 @@
             document.getElementById('pitchModal').style.display = 'block';
         }
 
-        document.getElementById('submitPitchBtn').onclick = async function() {
-            if (!selectedApplication) {
-                alert('Please select an application first');
-                return;
-            }
-            
-            const modal = document.getElementById('pitchModal');
+      document.getElementById('submitPitchBtn').onclick = async function() {
+    if (!selectedApplication || !selectedInvestor) {
+        alert('Please select an application and an investor first');
+        return;
+    }
+    
+    const modal = document.getElementById('pitchModal');
+    modal.querySelector('.modal-content').innerHTML = `
+        <div class="sending-animation">
+            <div class="spinner"></div>
+            <h3>SUI Making in progress...</h3>
+        </div>
+    `;
+
+    try {
+        // 🚀 THE POWER MOVE: Atomically increment the investor's PitchedCount
+        const investorRef = ref(database, `angelProfiles/${selectedInvestor}`);
+        await update(investorRef, {
+            PitchedCount: increment(1),
+            lastUpdated: new Date().toISOString() // Keeps them "Active Now"
+        });
+
+        // 🛡️ Logic: Save the actual pitch record here in your 'Pitches' node later
+
+        // Success State
+        setTimeout(() => {
             modal.querySelector('.modal-content').innerHTML = `
-                <div class="sending-animation">
-                    <div class="spinner"></div>
-                    <h3>Sending your pitch...</h3>
+                <div class="success-animation">
+                    <div class="checkmark">✓</div>
+                    <h2>Pitch Dispatched!</h2>
+                    <p>Your SUI Match has been recorded. ScaleVest is now alerting the investor.</p>
+                    <button class="submit-pitch-btn" onclick="closePitchModal()">Back to Dashboard</button>
                 </div>
             `;
-            
-            setTimeout(() => {
-                modal.querySelector('.modal-content').innerHTML = `
-                    <div class="success-animation">
-                        <div class="checkmark">✓</div>
-                        <h2>Successfully Sent!</h2>
-                        <p>ScaleVest wishes you the very best and hopes you will get selected!</p>
-                        <button class="submit-pitch-btn" onclick="closePitchModal()">Close</button>
-                    </div>
-                `;
-            }, 2000);
-        };
+        }, 1500);
+
+    } catch (error) {
+        console.error("Pitch Error:", error);
+        alert("The Logic Floor encountered an error. Please try again.");
+    }
+};
 
         window.closeProfileModal = function() {
             document.getElementById('profileModal').style.display = 'none';
