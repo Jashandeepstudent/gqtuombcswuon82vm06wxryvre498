@@ -28,7 +28,54 @@
             text-align: center;
             margin-bottom: 40px;
         }
+/* --- LOGO STYLING --- */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.8rem; /* Adjusted slightly for alignment */
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    text-shadow: none; /* Optional: Cleaner look */
+}
 
+.nav-logo-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* Makes image circular */
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* --- NEW WHITE BUTTON --- */
+.btn-browse-angels {
+    background-color: #ffffff;
+    color: #000000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: 10px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-browse-angels:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.4);
+}
+
+/* --- EXISTING NAV LINKS ALIGNMENT --- */
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
         .header h1 {
             font-size: 2.5rem;
             background: linear-gradient(135deg, #ff006e, #8338ec, #3a86ff);
@@ -6984,7 +7031,54 @@ max-width: 1100px;
                 justify-content: center;
             }
         }
+/* --- LOGO STYLING --- */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.8rem; /* Adjusted slightly for alignment */
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    text-shadow: none; /* Optional: Cleaner look */
+}
 
+.nav-logo-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* Makes image circular */
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* --- NEW WHITE BUTTON --- */
+.btn-browse-angels {
+    background-color: #ffffff;
+    color: #000000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: 10px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-browse-angels:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.4);
+}
+
+/* --- EXISTING NAV LINKS ALIGNMENT --- */
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
         @media (max-width: 480px) {
             .top-nav {
                 padding: 0.75rem 1rem;
@@ -7110,16 +7204,19 @@ max-width: 1100px;
        <!-- Top Navigation -->
 <nav class="top-nav">
     <div class="logo" onclick="window.location.hash='founder_dashboard'">
-        <img src="ScaleVestLogo.png" alt="Logo" class="nav-logo-img">
+        <img src="ScaleVestLogo.png" alt="ScaleVest Logo" class="nav-logo-img">
         <span>ScaleVest</span>
     </div>
 
     <div class="nav-links">
         <a href="#founder_dashboard" class="nav-link">Dashboard</a>
         <a href="vests.html#edit_startup" class="nav-link">My Startup</a>
-        
+        <a href="#" class="nav-link">Analytics</a>
+
         <div class="dropdown">
-            <span class="nav-link" onclick="toggleDropdown('scaleDropdown')">Scale and Elevate ▾</span>
+            <span class="nav-link" onclick="toggleDropdown('scaleDropdown'); event.stopPropagation();">
+                Scale and Elevate ▾
+            </span>
             <div class="dropdown-content" id="scaleDropdown">
                 <a href="#founder_emergence" class="dropdown-item">Founder Emergence</a>
                 <a href="#" class="dropdown-item">Referrals</a>
@@ -7132,19 +7229,17 @@ max-width: 1100px;
             Browse Angel Profiles
         </button>
     </div>
-    </div>
-<div class="top-nav-right">
-<div class="nav-icon-wrapper" onclick="window.handleBellClick()">
-        <div class="icon-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
+
+    <div class="top-nav-right">
+        <div class="nav-icon-wrapper" onclick="window.handleBellClick()">
+            <div class="icon-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+            </div>
+            <div class="notif-badge" id="navBellBadge"></div>
         </div>
-        <div class="notif-badge" id="navBellBadge"></div>
-    </div>
-
-
 
         <div class="profile-dropdown">
 <div class="icon-btn" onclick="toggleDashProfileDropdown()">
