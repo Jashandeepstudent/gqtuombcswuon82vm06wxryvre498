@@ -26,9 +26,35 @@
         h1 {
             text-align: center;
             color: #1a1a1a;
-            margin-bottom: 50px;
+            margin-bottom: 30px;
             font-size: 2.5rem;
             font-weight: 700;
+        }
+
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto 40px;
+            padding: 0 20px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 30px;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .search-box:focus {
+            border-color: #00CED1;
+            box-shadow: 0 4px 15px rgba(0,206,209,0.3);
+        }
+
+        .search-box::placeholder {
+            color: #999;
         }
 
         .cards-grid {
@@ -41,11 +67,11 @@
         .angel-card {
             background: #00CED1;
             border-radius: 12px;
-            overflow: visible;
+            overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
             cursor: pointer;
-            height: 380px;
+            height: 420px;
             position: relative;
         }
 
@@ -62,7 +88,6 @@
             align-items: center;
             justify-content: center;
             border-radius: 12px 12px 0 0;
-            overflow: hidden;
         }
 
         .crown-icon {
@@ -128,6 +153,15 @@
         @keyframes sparkle {
             0%, 100% { opacity: 0; }
             50% { opacity: 1; }
+        }
+
+        @keyframes glow {
+            0%, 100% { 
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1), 0 0 30px rgba(255,215,0,0.4);
+            }
+            50% { 
+                box-shadow: 0 8px 25px rgba(0,0,0,0.2), 0 0 50px rgba(255,215,0,0.8);
+            }
         }
 
         .profile-photo-container {
@@ -416,6 +450,9 @@
 <body>
     <div class="container">
         <h1>Browse Angel Investors</h1>
+        <div class="search-container">
+            <input type="text" id="searchBox" class="search-box" placeholder="Search by name or User ID...">
+        </div>
         <div id="loadingMessage" class="loading">Loading angel profiles...</div>
         <div id="cardsContainer" class="cards-grid"></div>
     </div>
@@ -463,9 +500,16 @@
         let currentUser = null;
         let selectedInvestor = null;
         let selectedApplication = null;
+        let allProfiles = {};
 
         const loadingMessage = document.getElementById('loadingMessage');
         const cardsContainer = document.getElementById('cardsContainer');
+        const searchBox = document.getElementById('searchBox');
+
+        searchBox.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            filterProfiles(searchTerm);
+        });
 
         onAuthStateChanged(auth, (user) => {
             if (!user) {
@@ -484,8 +528,8 @@
                 loadingMessage.style.display = 'none';
 
                 if (snapshot.exists()) {
-                    const profiles = snapshot.val();
-                    displayProfiles(profiles);
+                    allProfiles = snapshot.val();
+                    displayProfiles(allProfiles);
                 } else {
                     cardsContainer.innerHTML = '<div class="loading">No angel profiles found.</div>';
                 }
@@ -495,8 +539,34 @@
             }
         }
 
+        function filterProfiles(searchTerm) {
+            if (!searchTerm) {
+                displayProfiles(allProfiles);
+                return;
+            }
+
+            const filtered = {};
+            Object.keys(allProfiles).forEach(userId => {
+                const profile = allProfiles[userId];
+                const fullName = (profile.fullName || '').toLowerCase();
+                const userID = (profile.userID || '').toLowerCase();
+                const uid = (profile.uid || '').toLowerCase();
+                
+                if (fullName.includes(searchTerm) || userID.includes(searchTerm) || uid.includes(searchTerm)) {
+                    filtered[userId] = profile;
+                }
+            });
+
+            displayProfiles(filtered);
+        }
+
         function displayProfiles(profiles) {
             cardsContainer.innerHTML = '';
+
+            if (Object.keys(profiles).length === 0) {
+                cardsContainer.innerHTML = '<div class="loading">No investors found matching your search.</div>';
+                return;
+            }
 
             Object.keys(profiles).forEach(userId => {
                 const profile = profiles[userId];
@@ -512,8 +582,14 @@
                 // Determine tier based on reputation
                 const tier = getTierInfo(replyReputation);
 
+                // Apply full card styling for milestone tiers (500+)
+                if (replyReputation >= 500) {
+                    card.style.background = tier.cardBackground;
+                    card.style.animation = tier.animation;
+                }
+
                 card.innerHTML = `
-                    <div class="card-header" style="background: ${tier.headerColor};">
+                    <div class="card-header" ${replyReputation >= 500 ? '' : `style="background: ${tier.headerColor};"`}>
                         ${tier.decorations}
                     </div>
                     <div class="profile-photo-container">
@@ -538,7 +614,9 @@
         function getTierInfo(reputation) {
             if (reputation >= 100000) {
                 return {
-                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF4500 100%)',
+                    headerColor: 'transparent',
+                    cardBackground: 'linear-gradient(135deg, #FFD700 0%, #FFA500 30%, #FF4500 60%, #DC143C 100%)',
+                    animation: 'pulse 3s ease-in-out infinite, glow 2s ease-in-out infinite',
                     decorations: `
                         <div class="sparkle"></div>
                         <div class="crown-icon" style="font-size: 3.5rem;">👑</div>
@@ -550,7 +628,9 @@
                 };
             } else if (reputation >= 50000) {
                 return {
-                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #FF69B4 50%, #9370DB 100%)',
+                    headerColor: 'transparent',
+                    cardBackground: 'linear-gradient(135deg, #FFD700 0%, #FF69B4 40%, #9370DB 80%, #4169E1 100%)',
+                    animation: 'glow 2.5s ease-in-out infinite',
                     decorations: `
                         <div class="sparkle"></div>
                         <div class="crown-icon" style="font-size: 3.2rem;">👑</div>
@@ -562,7 +642,9 @@
                 };
             } else if (reputation >= 25000) {
                 return {
-                    headerColor: 'linear-gradient(135deg, #FF1493 0%, #9370DB 50%, #FFD700 100%)',
+                    headerColor: 'transparent',
+                    cardBackground: 'linear-gradient(135deg, #FF1493 0%, #9370DB 50%, #FFD700 100%)',
+                    animation: 'glow 3s ease-in-out infinite',
                     decorations: `
                         <div class="crown-icon" style="font-size: 3rem;">👑</div>
                         <div class="title-badge" style="background: linear-gradient(135deg, #FF1493, #9370DB); color: #fff;">SUPREME RULER</div>
@@ -573,7 +655,9 @@
                 };
             } else if (reputation >= 10000) {
                 return {
-                    headerColor: 'linear-gradient(135deg, #4169E1 0%, #FFD700 50%, #4169E1 100%)',
+                    headerColor: 'transparent',
+                    cardBackground: 'linear-gradient(135deg, #4169E1 0%, #FFD700 50%, #4169E1 100%)',
+                    animation: 'glow 3s ease-in-out infinite',
                     decorations: `
                         <div class="crown-icon" style="font-size: 2.8rem;">👑</div>
                         <div class="title-badge" style="background: linear-gradient(135deg, #4169E1, #FFD700); color: #fff;">DIAMOND KING</div>
@@ -583,7 +667,9 @@
                 };
             } else if (reputation >= 5000) {
                 return {
-                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                    headerColor: 'transparent',
+                    cardBackground: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                    animation: 'glow 3s ease-in-out infinite',
                     decorations: `
                         <div class="crown-icon" style="font-size: 2.5rem;">👑</div>
                         <div class="title-badge" style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #000;">PLATINUM EMPEROR</div>
@@ -592,7 +678,9 @@
                 };
             } else if (reputation >= 2500) {
                 return {
-                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)',
+                    headerColor: 'transparent',
+                    cardBackground: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)',
+                    animation: 'glow 3s ease-in-out infinite',
                     decorations: `
                         <div class="crown-icon" style="font-size: 2.3rem;">👑</div>
                         <div class="title-badge" style="background: #FFD700; color: #000;">GOLDEN PRINCE</div>
@@ -601,7 +689,9 @@
                 };
             } else if (reputation >= 1000) {
                 return {
-                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #B8860B 100%)',
+                    headerColor: 'transparent',
+                    cardBackground: 'linear-gradient(135deg, #FFD700 0%, #B8860B 100%)',
+                    animation: 'glow 3s ease-in-out infinite',
                     decorations: `
                         <div class="crown-icon">👑</div>
                         <div class="title-badge" style="background: #FFD700; color: #000;">GOLD DUKE</div>
@@ -609,7 +699,9 @@
                 };
             } else if (reputation >= 500) {
                 return {
-                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #8B4513 100%)',
+                    headerColor: 'transparent',
+                    cardBackground: 'linear-gradient(135deg, #FFD700 0%, #8B4513 100%)',
+                    animation: 'glow 3s ease-in-out infinite',
                     decorations: `
                         <div class="crown-icon">👑</div>
                         <div class="title-badge" style="background: #FFD700; color: #000;">REAL ANGEL</div>
