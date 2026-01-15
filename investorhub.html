@@ -1174,63 +1174,6 @@ function updateNotificationBadge(count) {
 }
 
 // =========================================================
-// 2. DASHBOARD INBOX PREVIEW (Sidebar Card)
-// =========================================================
-
-function startDashboardInboxListener() {
-    const inboxDiv = document.getElementById('dashInboxContent');
-    const dot = document.getElementById('dashInboxDot');
-    
-    onValue(ref(db, 'Chats'), async (snapshot) => {
-        if (!snapshot.exists()) {
-            inboxDiv.innerHTML = `<p style="color:#666; font-size:0.9rem;">No messages yet.</p>`;
-            return;
-        }
-
-        const allChats = snapshot.val();
-        let latestMsg = null;
-        let latestTimestamp = 0;
-
-        Object.keys(allChats).forEach(roomKey => {
-            if (roomKey.includes(currentUser.uid)) {
-                Object.values(allChats[roomKey]).forEach(msg => {
-                    if (msg.timestamp > latestTimestamp) {
-                        latestTimestamp = msg.timestamp;
-                        latestMsg = msg;
-                    }
-                });
-            }
-        });
-
-        if (!latestMsg) return;
-
-        let senderName = "You";
-        if (latestMsg.sender !== currentUser.uid) {
-            try {
-                let snap = await get(ref(db, `founderProfile/${latestMsg.sender}`));
-                if (!snap.exists()) snap = await get(ref(db, `investorProfiles/${latestMsg.sender}`));
-                if (snap.exists()) {
-                    const d = snap.val();
-                    senderName = d.founderUsername || d.fullName || "User";
-                }
-            } catch (e) { console.error(e); }
-        }
-
-        const isUnread = (latestMsg.recipient === currentUser.uid && latestMsg.read !== true);
-        if(dot) dot.style.display = isUnread ? 'block' : 'none';
-
-        inboxDiv.innerHTML = `
-            <div style="display:flex; align-items:center; gap: 10px; margin-bottom: 5px;">
-                <span style="font-weight: 700; color: #fff; font-size: 0.95rem;">${senderName}</span>
-            </div>
-            <div style="color: ${isUnread ? '#fff' : '#94a3b8'}; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                ${latestMsg.text}
-            </div>
-        `;
-    });
-}
-
-// =========================================================
 // 3. FULL INVESTOR INBOX LIST
 // =========================================================
 
