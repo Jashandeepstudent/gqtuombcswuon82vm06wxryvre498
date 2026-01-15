@@ -253,9 +253,25 @@
             position: absolute;
             top: 15px;
             right: 20px;
-            font-size: 28px;
+            font-size: 32px;
+            font-weight: bold;
             cursor: pointer;
             color: #666;
+            transition: color 0.3s ease;
+            z-index: 100;
+            line-height: 1;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #f0f0f0;
+        }
+
+        .close-modal:hover {
+            color: #DC143C;
+            background: #ffe0e0;
         }
 
         .profile-header {
@@ -429,17 +445,16 @@
         import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
         import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-  authDomain: "scalevest-163a0.firebaseapp.com",
-  databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-  projectId: "scalevest-163a0",
-  storageBucket: "scalevest-163a0.firebasestorage.app",
-  messagingSenderId: "938358950124",
-  appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
-  measurementId: "G-QD3TWBZHR0"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+            authDomain: "scalevest-163a0.firebaseapp.com",
+            databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+            projectId: "scalevest-163a0",
+            storageBucket: "scalevest-163a0.firebasestorage.app",
+            messagingSenderId: "938358950124",
+            appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
+            measurementId: "G-QD3TWBZHR0"
+        };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -665,15 +680,11 @@ const firebaseConfig = {
         }
 
         window.handleViewProfilePage = function(userId) {
-            // Store investor ID in localStorage and navigate to profile page
-            localStorage.setItem('viewInvestorId', userId);
-            window.location.href = `investor-profile.html?id=${userId}`;
+            handleViewProfile(userId);
         };
 
         window.handlePitchPage = function(userId) {
-            // Store investor ID in localStorage and navigate to pitch page
-            localStorage.setItem('pitchToInvestorId', userId);
-            window.location.href = `pitch-investor.html?id=${userId}`;
+            handlePitch(userId);
         };
 
         window.handleViewProfile = async function(userId) {
