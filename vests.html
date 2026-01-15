@@ -4894,7 +4894,7 @@ async function showUsernameSetupModal() {
             from { transform: translateY(30px) scale(0.95); opacity: 0; }
             to { transform: translateY(0) scale(1); opacity: 1; }
         }
-        .sv-modal-card {
+.sv-modal-card {
             background: #050505;
             border: 1px solid #222;
             border-radius: 16px;
@@ -4907,13 +4907,19 @@ async function showUsernameSetupModal() {
             position: relative;
         }
         .sv-modal-icon {
-            width: 50px; height: 50px;
-            background: #fff; color: #000;
+            width: 64px; height: 64px;
+            background: #fff; 
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 24px; font-weight: bold;
             margin: 0 auto 20px auto;
-            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+            box-shadow: 0 0 25px rgba(255,255,255,0.15);
+            overflow: hidden;
+            border: 2px solid #fff;
+        }
+        .sv-modal-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .sv-input-group {
             margin: 25px 0;
