@@ -1014,7 +1014,7 @@ searchBox.addEventListener('input', (e) => {
 
         async function loadUserCategory() {
             try {
-                const startupRef = ref(database, `startupProfiles/${currentUser.uid}`);
+                const startupRef = ref(database, `startupProfile/${currentUser.uid}`);
                 const snapshot = await get(startupRef);
                 
                 if (snapshot.exists()) {
