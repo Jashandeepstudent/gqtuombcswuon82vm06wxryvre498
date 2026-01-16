@@ -1414,9 +1414,9 @@ async function loadOnlineStatus() {
                     
                     onlineStatusMap[userId] = {
                         online: userPresence.online === true,
-                        todayLogin: userPresence.todayLogin === true, // 🔥 NEW
-                        loginStreak: userPresence.loginStreak || 0,   // 🔥 NEW
-                        lastSeen: userPresence.lastSeen || null       // 🔥 NEW
+                        todayLogin: userPresence.todayLogin === true,
+                        loginStreak: userPresence.loginStreak || 0,
+                        lastSeen: userPresence.lastSeen || null
                     };
                 });
                 
@@ -1427,15 +1427,16 @@ async function loadOnlineStatus() {
                 console.log(`   🔥 Online NOW: ${onlineCount} investors`);
                 console.log(`   📅 Logged in today: ${todayLoginCount} investors`);
                 
-                // Refresh the display to show updated online status
-                displayRows();
+                // ✅ REFRESH UI IMMEDIATELY when presence changes
+                if (allProfiles && Object.keys(allProfiles).length > 0) {
+                    displayRows();
+                }
             }
         });
     } catch (error) {
         console.error('❌ Error loading online status:', error);
     }
 }
-
 
 
       // ============================================
@@ -1446,141 +1447,94 @@ async function loadOnlineStatus() {
 function calculateInvestorScore(profile, userId) {
     let score = 0;
     const now = Date.now();
+    const preferences = analyzeFounderPreferences();
+    const learningConfidence = preferences.learningConfidence;
     
-    // Base reputation score (25% weight)
-    const reputation = profile.replyReputation || 0;
-    score += reputation * 0.25;
+    // ============================================
+    // **PRIORITY 1: SUI MATCHMAKING** (ALWAYS FIRST)
+    // Massive base score for category match
+    // ============================================
+    const hasSUIMatch = currentUserCategory && 
+                       profile.preferredCategories && 
+                       Array.isArray(profile.preferredCategories) &&
+                       profile.preferredCategories.includes(currentUserCategory);
     
-    // Pitched count (15% weight)
-    const pitchedCount = profile.PitchedCount || 0;
-    score += pitchedCount * 0.15;
-
-    // **🚀 SUI MATCHMAKING - Category matching bonus (2x multiplier)**
-    if (currentUserCategory && profile.preferredCategories) {
-        const preferredCats = Array.isArray(profile.preferredCategories) 
-            ? profile.preferredCategories 
-            : [];
+    if (hasSUIMatch) {
+        score = 10000; // Huge base score for SUI match - ensures it's always first
+    } else {
+        // Base reputation score for non-SUI matches
+        const reputation = profile.replyReputation || 0;
+        score += reputation * 0.25;
         
-        if (preferredCats.includes(currentUserCategory)) {
-            score *= 2; // 2x multiplier for matching categories
+        const pitchedCount = profile.PitchedCount || 0;
+        score += pitchedCount * 0.15;
+    }
+    
+    // ============================================
+    // **PRIORITY 2: AI INTELLIGENCE BOOST**
+    // Only if confidence >= 30%
+    // ============================================
+    if (learningConfidence >= 30) {
+        const intelligentBoost = calculateIntelligentBoost(profile, userId);
+        score += intelligentBoost;
+    }
+    
+    // ============================================
+    // **PRIORITY 3: ONLINE STATUS BOOSTS**
+    // Real-time presence data
+    // ============================================
+    const presenceData = onlineStatusMap[userId] || {};
+    
+    // 🔥 Online NOW (from Firebase Presence)
+    if (presenceData.online === true) {
+        score += 1500;
+    }
+    
+    // 📅 Logged in today (from Firebase Presence)
+    if (presenceData.todayLogin === true) {
+        score += 400;
+    }
+    
+    // ⭐ Login streak (from Firebase Presence)
+    if (presenceData.loginStreak && presenceData.loginStreak > 0) {
+        const streakBonus = Math.min(presenceData.loginStreak * 10, 300);
+        score += streakBonus;
+    }
+    
+    // ⏰ 1 HOUR and 24 HOUR ACTIVITY BOOST (fallback only)
+    if (!presenceData.online && profile.lastUpdated) {
+        const lastUpdate = new Date(profile.lastUpdated).getTime();
+        const hoursSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60);
+        
+        if (hoursSinceUpdate < 1) {
+            score += 500; // Active in last 1 hour
+        } else if (hoursSinceUpdate < 24) {
+            score += 200; // Active in last 24 hours
         }
     }
     
-    // **New user boost**
+    // ============================================
+    // **PRIORITY 4: OTHER BOOSTS**
+    // ============================================
+    
+    // New user boost (launched in last 24 hours)
     if (profile.launchedAt) {
         const launchedTime = new Date(profile.launchedAt).getTime();
         const hoursSinceLaunch = (now - launchedTime) / (1000 * 60 * 60);
-        
         if (hoursSinceLaunch < 24) {
             score += 500;
         }
     }
     
-    // **Activity boost**
-    if (profile.lastUpdated) {
-        const lastUpdate = new Date(profile.lastUpdated).getTime();
-        const minutesSinceUpdate = (now - lastUpdate) / (1000 * 60);
-        
-        if (minutesSinceUpdate < 10) {
-            score += 200;
-        } else if (minutesSinceUpdate < 120) {
-            score += 100;
-        }
-    }
-    
-   // ============================================
-// 📅 COMBINED DAILY LOGIN & ONLINE BOOST SYSTEM
-// Uses Firebase Presence (primary) + Profile data (fallback)
-// ============================================
-
-const presenceData = onlineStatusMap[userId] || {};
-
-// **🔥 PRIORITY 1: ONLINE NOW BOOST** (Highest boost)
-let isOnlineNow = false;
-
-// Check Firebase Presence first (most accurate)
-if (presenceData.online === true) {
-    isOnlineNow = true;
-    score += 1500; // 🔥 MEGA BOOST for being online RIGHT NOW
-    console.log(`🔥 ${profile.fullName || 'Investor'} is ONLINE NOW! +1500`);
-}
-// Fallback: Check lastUpdated if presence not available
-else if (profile.lastUpdated) {
-    const lastUpdate = new Date(profile.lastUpdated).getTime();
-    const minutesSinceUpdate = (now - lastUpdate) / (1000 * 60);
-    
-    if (minutesSinceUpdate < 10) {
-        isOnlineNow = true;
-        score += 1000; // MEGA BOOST (slightly less than presence)
-        console.log(`⚡ ${profile.fullName || 'Investor'} active in last 10 min! +1000`);
-    }
-}
-
-// **📅 PRIORITY 2: DAILY LOGIN BOOST** (Logged in today)
-let hasDailyLogin = false;
-
-// Check Firebase Presence first
-if (presenceData.todayLogin === true) {
-    hasDailyLogin = true;
-    score += 400; // Daily boost from presence
-    console.log(`📅 ${profile.fullName || 'Investor'} logged in today! +400`);
-}
-// Fallback: Check lastUpdated
-else if (profile.lastUpdated && !isOnlineNow) {
-    const lastUpdate = new Date(profile.lastUpdated).getTime();
-    const daysSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60 * 24);
-    
-    if (daysSinceUpdate < 1) {
-        hasDailyLogin = true;
-        score += 350; // Daily boost (slightly less than presence)
-        console.log(`📅 ${profile.fullName || 'Investor'} logged in today (from profile)! +350`);
-    }
-}
-
-// **⭐ PRIORITY 3: LOGIN STREAK BOOST**
-let loginStreak = 0;
-
-// Check Firebase Presence first
-if (presenceData.loginStreak && presenceData.loginStreak > 0) {
-    loginStreak = presenceData.loginStreak;
-    const streakBonus = Math.min(loginStreak * 10, 300); // Max +300
-    score += streakBonus;
-    console.log(`⭐ ${profile.fullName || 'Investor'} has ${loginStreak} day streak! +${streakBonus}`);
-}
-// Fallback: Check profile
-else if (profile.loginStreak && profile.loginStreak > 0) {
-    loginStreak = profile.loginStreak;
-    const streakBonus = Math.min(loginStreak * 10, 300); // Max +300
-    score += streakBonus;
-    console.log(`⭐ ${profile.fullName || 'Investor'} has ${loginStreak} day streak (from profile)! +${streakBonus}`);
-}
-
-// **🎯 PRIORITY 4: RECENT ACTIVITY BOOST** (For those not online but recently active)
-if (!isOnlineNow && !hasDailyLogin && profile.lastUpdated) {
-    const lastUpdate = new Date(profile.lastUpdated).getTime();
-    const hoursSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60);
-    
-    if (hoursSinceUpdate < 1) {
-        score += 200; // Active in last hour
-        console.log(`⚡ ${profile.fullName || 'Investor'} active in last hour! +200`);
-    } else if (hoursSinceUpdate < 6) {
-        score += 100; // Active in last 6 hours
-        console.log(`📊 ${profile.fullName || 'Investor'} active in last 6 hours! +100`);
-    } else if (hoursSinceUpdate < 24) {
-        score += 50; // Active today
-        console.log(`📊 ${profile.fullName || 'Investor'} active today! +50`);
-    }
-}
-    
-    // **Trending boost**
+    // Trending boost
+    const pitchedCount = profile.PitchedCount || 0;
+    const reputation = profile.replyReputation || 0;
     const trendingScore = (pitchedCount * 0.5) + (reputation * 0.0001);
     score += trendingScore * 10;
     
-    // **🤖 ULTRA-INTELLIGENT AI BOOST - 60% of total weight**
-    const intelligentBoost = calculateIntelligentBoost(profile, userId);
-    score += intelligentBoost;
-    
-    // **Randomization factor (2%)**
+    // ============================================
+    // **PRIORITY 5: RANDOMNESS** (2% only)
+    // ============================================
     const randomFactor = Math.random() * 0.02 * score;
     score += randomFactor;
     
