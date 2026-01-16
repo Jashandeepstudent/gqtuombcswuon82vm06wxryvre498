@@ -5063,170 +5063,6 @@ window.saveNewUsername = async function() {
         btn.disabled = false;
     }
 };
-window.showApplicationReplies = async function() {
-    const container = document.getElementById('dashboardContainer');
-    document.querySelector('.vest-container').style.display = 'none';
-    container.style.display = 'block';
-    
-    container.innerHTML = `<div class="loading-box"><div class="spinner"></div><p>Loading Replies...</p></div>`;
-
-    try {
-        const repliesRef = ref(db, `ApplicationReplies/${currentUser.uid}`);
-        const snapshot = await get(repliesRef);
-        const replies = snapshot.val() || {};
-
-        // Mark all as read immediately
-        const updates = {};
-        Object.keys(replies).forEach(replyId => {
-            if (replies[replyId].read === false) {
-                updates[`ApplicationReplies/${currentUser.uid}/${replyId}/read`] = true;
-            }
-        });
-        if (Object.keys(updates).length > 0) {
-            await update(ref(db), updates);
-        }
-
-        // Fetch application details for each reply
-        const enrichedReplies = await Promise.all(
-            Object.entries(replies).map(async ([replyId, reply]) => {
-                const appRef = ref(db, `Applications/${currentUser.uid}/${reply.applicationId}`);
-                const appSnap = await get(appRef);
-                const appData = appSnap.exists() ? appSnap.val() : { appName: 'Unknown Application' };
-
-                return {
-                    replyId,
-                    ...reply,
-                    appName: appData.appName || 'Untitled Application',
-                    timestamp: reply.timestamp || Date.now()
-                };
-            })
-        );
-
-        // Sort by newest first
-        enrichedReplies.sort((a, b) => b.timestamp - a.timestamp);
-
-        container.innerHTML = `
-            <div class="manage-vests-page">
-                <div class="header-row">
-                    <a href="#founder_dashboard" class="back-to-dash">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                        Dashboard
-                    </a>
-                    <h1>Application Replies</h1>
-                </div>
-
-                <div class="vest-cards-grid">
-                    ${enrichedReplies.length > 0 
-                        ? enrichedReplies.map(reply => `
-                            <div class="reply-card" onclick="openReply('${reply.replyId}', '${reply.applicationId}')">
-                                <div class="reply-header">
-                                    <div class="investor-avatar">
-                                        ${reply.investorName ? reply.investorName.charAt(0).toUpperCase() : 'I'}
-                                    </div>
-                                    <div class="reply-info">
-                                        <div class="investor-name">${reply.investorName || 'Investor'}</div>
-                                        <div class="reply-app-name">${reply.appName}</div>
-                                    </div>
-                                    <div class="reply-time">${timeSince(new Date(reply.timestamp))}</div>
-                                </div>
-                                
-                                <div class="reply-preview">
-                                    ${reply.message?.substring(0, 120) || 'View full reply...'}${reply.message?.length > 120 ? '...' : ''}
-                                </div>
-
-                                ${reply.read === false 
-                                    ? '<div class="unread-indicator">NEW</div>' 
-                                    : ''}
-                            </div>
-                        `).join('') 
-                        : `<div class="empty-state-box" style="grid-column:1/-1;">
-                               <p style="color:#666;">No replies yet. Investors will reply to your applications here.</p>
-                           </div>`
-                    }
-                </div>
-            </div>
-
-            <style>
-            .reply-card {
-                background: #0f0f0f;
-                border: 1px solid #222;
-                border-radius: 16px;
-                padding: 1.5rem;
-                cursor: pointer;
-                transition: all 0.3s;
-                position: relative;
-            }
-            .reply-card:hover {
-                border-color: #444;
-                transform: translateY(-5px);
-                box-shadow: 0 15px 30px rgba(0,0,0,0.5);
-            }
-            .reply-header {
-                display: flex;
-                align-items: center;
-                gap: 1rem;
-                margin-bottom: 1rem;
-            }
-            .investor-avatar {
-                width: 50px;
-                height: 50px;
-                border-radius: 50%;
-                background: linear-gradient(135deg, #ff006e, #8338ec);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.5rem;
-                font-weight: 800;
-                color: #fff;
-            }
-            .reply-info {
-                flex: 1;
-            }
-            .investor-name {
-                font-weight: 700;
-                font-size: 1.1rem;
-                margin-bottom: 0.25rem;
-            }
-            .reply-app-name {
-                color: #888;
-                font-size: 0.85rem;
-            }
-            .reply-time {
-                color: #666;
-                font-size: 0.75rem;
-            }
-            .reply-preview {
-                color: #aaa;
-                line-height: 1.6;
-            }
-            .unread-indicator {
-                position: absolute;
-                top: 10px;
-                right: 10px;
-                background: #10b981;
-                color: #fff;
-                padding: 4px 10px;
-                border-radius: 12px;
-                font-size: 0.7rem;
-                font-weight: 800;
-            }
-            </style>
-        `;
-
-    } catch (error) {
-        console.error("Error loading replies:", error);
-        container.innerHTML = `<div style="text-align:center;padding:4rem;color:#ff4d4d;">
-            <h3>Error Loading Replies</h3>
-        </div>`;
-    }
-};
-
-window.openReply = function(replyId, applicationId) {
-    // You can expand this to show full reply details
-    alert(`Opening reply ${replyId} for application ${applicationId}`);
-    // Or navigate to a detailed view:
-    // window.location.hash = `reply_detail_${replyId}`;
-};
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -5258,8 +5094,7 @@ window.openReply = function(replyId, applicationId) {
                 };
                 
                 await update(ref(db, `founderProfile/${user.uid}`), cachedFounderData);
-                // Add this at the very bottom of your script
-window.addEventListener('hashchange', handleHashChange);
+                
                 // Hide loading screen and show User ID setup
                 document.getElementById('loadingScreen').classList.add('hidden');
                 showUserIdSetupModal();
@@ -6025,6 +5860,16 @@ window.saveWorkExperience = async function() {
 };
 
 
+   // ========================================
+    // SECTION 2: PLACE HASH CHANGE HANDLER HERE
+    // ========================================
+    
+    // Handle hash navigation
+    window.addEventListener('hashchange', handleHashChange);
+
+    // ==========================================
+// 1. ROUTING GATEKEEPER (Strict Custom Check)
+// ==========================================
 function handleHashChange() {
     // 1. DATA CHECK
     if (!currentUser || !cachedFounderData) {
@@ -6083,16 +5928,6 @@ function handleHashChange() {
             document.body.style.background = "#000";
             window.showApplicationsList(); 
         } 
-// Inside handleHashChange function
-else if (hash === 'application_replies') {
-    console.log("Routing to Application Replies..."); // Debug log
-    document.body.style.background = "#000";
-    if (typeof window.showApplicationReplies === 'function') {
-        window.showApplicationReplies();
-    } else {
-        console.error("Critical Error: window.showApplicationReplies function not found!");
-    }
-}
         else if (hash.startsWith('view_application_')) {
             const appId = hash.replace('view_application_', '');
             document.body.style.background = "#f4f4f4"; // Document feel
@@ -6116,6 +5951,10 @@ else if (hash === 'application_replies') {
             document.body.style.background = "#000";
             showFounderEmergence();
         } 
+        else if (hash === 'application_replies') {
+    document.body.style.background = "#000";
+    showApplicationReplies();
+}
         else if (hash === 'manage_vests') {
             document.body.style.background = "#000";
             showManageVests();
@@ -6292,40 +6131,35 @@ async function createDashboard() {
     
     const draftCount = Object.values(vestsData).filter(v => v.status === 'draft').length;
     const activeCount = Object.values(vestsData).filter(v => v.status === 'live').length;
-  // Real-time listener for new replies
-const repliesRef = ref(db, `ApplicationReplies/${currentUser.uid}`);
-onValue(repliesRef, (snapshot) => {
-    if (!snapshot.exists()) {
-        hideBadge();
-        return;
-    }
-
-    const allReplies = snapshot.val();
-    let unreadCount = 0;
-
-    Object.values(allReplies).forEach(reply => {
-        if (reply.read === false) unreadCount++;
+  const appRef = ref(db, `Applications/${currentUser.uid}`);
+onValue(appRef, (snapshot) => {
+    if (!snapshot.exists()) return;
+    
+    const apps = snapshot.val();
+    let totalUnread = 0;
+    
+    // Count unread replies
+    Object.values(apps).forEach(app => {
+        if (app.replies) {
+            Object.values(app.replies).forEach(reply => {
+                if (!reply.read) totalUnread++;
+            });
+        }
     });
-
-    updateReplyBadge(unreadCount);
-});
-
-function updateReplyBadge(count) {
-    const badge = document.getElementById('newRepliesBadge');
-    if (!badge) return;
-
-    if (count > 0) {
-        badge.textContent = `+${count} NEW`;
-        badge.style.display = 'inline-block';
-    } else {
-        badge.style.display = 'none';
+    
+    // Update badge
+    const badge = document.getElementById('replyNotifBadge');
+    const countEl = document.getElementById('replyCount');
+    
+    if (badge && countEl) {
+        if (totalUnread > 0) {
+            badge.style.display = 'block';
+            countEl.textContent = `+${totalUnread}`;
+        } else {
+            badge.style.display = 'none';
+        }
     }
-}
-
-function hideBadge() {
-    const badge = document.getElementById('newRepliesBadge');
-    if (badge) badge.style.display = 'none';
-}
+});
     
     const dashboardHTML = `
        <style>
@@ -6834,7 +6668,110 @@ max-width: 1100px;
             height: 100%;
             object-fit: cover;
         }
+.reply-notif-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: linear-gradient(135deg, #ff006e, #ff4d94);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(255, 0, 110, 0.4);
+    animation: pulseBadge 2s infinite;
+    z-index: 10;
+}
 
+@keyframes pulseBadge {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.reply-item {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.reply-item:hover {
+    border-color: #444;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.reply-item.unread {
+    border-left: 4px solid #ff006e;
+    background: rgba(255, 0, 110, 0.05);
+}
+
+.reply-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #222;
+}
+
+.reply-app-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.reply-timestamp {
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.reply-content {
+    color: #aaa;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.reply-footer {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-view-app, .btn-mark-read {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btn-view-app {
+    background: #fff;
+    color: #000;
+}
+
+.btn-view-app:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255,255,255,0.3);
+}
+
+.btn-mark-read {
+    background: #1a1a1a;
+    color: #888;
+    border: 1px solid #333;
+}
+
+.btn-mark-read:hover {
+    border-color: #fff;
+    color: #fff;
+}
         .availability-indicator {
             width: 70px;
             height: 70px;
@@ -7478,32 +7415,32 @@ max-width: 1100px;
         </svg>
     </div>
 </div>
-
-<div class="banner" onclick="window.location.hash='application_replies'" style="cursor: pointer;">
+<div class="banner" onclick="window.location.hash='application_replies'" style="cursor: pointer; position: relative;">
     <div class="banner-content">
         <h3>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
                  stroke="white" stroke-width="2"
                  style="vertical-align:middle;margin-right:.5rem;">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                <circle cx="9" cy="10" r="1"></circle>
-                <circle cx="12" cy="10" r="1"></circle>
-                <circle cx="15" cy="10" r="1"></circle>
             </svg>
             Application Replies Inbox
-            <span id="newRepliesBadge" style="display:none; background:#10b981; color:#fff; padding:4px 12px; border-radius:20px; font-size:0.75rem; margin-left:12px; font-weight:800;">+0 NEW</span>
         </h3>
-        <p>View responses from investors on your funding applications.</p>
+        <p>View and manage investor responses to your funding applications.</p>
     </div>
 
     <div class="banner-icon">
         <svg width="60" height="60" viewBox="0 0 24 24" fill="none"
              stroke="white" stroke-width="2">
-            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
         </svg>
     </div>
+    
+    <!-- NEW REPLY NOTIFICATION BADGE -->
+    <div id="replyNotifBadge" class="reply-notif-badge" style="display:none;">
+        <span id="replyCount">0</span> New
+    </div>
 </div>
-
 </div>
 
 </div>
@@ -10632,7 +10569,144 @@ window.closeFullScreenPDF = function() {
         setTimeout(() => viewer.remove(), 300);
     }
 };
+// ==========================================
+// APPLICATION REPLIES INBOX
+// ==========================================
 
+window.showApplicationReplies = async function() {
+    const container = document.getElementById('dashboardContainer');
+    document.querySelector('.vest-container').style.display = 'none';
+    container.style.display = 'block';
+    document.title = "Application Replies | ScaleVest";
+    
+    // Show loading
+    container.innerHTML = `<div class="loading-box"><div class="spinner"></div><p>Loading Replies...</p></div>`;
+    
+    try {
+        // Fetch all applications
+        const appRef = ref(db, `Applications/${currentUser.uid}`);
+        const snapshot = await get(appRef);
+        
+        if (!snapshot.exists()) {
+            container.innerHTML = `
+                <div class="manage-vests-page">
+                    <a href="#founder_dashboard" class="back-to-dash">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        Back
+                    </a>
+                    <h1>Application Replies</h1>
+                    <div class="empty-state-box">
+                        <p>No applications found.</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        const apps = snapshot.val();
+        let repliesHTML = '';
+        let unreadCount = 0;
+        
+        // Loop through all applications and check for replies
+        for (const [appId, appData] of Object.entries(apps)) {
+            if (appData.replies) {
+                for (const [replyId, reply] of Object.entries(appData.replies)) {
+                    const isUnread = !reply.read;
+                    if (isUnread) unreadCount++;
+                    
+                    repliesHTML += `
+                        <div class="reply-item ${isUnread ? 'unread' : ''}" data-reply-id="${replyId}" data-app-id="${appId}">
+                            <div class="reply-header">
+                                <div>
+                                    <div class="reply-app-name">${appData.appName || 'Application'}</div>
+                                    <div style="color: #666; font-size: 0.85rem; margin-top: 4px;">
+                                        From: <strong style="color: #ff006e;">${reply.investorName || 'Investor'}</strong>
+                                    </div>
+                                </div>
+                                <div class="reply-timestamp">${formatTimestamp(reply.timestamp)}</div>
+                            </div>
+                            
+                            <div class="reply-content">
+                                ${reply.message || 'No message content'}
+                            </div>
+                            
+                            <div class="reply-footer">
+                                <button class="btn-view-app" onclick="window.location.hash='view_application_${appId}'">
+                                    View Application
+                                </button>
+                                ${isUnread ? `
+                                <button class="btn-mark-read" onclick="markReplyAsRead('${appId}', '${replyId}')">
+                                    Mark as Read
+                                </button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Clear badge after viewing
+        clearReplyBadge();
+        
+        container.innerHTML = `
+            <div class="manage-vests-page">
+                <div class="header-row">
+                    <a href="#founder_dashboard" class="back-to-dash">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        Back
+                    </a>
+                    <h1>Application Replies Inbox</h1>
+                </div>
+                
+                <div style="max-width: 900px; margin: 0 auto;">
+                    ${repliesHTML || `
+                        <div class="empty-state-box">
+                            <p style="color: #666;">No replies yet. Keep checking back!</p>
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error("Error loading replies:", error);
+        container.innerHTML = `<p style="color:red; text-align:center; padding:2rem;">Error loading replies</p>`;
+    }
+};
+
+// Mark reply as read
+window.markReplyAsRead = async function(appId, replyId) {
+    try {
+        await update(ref(db, `Applications/${currentUser.uid}/${appId}/replies/${replyId}`), {
+            read: true
+        });
+        
+        // Refresh the view
+        showApplicationReplies();
+    } catch (error) {
+        console.error("Error marking as read:", error);
+    }
+};
+
+// Clear notification badge
+function clearReplyBadge() {
+    const badge = document.getElementById('replyNotifBadge');
+    if (badge) badge.style.display = 'none';
+}
+
+// Format timestamp helper
+function formatTimestamp(timestamp) {
+    if (!timestamp) return 'Unknown';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
+    return date.toLocaleDateString();
+}
 
 </script>
 <!-- FOUNDER DASHBOARD -->
