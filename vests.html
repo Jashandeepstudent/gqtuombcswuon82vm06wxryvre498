@@ -5127,9 +5127,9 @@ window.showApplicationReplies = async function() {
     container.innerHTML = `<div class="loading-box"><div class="spinner"></div><p>Loading Replies...</p></div>`;
     
     try {
-        // Fetch all applications
-        const appRef = ref(db, `Applications/${currentUser.uid}`);
-        const snapshot = await get(appRef);
+        // 1. Fetch from the flat 'ApplicationReplies' node
+        const repliesRef = ref(db, `ApplicationReplies`);
+        const snapshot = await get(repliesRef);
         
         if (!snapshot.exists()) {
             container.innerHTML = `
@@ -5140,56 +5140,51 @@ window.showApplicationReplies = async function() {
                     </a>
                     <h1>Application Replies</h1>
                     <div class="empty-state-box">
-                        <p>No applications found.</p>
+                        <p>No replies found in the system.</p>
                     </div>
                 </div>
             `;
             return;
         }
         
-        const apps = snapshot.val();
+        const allReplies = snapshot.val();
         let repliesHTML = '';
-        let unreadCount = 0;
         
-        // Loop through all applications and check for replies
-        for (const [appId, appData] of Object.entries(apps)) {
-            if (appData.replies) {
-                for (const [replyId, reply] of Object.entries(appData.replies)) {
-                    const isUnread = !reply.read;
-                    if (isUnread) unreadCount++;
-                    
-                    repliesHTML += `
-                        <div class="reply-item ${isUnread ? 'unread' : ''}" data-reply-id="${replyId}" data-app-id="${appId}">
-                            <div class="reply-header">
-                                <div>
-                                    <div class="reply-app-name">${appData.appName || 'Application'}</div>
-                                    <div style="color: #666; font-size: 0.85rem; margin-top: 4px;">
-                                        From: <strong style="color: #ff006e;">${reply.investorName || 'Investor'}</strong>
-                                    </div>
-                                </div>
-                                <div class="reply-timestamp">${formatTimestamp(reply.timestamp)}</div>
-                            </div>
-                            
-                            <div class="reply-content">
-                                ${reply.message || 'No message content'}
-                            </div>
-                            
-                            <div class="reply-footer">
-                                <button class="btn-view-app" onclick="window.location.hash='view_application_${appId}'">
-                                    View Application
-                                </button>
-                                ${isUnread ? `
-                                <button class="btn-mark-read" onclick="markReplyAsRead('${appId}', '${replyId}')">
-                                    Mark as Read
-                                </button>` : ''}
+        // 2. Loop through the replies object
+        for (const [replyId, reply] of Object.entries(allReplies)) {
+            
+            // NOTE: If you add 'founderId' to your database, uncomment the line below to only show relevant replies
+            // if (reply.founderId !== currentUser.uid) continue;
+
+            const isUnread = !reply.read;
+            
+            // Mapping keys: 'comment' from DB -> display, 'status' from DB -> title
+            repliesHTML += `
+                <div class="reply-item ${isUnread ? 'unread' : ''}" data-reply-id="${replyId}">
+                    <div class="reply-header">
+                        <div>
+                            <div class="reply-app-name">Status: <strong style="color: ${reply.status === 'YES' ? '#00b894' : '#ff7675'};">${reply.status}</strong></div>
+                            <div style="color: #666; font-size: 0.85rem; margin-top: 4px;">
+                                From Investor: <span style="color: #ff006e;">${reply.investorId.substring(0, 8)}...</span>
                             </div>
                         </div>
-                    `;
-                }
-            }
+                        <div class="reply-timestamp">${formatTimestamp(reply.timestamp)}</div>
+                    </div>
+                    
+                    <div class="reply-content">
+                        ${reply.comment || 'No additional message provided.'}
+                    </div>
+                    
+                    <div class="reply-footer">
+                        ${isUnread ? `
+                        <button class="btn-mark-read" onclick="markReplyAsRead('${replyId}')">
+                            Mark as Read
+                        </button>` : ''}
+                    </div>
+                </div>
+            `;
         }
         
-        // Clear badge after viewing
         clearReplyBadge();
         
         container.innerHTML = `
@@ -5205,7 +5200,7 @@ window.showApplicationReplies = async function() {
                 <div style="max-width: 900px; margin: 0 auto;">
                     ${repliesHTML || `
                         <div class="empty-state-box">
-                            <p style="color: #666;">No replies yet. Keep checking back!</p>
+                            <p style="color: #666;">No replies matches your account yet.</p>
                         </div>
                     `}
                 </div>
@@ -5218,14 +5213,12 @@ window.showApplicationReplies = async function() {
     }
 };
 
-// Mark reply as read
-window.markReplyAsRead = async function(appId, replyId) {
+// Updated Mark as Read for the new path
+window.markReplyAsRead = async function(replyId) {
     try {
-        await update(ref(db, `Applications/${currentUser.uid}/${appId}/replies/${replyId}`), {
+        await update(ref(db, `ApplicationReplies/${replyId}`), {
             read: true
         });
-        
-        // Refresh the view
         showApplicationReplies();
     } catch (error) {
         console.error("Error marking as read:", error);
