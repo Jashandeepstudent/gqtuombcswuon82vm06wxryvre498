@@ -5152,7 +5152,7 @@ window.showApplicationReplies = async function () {
       // if (reply.founderId !== currentUser.uid) continue;
 
       const investorSnap = await get(
-        ref(db, `AngelProfiles/${reply.investorId}`)
+        ref(db, `angelProfiles/${reply.investorId}`)
       );
 
       const investor = investorSnap.exists()
