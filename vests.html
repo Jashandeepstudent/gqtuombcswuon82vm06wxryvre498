@@ -109,7 +109,110 @@
   margin: 0 auto;
   padding: 24px;
 }
+.reply-notif-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: linear-gradient(135deg, #ff006e, #ff4d94);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(255, 0, 110, 0.4);
+    animation: pulseBadge 2s infinite;
+    z-index: 10;
+}
 
+@keyframes pulseBadge {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.reply-item {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.reply-item:hover {
+    border-color: #444;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.reply-item.unread {
+    border-left: 4px solid #ff006e;
+    background: rgba(255, 0, 110, 0.05);
+}
+
+.reply-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #222;
+}
+
+.reply-app-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.reply-timestamp {
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.reply-content {
+    color: #aaa;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.reply-footer {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-view-app, .btn-mark-read {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btn-view-app {
+    background: #fff;
+    color: #000;
+}
+
+.btn-view-app:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255,255,255,0.3);
+}
+
+.btn-mark-read {
+    background: #1a1a1a;
+    color: #888;
+    border: 1px solid #333;
+}
+
+.btn-mark-read:hover {
+    border-color: #fff;
+    color: #fff;
+}
 .chat-header-row {
   display: flex;
   justify-content: space-between;
