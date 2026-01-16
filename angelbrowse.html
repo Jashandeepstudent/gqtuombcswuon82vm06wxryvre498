@@ -1392,6 +1392,7 @@ searchBox.addEventListener('input', (e) => {
                  loadOnlineStatus();
                  setUserPresence(user);
                  startBrowseTimeTracking();
+                autoOpenProfile();
             }
         });
 
@@ -2408,6 +2409,56 @@ window.onclick = function(event) {
         closePitchModal();
     }
 };
+        // Add this at the bottom of your script in angelbrowse.html
+async function autoOpenProfile() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const profileId = urlParams.get('view');
+
+    if (profileId) {
+        console.log("Auto-opening profile for:", profileId);
+        
+        // We must wait a moment for Firebase to load the profiles first
+        // Check every 500ms if profiles have loaded
+        const checkExist = setInterval(() => {
+            if (Object.keys(allProfiles).length > 0) {
+                clearInterval(checkExist);
+                
+                // Trigger your existing function that opens the overlay
+                if (typeof handleViewProfile === 'function') {
+                    handleViewProfile(profileId);
+                    
+                    // Optional: Clean the URL so refreshing doesn't keep opening it
+                    window.history.replaceState({}, document.title, "angelbrowse.html");
+                }
+            }
+        }, 500);
+    }
+}
+
+async function autoOpenProfile() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const profileId = urlParams.get('view');
+
+    if (profileId) {
+        console.log("Auto-opening profile for:", profileId);
+        
+        // We must wait a moment for Firebase to load the profiles first
+        // Check every 500ms if profiles have loaded
+        const checkExist = setInterval(() => {
+            if (Object.keys(allProfiles).length > 0) {
+                clearInterval(checkExist);
+                
+                // Trigger your existing function that opens the overlay
+                if (typeof handleViewProfile === 'function') {
+                    handleViewProfile(profileId);
+                    
+                    // Optional: Clean the URL so refreshing doesn't keep opening it
+                    window.history.replaceState({}, document.title, "angelbrowse.html");
+                }
+            }
+        }, 500);
+    }
+}
     </script>
 </body>
 </html>
