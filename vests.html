@@ -5063,6 +5063,145 @@ window.saveNewUsername = async function() {
         btn.disabled = false;
     }
 };
+
+// ==========================================
+// APPLICATION REPLIES INBOX
+// ==========================================
+
+window.showApplicationReplies = async function() {
+    const container = document.getElementById('dashboardContainer');
+    document.querySelector('.vest-container').style.display = 'none';
+    container.style.display = 'block';
+    document.title = "Application Replies | ScaleVest";
+    
+    // Show loading
+    container.innerHTML = `<div class="loading-box"><div class="spinner"></div><p>Loading Replies...</p></div>`;
+    
+    try {
+        // Fetch all applications
+        const appRef = ref(db, `Applications/${currentUser.uid}`);
+        const snapshot = await get(appRef);
+        
+        if (!snapshot.exists()) {
+            container.innerHTML = `
+                <div class="manage-vests-page">
+                    <a href="#founder_dashboard" class="back-to-dash">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        Back
+                    </a>
+                    <h1>Application Replies</h1>
+                    <div class="empty-state-box">
+                        <p>No applications found.</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        const apps = snapshot.val();
+        let repliesHTML = '';
+        let unreadCount = 0;
+        
+        // Loop through all applications and check for replies
+        for (const [appId, appData] of Object.entries(apps)) {
+            if (appData.replies) {
+                for (const [replyId, reply] of Object.entries(appData.replies)) {
+                    const isUnread = !reply.read;
+                    if (isUnread) unreadCount++;
+                    
+                    repliesHTML += `
+                        <div class="reply-item ${isUnread ? 'unread' : ''}" data-reply-id="${replyId}" data-app-id="${appId}">
+                            <div class="reply-header">
+                                <div>
+                                    <div class="reply-app-name">${appData.appName || 'Application'}</div>
+                                    <div style="color: #666; font-size: 0.85rem; margin-top: 4px;">
+                                        From: <strong style="color: #ff006e;">${reply.investorName || 'Investor'}</strong>
+                                    </div>
+                                </div>
+                                <div class="reply-timestamp">${formatTimestamp(reply.timestamp)}</div>
+                            </div>
+                            
+                            <div class="reply-content">
+                                ${reply.message || 'No message content'}
+                            </div>
+                            
+                            <div class="reply-footer">
+                                <button class="btn-view-app" onclick="window.location.hash='view_application_${appId}'">
+                                    View Application
+                                </button>
+                                ${isUnread ? `
+                                <button class="btn-mark-read" onclick="markReplyAsRead('${appId}', '${replyId}')">
+                                    Mark as Read
+                                </button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Clear badge after viewing
+        clearReplyBadge();
+        
+        container.innerHTML = `
+            <div class="manage-vests-page">
+                <div class="header-row">
+                    <a href="#founder_dashboard" class="back-to-dash">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        Back
+                    </a>
+                    <h1>Application Replies Inbox</h1>
+                </div>
+                
+                <div style="max-width: 900px; margin: 0 auto;">
+                    ${repliesHTML || `
+                        <div class="empty-state-box">
+                            <p style="color: #666;">No replies yet. Keep checking back!</p>
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error("Error loading replies:", error);
+        container.innerHTML = `<p style="color:red; text-align:center; padding:2rem;">Error loading replies</p>`;
+    }
+};
+
+// Mark reply as read
+window.markReplyAsRead = async function(appId, replyId) {
+    try {
+        await update(ref(db, `Applications/${currentUser.uid}/${appId}/replies/${replyId}`), {
+            read: true
+        });
+        
+        // Refresh the view
+        showApplicationReplies();
+    } catch (error) {
+        console.error("Error marking as read:", error);
+    }
+};
+
+// Clear notification badge
+function clearReplyBadge() {
+    const badge = document.getElementById('replyNotifBadge');
+    if (badge) badge.style.display = 'none';
+}
+
+// Format timestamp helper
+function formatTimestamp(timestamp) {
+    if (!timestamp) return 'Unknown';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
+    return date.toLocaleDateString();
+}
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -10569,144 +10708,7 @@ window.closeFullScreenPDF = function() {
         setTimeout(() => viewer.remove(), 300);
     }
 };
-// ==========================================
-// APPLICATION REPLIES INBOX
-// ==========================================
 
-window.showApplicationReplies = async function() {
-    const container = document.getElementById('dashboardContainer');
-    document.querySelector('.vest-container').style.display = 'none';
-    container.style.display = 'block';
-    document.title = "Application Replies | ScaleVest";
-    
-    // Show loading
-    container.innerHTML = `<div class="loading-box"><div class="spinner"></div><p>Loading Replies...</p></div>`;
-    
-    try {
-        // Fetch all applications
-        const appRef = ref(db, `Applications/${currentUser.uid}`);
-        const snapshot = await get(appRef);
-        
-        if (!snapshot.exists()) {
-            container.innerHTML = `
-                <div class="manage-vests-page">
-                    <a href="#founder_dashboard" class="back-to-dash">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                        Back
-                    </a>
-                    <h1>Application Replies</h1>
-                    <div class="empty-state-box">
-                        <p>No applications found.</p>
-                    </div>
-                </div>
-            `;
-            return;
-        }
-        
-        const apps = snapshot.val();
-        let repliesHTML = '';
-        let unreadCount = 0;
-        
-        // Loop through all applications and check for replies
-        for (const [appId, appData] of Object.entries(apps)) {
-            if (appData.replies) {
-                for (const [replyId, reply] of Object.entries(appData.replies)) {
-                    const isUnread = !reply.read;
-                    if (isUnread) unreadCount++;
-                    
-                    repliesHTML += `
-                        <div class="reply-item ${isUnread ? 'unread' : ''}" data-reply-id="${replyId}" data-app-id="${appId}">
-                            <div class="reply-header">
-                                <div>
-                                    <div class="reply-app-name">${appData.appName || 'Application'}</div>
-                                    <div style="color: #666; font-size: 0.85rem; margin-top: 4px;">
-                                        From: <strong style="color: #ff006e;">${reply.investorName || 'Investor'}</strong>
-                                    </div>
-                                </div>
-                                <div class="reply-timestamp">${formatTimestamp(reply.timestamp)}</div>
-                            </div>
-                            
-                            <div class="reply-content">
-                                ${reply.message || 'No message content'}
-                            </div>
-                            
-                            <div class="reply-footer">
-                                <button class="btn-view-app" onclick="window.location.hash='view_application_${appId}'">
-                                    View Application
-                                </button>
-                                ${isUnread ? `
-                                <button class="btn-mark-read" onclick="markReplyAsRead('${appId}', '${replyId}')">
-                                    Mark as Read
-                                </button>` : ''}
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-        }
-        
-        // Clear badge after viewing
-        clearReplyBadge();
-        
-        container.innerHTML = `
-            <div class="manage-vests-page">
-                <div class="header-row">
-                    <a href="#founder_dashboard" class="back-to-dash">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                        Back
-                    </a>
-                    <h1>Application Replies Inbox</h1>
-                </div>
-                
-                <div style="max-width: 900px; margin: 0 auto;">
-                    ${repliesHTML || `
-                        <div class="empty-state-box">
-                            <p style="color: #666;">No replies yet. Keep checking back!</p>
-                        </div>
-                    `}
-                </div>
-            </div>
-        `;
-        
-    } catch (error) {
-        console.error("Error loading replies:", error);
-        container.innerHTML = `<p style="color:red; text-align:center; padding:2rem;">Error loading replies</p>`;
-    }
-};
-
-// Mark reply as read
-window.markReplyAsRead = async function(appId, replyId) {
-    try {
-        await update(ref(db, `Applications/${currentUser.uid}/${appId}/replies/${replyId}`), {
-            read: true
-        });
-        
-        // Refresh the view
-        showApplicationReplies();
-    } catch (error) {
-        console.error("Error marking as read:", error);
-    }
-};
-
-// Clear notification badge
-function clearReplyBadge() {
-    const badge = document.getElementById('replyNotifBadge');
-    if (badge) badge.style.display = 'none';
-}
-
-// Format timestamp helper
-function formatTimestamp(timestamp) {
-    if (!timestamp) return 'Unknown';
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-    return date.toLocaleDateString();
-}
 
 </script>
 <!-- FOUNDER DASHBOARD -->
