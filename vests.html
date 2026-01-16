@@ -5258,7 +5258,8 @@ window.openReply = function(replyId, applicationId) {
                 };
                 
                 await update(ref(db, `founderProfile/${user.uid}`), cachedFounderData);
-                
+                // Add this at the very bottom of your script
+window.addEventListener('hashchange', handleHashChange);
                 // Hide loading screen and show User ID setup
                 document.getElementById('loadingScreen').classList.add('hidden');
                 showUserIdSetupModal();
