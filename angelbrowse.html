@@ -363,41 +363,53 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: white;
             z-index: 1000;
             overflow-y: auto;
         }
 
-        .modal-content {
-            background: white;
-            max-width: 600px;
-            margin: 50px auto;
-            border-radius: 15px;
-            padding: 30px;
-            position: relative;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
+.modal-content {
+    background: white;
+    width: 100%; /* Changed from max-width: 600px */
+    min-height: 100vh; /* Full viewport height */
+    margin: 0; /* Removed auto centering */
+    border-radius: 0; /* Removed rounded corners */
+    padding: 80px 20px 40px; /* More top padding for back button */
+    position: relative;
+    max-width: 1200px; /* Optional: limit width on large screens */
+    margin: 0 auto; /* Center on large screens */
+}
 
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 32px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #666;
-            transition: color 0.3s ease;
-            z-index: 100;
-            line-height: 1;
-            width: 35px;
-            height: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: #f0f0f0;
-        }
+.close-modal {
+    position: fixed; /* Changed from absolute */
+    top: 20px;
+    left: 20px; /* Changed from right */
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #333;
+    transition: all 0.3s ease;
+    z-index: 100;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 25px;
+    background: #f0f0f0;
+    border: 2px solid #ddd;
+}
+
+.close-modal:hover {
+    color: #00CED1;
+    background: #e0f7f7;
+    border-color: #00CED1;
+    transform: translateX(-5px);
+}
+
+.close-modal::before {
+    content: "← ";
+    font-size: 20px;
+}
 
         .close-modal:hover {
             color: #DC143C;
@@ -584,14 +596,14 @@
 
     <div id="profileModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeProfileModal()">&times;</span>
+            <span class="close-modal" onclick="closeProfileModal()">Back to Browse</span>
             <div id="profileDetails"></div>
         </div>
     </div>
 
     <div id="pitchModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="closePitchModal()">&times;</span>
+            <span class="close-modal" onclick="closePitchModal()">Back to Browse</span>
             <h2>Select Your Application</h2>
             <div id="applicationsContainer"></div>
             <div class="file-upload" id="fileUploadSection" style="display: none;">
@@ -605,7 +617,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
         import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-        import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+import { getDatabase, ref, get, set, update, increment } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
@@ -629,6 +641,331 @@
         let allProfiles = {};
         let selectedCategory = 'All';
         let searchTerm = '';
+
+        // ============================================
+// ULTRA-INTELLIGENT TRACKING SYSTEM
+// ============================================
+
+let founderBehaviorData = {
+    profileViews: {},
+    pitchedTo: {},
+    categoryViews: {},
+    investorTypeViews: {},
+    investmentRangeViews: {},
+    netWorthViews: {},
+    timeSpentOnProfiles: {},
+    searchHistory: [],
+    totalBrowseTime: 0,
+    sessionStartTime: Date.now(),
+    pitchTimes: [],
+    lastActivityTime: Date.now()
+};
+
+let profileViewStartTime = null;
+
+// Track when user views an investor card (even scroll past it)
+function trackCardView(investorId, investor) {
+    if (!founderBehaviorData.profileViews[investorId]) {
+        founderBehaviorData.profileViews[investorId] = {
+            count: 0,
+            firstSeen: Date.now(),
+            investorType: investor.investorType,
+            categories: investor.preferredCategories || [],
+            investmentRange: `${investor.minInvestment}-${investor.maxInvestment}`,
+            netWorth: investor.netWorth,
+            reputation: investor.replyReputation || 0
+        };
+    }
+    founderBehaviorData.profileViews[investorId].count++;
+    founderBehaviorData.profileViews[investorId].lastSeen = Date.now();
+    
+    // Track category views
+    const category = investor.investorType;
+    founderBehaviorData.categoryViews[category] = (founderBehaviorData.categoryViews[category] || 0) + 1;
+    
+    // Track investor type
+    founderBehaviorData.investorTypeViews[investor.investorType] = 
+        (founderBehaviorData.investorTypeViews[investor.investorType] || 0) + 1;
+    
+    // Track investment range preference
+    const range = `${investor.minInvestment}-${investor.maxInvestment}`;
+    founderBehaviorData.investmentRangeViews[range] = 
+        (founderBehaviorData.investmentRangeViews[range] || 0) + 1;
+    
+    // Track net worth interest
+    if (investor.netWorth) {
+        founderBehaviorData.netWorthViews[investor.netWorth] = 
+            (founderBehaviorData.netWorthViews[investor.netWorth] || 0) + 1;
+    }
+    
+    saveFounderBehavior();
+}
+
+// Track profile click (full profile view)
+function trackProfileClick(investorId, investor, timeSpent = 0) {
+    if (!founderBehaviorData.timeSpentOnProfiles[investorId]) {
+        founderBehaviorData.timeSpentOnProfiles[investorId] = 0;
+    }
+    founderBehaviorData.timeSpentOnProfiles[investorId] += timeSpent;
+    
+    trackCardView(investorId, investor);
+    saveFounderBehavior();
+}
+
+// Track pitch action
+function trackPitchAction(investorId, investor) {
+    const now = Date.now();
+    founderBehaviorData.pitchedTo[investorId] = {
+        pitchedAt: now,
+        investorType: investor.investorType,
+        categories: investor.preferredCategories || [],
+        investmentRange: `${investor.minInvestment}-${investor.maxInvestment}`,
+        netWorth: investor.netWorth,
+        reputation: investor.replyReputation || 0
+    };
+    
+    founderBehaviorData.pitchTimes.push(now);
+    saveFounderBehavior();
+}
+
+// Track search behavior
+function trackSearchBehavior(searchTerm) {
+    if (searchTerm && searchTerm.length > 2) {
+        founderBehaviorData.searchHistory.push({
+            term: searchTerm,
+            timestamp: Date.now()
+        });
+        
+        if (founderBehaviorData.searchHistory.length > 50) {
+            founderBehaviorData.searchHistory.shift();
+        }
+        
+        saveFounderBehavior();
+    }
+}
+
+// Save behavior to Firebase
+async function saveFounderBehavior() {
+    if (!currentUser) return;
+    
+    try {
+        const behaviorRef = ref(database, `founderBehavior/${currentUser.uid}`);
+        await set(behaviorRef, {
+            ...founderBehaviorData,
+            lastUpdated: Date.now()
+        });
+    } catch (error) {
+        console.error('Error saving behavior:', error);
+    }
+}
+
+// Load existing behavior data
+async function loadFounderBehavior() {
+    if (!currentUser) return;
+    
+    try {
+        const behaviorRef = ref(database, `founderBehavior/${currentUser.uid}`);
+        const snapshot = await get(behaviorRef);
+        
+        if (snapshot.exists()) {
+            const savedData = snapshot.val();
+            founderBehaviorData = {
+                ...founderBehaviorData,
+                ...savedData
+            };
+        }
+    } catch (error) {
+        console.error('Error loading behavior:', error);
+    }
+}
+
+// ============================================
+// MACHINE LEARNING ALGORITHM
+// ============================================
+
+function analyzeFounderPreferences() {
+    const analysis = {
+        preferredInvestorTypes: [],
+        preferredCategories: [],
+        preferredInvestmentRanges: [],
+        preferredNetWorth: [],
+        pitchPattern: {},
+        engagementLevel: 'low',
+        learningConfidence: 0
+    };
+    
+    const totalViews = Object.keys(founderBehaviorData.profileViews).length;
+    const totalPitches = Object.keys(founderBehaviorData.pitchedTo).length;
+    
+    if (totalViews < 10) {
+        analysis.learningConfidence = Math.min(totalViews * 10, 100);
+        return analysis;
+    } else if (totalViews >= 10 && totalViews < 30) {
+        analysis.learningConfidence = 50 + (totalViews - 10);
+    } else {
+        analysis.learningConfidence = Math.min(80 + (totalPitches * 2), 100);
+    }
+    
+    const investorTypeScores = {};
+    Object.entries(founderBehaviorData.investorTypeViews).forEach(([type, count]) => {
+        investorTypeScores[type] = count;
+    });
+    
+    analysis.preferredInvestorTypes = Object.entries(investorTypeScores)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([type]) => type);
+    
+    const categoryScores = {};
+    Object.entries(founderBehaviorData.categoryViews).forEach(([cat, count]) => {
+        categoryScores[cat] = count;
+    });
+    
+    analysis.preferredCategories = Object.entries(categoryScores)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([cat]) => cat);
+    
+    const rangeScores = {};
+    Object.entries(founderBehaviorData.investmentRangeViews).forEach(([range, count]) => {
+        rangeScores[range] = count;
+    });
+    
+    analysis.preferredInvestmentRanges = Object.entries(rangeScores)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 2)
+        .map(([range]) => range);
+    
+    const netWorthScores = {};
+    Object.entries(founderBehaviorData.netWorthViews).forEach(([nw, count]) => {
+        netWorthScores[nw] = count;
+    });
+    
+    analysis.preferredNetWorth = Object.entries(netWorthScores)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 2)
+        .map(([nw]) => nw);
+    
+    if (totalPitches > 0) {
+        const pitchSpeed = totalPitches / Math.max(totalViews, 1);
+        analysis.pitchPattern.speed = pitchSpeed > 0.5 ? 'aggressive' : pitchSpeed > 0.2 ? 'moderate' : 'selective';
+        
+        const pitchHours = founderBehaviorData.pitchTimes.map(time => new Date(time).getHours());
+        const hourCounts = {};
+        pitchHours.forEach(hour => {
+            hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+        });
+        analysis.pitchPattern.preferredHours = Object.entries(hourCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3)
+            .map(([hour]) => parseInt(hour));
+    }
+    
+    const avgTimePerProfile = Object.values(founderBehaviorData.timeSpentOnProfiles)
+        .reduce((sum, time) => sum + time, 0) / Math.max(totalViews, 1);
+    
+    if (avgTimePerProfile > 45) {
+        analysis.engagementLevel = 'high';
+    } else if (avgTimePerProfile > 20) {
+        analysis.engagementLevel = 'medium';
+    } else {
+        analysis.engagementLevel = 'low';
+    }
+    
+    return analysis;
+}
+
+function calculateIntelligentBoost(investor, investorId) {
+    const preferences = analyzeFounderPreferences();
+    let boost = 0;
+    
+    if (preferences.learningConfidence < 30) {
+        return boost;
+    }
+    
+    if (preferences.preferredInvestorTypes.includes(investor.investorType)) {
+        const rank = preferences.preferredInvestorTypes.indexOf(investor.investorType);
+        boost += (3 - rank) * 350;
+    }
+    
+    if (investor.preferredCategories) {
+        const matchingCategories = investor.preferredCategories.filter(cat => 
+            preferences.preferredCategories.includes(cat)
+        );
+        boost += matchingCategories.length * 250;
+    }
+    
+    const investorRange = `${investor.minInvestment}-${investor.maxInvestment}`;
+    if (preferences.preferredInvestmentRanges.includes(investorRange)) {
+        boost += 600;
+    }
+    
+    if (investor.netWorth && preferences.preferredNetWorth.includes(investor.netWorth)) {
+        boost += 300;
+    }
+    
+    if (founderBehaviorData.profileViews[investorId]) {
+        const viewCount = founderBehaviorData.profileViews[investorId].count;
+        boost += viewCount * 100;
+    }
+    
+    const timeSpent = founderBehaviorData.timeSpentOnProfiles[investorId] || 0;
+    boost += Math.min(timeSpent * 5, 500);
+    
+    const pitchedInvestors = Object.keys(founderBehaviorData.pitchedTo);
+    if (pitchedInvestors.length > 0) {
+        let similarityScore = 0;
+        pitchedInvestors.forEach(pitchedId => {
+            const pitched = founderBehaviorData.pitchedTo[pitchedId];
+            
+            if (pitched.investorType === investor.investorType) similarityScore += 200;
+            
+            if (pitched.investmentRange === `${investor.minInvestment}-${investor.maxInvestment}`) {
+                similarityScore += 150;
+            }
+            
+            if (Math.abs((pitched.reputation || 0) - (investor.replyReputation || 0)) < 500) {
+                similarityScore += 100;
+            }
+        });
+        
+        boost += Math.min(similarityScore, 800);
+    }
+    
+    if (investor.lastUpdated) {
+        const lastUpdate = new Date(investor.lastUpdated).getTime();
+        const now = Date.now();
+        const daysSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60 * 24);
+        
+        if (daysSinceUpdate < 1) {
+            boost += 25;
+            
+            const hoursSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60);
+            if (hoursSinceUpdate < 1) {
+                boost += 500;
+            }
+        }
+    }
+    
+    if (founderBehaviorData.searchHistory.length > 0) {
+        const recentSearches = founderBehaviorData.searchHistory.slice(-10);
+        recentSearches.forEach(search => {
+            const searchTerm = search.term.toLowerCase();
+            const investorName = (investor.fullName || '').toLowerCase();
+            const investorType = (investor.investorType || '').toLowerCase();
+            
+            if (investorName.includes(searchTerm) || investorType.includes(searchTerm)) {
+                boost += 400;
+            }
+        });
+    }
+    
+    boost = boost * (preferences.learningConfidence / 100);
+    
+    return boost;
+}
+
+
 
         const loadingMessage = document.getElementById('loadingMessage');
         const rowsContainer = document.getElementById('rowsContainer');
@@ -655,17 +992,22 @@
             });
         });
 
-        searchBox.addEventListener('input', (e) => {
-            searchTerm = e.target.value.toLowerCase().trim();
-            displayRows();
-        });
-
+searchBox.addEventListener('input', (e) => {
+    searchTerm = e.target.value.toLowerCase().trim();
+    
+    if (searchTerm.length > 2) {
+        trackSearchBehavior(searchTerm);
+    }
+    
+    displayRows();
+});
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.href = 'login2.html';
             } else {
                 currentUser = user;
                 await loadUserCategory();
+                 await loadFounderBehavior(); 
                 loadAngelProfiles();
             }
         });
@@ -703,62 +1045,99 @@
             }
         }
 
-        function calculateInvestorScore(profile) {
-            let score = 0;
-            const now = Date.now();
-            
-            // Base reputation score (40% weight)
-            const reputation = profile.replyReputation || 0;
-            score += reputation * 0.4;
-            
-            // Pitched count (20% weight)
-            const pitchedCount = profile.PitchedCount || 0;
-            score += pitchedCount * 0.2;
+      // ============================================
+// ULTIMATE COMBINED SCORING ALGORITHM
+// SUI Matchmaking + AI Learning + All Original Boosts + DAILY LOGIN BOOST
+// ============================================
 
-            // Category matching bonus (2x multiplier)
-            if (currentUserCategory && profile.preferredCategories) {
-                const preferredCats = Array.isArray(profile.preferredCategories) 
-                    ? profile.preferredCategories 
-                    : [];
-                
-                if (preferredCats.includes(currentUserCategory)) {
-                    score *= 2; // 2x multiplier for matching categories
-                }
-            }
-            
-            // New user boost
-            if (profile.launchedAt) {
-                const launchedTime = new Date(profile.launchedAt).getTime();
-                const hoursSinceLaunch = (now - launchedTime) / (1000 * 60 * 60);
-                
-                if (hoursSinceLaunch < 24) {
-                    score += 500;
-                }
-            }
-            
-            // Activity boost
-            if (profile.lastUpdated) {
-                const lastUpdate = new Date(profile.lastUpdated).getTime();
-                const minutesSinceUpdate = (now - lastUpdate) / (1000 * 60);
-                
-                if (minutesSinceUpdate < 10) {
-                    score += 200;
-                } else if (minutesSinceUpdate < 120) {
-                    score += 100;
-                }
-            }
-            
-            // Trending boost
-            const trendingScore = (pitchedCount * 0.5) + (reputation * 0.0001);
-            score += trendingScore * 10;
-            
-            // Randomization factor
-            const randomFactor = Math.random() * 0.1 * score;
-            score += randomFactor;
-            
-            return score;
+function calculateInvestorScore(profile, userId) {
+    let score = 0;
+    const now = Date.now();
+    
+    // Base reputation score (25% weight)
+    const reputation = profile.replyReputation || 0;
+    score += reputation * 0.25;
+    
+    // Pitched count (15% weight)
+    const pitchedCount = profile.PitchedCount || 0;
+    score += pitchedCount * 0.15;
+
+    // **🚀 SUI MATCHMAKING - Category matching bonus (2x multiplier)**
+    if (currentUserCategory && profile.preferredCategories) {
+        const preferredCats = Array.isArray(profile.preferredCategories) 
+            ? profile.preferredCategories 
+            : [];
+        
+        if (preferredCats.includes(currentUserCategory)) {
+            score *= 2; // 2x multiplier for matching categories
         }
-
+    }
+    
+    // **New user boost**
+    if (profile.launchedAt) {
+        const launchedTime = new Date(profile.launchedAt).getTime();
+        const hoursSinceLaunch = (now - launchedTime) / (1000 * 60 * 60);
+        
+        if (hoursSinceLaunch < 24) {
+            score += 500;
+        }
+    }
+    
+    // **Activity boost**
+    if (profile.lastUpdated) {
+        const lastUpdate = new Date(profile.lastUpdated).getTime();
+        const minutesSinceUpdate = (now - lastUpdate) / (1000 * 60);
+        
+        if (minutesSinceUpdate < 10) {
+            score += 200;
+        } else if (minutesSinceUpdate < 120) {
+            score += 100;
+        }
+    }
+    
+    // **📅 DAILY LOGIN BOOST - Reward consistent activity**
+    if (profile.lastUpdated) {
+        const lastUpdate = new Date(profile.lastUpdated).getTime();
+        const daysSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60 * 24);
+        
+        // If logged in today (within last 24 hours)
+        if (daysSinceUpdate < 1) {
+            score += 25; // Daily boost
+            
+            // SUPER BOOST if online RIGHT NOW (within last hour)
+            const hoursSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60);
+            if (hoursSinceUpdate < 1) {
+                score += 500; // Online NOW boost
+            }
+            
+            // MEGA BOOST if online in last 10 minutes
+            const minutesSinceUpdate = (now - lastUpdate) / (1000 * 60);
+            if (minutesSinceUpdate < 10) {
+                score += 1000; // Super active RIGHT NOW
+            }
+        }
+        
+        // Track login streaks (if you have loginStreak field in profile)
+        if (profile.loginStreak) {
+            const streakBonus = Math.min(profile.loginStreak * 10, 300); // Max +300
+            score += streakBonus;
+        }
+    }
+    
+    // **Trending boost**
+    const trendingScore = (pitchedCount * 0.5) + (reputation * 0.0001);
+    score += trendingScore * 10;
+    
+    // **🤖 ULTRA-INTELLIGENT AI BOOST - 60% of total weight**
+    const intelligentBoost = calculateIntelligentBoost(profile, userId);
+    score += intelligentBoost;
+    
+    // **Randomization factor (2%)**
+    const randomFactor = Math.random() * 0.02 * score;
+    score += randomFactor;
+    
+    return score;
+}
         function categorizeInvestor(profile) {
             const score = calculateInvestorScore(profile);
             const reputation = profile.replyReputation || 0;
@@ -816,105 +1195,340 @@
             filtered = filtered.map(([userId, profile]) => ({
                 userId,
                 profile,
-                score: calculateInvestorScore(profile),
+                score: calculateInvestorScore(profile, userId),
                 category: categorizeInvestor(profile)
             }));
 
             return filtered;
         }
 
-        function displayRows() {
-            rowsContainer.innerHTML = '';
+       // ============================================
+// ULTRA-ADVANCED DISPLAY ROWS
+// Maximum Intelligence + All Features
+// ============================================
+
+function displayRows() {
+    rowsContainer.innerHTML = '';
+    
+    const profiles = filterAndSortProfiles();
+    
+    if (profiles.length === 0) {
+        rowsContainer.innerHTML = '<div class="loading">No investors found matching your criteria.</div>';
+        return;
+    }
+
+    // Analyze AI learning progress
+    const preferences = analyzeFounderPreferences();
+    const learningConfidence = preferences.learningConfidence;
+
+    const categories = {
+        featured: [],
+        trending: [],
+        new: [],
+        active: [],
+        regular: [],
+        suiMatch: [], // Perfect SUI category matches
+        onlineNow: [], // Investors online in last 10 minutes
+        dailyActive: [], // Logged in today (daily boost)
+        matchingPattern: [], // AI behavior matching
+        pitchedSimilar: [], // Similar to pitched investors
+        preferredCategory: [], // AI learned categories
+        highReputation: [], // 10k+ reputation
+        fastResponders: [] // Quick reply history
+    };
+
+    // Categorize profiles with MAXIMUM INTELLIGENCE
+    profiles.forEach(item => {
+        const intelligentBoost = calculateIntelligentBoost(item.profile, item.userId);
+        const now = Date.now();
+        
+        // Check online status
+        let isOnlineNow = false;
+        let isDailyActive = false;
+        
+        if (item.profile.lastUpdated) {
+            const lastUpdate = new Date(item.profile.lastUpdated).getTime();
+            const minutesSince = (now - lastUpdate) / (1000 * 60);
+            const hoursSince = minutesSince / 60;
+            const daysSince = hoursSince / 24;
             
-            const profiles = filterAndSortProfiles();
+            isOnlineNow = minutesSince < 10;
+            isDailyActive = daysSince < 1;
+        }
+        
+        // **PRIORITY 1: ONLINE NOW** (Super active investors)
+        if (isOnlineNow) {
+            categories.onlineNow.push(item);
+        }
+        
+        // **PRIORITY 2: SUI MATCHMAKING** - Perfect category match
+        const hasSUIMatch = currentUserCategory && 
+                           item.profile.preferredCategories && 
+                           Array.isArray(item.profile.preferredCategories) &&
+                           item.profile.preferredCategories.includes(currentUserCategory);
+        
+        if (hasSUIMatch && !isOnlineNow) {
+            categories.suiMatch.push(item);
+        }
+        
+        // **PRIORITY 3: DAILY ACTIVE** - Logged in today
+        if (isDailyActive && !isOnlineNow && !hasSUIMatch) {
+            categories.dailyActive.push(item);
+        }
+        
+        // **PRIORITY 4: AI PATTERN MATCHING** - Behavior-based
+        if (learningConfidence >= 30 && intelligentBoost > 500 && !isOnlineNow && !hasSUIMatch && !isDailyActive) {
+            categories.matchingPattern.push(item);
+        }
+        
+        // **PRIORITY 5: HIGH REPUTATION** - Proven investors
+        const reputation = item.profile.replyReputation || 0;
+        if (reputation >= 10000 && !isOnlineNow && !hasSUIMatch && !isDailyActive && intelligentBoost <= 500) {
+            categories.highReputation.push(item);
+        }
+        
+        // **PRIORITY 6: TRADITIONAL CATEGORIZATION**
+        if (!isOnlineNow && !hasSUIMatch && !isDailyActive && intelligentBoost <= 500 && reputation < 10000) {
+            categories[item.category].push(item);
+        }
+    });
+
+    // ========================================
+    // **DISPLAY ORDER - PRIORITY BASED**
+    // ========================================
+    
+    // 🔥 **ROW 1: INVESTORS ONLINE NOW** (Highest Priority)
+    if (categories.onlineNow.length > 0) {
+        categories.onlineNow.sort((a, b) => b.score - a.score);
+        createRow(
+            categories.onlineNow.slice(0, 20), 
+            '🔥 Investors Online RIGHT NOW', 
+            'Live', 
+            'badge-featured'
+        );
+    }
+    
+    // 🎯 **ROW 2: SUI PERFECT MATCHES**
+    if (categories.suiMatch.length > 0) {
+        categories.suiMatch.sort((a, b) => b.score - a.score);
+        createRow(
+            categories.suiMatch.slice(0, 20), 
+            `🎯 Perfect Matches: ${currentUserCategory || 'Your Category'}`, 
+            'SUI Match', 
+            'badge-featured'
+        );
+    }
+    
+    // ⚡ **ROW 3: ACTIVE TODAY** (Daily boost investors)
+    if (categories.dailyActive.length > 0) {
+        categories.dailyActive.sort((a, b) => b.score - a.score);
+        createRow(
+            categories.dailyActive.slice(0, 15), 
+            '⚡ Active Today - Daily Boost', 
+            'Active', 
+            'badge-active'
+        );
+    }
+
+    // 🤖 **ROW 4-6: AI-POWERED PERSONALIZED ROWS** (Show when confidence >= 30%)
+    if (learningConfidence >= 30) {
+        
+        // Row 4: "Investors Matching Your Behavior"
+        if (categories.matchingPattern.length > 0) {
+            categories.matchingPattern.sort((a, b) => b.score - a.score);
+            createRow(
+                categories.matchingPattern.slice(0, 15), 
+                `🤖 AI Picked for You (${Math.round(learningConfidence)}% Confidence)`, 
+                'AI Match', 
+                'badge-trending'
+            );
+        }
+        
+        // Row 5: "Similar to [InvestorName] You Pitched"
+        const pitchedInvestors = Object.keys(founderBehaviorData.pitchedTo);
+        if (pitchedInvestors.length > 0) {
+            const lastPitchedId = pitchedInvestors[pitchedInvestors.length - 1];
+            const lastPitched = allProfiles[lastPitchedId];
             
-            if (profiles.length === 0) {
-                rowsContainer.innerHTML = '<div class="loading">No investors found matching your criteria.</div>';
-                return;
-            }
-
-            const categories = {
-                featured: [],
-                trending: [],
-                new: [],
-                active: [],
-                regular: []
-            };
-
-            profiles.forEach(item => {
-                categories[item.category].push(item);
-            });
-
-            const rowConfig = [
-                { key: 'featured', title: 'Featured Investors', badge: 'Featured', badgeClass: 'badge-featured' },
-                { key: 'trending', title: 'Trending Now', badge: 'Trending', badgeClass: 'badge-trending' },
-                { key: 'new', title: 'New on ScaleVest', badge: 'New', badgeClass: 'badge-new' },
-                { key: 'active', title: 'Active Now', badge: 'Online', badgeClass: 'badge-active' }
-            ];
-
-            rowConfig.forEach(config => {
-                const categoryProfiles = categories[config.key];
-                if (categoryProfiles.length > 0) {
-                    createRow(categoryProfiles, config.title, config.badge, config.badgeClass);
-                }
-            });
-
-            const regularProfiles = [...categories.regular, ...profiles.filter(p => p.category === 'regular')];
-            if (regularProfiles.length > 0) {
-                regularProfiles.sort((a, b) => b.score - a.score);
+            if (lastPitched) {
+                const similarInvestors = profiles.filter(p => {
+                    if (p.userId === lastPitchedId) return false;
+                    if (categories.onlineNow.includes(p)) return false;
+                    if (categories.suiMatch.includes(p)) return false;
+                    if (categories.dailyActive.includes(p)) return false;
+                    
+                    const similar = 
+                        p.profile.investorType === lastPitched.investorType ||
+                        (p.profile.preferredCategories || []).some(cat => 
+                            (lastPitched.preferredCategories || []).includes(cat)
+                        );
+                    
+                    return similar;
+                }).sort((a, b) => b.score - a.score);
                 
-                for (let i = 0; i < Math.min(10, Math.ceil(regularProfiles.length / 10)); i++) {
-                    const start = i * 10;
-                    const rowProfiles = regularProfiles.slice(start, start + 10);
-                    
-                    const sortedByScore = [...rowProfiles].sort((a, b) => b.score - a.score);
-                    const highScorers = sortedByScore.slice(0, 7);
-                    const lowerScorers = sortedByScore.slice(7);
-                    
-                    const mixedRow = [];
-                    for (let j = 0; j < 10; j++) {
-                        if (j % 3 === 2 && lowerScorers.length > 0) {
-                            mixedRow.push(lowerScorers.shift());
-                        } else if (highScorers.length > 0) {
-                            mixedRow.push(highScorers.shift());
-                        } else if (lowerScorers.length > 0) {
-                            mixedRow.push(lowerScorers.shift());
-                        }
-                    }
-                    
-                    createRow(mixedRow.filter(Boolean), `Recommended for You ${i > 0 ? '(' + (i + 1) + ')' : ''}`, null, null);
+                if (similarInvestors.length > 0) {
+                    createRow(
+                        similarInvestors.slice(0, 10),
+                        `💡 Similar to ${lastPitched.fullName || 'Investor'} You Pitched`,
+                        'Smart Pick',
+                        'badge-new'
+                    );
                 }
             }
         }
-
-        function createRow(profiles, title, badge, badgeClass) {
-            const rowDiv = document.createElement('div');
-            rowDiv.className = 'investor-row';
-            
-            const headerHTML = badge 
-                ? `<div class="row-header">
-                     <h2 class="row-title">${title}</h2>
-                     <span class="row-badge ${badgeClass}">${badge}</span>
-                   </div>`
-                : `<div class="row-header"><h2 class="row-title">${title}</h2></div>`;
-            
-            rowDiv.innerHTML = `
-                ${headerHTML}
-                <div class="cards-scroll-container">
-                    <div class="cards-row" id="row-${title.replace(/\s+/g, '-')}"></div>
-                </div>
-            `;
-            
-            rowsContainer.appendChild(rowDiv);
-            
-            const cardsRow = rowDiv.querySelector('.cards-row');
-            profiles.forEach(item => {
-                const card = createCard(item.userId, item.profile);
-                cardsRow.appendChild(card);
+        
+        // Row 6: "Top [Category] Investors" - AI learned preferences
+        if (preferences.preferredCategories.length > 0) {
+            preferences.preferredCategories.forEach((preferredCat, index) => {
+                if (index < 2) { // Show max 2 category rows
+                    const categoryInvestors = profiles.filter(p => {
+                        if (categories.onlineNow.includes(p)) return false;
+                        if (categories.suiMatch.includes(p)) return false;
+                        if (categories.dailyActive.includes(p)) return false;
+                        if (categories.matchingPattern.includes(p)) return false;
+                        
+                        return p.profile.investorType === preferredCat || 
+                               (p.profile.preferredCategories || []).includes(preferredCat);
+                    });
+                    
+                    if (categoryInvestors.length > 0) {
+                        categoryInvestors.sort((a, b) => b.score - a.score);
+                        createRow(
+                            categoryInvestors.slice(0, 10),
+                            `📂 Top ${preferredCat} Investors You Like`,
+                            'AI Learned',
+                            'badge-new'
+                        );
+                    }
+                }
             });
         }
+    }
+    
+    // 💎 **ROW 7: HIGH REPUTATION INVESTORS** (10k+)
+    if (categories.highReputation.length > 0) {
+        categories.highReputation.sort((a, b) => b.score - a.score);
+        createRow(
+            categories.highReputation.slice(0, 10), 
+            '💎 Elite Investors (10k+ Reputation)', 
+            'Elite', 
+            'badge-featured'
+        );
+    }
+
+    // 🏆 **ROW 8-11: TRADITIONAL ROWS** (Show based on learning stage)
+    const rowConfig = [
+        { key: 'featured', title: '🏆 Featured Investors', badge: 'Featured', badgeClass: 'badge-featured' },
+        { key: 'trending', title: '📈 Trending Now', badge: 'Trending', badgeClass: 'badge-trending' },
+        { key: 'new', title: '✨ New on ScaleVest', badge: 'New', badgeClass: 'badge-new' },
+        { key: 'active', title: '🟢 Recently Active', badge: 'Active', badgeClass: 'badge-active' }
+    ];
+
+    if (learningConfidence < 30) {
+        // Show ALL traditional rows when AI is still learning
+        rowConfig.forEach(config => {
+            const categoryProfiles = categories[config.key];
+            if (categoryProfiles.length > 0) {
+                createRow(categoryProfiles.slice(0, 15), config.title, config.badge, config.badgeClass);
+            }
+        });
+    } else if (learningConfidence < 50) {
+        // Show top 3 traditional rows when AI is learning
+        rowConfig.slice(0, 3).forEach(config => {
+            const categoryProfiles = categories[config.key];
+            if (categoryProfiles.length > 0) {
+                createRow(categoryProfiles.slice(0, 10), config.title, config.badge, config.badgeClass);
+            }
+        });
+    } else if (learningConfidence < 80) {
+        // Show only top 2 traditional rows when AI is confident
+        rowConfig.slice(0, 2).forEach(config => {
+            const categoryProfiles = categories[config.key];
+            if (categoryProfiles.length > 0) {
+                createRow(categoryProfiles.slice(0, 5), config.title, config.badge, config.badgeClass);
+            }
+        });
+    }
+    // When learningConfidence >= 80%, skip traditional rows (AI fully takes over)
+
+    // 📊 **ROW 12+: RECOMMENDED FOR YOU** (Enhanced smart mixing)
+    const regularProfiles = [...categories.regular, ...profiles.filter(p => p.category === 'regular')];
+    
+    // Remove duplicates already shown in other categories
+    const shownUserIds = new Set([
+        ...categories.onlineNow.map(p => p.userId),
+        ...categories.suiMatch.map(p => p.userId),
+        ...categories.dailyActive.map(p => p.userId),
+        ...categories.matchingPattern.map(p => p.userId),
+        ...categories.highReputation.map(p => p.userId)
+    ]);
+    
+    const uniqueRegular = regularProfiles.filter(p => !shownUserIds.has(p.userId));
+    
+    if (uniqueRegular.length > 0 && learningConfidence < 70) {
+        uniqueRegular.sort((a, b) => b.score - a.score);
+        
+        const numRows = Math.min(5, Math.ceil(uniqueRegular.length / 10));
+        
+        for (let i = 0; i < numRows; i++) {
+            const start = i * 10;
+            const rowProfiles = uniqueRegular.slice(start, start + 10);
+            
+            // Smart mixing: 70% high scorers, 30% variety
+            const sortedByScore = [...rowProfiles].sort((a, b) => b.score - a.score);
+            const highScorers = sortedByScore.slice(0, 7);
+            const lowerScorers = sortedByScore.slice(7);
+            
+            const mixedRow = [];
+            for (let j = 0; j < 10; j++) {
+                if (j % 3 === 2 && lowerScorers.length > 0) {
+                    mixedRow.push(lowerScorers.shift());
+                } else if (highScorers.length > 0) {
+                    mixedRow.push(highScorers.shift());
+                } else if (lowerScorers.length > 0) {
+                    mixedRow.push(lowerScorers.shift());
+                }
+            }
+            
+            createRow(
+                mixedRow.filter(Boolean), 
+                `📋 ${i === 0 ? 'Recommended for You' : `More Recommendations (${i + 1})`}`, 
+                null, 
+                null
+            );
+        }
+    }
+}
+
+function createRow(profiles, title, badge, badgeClass) {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'investor-row';
+    
+    const headerHTML = badge 
+        ? `<div class="row-header">
+             <h2 class="row-title">${title}</h2>
+             <span class="row-badge ${badgeClass}">${badge}</span>
+           </div>`
+        : `<div class="row-header"><h2 class="row-title">${title}</h2></div>`;
+    
+    rowDiv.innerHTML = `
+        ${headerHTML}
+        <div class="cards-scroll-container">
+            <div class="cards-row" id="row-${title.replace(/\s+/g, '-')}"></div>
+        </div>
+    `;
+    
+    rowsContainer.appendChild(rowDiv);
+    
+    const cardsRow = rowDiv.querySelector('.cards-row');
+    profiles.forEach(item => {
+        const card = createCard(item.userId, item.profile);
+        cardsRow.appendChild(card);
+    });
+}
 
         function createCard(userId, profile) {
+             trackCardView(userId, profile); 
             const card = document.createElement('div');
             card.className = 'angel-card';
 
@@ -1115,19 +1729,22 @@
             handlePitch(userId);
         };
 
-        window.handleViewProfile = async function(userId) {
-            try {
-                const profileRef = ref(database, `angelProfiles/${userId}`);
-                const snapshot = await get(profileRef);
-                
-                if (snapshot.exists()) {
-                    const profile = snapshot.val();
-                    displayProfileModal(profile);
-                }
-            } catch (error) {
-                console.error('Error loading profile:', error);
-            }
-        };
+window.handleViewProfile = async function(userId) {
+    profileViewStartTime = Date.now();
+    
+    try {
+        const profileRef = ref(database, `angelProfiles/${userId}`);
+        const snapshot = await get(profileRef);
+        
+        if (snapshot.exists()) {
+            const profile = snapshot.val();
+            displayProfileModal(profile);
+            trackProfileClick(userId, profile);
+        }
+    } catch (error) {
+        console.error('Error loading profile:', error);
+    }
+};
 
         function displayProfileModal(profile) {
             const categories = profile.preferredCategories || [];
@@ -1254,6 +1871,10 @@
     `;
 
     try {
+         const investorSnapshot = await get(ref(database, `angelProfiles/${selectedInvestor}`));
+        if (investorSnapshot.exists()) {
+            trackPitchAction(selectedInvestor, investorSnapshot.val());
+        }
         // 🚀 THE POWER MOVE: Atomically increment the investor's PitchedCount
         const investorRef = ref(database, `angelProfiles/${selectedInvestor}`);
         await update(investorRef, {
@@ -1281,25 +1902,29 @@
     }
 };
 
-        window.closeProfileModal = function() {
-            document.getElementById('profileModal').style.display = 'none';
-        };
-
+window.closeProfileModal = function() {
+    if (profileViewStartTime) {
+        const timeSpent = Math.floor((Date.now() - profileViewStartTime) / 1000);
+        profileViewStartTime = null;
+    }
+    
+    document.getElementById('profileModal').style.display = 'none';
+};
         window.closePitchModal = function() {
             document.getElementById('pitchModal').style.display = 'none';
             selectedApplication = null;
         };
 
-        window.onclick = function(event) {
-            const profileModal = document.getElementById('profileModal');
-            const pitchModal = document.getElementById('pitchModal');
-            if (event.target === profileModal) {
-                closeProfileModal();
-            }
-            if (event.target === pitchModal) {
-                closePitchModal();
-            }
-        };
+window.onclick = function(event) {
+    const profileModal = document.getElementById('profileModal');
+    const pitchModal = document.getElementById('pitchModal');
+    if (event.target === profileModal) {
+        closeProfileModal();
+    }
+    if (event.target === pitchModal) {
+        closePitchModal();
+    }
+};
     </script>
 </body>
 </html>
