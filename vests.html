@@ -6083,9 +6083,15 @@ function handleHashChange() {
             document.body.style.background = "#000";
             window.showApplicationsList(); 
         } 
-       else if (hash === 'application_replies') {
+// Inside handleHashChange function
+else if (hash === 'application_replies') {
     document.body.style.background = "#000";
-    window.showApplicationReplies();
+    // Explicitly call the function
+    if (typeof window.showApplicationReplies === 'function') {
+        window.showApplicationReplies();
+    } else {
+        console.error("showApplicationReplies is not defined");
+    }
 }
         else if (hash.startsWith('view_application_')) {
             const appId = hash.replace('view_application_', '');
