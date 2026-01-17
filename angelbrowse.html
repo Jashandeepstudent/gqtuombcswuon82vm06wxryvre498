@@ -2274,51 +2274,39 @@ window.handleViewProfile = async function(userId) {
             }
         };
 
-      async function displayApplications(apps) {
+       function displayApplications(apps) {
     const container = document.getElementById('applicationsContainer');
     container.innerHTML = '';
     
-    // We use a for...of loop to allow 'await' inside
-    for (const [appId, app] of apps) {
-        let startupName = app.startupName || 'Unnamed Startup';
-
-       
-        // Assuming app.founderId is the UID of the user who owns the startup
-        if (app.founderId) {
-            try {
-                const profileRef = ref(db, `startupProfile/${app.founderId}`);
-                const profileSnap = await get(profileRef);
-                if (profileSnap.exists()) {
-                    // Get the name from the startupProfile node
-                    startupName = profileSnap.val().startupName || startupName;
-                }
-            } catch (error) {
-                console.error("Error fetching startup name:", error);
-            }
-        }
-
+    apps.forEach(([appId, app]) => {
         const appDiv = document.createElement('div');
         appDiv.className = 'app-option';
         appDiv.innerHTML = `
-            <strong>${startupName}</strong>
             <p><small>Founder: ${app.founderName || 'ScaleVest Member'}</small></p>
             <p style="font-size: 0.85rem; color: #666; margin-top: 5px;">${app.appHook || 'No hook provided'}</p>
         `;
         
         appDiv.onclick = () => {
+            // 1. Remove "selected" class from all other options
             document.querySelectorAll('.app-option').forEach(el => el.classList.remove('selected'));
+            
+            // 2. Add "selected" class to this one
             appDiv.classList.add('selected');
             
+            // 3. Set the global variable
             selectedApplication = appId;
             
+            // 4. 🔥 THE FIX: Force the button to appear
             const submitBtn = document.getElementById('submitPitchBtn');
             submitBtn.style.display = 'block';
+            
+            // Optional: Scroll the button into view so the user sees it
             submitBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         };
         
         container.appendChild(appDiv);
-    }
-}
+    });
+
     // Add beautiful header (Your existing logic)
     const modalContent = document.querySelector('#pitchModal .modal-content');
     const existingHeader = modalContent.querySelector('.pitch-modal-header');
@@ -2336,7 +2324,7 @@ window.handleViewProfile = async function(userId) {
     }
 
     document.getElementById('pitchModal').style.display = 'block';
-
+}
 
 
 
