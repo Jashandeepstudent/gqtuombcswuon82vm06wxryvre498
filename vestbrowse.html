@@ -39,7 +39,6 @@
             margin-bottom: 30px;
         }
 
-        /* Stage Filter Pills */
         .category-filter {
             display: flex;
             gap: 12px;
@@ -75,7 +74,6 @@
             box-shadow: 0 4px 15px rgba(16,185,129,0.5);
         }
 
-        /* Search Box */
         .search-container {
             max-width: 600px;
             margin: 0 auto 40px;
@@ -104,7 +102,6 @@
             box-shadow: 0 4px 15px rgba(16,185,129,0.3);
         }
 
-        /* Vest Row Section */
         .vest-row {
             margin-bottom: 60px;
         }
@@ -138,7 +135,6 @@
         .badge-active { background: linear-gradient(135deg, #4169E1, #1E90FF); }
         .badge-trending { background: linear-gradient(135deg, #FF6B6B, #FF1493); }
 
-        /* Horizontal Scroll Container */
         .cards-scroll-container {
             overflow-x: auto;
             overflow-y: hidden;
@@ -169,7 +165,6 @@
             min-width: min-content;
         }
 
-        /* ENHANCED FIVERR-STYLE CARD */
         .card {
             background: #fff;
             border-radius: 16px;
@@ -428,9 +423,6 @@
     let searchTerm = '';
     let onlineStatusMap = {};
 
-    // ============================================
-    // INVESTOR BEHAVIOR TRACKING
-    // ============================================
     let investorBehaviorData = {
         vestViews: {},
         categoryViews: {},
@@ -588,7 +580,9 @@
                 const savedData = snapshot.val();
                 investorBehaviorData = {
                     ...investorBehaviorData,
-                    ...savedData
+                    ...savedData,
+                    sessionStartTime: Date.now(),
+                    lastActivityTime: Date.now()
                 };
             }
         } catch (error) {
@@ -618,7 +612,7 @@
     });
 
     // ============================================
-    // AI LEARNING ALGORITHM
+    // IMPROVED AI LEARNING ALGORITHM
     // ============================================
     function analyzeInvestorPreferences() {
         const analysis = {
@@ -629,34 +623,47 @@
         
         const totalViews = Object.keys(investorBehaviorData.vestViews).length;
         const totalAnalyzed = investorBehaviorData.analyzedVests.length;
+        const totalSearches = investorBehaviorData.searchHistory.length;
         
+        // IMPROVED CONFIDENCE CALCULATION
         if (totalViews < 5) {
-            analysis.learningConfidence = totalViews * 15;
-            return analysis;
+            analysis.learningConfidence = totalViews * 10;
         } else if (totalViews < 15) {
-            analysis.learningConfidence = 75 + (totalViews - 5);
+            analysis.learningConfidence = 50 + ((totalViews - 5) * 2.5);
         } else if (totalViews < 30) {
-            analysis.learningConfidence = 85 + ((totalViews - 15) * 0.5);
+            analysis.learningConfidence = 75 + ((totalViews - 15) * 1);
+        } else if (totalViews < 50) {
+            analysis.learningConfidence = 90 + ((totalViews - 30) * 0.25);
         } else {
-            const baseLearning = 92;
-            const analyzeBonus = Math.min(totalAnalyzed * 1.5, 8);
-            analysis.learningConfidence = Math.min(baseLearning + analyzeBonus, 100);
+            const baseLearning = 95;
+            const analyzeBonus = Math.min(totalAnalyzed * 0.5, 3);
+            const searchBonus = Math.min(totalSearches * 0.1, 2);
+            analysis.learningConfidence = Math.min(baseLearning + analyzeBonus + searchBonus, 100);
         }
         
+        // WEIGHTED PREFERENCE ANALYSIS
         const stageScores = {};
-        Object.entries(investorBehaviorData.stageViews).forEach(([stage, count]) => {
-            stageScores[stage] = count;
+        const categoryScores = {};
+        
+        // Weight recent views more heavily
+        Object.entries(investorBehaviorData.vestViews).forEach(([vestId, data]) => {
+            const recencyWeight = 1 + (0.5 * Math.min((Date.now() - data.lastSeen) / (1000 * 60 * 60 * 24), 1));
+            const viewWeight = Math.min(data.count, 5);
+            const totalWeight = recencyWeight * viewWeight;
+            
+            if (data.stage) {
+                stageScores[data.stage] = (stageScores[data.stage] || 0) + totalWeight;
+            }
+            
+            if (data.category) {
+                categoryScores[data.category] = (categoryScores[data.category] || 0) + totalWeight;
+            }
         });
         
         analysis.preferredStages = Object.entries(stageScores)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 3)
             .map(([stage]) => stage);
-        
-        const categoryScores = {};
-        Object.entries(investorBehaviorData.categoryViews).forEach(([cat, count]) => {
-            categoryScores[cat] = count;
-        });
         
         analysis.preferredCategories = Object.entries(categoryScores)
             .sort((a, b) => b[1] - a[1])
@@ -666,67 +673,92 @@
         return analysis;
     }
 
+    // ============================================
+    // IMPROVED AI INTELLIGENCE BOOST
+    // ============================================
     function calculateIntelligentBoost(vestData, vestId) {
         const preferences = analyzeInvestorPreferences();
         let boost = 0;
         
-        if (preferences.learningConfidence < 30) {
+        // AI doesn't activate until 75% confidence
+        if (preferences.learningConfidence < 75) {
             return boost;
         }
         
-        // Stage preference boost
+        // Calculate confidence multiplier (0.3x at 75%, scaling to 1.8x at 100%)
+        const confidenceMultiplier = preferences.learningConfidence >= 100 
+            ? 1.8 
+            : 0.3 + ((preferences.learningConfidence - 75) / 25) * 1.5;
+        
+        // STAGE PREFERENCE INTELLIGENCE
         const stage = vestData.StartupDetails?.stage;
         if (stage && preferences.preferredStages.includes(stage)) {
             const rank = preferences.preferredStages.indexOf(stage);
-            boost += (3 - rank) * 350;
+            const stageWeight = (3 - rank) * 600;
+            boost += stageWeight;
         }
         
-        // Category preference boost
+        // CATEGORY PREFERENCE INTELLIGENCE (Higher weight)
         const category = vestData.StartupDetails?.category;
         if (category && preferences.preferredCategories.includes(category)) {
             const rank = preferences.preferredCategories.indexOf(category);
-            boost += (3 - rank) * 400;
+            const categoryWeight = (3 - rank) * 800;
+            boost += categoryWeight;
         }
         
-        // View count boost
+        // BEHAVIORAL PATTERN MATCHING
         if (investorBehaviorData.vestViews[vestId]) {
             const viewCount = investorBehaviorData.vestViews[vestId].count;
-            boost += viewCount * 100;
+            boost += Math.min(viewCount * 150, 600);
         }
         
-        // Time spent boost
+        // TIME ENGAGEMENT BOOST
         const timeSpent = investorBehaviorData.timeSpentOnVests[vestId] || 0;
-        boost += Math.min(timeSpent * 5, 500);
+        boost += Math.min(timeSpent * 8, 700);
         
-        // Search history boost
+        // SEARCH PATTERN MATCHING
         if (investorBehaviorData.searchHistory.length > 0) {
-            const recentSearches = investorBehaviorData.searchHistory.slice(-10);
+            const recentSearches = investorBehaviorData.searchHistory.slice(-15);
+            let searchMatches = 0;
+            
             recentSearches.forEach(search => {
                 const searchTerm = search.term.toLowerCase();
                 const startupName = (vestData.StartupDetails?.name || '').toLowerCase();
                 const vestCategory = (vestData.StartupDetails?.category || '').toLowerCase();
+                const hook = (vestData.MainVest?.hook || '').toLowerCase();
                 
-                if (startupName.includes(searchTerm) || vestCategory.includes(searchTerm)) {
-                    boost += 400;
+                if (startupName.includes(searchTerm) || 
+                    vestCategory.includes(searchTerm) || 
+                    hook.includes(searchTerm)) {
+                    searchMatches++;
                 }
             });
+            
+            boost += searchMatches * 500;
         }
         
-        boost = boost * (preferences.learningConfidence / 100);
+        // SIMILAR VEST ANALYSIS (If investor viewed vests in same category/stage)
+        const similarVestsViewed = Object.values(investorBehaviorData.vestViews).filter(v => 
+            v.category === category || v.stage === stage
+        ).length;
+        boost += Math.min(similarVestsViewed * 100, 500);
+        
+        // Apply confidence multiplier
+        boost = boost * confidenceMultiplier;
         
         return boost;
     }
 
     // ============================================
-    // VEST SCORING ALGORITHM (ALL BOOSTS)
+    // FIXED PRIORITY SCORING SYSTEM
     // ============================================
     function calculateVestScore(vestData, vestId) {
-        let score = 0;
+        let score = 100; // Base score
         const now = Date.now();
         const preferences = analyzeInvestorPreferences();
         const learningConfidence = preferences.learningConfidence;
         
-        // **PRIORITY 1: SUI MATCHMAKING** (Category match with investor preferences)
+        // **PRIORITY 1: SUI MATCHMAKING** (Highest priority - investor's explicit preferences)
         const vestCategory = vestData.StartupDetails?.category;
         const hasSUIMatch = investorPreferences && 
                            investorPreferences.preferredCategories && 
@@ -735,65 +767,63 @@
                            investorPreferences.preferredCategories.includes(vestCategory);
         
         if (hasSUIMatch) {
-            score = 10000; // Massive base score for perfect match
-        } else {
-            score += 100; // Base score
+            score += 20000; // MASSIVE boost for SUI match
         }
         
-        // **PRIORITY 2: AI INTELLIGENCE BOOST**
-        if (learningConfidence >= 30) {
-            const intelligentBoost = calculateIntelligentBoost(vestData, vestId);
-            score += intelligentBoost;
-        }
-        
-        // **PRIORITY 3: FOUNDER ONLINE STATUS BOOSTS**
+        // **PRIORITY 2: FOUNDER ONLINE STATUS**
         const founderUID = vestData.ownerUID || vestData.userId;
         const presenceData = onlineStatusMap[founderUID] || {};
         
-        // Online NOW
         if (presenceData.online === true) {
-            score += 1500;
+            score += 2500; // Online NOW
         }
         
-        // Logged in today
         if (presenceData.todayLogin === true) {
-            score += 400;
+            score += 1000; // Active today
         }
         
-        // Login streak boost
         if (presenceData.loginStreak && presenceData.loginStreak > 0) {
-            const streakBonus = Math.min(presenceData.loginStreak * 10, 300);
+            const streakBonus = Math.min(presenceData.loginStreak * 20, 600);
             score += streakBonus;
         }
         
-        // **PRIORITY 4: NEW VEST BOOST** (Created in last 24-72 hours)
+        // **PRIORITY 3: NEW VEST BOOST**
         if (vestData.createdAt) {
             const createdTime = new Date(vestData.createdAt).getTime();
             const hoursSinceCreation = (now - createdTime) / (1000 * 60 * 60);
-            if (hoursSinceCreation < 24) {
-                score += 800;
+            if (hoursSinceCreation < 12) {
+                score += 1500; // Very new (< 12 hours)
+            } else if (hoursSinceCreation < 24) {
+                score += 1200; // New (< 24 hours)
             } else if (hoursSinceCreation < 72) {
-                score += 400;
+                score += 700; // Recent (< 3 days)
             }
         }
         
-        // **PRIORITY 5: STAGE PREFERENCE MATCH**
+        // **PRIORITY 4: STAGE PREFERENCE MATCH**
         const vestStage = vestData.StartupDetails?.stage;
         if (investorPreferences && investorPreferences.preferredStages) {
             if (Array.isArray(investorPreferences.preferredStages) && 
                 investorPreferences.preferredStages.includes(vestStage)) {
-                score += 600;
+                score += 1100;
             }
         }
         
-        // **PRIORITY 6: TRENDING BOOST** (Based on views if available)
+        // **PRIORITY 5: TRENDING/VIEW COUNT**
         if (vestData.viewCount && vestData.viewCount > 50) {
-            score += vestData.viewCount * 2;
+            score += Math.min(vestData.viewCount * 4, 1000);
         }
         
-        // **PRIORITY 7: RANDOMNESS** (2% only)
-        const randomFactor = Math.random() * 0.02 * score;
+        // **PRIORITY 6: RANDOMNESS** (Diversity)
+        const randomFactor = Math.random() * 150;
         score += randomFactor;
+        
+        // **PRIORITY 7: AI INTELLIGENCE BOOST**
+        // Low priority until 75% confidence, becomes secondary priority at 100%
+        if (learningConfidence >= 75) {
+            const intelligentBoost = calculateIntelligentBoost(vestData, vestId);
+            score += intelligentBoost;
+        }
         
         return score;
     }
@@ -832,7 +862,6 @@
         }
     });
 
-    // Stage filter buttons
     document.querySelectorAll('.category-pill').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.category-pill').forEach(b => b.classList.remove('active'));
@@ -842,7 +871,6 @@
         });
     });
 
-    // Search box
     document.getElementById('searchBox').addEventListener('input', (e) => {
         searchTerm = e.target.value.toLowerCase().trim();
         
@@ -899,12 +927,10 @@
 
     function filterAndSortVests() {
         let filtered = Object.entries(allVests).filter(([vestId, vestData]) => {
-            // Filter by stage
             if (selectedStage !== 'All' && vestData.StartupDetails?.stage !== selectedStage) {
                 return false;
             }
             
-            // Filter by search
             if (searchTerm) {
                 const startupName = (vestData.StartupDetails?.name || '').toLowerCase();
                 const category = (vestData.StartupDetails?.category || '').toLowerCase();
@@ -948,7 +974,6 @@
         const preferences = analyzeInvestorPreferences();
         const learningConfidence = preferences.learningConfidence;
 
-        // Organize vests by STARTUP CATEGORY (not stage)
         const categoryRows = {
             suiMatch: [],
             onlineNow: [],
@@ -957,7 +982,6 @@
             aiPicked: []
         };
 
-        // Dynamic category storage
         const startupCategories = {};
 
         vests.forEach(item => {
@@ -965,31 +989,27 @@
             const vestCategory = item.vestData.StartupDetails?.category;
             const now = Date.now();
             
-            // Track vest view
-            trackVestView(item.vestId, item.vestData);
-            
-            // Check founder online status
             const founderUID = item.vestData.ownerUID || item.vestData.userId;
             const presenceData = onlineStatusMap[founderUID] || {};
             
             let isOnlineNow = presenceData.online === true;
             let isDailyActive = presenceData.todayLogin === true;
             
-            // **PRIORITY 1: ONLINE NOW**
-            if (isOnlineNow) {
-                categoryRows.onlineNow.push(item);
-                return;
-            }
-            
-            // **PRIORITY 2: SUI PERFECT MATCH**
+            // **PRIORITY 1: SUI PERFECT MATCH** (Always first)
             const hasSUIMatch = investorPreferences && 
                                investorPreferences.preferredCategories && 
                                Array.isArray(investorPreferences.preferredCategories) &&
                                vestCategory &&
                                investorPreferences.preferredCategories.includes(vestCategory);
             
-            if (hasSUIMatch && !isOnlineNow) {
+            if (hasSUIMatch) {
                 categoryRows.suiMatch.push(item);
+                return;
+            }
+            
+            // **PRIORITY 2: ONLINE NOW** (But only if not SUI match)
+            if (isOnlineNow && !hasSUIMatch) {
+                categoryRows.onlineNow.push(item);
                 return;
             }
             
@@ -999,23 +1019,23 @@
                 return;
             }
             
-            // **PRIORITY 4: NEW VESTS** (Last 24 hours - Reserve 3 minimum)
+            // **PRIORITY 4: NEW VESTS** (Last 24 hours)
             if (item.vestData.createdAt) {
                 const createdTime = new Date(item.vestData.createdAt).getTime();
                 const hoursSinceCreation = (now - createdTime) / (1000 * 60 * 60);
-                if (hoursSinceCreation < 24) {
+                if (hoursSinceCreation < 24 && !hasSUIMatch && !isOnlineNow && !isDailyActive) {
                     categoryRows.new.push(item);
                     return;
                 }
             }
             
-            // **PRIORITY 5: AI PICKED** (if confidence >= 30%)
-            if (learningConfidence >= 30 && intelligentBoost > 500) {
+            // **PRIORITY 5: AI PICKED** (Only when confidence >= 75%)
+            if (learningConfidence >= 75 && intelligentBoost > 800) {
                 categoryRows.aiPicked.push(item);
                 return;
             }
             
-            // **PRIORITY 6: BY STARTUP CATEGORY** (E-commerce, SaaS, FinTech, etc.)
+            // **PRIORITY 6: BY STARTUP CATEGORY**
             if (vestCategory) {
                 if (!startupCategories[vestCategory]) {
                     startupCategories[vestCategory] = [];
@@ -1025,27 +1045,27 @@
         });
 
         // ============================================
-        // DISPLAY ORDER - PRIORITY BASED
+        // DISPLAY ORDER - FIXED PRIORITY
         // ============================================
         
-        // **ROW 1: FOUNDERS ONLINE NOW**
-        if (categoryRows.onlineNow.length > 0) {
-            categoryRows.onlineNow.sort((a, b) => b.score - a.score);
-            createRow(
-                categoryRows.onlineNow.slice(0, 10),
-                '🔥 Founders Active Now',
-                'Live',
-                'badge-perfect'
-            );
-        }
-        
-        // **ROW 2: SUI PERFECT MATCHES**
+        // **ROW 1: SUI PERFECT MATCHES** (ALWAYS FIRST)
         if (categoryRows.suiMatch.length > 0) {
             categoryRows.suiMatch.sort((a, b) => b.score - a.score);
             createRow(
                 categoryRows.suiMatch.slice(0, 10),
                 `🎯 Perfect Match: ${investorPreferences?.preferredCategories?.[0] || 'Your Preferences'}`,
                 'Perfect Match',
+                'badge-perfect'
+            );
+        }
+        
+        // **ROW 2: FOUNDERS ONLINE NOW**
+        if (categoryRows.onlineNow.length > 0) {
+            categoryRows.onlineNow.sort((a, b) => b.score - a.score);
+            createRow(
+                categoryRows.onlineNow.slice(0, 10),
+                '🔥 Founders Active Now',
+                'Live',
                 'badge-perfect'
             );
         }
@@ -1061,7 +1081,7 @@
             );
         }
         
-        // **ROW 4: NEW VESTS** (Reserve 3 slots minimum)
+        // **ROW 4: NEW VESTS**
         if (categoryRows.new.length > 0) {
             categoryRows.new.sort((a, b) => b.score - a.score);
             const minSlots = 3;
@@ -1074,19 +1094,19 @@
             );
         }
         
-        // **ROW 5: AI PICKED** (Show when confidence >= 30%)
-        if (learningConfidence >= 30 && categoryRows.aiPicked.length > 0) {
+        // **ROW 5: AI PICKED** (Show when confidence >= 75%)
+        if (learningConfidence >= 75 && categoryRows.aiPicked.length > 0) {
             categoryRows.aiPicked.sort((a, b) => b.score - a.score);
+            const confidenceLabel = learningConfidence >= 100 ? '100%' : `${Math.round(learningConfidence)}%`;
             createRow(
                 categoryRows.aiPicked.slice(0, 10),
-                `🤖 AI Picked For You `,
+                `🤖 AI Picked For You (${confidenceLabel} Confidence)`,
                 'AI Match',
                 'badge-trending'
             );
         }
         
-        // **ROWS 6+: BY STARTUP CATEGORY** (One row per category - E-commerce, SaaS, etc.)
-        // Sort categories by total score
+        // **ROWS 6+: BY STARTUP CATEGORY**
         const sortedCategories = Object.entries(startupCategories)
             .map(([category, vests]) => {
                 const totalScore = vests.reduce((sum, v) => sum + v.score, 0);
@@ -1098,10 +1118,7 @@
             if (vests.length > 0) {
                 vests.sort((a, b) => b.score - a.score);
                 
-                // Show max 10 per category
                 const vestsToShow = vests.slice(0, 10);
-                
-                // Get category emoji
                 const categoryEmoji = getCategoryEmoji(category);
                 
                 createRow(
