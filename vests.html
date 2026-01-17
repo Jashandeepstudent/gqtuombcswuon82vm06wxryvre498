@@ -4808,12 +4808,15 @@ function timeSince(date) {
     return "Just now";
 }
 // --- PASTE AFTER timeSince function ---
+// Track which replies we've already shown popups for (persist across page refreshes)
+let shownPopups = new Set(JSON.parse(localStorage.getItem('shownReplyPopups') || '[]'));
+
 function startApplicationReplyListener() {
     if (!currentUser) return;
 
     const repliesRef = ref(db, 'ApplicationReplies');
 
-    onValue(repliesRef, (snapshot) => {
+    onValue(repliesRef, async (snapshot) => {
         if (!snapshot.exists()) {
             updateReplyBadge(0);
             return;
@@ -4822,17 +4825,318 @@ function startApplicationReplyListener() {
         const allReplies = snapshot.val() || {};
         let unreadCount = 0;
 
-        Object.values(allReplies).forEach(reply => {
-            // ✅ FILTER BY LOGGED-IN USER
-            if (reply.founderId === currentUser.uid && reply.read === false) {
-                unreadCount++;
+        // Find unread replies for this user
+        for (const [replyId, reply] of Object.entries(allReplies)) {
+            // ✅ ONLY process replies for THIS user
+            if (reply.founderId === currentUser.uid) {
+                
+                // Count unread replies
+                if (reply.read === false) {
+                    unreadCount++;
+                    
+                    // ✅ Show popup ONLY if:
+                    // 1. Reply is unread (read: false)
+                    // 2. We haven't shown popup for this reply before
+                    // 3. User is on dashboard
+                    if (!shownPopups.has(replyId)) {
+                        const isDashboard = window.location.hash === '#founder_dashboard' || window.location.hash === '';
+                        
+                        if (isDashboard) {
+                            // Mark as shown IMMEDIATELY to prevent duplicates
+                            shownPopups.add(replyId);
+                            localStorage.setItem('shownReplyPopups', JSON.stringify([...shownPopups]));
+                            
+                            // Fetch investor name
+                            let investorName = 'An Investor';
+                            try {
+                                const investorSnap = await get(ref(db, `angelProfiles/${reply.investorId}/fullName`));
+                                if (investorSnap.exists()) {
+                                    investorName = investorSnap.val();
+                                }
+                            } catch (e) {
+                                console.error("Error fetching investor:", e);
+                            }
+                            
+                            // Fetch application name
+                            let appName = 'Your Application';
+                            try {
+                                const appSnap = await get(ref(db, `Applications/${currentUser.uid}/${reply.applicationId}/appName`));
+                                if (appSnap.exists()) {
+                                    appName = appSnap.val();
+                                }
+                            } catch (e) {
+                                console.error("Error fetching app name:", e);
+                            }
+                            
+                            // Show the popup
+                            showNewReplyPopup(reply, investorName, appName, replyId);
+                        }
+                    }
+                }
+                
+                // ✅ IMPORTANT: If reply is now read, remove from shown list
+                // This allows popup to show again if status changes back to unread
+                if (reply.read === true && shownPopups.has(replyId)) {
+                    shownPopups.delete(replyId);
+                    localStorage.setItem('shownReplyPopups', JSON.stringify([...shownPopups]));
+                }
             }
-        });
+        }
 
         updateReplyBadge(unreadCount);
     });
 }
+// Show Beautiful Reply Notification Popup
+function showNewReplyPopup(replyData, investorName, appName, replyId) {
+    // Prevent duplicate popups
+    if (document.getElementById('newReplyPopup')) return;
+    
+    // Determine status styling
+    let statusClass = '';
+    let statusText = '';
+    let statusEmoji = '';
+    let statusColor = '';
+    
+    if (replyData.status === 'YES') {
+        statusClass = 'status-accepted';
+        statusText = 'Accepted';
+        statusEmoji = '🎉';
+        statusColor = '#10b981';
+    } else if (replyData.status === 'LATER') {
+        statusClass = 'status-postponed';
+        statusText = 'Postponed';
+        statusEmoji = '⏸️';
+        statusColor = '#fbbf24';
+    } else {
+        statusClass = 'status-rejected';
+        statusText = 'Rejected';
+        statusEmoji = '💭';
+        statusColor = '#ef4444';
+    }
+    
+    // Create popup overlay
+    const popup = document.createElement('div');
+    popup.id = 'newReplyPopup';
+    popup.innerHTML = `
+        <style>
+            .new-reply-popup-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(10px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 999999;
+                animation: popupFadeIn 0.4s ease;
+            }
+            
+            @keyframes popupFadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            
+            .new-reply-popup-box {
+                background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+                border: 2px solid #333;
+                border-radius: 24px;
+                width: 90%;
+                max-width: 500px;
+                padding: 0;
+                position: relative;
+                overflow: hidden;
+                box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+                animation: popupSlideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            
+            @keyframes popupSlideUp {
+                from { 
+                    transform: translateY(50px) scale(0.9);
+                    opacity: 0;
+                }
+                to { 
+                    transform: translateY(0) scale(1);
+                    opacity: 1;
+                }
+            }
+            
+            .popup-glow-ring {
+                position: absolute;
+                top: -50px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #ff006e, #8338ec);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 0 40px rgba(255, 0, 110, 0.6);
+                animation: pulseGlow 2s infinite;
+                z-index: 10;
+            }
+            
+            @keyframes pulseGlow {
+                0%, 100% { transform: translateX(-50%) scale(1); }
+                50% { transform: translateX(-50%) scale(1.1); }
+            }
+            
+            .popup-icon-inner {
+                width: 100px;
+                height: 100px;
+                border-radius: 50%;
+                background: #000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 3rem;
+            }
+            
+            .popup-content-area {
+                padding: 80px 40px 40px 40px;
+                text-align: center;
+            }
+            
+            .popup-new-tag {
+                display: inline-block;
+                background: linear-gradient(135deg, #ff006e, #ff4d94);
+                color: #fff;
+                padding: 6px 16px;
+                border-radius: 20px;
+                font-size: 0.75rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-bottom: 1.5rem;
+                animation: tagPulse 1.5s infinite;
+            }
+            
+            @keyframes tagPulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+            
+            .popup-main-title {
+                font-size: 1.8rem;
+                font-weight: 800;
+                color: #fff;
+                margin-bottom: 1rem;
+                line-height: 1.3;
+            }
+            
+            .popup-app-highlight {
+                color: #ff006e;
+                font-weight: 700;
+            }
+            
+            .popup-investor-highlight {
+                color: #8338ec;
+                font-weight: 700;
+            }
+            
+            .popup-status-display {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 1rem;
+                margin: 2rem 0;
+                padding: 1.5rem;
+                background: rgba(255, 255, 255, 0.03);
+                border-radius: 16px;
+                border: 1px solid #222;
+            }
+            
+            .status-badge-popup {
+                padding: 10px 24px;
+                border-radius: 20px;
+                font-weight: 800;
+                font-size: 1.1rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: #fff;
+            }
+            
+            .popup-message-text {
+                color: #aaa;
+                font-size: 1rem;
+                line-height: 1.7;
+                margin-bottom: 2rem;
+            }
+            
+            .popup-action-btn {
+                background: linear-gradient(135deg, #ff006e, #8338ec);
+                color: #fff;
+                border: none;
+                padding: 16px 48px;
+                border-radius: 12px;
+                font-weight: 800;
+                font-size: 1rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                cursor: pointer;
+                transition: all 0.3s;
+                box-shadow: 0 10px 30px rgba(255, 0, 110, 0.3);
+            }
+            
+            .popup-action-btn:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 15px 40px rgba(255, 0, 110, 0.5);
+            }
+        </style>
+        
+        <div class="new-reply-popup-overlay" onclick="closeNewReplyPopup('${replyId}')">
+            <div class="new-reply-popup-box" onclick="event.stopPropagation()">
+                
+                <div class="popup-glow-ring">
+                    <div class="popup-icon-inner">
+                        ${statusEmoji}
+                    </div>
+                </div>
+                
+                <div class="popup-content-area">
+                    <div class="popup-new-tag">🔔 NEW REPLY</div>
+                    
+                    <h2 class="popup-main-title">
+                        Application Reply Received!
+                    </h2>
+                    
+                    <div class="popup-status-display">
+                        <span class="status-badge-popup" style="background: ${statusColor};">
+                            ${statusText}
+                        </span>
+                    </div>
+                    
+                    <p class="popup-message-text">
+                        <strong class="popup-investor-highlight">${investorName}</strong> has responded to your application 
+                        <strong class="popup-app-highlight">"${appName}"</strong>
+                        <br><br>
+                        Please check the <strong>Application Replies Inbox</strong> to view the full details.
+                    </p>
+                    
+                    <button class="popup-action-btn" onclick="closeNewReplyPopup('${replyId}')">
+                        OK, Got It!
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(popup);
+}
 
+// Close popup function
+window.closeNewReplyPopup = function(replyId) {
+    const popup = document.getElementById('newReplyPopup');
+    if (popup) {
+        popup.style.animation = 'popupFadeIn 0.3s ease reverse';
+        setTimeout(() => popup.remove(), 300);
+    }
+};
 function updateReplyBadge(count) {
     const badge = document.getElementById('replyNotifBadge');
     const countEl = document.getElementById('replyCount');
