@@ -288,8 +288,7 @@
                 investorId: auth.currentUser.uid,
                 status: tempStatus,
                 comment,
-                 founderId: founderId,          // 🔥 ADD THIS LINE
-                  applicationId: applicationId,
+                 founderId: currentApp.founderId
                 timestamp: serverTimestamp()
             });
 
