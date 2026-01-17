@@ -4807,7 +4807,38 @@ function timeSince(date) {
     if (interval > 1) return Math.floor(interval) + "m ago";
     return "Just now";
 }
+// --- PASTE AFTER timeSince function ---
+function startApplicationReplyListener() {
+    if (!currentUser) return;
+    const repliesRef = ref(db, 'ApplicationReplies');
+    onValue(repliesRef, (snapshot) => {
+        if (!snapshot.exists()) {
+            updateReplyBadge(0);
+            return;
+        }
+        const allReplies = snapshot.val();
+        let unreadCount = 0;
+        Object.values(allReplies).forEach(reply => {
+            if (reply.read === false) {
+                unreadCount++;
+            }
+        });
+        updateReplyBadge(unreadCount);
+    });
+}
 
+function updateReplyBadge(count) {
+    const badge = document.getElementById('replyNotifBadge');
+    const countEl = document.getElementById('replyCount');
+    if (badge && countEl) {
+        if (count > 0) {
+            badge.style.display = 'block';
+            countEl.textContent = count;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
 import {
   onDisconnect,
   serverTimestamp,
@@ -5737,6 +5768,7 @@ function formatTimestamp(timestamp) {
           setUserPresence(user);
         isInitialLoad = false;
         startNotificationListener();
+        startApplicationReplyListener();
         document.getElementById('loadingScreen').classList.remove('hidden');
         
         try {
