@@ -974,158 +974,75 @@
         const preferences = analyzeInvestorPreferences();
         const learningConfidence = preferences.learningConfidence;
 
-        const categoryRows = {
-            suiMatch: [],
-            onlineNow: [],
-            dailyActive: [],
-            new: [],
-            aiPicked: []
-        };
-
+        // GROUP ALL VESTS BY THEIR STARTUP CATEGORY
         const startupCategories = {};
 
         vests.forEach(item => {
-            const intelligentBoost = calculateIntelligentBoost(item.vestData, item.vestId);
-            const vestCategory = item.vestData.StartupDetails?.category;
-            const now = Date.now();
+            const vestCategory = item.vestData.StartupDetails?.category || 'Other';
             
-            const founderUID = item.vestData.ownerUID || item.vestData.userId;
-            const presenceData = onlineStatusMap[founderUID] || {};
-            
-            let isOnlineNow = presenceData.online === true;
-            let isDailyActive = presenceData.todayLogin === true;
-            
-            // **PRIORITY 1: SUI PERFECT MATCH** (Always first)
-            const hasSUIMatch = investorPreferences && 
-                               investorPreferences.preferredCategories && 
-                               Array.isArray(investorPreferences.preferredCategories) &&
-                               vestCategory &&
-                               investorPreferences.preferredCategories.includes(vestCategory);
-            
-            if (hasSUIMatch) {
-                categoryRows.suiMatch.push(item);
-                return;
+            if (!startupCategories[vestCategory]) {
+                startupCategories[vestCategory] = [];
             }
-            
-            // **PRIORITY 2: ONLINE NOW** (But only if not SUI match)
-            if (isOnlineNow && !hasSUIMatch) {
-                categoryRows.onlineNow.push(item);
-                return;
-            }
-            
-            // **PRIORITY 3: DAILY ACTIVE**
-            if (isDailyActive && !isOnlineNow && !hasSUIMatch) {
-                categoryRows.dailyActive.push(item);
-                return;
-            }
-            
-            // **PRIORITY 4: NEW VESTS** (Last 24 hours)
-            if (item.vestData.createdAt) {
-                const createdTime = new Date(item.vestData.createdAt).getTime();
-                const hoursSinceCreation = (now - createdTime) / (1000 * 60 * 60);
-                if (hoursSinceCreation < 24 && !hasSUIMatch && !isOnlineNow && !isDailyActive) {
-                    categoryRows.new.push(item);
-                    return;
-                }
-            }
-            
-            // **PRIORITY 5: AI PICKED** (Only when confidence >= 75%)
-            if (learningConfidence >= 75 && intelligentBoost > 800) {
-                categoryRows.aiPicked.push(item);
-                return;
-            }
-            
-            // **PRIORITY 6: BY STARTUP CATEGORY**
-            if (vestCategory) {
-                if (!startupCategories[vestCategory]) {
-                    startupCategories[vestCategory] = [];
-                }
-                startupCategories[vestCategory].push(item);
-            }
+            startupCategories[vestCategory].push(item);
         });
 
-        // ============================================
-        // DISPLAY ORDER - FIXED PRIORITY
-        // ============================================
-        
-        // **ROW 1: SUI PERFECT MATCHES** (ALWAYS FIRST)
-        if (categoryRows.suiMatch.length > 0) {
-            categoryRows.suiMatch.sort((a, b) => b.score - a.score);
-            createRow(
-                categoryRows.suiMatch.slice(0, 10),
-                `🎯 Perfect Match: ${investorPreferences?.preferredCategories?.[0] || 'Your Preferences'}`,
-                'Perfect Match',
-                'badge-perfect'
-            );
-        }
-        
-        // **ROW 2: FOUNDERS ONLINE NOW**
-        if (categoryRows.onlineNow.length > 0) {
-            categoryRows.onlineNow.sort((a, b) => b.score - a.score);
-            createRow(
-                categoryRows.onlineNow.slice(0, 10),
-                '🔥 Founders Active Now',
-                'Live',
-                'badge-perfect'
-            );
-        }
-        
-        // **ROW 3: ACTIVE TODAY**
-        if (categoryRows.dailyActive.length > 0) {
-            categoryRows.dailyActive.sort((a, b) => b.score - a.score);
-            createRow(
-                categoryRows.dailyActive.slice(0, 10),
-                '⚡ Founders Active Today',
-                'Active',
-                'badge-active'
-            );
-        }
-        
-        // **ROW 4: NEW VESTS**
-        if (categoryRows.new.length > 0) {
-            categoryRows.new.sort((a, b) => b.score - a.score);
-            const minSlots = 3;
-            const vestsToShow = Math.max(categoryRows.new.length, minSlots);
-            createRow(
-                categoryRows.new.slice(0, vestsToShow),
-                '✨ Fresh Opportunities',
-                'New',
-                'badge-new'
-            );
-        }
-        
-        // **ROW 5: AI PICKED** (Show when confidence >= 75%)
-        if (learningConfidence >= 75 && categoryRows.aiPicked.length > 0) {
-            categoryRows.aiPicked.sort((a, b) => b.score - a.score);
-            const confidenceLabel = learningConfidence >= 100 ? '100%' : `${Math.round(learningConfidence)}%`;
-            createRow(
-                categoryRows.aiPicked.slice(0, 10),
-                `🤖 AI Picked For You (${confidenceLabel} Confidence)`,
-                'AI Match',
-                'badge-trending'
-            );
-        }
-        
-        // **ROWS 6+: BY STARTUP CATEGORY**
+        // SORT CATEGORIES BY PRIORITY
+        // 1. SUI-matched categories first
+        // 2. Then by total score
         const sortedCategories = Object.entries(startupCategories)
             .map(([category, vests]) => {
                 const totalScore = vests.reduce((sum, v) => sum + v.score, 0);
-                return { category, vests, totalScore };
+                const avgScore = totalScore / vests.length;
+                
+                // Check if this category is a SUI match
+                const isSUICategory = investorPreferences && 
+                                     investorPreferences.preferredCategories && 
+                                     Array.isArray(investorPreferences.preferredCategories) &&
+                                     investorPreferences.preferredCategories.includes(category);
+                
+                return { 
+                    category, 
+                    vests, 
+                    totalScore, 
+                    avgScore,
+                    isSUICategory 
+                };
             })
-            .sort((a, b) => b.totalScore - a.totalScore);
+            .sort((a, b) => {
+                // SUI categories always come first
+                if (a.isSUICategory && !b.isSUICategory) return -1;
+                if (!a.isSUICategory && b.isSUICategory) return 1;
+                
+                // Then sort by average score (quality)
+                return b.avgScore - a.avgScore;
+            });
         
-        sortedCategories.forEach(({ category, vests }) => {
+        // DISPLAY EACH CATEGORY ROW
+        sortedCategories.forEach(({ category, vests, isSUICategory }) => {
             if (vests.length > 0) {
+                // Sort vests within category by score (SUI, online, new, AI all affect this)
                 vests.sort((a, b) => b.score - a.score);
                 
+                // Limit to top 10 per category
                 const vestsToShow = vests.slice(0, 10);
+                
+                // Get category emoji
                 const categoryEmoji = getCategoryEmoji(category);
+                
+                // Determine badge based on category status
+                let badge = category;
+                let badgeClass = 'badge-active';
+                
+                if (isSUICategory) {
+                    badge = '🎯 Perfect Match';
+                    badgeClass = 'badge-perfect';
+                }
                 
                 createRow(
                     vestsToShow,
                     `${categoryEmoji} ${category}`,
-                    category,
-                    'badge-active'
+                    badge,
+                    badgeClass
                 );
             }
         });
