@@ -5203,40 +5203,49 @@ window.showApplicationReplies = async function() {
             const isUnread = !reply.read;
             
             repliesHTML += `
-                <div class="reply-card ${isUnread ? 'unread-card' : ''}" onclick="markReplyAsReadOnly('${replyId}')">
-                    <div class="reply-status-badge ${statusClass}">
-                        <span class="status-icon">${statusIcon}</span>
-                        <span>${statusText}</span>
-                    </div>
+                <div class="reply-card ${isUnread ? 'unread-card' : ''}" id="reply-${replyId}">
+                    <button class="delete-reply-btn" onclick="deleteReply('${replyId}', event)" title="Delete Reply">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
                     
-                    <div class="reply-card-content">
-                        <h3 class="reply-app-title">${appName}</h3>
-                        
-                        <div class="investor-info">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
-                            <span>From: <strong>${investorName}</strong></span>
+                    <div onclick="markReplyAsReadOnly('${replyId}')" style="cursor: pointer;">
+                        <div class="reply-status-badge ${statusClass}">
+                            <span class="status-icon">${statusIcon}</span>
+                            <span>${statusText}</span>
                         </div>
                         
-                        ${reply.comment ? `
-                            <div class="investor-comment">
-                                <p class="comment-label">Investor's Message:</p>
-                                <p class="comment-text">"${reply.comment}"</p>
+                        <div class="reply-card-content">
+                            <h3 class="reply-app-title">${appName}</h3>
+                            
+                            <div class="investor-info">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span>From: <strong>${investorName}</strong></span>
                             </div>
-                        ` : ''}
-                        
-                        <div class="reply-timestamp">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 16 14"></polyline>
-                            </svg>
-                            ${formatTimestamp(reply.timestamp)}
+                            
+                            ${reply.comment ? `
+                                <div class="investor-comment">
+                                    <p class="comment-label">Investor's Message:</p>
+                                    <p class="comment-text">"${reply.comment}"</p>
+                                </div>
+                            ` : ''}
+                            
+                            <div class="reply-timestamp">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                ${formatTimestamp(reply.timestamp)}
+                            </div>
                         </div>
+                        
+                        ${isUnread ? '<div class="unread-indicator">NEW</div>' : ''}
                     </div>
-                    
-                    ${isUnread ? '<div class="unread-indicator">NEW</div>' : ''}
                 </div>
             `;
         }
@@ -5254,7 +5263,6 @@ window.showApplicationReplies = async function() {
                     margin-bottom: 1.5rem;
                     position: relative;
                     transition: all 0.3s ease;
-                    cursor: pointer;
                 }
                 
                 .reply-card:hover {
@@ -5266,6 +5274,37 @@ window.showApplicationReplies = async function() {
                 .unread-card {
                     border-left: 4px solid #ff006e;
                     background: rgba(255, 0, 110, 0.05);
+                }
+                
+                .delete-reply-btn {
+                    position: absolute;
+                    top: 15px;
+                    right: 15px;
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 8px;
+                    background: rgba(239, 68, 68, 0.1);
+                    border: 1px solid rgba(239, 68, 68, 0.3);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    z-index: 10;
+                }
+                
+                .delete-reply-btn svg {
+                    stroke: #ef4444;
+                }
+                
+                .delete-reply-btn:hover {
+                    background: #ef4444;
+                    border-color: #ef4444;
+                    transform: scale(1.1);
+                }
+                
+                .delete-reply-btn:hover svg {
+                    stroke: #fff;
                 }
                 
                 .reply-status-badge {
@@ -5359,7 +5398,7 @@ window.showApplicationReplies = async function() {
                 
                 .unread-indicator {
                     position: absolute;
-                    top: 20px;
+                    top: 60px;
                     right: 20px;
                     background: #ff006e;
                     color: #fff;
@@ -5384,6 +5423,16 @@ window.showApplicationReplies = async function() {
                     justify-content: center;
                     z-index: 999999;
                     animation: fadeIn 0.3s ease;
+                }
+                
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                
+                @keyframes fadeOut {
+                    from { opacity: 1; }
+                    to { opacity: 0; }
                 }
                 
                 .reply-popup {
@@ -5504,6 +5553,65 @@ window.showApplicationReplies = async function() {
     }
 };
 
+// Delete reply function
+window.deleteReply = async function(replyId, event) {
+    event.stopPropagation(); // Prevent card click
+    
+    if (!confirm("Are you sure you want to delete this reply? This action cannot be undone.")) {
+        return;
+    }
+    
+    try {
+        // Show deleting state
+        const card = document.getElementById(`reply-${replyId}`);
+        if (card) {
+            card.style.opacity = '0.5';
+            card.style.pointerEvents = 'none';
+        }
+        
+        // Delete from Firebase
+        await remove(ref(db, `ApplicationReplies/${replyId}`));
+        
+        // Animate removal
+        if (card) {
+            card.style.transform = 'translateX(100%)';
+            card.style.opacity = '0';
+            setTimeout(() => {
+                card.remove();
+                
+                // Check if there are any cards left
+                const remainingCards = document.querySelectorAll('.reply-card');
+                if (remainingCards.length === 0) {
+                    const container = document.querySelector('.manage-vests-page > div:last-child');
+                    if (container) {
+                        container.innerHTML = `
+                            <div class="empty-state-box">
+                                <p style="color: #666;">No replies yet.</p>
+                            </div>
+                        `;
+                    }
+                }
+            }, 300);
+        }
+        
+        // Show success toast
+        if (window.showSuccessToast) {
+            window.showSuccessToast("Reply deleted successfully");
+        }
+        
+    } catch (error) {
+        console.error("Error deleting reply:", error);
+        alert("Failed to delete reply. Please try again.");
+        
+        // Restore card state
+        const card = document.getElementById(`reply-${replyId}`);
+        if (card) {
+            card.style.opacity = '1';
+            card.style.pointerEvents = 'auto';
+        }
+    }
+};
+
 // Function to show popup for new reply
 async function showReplyPopup(replyId, reply) {
     // Fetch investor name
@@ -5573,12 +5681,12 @@ window.closeReplyPopupAndMarkRead = async function(replyId) {
         }
         
         // Update UI: Remove the NEW badge and unread styling from the card
-        const cards = document.querySelectorAll('.reply-card');
-        cards.forEach(card => {
+        const card = document.getElementById(`reply-${replyId}`);
+        if (card) {
             card.classList.remove('unread-card');
             const badge = card.querySelector('.unread-indicator');
             if (badge) badge.remove();
-        });
+        }
         
     } catch (error) {
         console.error("Error marking as read:", error);
@@ -5593,9 +5701,12 @@ window.markReplyAsReadOnly = async function(replyId) {
         });
         
         // Update UI without reload
-        event.currentTarget.classList.remove('unread-card');
-        const badge = event.currentTarget.querySelector('.unread-indicator');
-        if (badge) badge.remove();
+        const card = document.getElementById(`reply-${replyId}`);
+        if (card) {
+            card.classList.remove('unread-card');
+            const badge = card.querySelector('.unread-indicator');
+            if (badge) badge.remove();
+        }
         
     } catch (error) {
         console.error("Error marking as read:", error);
