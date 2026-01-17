@@ -5155,16 +5155,7 @@ window.showApplicationReplies = async function() {
         
         const allReplies = snapshot.val();
         
-        // 2. Check for unread replies and show popup
-        const unreadReplies = Object.entries(allReplies).filter(([id, reply]) => !reply.read);
-        
-        if (unreadReplies.length > 0) {
-            // Show popup for the FIRST unread reply only
-            const [firstReplyId, firstReply] = unreadReplies[0];
-            await showReplyPopup(firstReplyId, firstReply);
-        }
-        
-        // 3. Build reply cards
+        // 2. Build reply cards HTML FIRST
         let repliesHTML = '';
         
         for (const [replyId, reply] of Object.entries(allReplies)) {
@@ -5212,7 +5203,7 @@ window.showApplicationReplies = async function() {
             const isUnread = !reply.read;
             
             repliesHTML += `
-                <div class="reply-card ${isUnread ? 'unread-card' : ''}" onclick="markReplyAsRead('${replyId}')">
+                <div class="reply-card ${isUnread ? 'unread-card' : ''}" onclick="markReplyAsReadOnly('${replyId}')">
                     <div class="reply-status-badge ${statusClass}">
                         <span class="status-icon">${statusIcon}</span>
                         <span>${statusText}</span>
@@ -5252,6 +5243,7 @@ window.showApplicationReplies = async function() {
         
         clearReplyBadge();
         
+        // 3. Render the full page HTML
         container.innerHTML = `
             <style>
                 .reply-card {
@@ -5495,6 +5487,17 @@ window.showApplicationReplies = async function() {
             </div>
         `;
         
+        // 4. NOW check for unread and show popup AFTER page is rendered
+        const unreadReplies = Object.entries(allReplies).filter(([id, reply]) => !reply.read);
+        
+        if (unreadReplies.length > 0) {
+            // Small delay to let the page render first
+            setTimeout(async () => {
+                const [firstReplyId, firstReply] = unreadReplies[0];
+                await showReplyPopup(firstReplyId, firstReply);
+            }, 300);
+        }
+        
     } catch (error) {
         console.error("Error loading replies:", error);
         container.innerHTML = `<p style="color:red; text-align:center; padding:2rem;">Error loading replies</p>`;
@@ -5547,29 +5550,53 @@ async function showReplyPopup(replyId, reply) {
             </div>
             <h2 class="popup-title">${title}</h2>
             <p class="popup-message">${message}</p>
-            <button class="popup-btn" onclick="this.closest('.reply-popup-overlay').remove()">
+            <button class="popup-btn" onclick="closeReplyPopupAndMarkRead('${replyId}')">
                 Got It
             </button>
         </div>
     `;
     
     document.body.appendChild(popup);
-    
-    // Auto-mark as read
-    await update(ref(db, `ApplicationReplies/${replyId}`), { read: true });
 }
 
-// Mark as read function
-window.markReplyAsRead = async function(replyId) {
+// Close popup and mark as read WITHOUT reloading
+window.closeReplyPopupAndMarkRead = async function(replyId) {
+    try {
+        // Mark as read in Firebase
+        await update(ref(db, `ApplicationReplies/${replyId}`), { read: true });
+        
+        // Remove popup
+        const popup = document.querySelector('.reply-popup-overlay');
+        if (popup) {
+            popup.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => popup.remove(), 300);
+        }
+        
+        // Update UI: Remove the NEW badge and unread styling from the card
+        const cards = document.querySelectorAll('.reply-card');
+        cards.forEach(card => {
+            card.classList.remove('unread-card');
+            const badge = card.querySelector('.unread-indicator');
+            if (badge) badge.remove();
+        });
+        
+    } catch (error) {
+        console.error("Error marking as read:", error);
+    }
+};
+
+// Mark individual card as read when clicked
+window.markReplyAsReadOnly = async function(replyId) {
     try {
         await update(ref(db, `ApplicationReplies/${replyId}`), {
             read: true
         });
-        // Refresh without popup
-        const repliesRef = ref(db, `ApplicationReplies`);
-        const snapshot = await get(repliesRef);
-        // Rebuild UI without triggering popup again
-        // (You can optimize this by just removing the unread styling instead of full reload)
+        
+        // Update UI without reload
+        event.currentTarget.classList.remove('unread-card');
+        const badge = event.currentTarget.querySelector('.unread-indicator');
+        if (badge) badge.remove();
+        
     } catch (error) {
         console.error("Error marking as read:", error);
     }
