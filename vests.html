@@ -4818,7 +4818,8 @@ function startApplicationReplyListener() {
         }
         const allReplies = snapshot.val();
         let unreadCount = 0;
-        Object.values(allReplies).forEach(reply => {
+        Object.values(userReplies
+).forEach(reply => {
             if (reply.read === false) {
                 unreadCount++;
             }
@@ -5184,12 +5185,20 @@ window.showApplicationReplies = async function() {
             return;
         }
         
-        const allReplies = snapshot.val();
+        const allReplies = snapshot.val() || {};
+
+const userReplies = Object.fromEntries(
+  Object.entries(allReplies).filter(
+    ([_, reply]) => reply.founderId === currentUser.uid
+  )
+);
+
         
         // 2. Build reply cards HTML FIRST
         let repliesHTML = '';
         
-        for (const [replyId, reply] of Object.entries(allReplies)) {
+        for (const [replyId, reply] of Object.entries(userReplies
+)) {
             // Fetch investor name
             let investorName = 'Unknown Investor';
             try {
@@ -5568,7 +5577,8 @@ window.showApplicationReplies = async function() {
         `;
         
         // 4. NOW check for unread and show popup AFTER page is rendered
-        const unreadReplies = Object.entries(allReplies).filter(([id, reply]) => !reply.read);
+        const unreadReplies = Object.entries(userReplies
+).filter(([id, reply]) => !reply.read);
         
         if (unreadReplies.length > 0) {
             // Small delay to let the page render first
