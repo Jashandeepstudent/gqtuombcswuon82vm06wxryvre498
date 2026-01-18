@@ -1052,6 +1052,58 @@ if (localStorage.getItem("businessProfileCreated") === "true") {
     window.location.href = page;
   }
 </script>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getDatabase, ref, runTransaction } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
+const firebaseConfig = {
+  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+  authDomain: "scalevest-163a0.firebaseapp.com",
+  databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+  projectId: "scalevest-163a0",
+  storageBucket: "scalevest-163a0.firebasestorage.app",
+  messagingSenderId: "938358950124",
+  appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
+  measurementId: "G-QD3TWBZHR0"
+};
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // Function to handle referral click
+  async function checkAndCreditReferral() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const referrerUid = urlParams.get('uid');
+    const refCode = urlParams.get('ref');
+
+    // 1. Check if UID exists in URL
+    if (referrerUid) {
+      // 2. Prevent infinite refreshing abuse (Simple LocalStorage check)
+      const hasClickedKey = `clicked_ref_${refCode}`;
+      if (localStorage.getItem(hasClickedKey)) {
+        console.log("Referral already credited for this session.");
+        return; 
+      }
+
+      try {
+        // 3. Transactional Update to ensure accuracy
+        await runTransaction(ref(db, `founderProfile/${referrerUid}/scaleTokens`), (currentTokens) => {
+          return (currentTokens || 0) + 10;
+        });
+
+        // 4. Mark locally as credited
+        localStorage.setItem(hasClickedKey, 'true');
+        console.log(`✅ Success! User ${referrerUid} credited +10 tokens.`);
+
+      } catch (error) {
+        console.error("Referral Credit Error:", error);
+      }
+    }
+  }
+
+  // Run immediately on page load
+  checkAndCreditReferral();
 </body>
 </html>
+
