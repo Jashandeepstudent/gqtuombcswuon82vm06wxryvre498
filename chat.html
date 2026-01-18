@@ -433,125 +433,66 @@ async function initializeChat() {
         }
     });
 }
-// Check and send auto-reply for first-time investor contact
+// This runs when FOUNDER opens an existing conversation
 async function checkAndSendAutoReply(newMessage) {
     try {
-        console.log("=== AUTO-REPLY CHECK STARTED ===");
-        console.log("New message from:", newMessage.sender);
-        console.log("Current user:", currentUser.uid);
-        console.log("Recipient UID:", recipientUID);
+        console.log("=== FOUNDER-SIDE AUTO-REPLY CHECK ===");
         
-        // Only check if the NEW message is from the OTHER person (investor)
-        if (newMessage.sender !== recipientUID) {
-            console.log("❌ Message is from me, skipping auto-reply");
-            return;
-        }
-        
-        console.log("✅ Message is from the other person");
-        
-        // 1. Check all messages in chatroom
-        const messagesRef = ref(db, `Chats/${chatRoomID}`);
-        const snapshot = await get(messagesRef);
-        
-        if (!snapshot.exists()) {
-            console.log("❌ No messages in chatroom");
-            return;
-        }
-        
-        const messages = snapshot.val();
-        const messageArray = Object.values(messages).filter(m => m && m.sender && m.timestamp);
-        
-        console.log("Total messages in chat:", messageArray.length);
-        
-        // 2. Count messages from each participant
-        const myMessages = messageArray.filter(m => m.sender === currentUser.uid);
-        const theirMessages = messageArray.filter(m => m.sender === recipientUID);
-        
-        console.log(`📊 Message count - Me: ${myMessages.length}, Them: ${theirMessages.length}`);
-        
-        // 3. Check if I'm a founder (only founders send auto-replies)
+        // Only proceed if I'm a founder
         const founderSnap = await get(ref(db, `founderProfile/${currentUser.uid}`));
         
         if (!founderSnap.exists()) {
-            console.log("❌ Not a founder, skipping auto-reply");
+            console.log("Not a founder, skipping");
             return;
         }
         
-        console.log("✅ User is a founder");
-        
         const founderData = founderSnap.val();
-        console.log("Founder data:", founderData);
+        const autoReplyData = founderData.autoReply;
         
-        // 4. Only send auto-reply if:
-        //    - Investor sent at least 1 message
-        //    - I (founder) have sent 0 messages (excluding auto-replies)
-        const myNonAutoMessages = myMessages.filter(m => !m.isAutoReply);
+        if (!autoReplyData || !autoReplyData.enabled) {
+            console.log("Auto-reply not enabled");
+            return;
+        }
         
-        console.log(`📊 My NON-AUTO messages: ${myNonAutoMessages.length}`);
+        // Get all messages
+        const messagesRef = ref(db, `Chats/${chatRoomID}`);
+        const snapshot = await get(messagesRef);
         
-        if (theirMessages.length > 0 && myNonAutoMessages.length === 0) {
-            console.log("✅ Conditions met for auto-reply");
+        if (!snapshot.exists()) return;
+        
+        const messages = snapshot.val();
+        const messageArray = Object.values(messages).filter(m => m && m.sender);
+        
+        // Count my non-auto messages
+        const myRealMessages = messageArray.filter(m => 
+            m.sender === currentUser.uid && !m.isAutoReply
+        );
+        
+        const theirMessages = messageArray.filter(m => m.sender === recipientUID);
+        const autoReplySent = messageArray.some(m => 
+            m.sender === currentUser.uid && m.isAutoReply
+        );
+        
+        // Send auto-reply if investor messaged but I haven't replied
+        if (theirMessages.length > 0 && myRealMessages.length === 0 && !autoReplySent) {
+            console.log("🚀 Sending auto-reply (founder opened chat)...");
             
-            const alreadySentAutoReply = messageArray.some(m => 
-                m.sender === currentUser.uid && m.isAutoReply === true
-            );
-            
-            if (alreadySentAutoReply) {
-                console.log("❌ Auto-reply already sent");
-                return;
-            }
-            
-            console.log("✅ No auto-reply sent yet");
-            
-            // 5. Get founder's auto-reply settings
-            const autoReplyData = founderData.autoReply;
-            
-            console.log("Auto-reply data:", autoReplyData);
-            
-            if (!autoReplyData) {
-                console.log("❌ No auto-reply configured");
-                return;
-            }
-            
-            // 6. Check if auto-reply is enabled
-            if (!autoReplyData.enabled) {
-                console.log("❌ Auto-reply is disabled");
-                return;
-            }
-            
-            console.log("✅ Auto-reply is enabled");
-            
-            // 7. Send the auto-reply message
-            console.log("🚀 SENDING AUTO-REPLY:", autoReplyData.message);
-            
-            const autoReplyMessage = {
+            await push(ref(db, `Chats/${chatRoomID}`), {
                 sender: currentUser.uid,
                 text: autoReplyData.message,
                 timestamp: Date.now(),
                 recipient: recipientUID,
                 read: false,
                 isAutoReply: true
-            };
+            });
             
-            console.log("Auto-reply message object:", autoReplyMessage);
-            
-            await push(ref(db, `Chats/${chatRoomID}`), autoReplyMessage);
-            
-            console.log("✅✅✅ AUTO-REPLY SENT SUCCESSFULLY ✅✅✅");
-        } else {
-            console.log("❌ Conditions not met:");
-            console.log("  - Their messages > 0:", theirMessages.length > 0);
-            console.log("  - My non-auto messages === 0:", myNonAutoMessages.length === 0);
+            console.log("✅ Auto-reply sent");
         }
         
-        console.log("=== AUTO-REPLY CHECK ENDED ===");
     } catch (error) {
-        console.error("💥 ERROR in auto-reply check:", error);
-        console.error("Error details:", error.message);
-        console.error("Stack:", error.stack);
+        console.error("Error in founder auto-reply:", error);
     }
 }
-
         function renderMessage(msg) {
     const container = document.getElementById('chatContainer');
     const isMine = msg.sender === currentUser.uid;
@@ -805,24 +746,106 @@ sender: currentUser.uid, text: "", fileUrl: downloadURL, fileType: type, fileNam
         const input = document.getElementById('msgInput');
         const sendBtn = document.getElementById('sendBtn');
 
-        async function sendMessage() {
-            const text = input.value.trim();
-            if (!text || !chatRoomID) return;
+async function sendMessage() {
+    const text = input.value.trim();
+    if (!text || !chatRoomID) return;
 
-            const badWords = ["abuse", "scam", "fraud", "kill", "idiot"];
-            let cleanText = text;
-            badWords.forEach(w => { cleanText = cleanText.replace(new RegExp(`\\b${w}\\b`,'gi'), '####'); });
+    const badWords = ["abuse", "scam", "fraud", "kill", "idiot"];
+    let cleanText = text;
+    badWords.forEach(w => { cleanText = cleanText.replace(new RegExp(`\\b${w}\\b`,'gi'), '####'); });
 
-            await push(ref(db, `Chats/${chatRoomID}`), {
-                sender: currentUser.uid,
-                text: cleanText,
-                timestamp: Date.now(),
-                recipient: recipientUID,
-                 read: false
-            });
-            input.value = "";
-            set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false);
+    // Send my message first
+    await push(ref(db, `Chats/${chatRoomID}`), {
+        sender: currentUser.uid,
+        text: cleanText,
+        timestamp: Date.now(),
+        recipient: recipientUID,
+        read: false
+    });
+
+    input.value = "";
+    set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false);
+
+    // ========================================
+    // AUTO-REPLY TRIGGER (NEW CODE)
+    // ========================================
+    // Check if recipient should send auto-reply
+    await triggerRecipientAutoReply();
+}
+
+// NEW FUNCTION: Check if recipient has auto-reply and trigger it
+async function triggerRecipientAutoReply() {
+    try {
+        console.log("🔍 Checking if recipient has auto-reply enabled...");
+        
+        // 1. Check if recipient is a founder
+        const founderSnap = await get(ref(db, `founderProfile/${recipientUID}`));
+        
+        if (!founderSnap.exists()) {
+            console.log("❌ Recipient is not a founder");
+            return;
         }
+        
+        console.log("✅ Recipient is a founder");
+        
+        const founderData = founderSnap.val();
+        const autoReplyData = founderData.autoReply;
+        
+        if (!autoReplyData || !autoReplyData.enabled) {
+            console.log("❌ Auto-reply not configured or disabled");
+            return;
+        }
+        
+        console.log("✅ Auto-reply is enabled:", autoReplyData);
+        
+        // 2. Check if this is the first message in the conversation
+        const messagesRef = ref(db, `Chats/${chatRoomID}`);
+        const snapshot = await get(messagesRef);
+        
+        if (!snapshot.exists()) {
+            console.log("❌ No messages found (shouldn't happen)");
+            return;
+        }
+        
+        const messages = snapshot.val();
+        const messageArray = Object.values(messages).filter(m => m && m.sender && m.timestamp);
+        
+        // Count founder's non-auto-reply messages
+        const founderMessages = messageArray.filter(m => 
+            m.sender === recipientUID && !m.isAutoReply
+        );
+        
+        // Check if auto-reply already sent
+        const autoReplySent = messageArray.some(m => 
+            m.sender === recipientUID && m.isAutoReply === true
+        );
+        
+        console.log("📊 Stats:");
+        console.log("  - Founder's real messages:", founderMessages.length);
+        console.log("  - Auto-reply already sent:", autoReplySent);
+        
+        // 3. Send auto-reply if conditions are met
+        if (founderMessages.length === 0 && !autoReplySent) {
+            console.log("🚀 SENDING AUTO-REPLY on behalf of founder...");
+            
+            await push(ref(db, `Chats/${chatRoomID}`), {
+                sender: recipientUID,  // Send as the founder
+                text: autoReplyData.message,
+                timestamp: Date.now(),
+                recipient: currentUser.uid,
+                read: false,
+                isAutoReply: true
+            });
+            
+            console.log("✅✅✅ AUTO-REPLY SENT SUCCESSFULLY ✅✅✅");
+        } else {
+            console.log("ℹ️ Auto-reply conditions not met (founder already replied or auto-reply sent)");
+        }
+        
+    } catch (error) {
+        console.error("💥 Error triggering auto-reply:", error);
+    }
+}
         
         input.addEventListener('input', () => {
             if (!chatRoomID) return;
