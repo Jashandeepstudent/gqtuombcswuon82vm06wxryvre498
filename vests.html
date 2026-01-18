@@ -11922,10 +11922,6 @@ window.saveTeamMember = async function() {
 
     await updateStartupField({ team: currentTeam });
 };
-// ==========================================
-//  STARTUP PROFILE EDIT LOGIC (Paste this!)
-// ==========================================
-
 // --- Helper: Save Changes to Firebase ---
 async function updateStartupField(updates) {
     if (!currentUser) return;
@@ -12243,7 +12239,7 @@ window.closeFullScreenPDF = function() {
         setTimeout(() => viewer.remove(), 300);
     }
 };
-
+}
 
 </script>
 <!-- FOUNDER DASHBOARD -->
