@@ -180,8 +180,8 @@
             <div class="loader-text">Connecting to meeting...</div>
         </div>
        
-    <script src="https://sdk.videosdk.live/rtc-js-prebuilt/0.3.30/rtc-js-prebuilt.js"></script>
-
+   
+<script src="https://sdk.videosdk.live/rtc-js-prebuilt/0.3.30/rtc-js-prebuilt.js"></script>
    <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { 
@@ -375,13 +375,30 @@ async function initializeChat() {
         }
     });
     
-    // After initial messages are loaded, mark as ready for new messages
-    setTimeout(() => {
+    // After initial messages are loaded, check if we need to send auto-reply for existing conversation
+    setTimeout(async () => {
+        // Check existing messages to see if auto-reply should be sent
+        const snapshot = await get(messagesRef);
+        if (snapshot.exists()) {
+            const messages = Object.values(snapshot.val()).filter(m => m && m.sender);
+            const myMessages = messages.filter(m => m.sender === currentUser.uid);
+            const theirMessages = messages.filter(m => m.sender === recipientUID);
+            
+            // If investor has sent messages but I haven't, check for auto-reply
+            if (theirMessages.length > 0 && myMessages.length === 0) {
+                console.log("Checking auto-reply for existing conversation...");
+                // Send the last investor message through the check
+                const lastInvestorMsg = theirMessages[theirMessages.length - 1];
+                await checkAndSendAutoReply(lastInvestorMsg);
+            }
+        }
+        
         isInitialLoad = false;
         console.log("Initial load complete, auto-reply is now active");
-    }, 1000);
+    }, 1500);
     
-    const typingRef = ref(db, `Chats/${chatRoomID}/typing/${recipientUID)}`;
+    // FIXED LINE BELOW - removed extra parenthesis
+    const typingRef = ref(db, `Chats/${chatRoomID}/typing/${recipientUID}`);
     onValue(typingRef, (snapshot) => {
         const isTyping = snapshot.val();
         const bubble = document.getElementById('typingBubble');
