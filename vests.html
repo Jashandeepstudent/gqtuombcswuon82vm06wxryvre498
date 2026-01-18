@@ -12026,37 +12026,30 @@ window.closeFullScreenPDF = function() {
 <div id="dashboardContainer" style="display: none;"></div>
 <div id="autoReplyModal" class="edit-modal">
     <div class="edit-modal-content">
-        <button class="modal-close" onclick="closeAutoReplyModal()" style="filter: invert(1);">×</button>
+        <button class="modal-close" onclick="closeAutoReplyModal()">×</button>
         
         <div class="edit-modal-header">
-            <h3>Auto-Response Settings</h3>
+            <h3>Automated Response</h3>
         </div>
         
         <div class="edit-modal-body" style="padding: 30px;">
-            <p style="color: #666; margin-bottom: 25px; font-size: 0.85rem; line-height: 1.5; font-style: italic;">
-                Set a professional tone. This message is automatically delivered to investors upon their first outreach.
+            <p style="color: #555; margin-bottom: 25px; font-size: 0.85rem; letter-spacing: 0.5px;">
+                SET YOUR DEFAULT INVESTOR GREETING.
             </p>
             
-            <label style="display: block; margin-bottom: 10px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: #fff; font-weight: 600;">
-                Message Content
-            </label>
-            
-            <textarea 
-                id="autoReplyTextarea" 
-                placeholder="Hi! Thanks for reaching out. I'm excited to discuss potential opportunities. I typically respond within 24 hours."
-            ></textarea>
+            <textarea id="autoReplyTextarea" placeholder="Type your message here...">Hi! Thanks for reaching out. I'm excited to discuss potential opportunities. I typically respond within 24 hours.</textarea>
             
             <div class="status-card-lite">
-                <input type="checkbox" id="autoReplyEnabled" style="width: 18px; height: 18px; accent-color: #fff; cursor: pointer;">
-                <label for="autoReplyEnabled" style="margin: 0; cursor: pointer; font-size: 0.85rem; color: #ccc; letter-spacing: 0.5px;">
-                    ENABLE AUTO-REPLY SYSTEM
+                <input type="checkbox" id="autoReplyEnabled" style="width: 20px; height: 20px; accent-color: #fff; cursor: pointer;">
+                <label for="autoReplyEnabled" style="margin: 0; cursor: pointer; font-size: 0.8rem; color: #fff; letter-spacing: 1.5px; font-weight: 600;">
+                    ACTIVATE SYSTEM
                 </label>
             </div>
         </div>
         
-        <div class="edit-modal-footer" style="padding: 20px 30px; background: #050505; border-top: 1px solid #222;">
+        <div class="edit-modal-footer">
             <button class="modal-btn-cancel" onclick="closeAutoReplyModal()">Discard</button>
-            <button class="modal-btn-save" onclick="saveAutoReply()">Save Changes</button>
+            <button class="modal-btn-save" onclick="saveAutoReply()">Save Settings</button>
         </div>
     </div>
 </div>
