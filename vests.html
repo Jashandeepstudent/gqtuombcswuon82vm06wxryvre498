@@ -7049,20 +7049,19 @@ async function showAnalytics() {
             </div>
         `;
         
-        // Fetch analytics for each vest
-        const vestCards = await Promise.all(
-            Object.entries(vests).map(async ([vestId, vest]) => {
-                const analyticsRef = ref(db, `interestedUsers/${vestId}`);
-                const analyticsSnap = await get(analyticsRef);
-                const analytics = analyticsSnap.exists() ? analyticsSnap.val() : {};
-                
-                return {
-                    vestId,
-                    vest,
-                    analytics
-                };
-            })
-        );
+
+const vestCards = await Promise.all(
+    Object.entries(vests).map(async ([vestId, vest]) => {
+        // FIXED: Analytics is stored inside each vest
+        const analytics = vest.analytics || {};
+        
+        return {
+            vestId,
+            vest,
+            analytics
+        };
+    })
+);
         
         const gridContainer = document.getElementById('vestSelectionGrid');
         gridContainer.innerHTML = vestCards.map(({ vestId, vest, analytics }) => `
@@ -7110,29 +7109,26 @@ async function showVestAnalytics(vestId) {
             <p style="color:#888;">Loading Analytics...</p>
         </div>`;
     
-    try {
-        // Fetch vest data
-        const vestRef = ref(db, `Vests/${currentUser.uid}/${vestId}`);
-        const vestSnap = await get(vestRef);
-        const vest = vestSnap.val();
-        
-        // Fetch analytics data
-        const analyticsRef = ref(db, `interestedUsers/${vestId}`);
-        const snapshot = await get(analyticsRef);
-        
-        const analytics = snapshot.exists() ? snapshot.val() : {
-            totalClicks: 0,
-            totalImpressions: 0,
-            totalTimeSpent: 0,
-            totalInterestedToFund: 0,
-            todayClicks: 0,
-            todayImpressions: 0,
-            todayTimeSpent: 0,
-            todayInterestedToFund: 0,
-            yesterdayClicks: 0,
-            yesterdayImpressions: 0,
-            yesterdayTimeSpent: 0
-        };
+try {
+    // Fetch vest data
+    const vestRef = ref(db, `Vests/${currentUser.uid}/${vestId}`);
+    const vestSnap = await get(vestRef);
+    const vest = vestSnap.val();
+    
+    // FIXED: Analytics is inside the vest
+    const analytics = vest?.analytics || {
+        totalClicks: 0,
+        totalImpressions: 0,
+        totalTimeSpent: 0,
+        totalInterestedToFund: 0,
+        todayClicks: 0,
+        todayImpressions: 0,
+        todayTimeSpent: 0,
+        todayInterestedToFund: 0,
+        yesterdayClicks: 0,
+        yesterdayImpressions: 0,
+        yesterdayTimeSpent: 0
+    };
         
         // Calculate changes
         const clickChange = analytics.yesterdayClicks > 0 
@@ -7504,6 +7500,7 @@ async function showVestAnalytics(vestId) {
 
 // Make functions globally accessible
 window.showVestAnalytics = showVestAnalytics;
+
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
