@@ -7050,9 +7050,10 @@ async function showAnalytics() {
         `;
         
 
+// Fetch analytics for each vest
 const vestCards = await Promise.all(
     Object.entries(vests).map(async ([vestId, vest]) => {
-        // FIXED: Analytics is stored inside each vest
+        // Analytics is inside the vest object
         const analytics = vest.analytics || {};
         
         return {
@@ -7062,33 +7063,34 @@ const vestCards = await Promise.all(
         };
     })
 );
-        
-        const gridContainer = document.getElementById('vestSelectionGrid');
-        gridContainer.innerHTML = vestCards.map(({ vestId, vest, analytics }) => `
-            <div class="vest-analytics-card" onclick="window.location.hash='vest_analytics_${vestId}'">
-                <div class="vest-analytics-thumb">
-                    <img src="${vest.MainVest?.thumbnailUrl || 'https://via.placeholder.com/400x225?text=No+Image'}" 
-                         alt="Vest Thumbnail">
+
+const gridContainer = document.getElementById('vestSelectionGrid');
+gridContainer.innerHTML = vestCards.map(({ vestId, vest, analytics }) => `
+    <div class="vest-analytics-card" onclick="window.location.hash='vest_analytics_${vestId}'">
+        <div class="vest-analytics-thumb">
+            <img src="${vest.MainVest?.thumbnailUrl || 'https://via.placeholder.com/400x225?text=No+Image'}" 
+                 alt="Vest Thumbnail"
+                 onerror="this.src='https://via.placeholder.com/400x225?text=No+Image'">
+        </div>
+        <div class="vest-analytics-content">
+            <h3 class="vest-analytics-hook">${vest.MainVest?.hook || 'Vest Campaign'}</h3>
+            <p class="vest-analytics-startup">${vest.StartupDetails?.name || 'Startup'}</p>
+            
+            <div class="vest-mini-stats">
+                <div class="vest-mini-stat">
+                    <div class="vest-mini-stat-label">Total Clicks</div>
+                    <div class="vest-mini-stat-value">${analytics.totalClicks || 0}</div>
                 </div>
-                <div class="vest-analytics-content">
-                    <h3 class="vest-analytics-hook">${vest.MainVest?.hook || 'Vest Campaign'}</h3>
-                    <p class="vest-analytics-startup">${vest.StartupDetails?.name || 'Startup'}</p>
-                    
-                    <div class="vest-mini-stats">
-                        <div class="vest-mini-stat">
-                            <div class="vest-mini-stat-label">Total Clicks</div>
-                            <div class="vest-mini-stat-value">${analytics.totalClicks || 0}</div>
-                        </div>
-                        <div class="vest-mini-stat">
-                            <div class="vest-mini-stat-label">Impressions</div>
-                            <div class="vest-mini-stat-value">${analytics.totalImpressions || 0}</div>
-                        </div>
-                    </div>
-                    
-                    <button class="vest-analytics-btn">View Full Analytics</button>
+                <div class="vest-mini-stat">
+                    <div class="vest-mini-stat-label">Impressions</div>
+                    <div class="vest-mini-stat-value">${analytics.totalImpressions || 0}</div>
                 </div>
             </div>
-        `).join('');
+            
+            <button class="vest-analytics-btn">View Full Analytics</button>
+        </div>
+    </div>
+`).join('');
         
     } catch (error) {
         console.error("Analytics Error:", error);
@@ -7115,8 +7117,12 @@ try {
     const vestSnap = await get(vestRef);
     const vest = vestSnap.val();
     
-    // FIXED: Analytics is inside the vest
-    const analytics = vest?.analytics || {
+    if (!vest) {
+        throw new Error('Vest not found');
+    }
+    
+    // Analytics is inside the vest
+    const analytics = vest.analytics || {
         totalClicks: 0,
         totalImpressions: 0,
         totalTimeSpent: 0,
@@ -7128,8 +7134,7 @@ try {
         yesterdayClicks: 0,
         yesterdayImpressions: 0,
         yesterdayTimeSpent: 0
-    };
-        
+    };        
         // Calculate changes
         const clickChange = analytics.yesterdayClicks > 0 
             ? ((analytics.todayClicks - analytics.yesterdayClicks) / analytics.yesterdayClicks * 100).toFixed(1)
@@ -7321,15 +7326,17 @@ try {
                     Back to Analytics
                 </a>
                 
-                <div class="analytics-vest-header">
-                    <div class="analytics-vest-thumb-small">
-                        <img src="${vest?.MainVest?.thumbnailUrl || 'https://via.placeholder.com/120?text=No+Image'}" alt="Vest">
-                    </div>
-                    <div class="analytics-vest-info">
-                        <h2>${vest?.MainVest?.hook || 'Vest Analytics'}</h2>
-                        <p>${vest?.StartupDetails?.name || 'Startup'} • Last updated: ${new Date().toLocaleDateString()}</p>
-                    </div>
-                </div>
+<div class="analytics-vest-header">
+    <div class="analytics-vest-thumb-small">
+        <img src="${vest?.MainVest?.thumbnailUrl || 'https://via.placeholder.com/120?text=No+Image'}" 
+             alt="Vest"
+             onerror="this.src='https://via.placeholder.com/120?text=No+Image'">
+    </div>
+    <div class="analytics-vest-info">
+        <h2>${vest?.MainVest?.hook || 'Vest Analytics'}</h2>
+        <p>${vest?.StartupDetails?.name || 'Startup'} • Last updated: ${new Date().toLocaleDateString()}</p>
+    </div>
+</div>
                 
                 <!-- Lifetime Performance -->
                 <div class="analytics-section">
