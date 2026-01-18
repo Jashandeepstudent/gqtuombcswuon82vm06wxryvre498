@@ -6239,6 +6239,7 @@ window.updateNavStatusUI = function(status) {
 };
 
 // --- CONSOLIDATED SAVE AVAILABILITY STATUS ---
+// --- CONSOLIDATED SAVE AVAILABILITY STATUS ---
 window.saveStatus = async function() {
     if (!currentUser) return;
     
@@ -6272,9 +6273,11 @@ window.saveStatus = async function() {
             });
         }
         
-        // 2. Update Founder Profile (Status + Active Count + Optional Date)
+        // 2. CRITICAL FIX: Save the actual inputs to the Founder Profile
+        // This makes the inputs "stay filled" in the database
         updates[`founderProfile/${currentUser.uid}/availabilityStatus`] = selectedStatus;
         updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = activeCount;
+        updates[`founderProfile/${currentUser.uid}/unavailableDate`] = unavailableDate;
         
         if (unavailableDate) {
             const selectedDate = new Date(unavailableDate);
@@ -6286,6 +6289,7 @@ window.saveStatus = async function() {
                 return;
             }
 
+            // Also store for scheduled logic
             updates[`founderProfile/${currentUser.uid}/scheduledUnavailability`] = {
                 date: unavailableDate,
                 scheduledAt: Date.now()
@@ -6299,10 +6303,13 @@ window.saveStatus = async function() {
         if (cachedFounderData) {
             cachedFounderData.availabilityStatus = selectedStatus;
             cachedFounderData.activeVestsCount = activeCount;
+            cachedFounderData.unavailableDate = unavailableDate;
         }
 
         // 5. Update the Navbar Status Pill immediately
-        window.updateNavStatusUI(selectedStatus);
+        if (typeof window.updateNavStatusUI === 'function') {
+            window.updateNavStatusUI(selectedStatus);
+        }
         
         // Finalize
         const statusMessage = selectedStatus === 'active' 
@@ -6325,8 +6332,7 @@ window.saveStatus = async function() {
         console.error("❌ Sync Error:", error);
         alert("❌ Failed to update status: " + error.message);
     }
-};// Schedule status change for a future date
-function scheduleStatusChange(targetDate) {
+};function scheduleStatusChange(targetDate) {
     const checkInterval = setInterval(async () => {
         const now = new Date();
         const target = new Date(targetDate);
@@ -6420,7 +6426,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+    // Inside your open modal logic:
+if (cachedFounderData) {
+    document.getElementById('status').value = cachedFounderData.availabilityStatus || 'active';
+    document.getElementById('unavailableDate').value = cachedFounderData.unavailableDate || '';
+}
     // Close modal when clicking outside
     window.addEventListener('click', function(event) {
         const modal = document.getElementById('availabilityModal');
