@@ -9,13 +9,88 @@
 
         body {
             font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0a2f23 0%, #0f172a 100%);
+            background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
             color: #fff;
             min-height: 100vh;
             padding: 40px 20px;
         }
 
         .container { max-width: 1600px; margin: 0 auto; }
+
+        /* BACK BUTTON */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-button:hover {
+            background: rgba(59, 130, 246, 0.3);
+            border-color: #3b82f6;
+            transform: translateX(-5px);
+        }
+
+        /* LOADING SCREEN */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader {
+            width: 80px;
+            height: 80px;
+            border: 8px solid rgba(255, 255, 255, 0.1);
+            border-top: 8px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #3b82f6;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
 
         .header-area { 
             margin-bottom: 50px; 
@@ -26,7 +101,7 @@
         .header-area h1 { 
             font-size: 3.5rem; 
             font-weight: 800;
-            background: linear-gradient(90deg, #10b981, #3b82f6); 
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6); 
             -webkit-background-clip: text; 
             -webkit-text-fill-color: transparent;
             letter-spacing: -2px;
@@ -61,17 +136,17 @@
         }
 
         .category-pill:hover {
-            border-color: #10b981;
-            background: rgba(16,185,129,0.1);
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.2);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
         }
 
         .category-pill.active {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
-            border-color: #10b981;
-            box-shadow: 0 4px 15px rgba(16,185,129,0.5);
+            border-color: #3b82f6;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5);
         }
 
         .search-container {
@@ -97,9 +172,9 @@
         }
 
         .search-box:focus {
-            border-color: #10b981;
+            border-color: #3b82f6;
             background: rgba(255,255,255,0.1);
-            box-shadow: 0 4px 15px rgba(16,185,129,0.3);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
         }
 
         .vest-row {
@@ -140,7 +215,7 @@
             overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
-            scrollbar-color: #10b981 rgba(255,255,255,0.1);
+            scrollbar-color: #3b82f6 rgba(255,255,255,0.1);
             padding-bottom: 10px;
         }
 
@@ -154,7 +229,7 @@
         }
 
         .cards-scroll-container::-webkit-scrollbar-thumb {
-            background: #10b981;
+            background: #3b82f6;
             border-radius: 10px;
         }
 
@@ -166,19 +241,20 @@
         }
 
         .card {
-            background: #fff;
-            border-radius: 16px;
+            background: linear-gradient(145deg, #ffffff, #f3f4f6);
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            height: 420px;
-            min-width: 320px;
-            max-width: 320px;
+            height: 440px;
+            min-width: 340px;
+            max-width: 340px;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
             position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .card::before {
@@ -188,7 +264,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, rgba(16,185,129,0.1), transparent);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
             opacity: 0;
             transition: opacity 0.4s ease;
             pointer-events: none;
@@ -200,15 +276,15 @@
         }
 
         .card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.4);
+            transform: translateY(-12px) scale(1.03);
+            box-shadow: 0 25px 50px rgba(59, 130, 246, 0.5);
         }
 
         .thumbnail-area {
             height: 200px;
             width: 100%;
             position: relative;
-            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            background: linear-gradient(135deg, #1e293b, #334155);
             overflow: hidden;
         }
 
@@ -219,7 +295,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.5) 100%);
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.6) 100%);
             pointer-events: none;
         }
 
@@ -231,26 +307,28 @@
         }
 
         .card:hover .thumbnail-area img {
-            transform: scale(1.15);
+            transform: scale(1.2);
         }
 
         .stage-badge {
             position: absolute;
             top: 12px;
             right: 12px;
-            background: rgba(16,185,129,0.95);
+            background: rgba(59, 130, 246, 0.95);
             color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
+            padding: 8px 16px;
+            border-radius: 25px;
             font-size: 0.75rem;
             font-weight: 700;
             z-index: 2;
             backdrop-filter: blur(10px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .card-content {
-            padding: 20px;
+            padding: 24px;
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -259,55 +337,62 @@
         }
 
         .hook-text {
-            color: #1a1a1a;
-            font-size: 16px;
+            color: #1e293b;
+            font-size: 17px;
             font-weight: 700;
             line-height: 1.5;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            min-height: 48px;
+            min-height: 51px;
         }
 
         .startup-info {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 14px;
+            gap: 14px;
+            margin-bottom: 16px;
         }
 
         .logo {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: linear-gradient(135deg, #667eea, #764ba2);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 700;
             color: white;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+            overflow: hidden;
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .startup-name {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 700;
-            color: #374151;
+            color: #1e293b;
         }
 
         .startup-category {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 2px;
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 3px;
         }
 
         .card-footer {
             margin-top: auto;
-            padding-top: 14px;
-            border-top: 2px solid #e5e7eb;
+            padding-top: 16px;
+            border-top: 2px solid #e2e8f0;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -315,45 +400,45 @@
 
         .fund-ask {
             font-size: 13px;
-            color: #6b7280;
+            color: #64748b;
             font-weight: 600;
         }
 
         .fund-amount {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 800;
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .analyze-btn {
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 13px;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
             font-weight: 700;
             border: none;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
         }
 
         .analyze-btn:hover {
-            transform: scale(1.08);
-            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
         }
 
         #noVests { 
             text-align: center; 
             width: 100%; 
             padding: 100px; 
-            color: #10b981; 
+            color: #3b82f6; 
             font-weight: 700; 
             font-size: 1.3rem; 
             display: none;
-            background: rgba(16,185,129,0.05);
+            background: rgba(59, 130, 246, 0.1);
             border-radius: 20px;
             backdrop-filter: blur(10px);
         }
@@ -367,10 +452,22 @@
             .header-area h1 { font-size: 2.5rem; }
             .category-filter { gap: 8px; }
             .category-pill { padding: 8px 16px; font-size: 0.85rem; }
+            .back-button { top: 10px; left: 10px; padding: 8px 16px; }
         }
     </style>
 </head>
 <body>
+
+<!-- LOADING SCREEN -->
+<div class="loading-screen" id="loadingScreen">
+    <div class="loader"></div>
+    <div class="loading-text">Loading Investment Opportunities...</div>
+</div>
+
+<!-- BACK BUTTON -->
+<button class="back-button" onclick="window.history.back()">
+    ← Back
+</button>
 
 <div class="container">
     <div class="header-area">
@@ -422,6 +519,7 @@
     let selectedStage = 'All';
     let searchTerm = '';
     let onlineStatusMap = {};
+    let startupLogos = {}; // Cache for logos
 
     let investorBehaviorData = {
         vestViews: {},
@@ -436,6 +534,12 @@
     };
 
     let browseTimeInterval = null;
+
+    // Hide loading screen
+    function hideLoadingScreen() {
+        const loadingScreen = document.getElementById('loadingScreen');
+        loadingScreen.classList.add('hidden');
+    }
 
     async function setUserPresence(user) {
         const presenceRef = ref(db, `presence/${user.uid}`);
@@ -513,6 +617,27 @@
         } catch (error) {
             console.error('Error loading online status:', error);
         }
+    }
+
+    // Load startup logo from Firebase
+    async function loadStartupLogo(ownerUID) {
+        if (startupLogos[ownerUID]) {
+            return startupLogos[ownerUID];
+        }
+
+        try {
+            const logoRef = ref(db, `startupProfile/${ownerUID}/logo`);
+            const snapshot = await get(logoRef);
+            
+            if (snapshot.exists()) {
+                startupLogos[ownerUID] = snapshot.val();
+                return snapshot.val();
+            }
+        } catch (error) {
+            console.error('Error loading logo:', error);
+        }
+        
+        return null;
     }
 
     function trackVestView(vestId, vestData) {
@@ -611,9 +736,6 @@
         }
     });
 
-    // ============================================
-    // IMPROVED AI LEARNING ALGORITHM
-    // ============================================
     function analyzeInvestorPreferences() {
         const analysis = {
             preferredStages: [],
@@ -625,7 +747,6 @@
         const totalAnalyzed = investorBehaviorData.analyzedVests.length;
         const totalSearches = investorBehaviorData.searchHistory.length;
         
-        // IMPROVED CONFIDENCE CALCULATION
         if (totalViews < 5) {
             analysis.learningConfidence = totalViews * 10;
         } else if (totalViews < 15) {
@@ -641,11 +762,9 @@
             analysis.learningConfidence = Math.min(baseLearning + analyzeBonus + searchBonus, 100);
         }
         
-        // WEIGHTED PREFERENCE ANALYSIS
         const stageScores = {};
         const categoryScores = {};
         
-        // Weight recent views more heavily
         Object.entries(investorBehaviorData.vestViews).forEach(([vestId, data]) => {
             const recencyWeight = 1 + (0.5 * Math.min((Date.now() - data.lastSeen) / (1000 * 60 * 60 * 24), 1));
             const viewWeight = Math.min(data.count, 5);
@@ -673,24 +792,18 @@
         return analysis;
     }
 
-    // ============================================
-    // IMPROVED AI INTELLIGENCE BOOST
-    // ============================================
     function calculateIntelligentBoost(vestData, vestId) {
         const preferences = analyzeInvestorPreferences();
         let boost = 0;
         
-        // AI doesn't activate until 75% confidence
         if (preferences.learningConfidence < 75) {
             return boost;
         }
         
-        // Calculate confidence multiplier (0.3x at 75%, scaling to 1.8x at 100%)
         const confidenceMultiplier = preferences.learningConfidence >= 100 
             ? 1.8 
             : 0.3 + ((preferences.learningConfidence - 75) / 25) * 1.5;
         
-        // STAGE PREFERENCE INTELLIGENCE
         const stage = vestData.StartupDetails?.stage;
         if (stage && preferences.preferredStages.includes(stage)) {
             const rank = preferences.preferredStages.indexOf(stage);
@@ -698,7 +811,6 @@
             boost += stageWeight;
         }
         
-        // CATEGORY PREFERENCE INTELLIGENCE (Higher weight)
         const category = vestData.StartupDetails?.category;
         if (category && preferences.preferredCategories.includes(category)) {
             const rank = preferences.preferredCategories.indexOf(category);
@@ -706,17 +818,14 @@
             boost += categoryWeight;
         }
         
-        // BEHAVIORAL PATTERN MATCHING
         if (investorBehaviorData.vestViews[vestId]) {
             const viewCount = investorBehaviorData.vestViews[vestId].count;
             boost += Math.min(viewCount * 150, 600);
         }
         
-        // TIME ENGAGEMENT BOOST
         const timeSpent = investorBehaviorData.timeSpentOnVests[vestId] || 0;
         boost += Math.min(timeSpent * 8, 700);
         
-        // SEARCH PATTERN MATCHING
         if (investorBehaviorData.searchHistory.length > 0) {
             const recentSearches = investorBehaviorData.searchHistory.slice(-15);
             let searchMatches = 0;
@@ -737,28 +846,22 @@
             boost += searchMatches * 500;
         }
         
-        // SIMILAR VEST ANALYSIS (If investor viewed vests in same category/stage)
         const similarVestsViewed = Object.values(investorBehaviorData.vestViews).filter(v => 
             v.category === category || v.stage === stage
         ).length;
         boost += Math.min(similarVestsViewed * 100, 500);
         
-        // Apply confidence multiplier
         boost = boost * confidenceMultiplier;
         
         return boost;
     }
 
-    // ============================================
-    // FIXED PRIORITY SCORING SYSTEM
-    // ============================================
     function calculateVestScore(vestData, vestId) {
-        let score = 100; // Base score
+        let score = 100;
         const now = Date.now();
         const preferences = analyzeInvestorPreferences();
         const learningConfidence = preferences.learningConfidence;
         
-        // **PRIORITY 1: SUI MATCHMAKING** (Highest priority - investor's explicit preferences)
         const vestCategory = vestData.StartupDetails?.category;
         const hasSUIMatch = investorPreferences && 
                            investorPreferences.preferredCategories && 
@@ -767,19 +870,18 @@
                            investorPreferences.preferredCategories.includes(vestCategory);
         
         if (hasSUIMatch) {
-            score += 20000; // MASSIVE boost for SUI match
+            score += 20000;
         }
         
-        // **PRIORITY 2: FOUNDER ONLINE STATUS**
         const founderUID = vestData.ownerUID || vestData.userId;
         const presenceData = onlineStatusMap[founderUID] || {};
         
         if (presenceData.online === true) {
-            score += 2500; // Online NOW
+            score += 2500;
         }
         
         if (presenceData.todayLogin === true) {
-            score += 1000; // Active today
+            score += 1000;
         }
         
         if (presenceData.loginStreak && presenceData.loginStreak > 0) {
@@ -787,20 +889,18 @@
             score += streakBonus;
         }
         
-        // **PRIORITY 3: NEW VEST BOOST**
         if (vestData.createdAt) {
             const createdTime = new Date(vestData.createdAt).getTime();
             const hoursSinceCreation = (now - createdTime) / (1000 * 60 * 60);
             if (hoursSinceCreation < 12) {
-                score += 1500; // Very new (< 12 hours)
+                score += 1500;
             } else if (hoursSinceCreation < 24) {
-                score += 1200; // New (< 24 hours)
+                score += 1200;
             } else if (hoursSinceCreation < 72) {
-                score += 700; // Recent (< 3 days)
+                score += 700;
             }
         }
         
-        // **PRIORITY 4: STAGE PREFERENCE MATCH**
         const vestStage = vestData.StartupDetails?.stage;
         if (investorPreferences && investorPreferences.preferredStages) {
             if (Array.isArray(investorPreferences.preferredStages) && 
@@ -809,17 +909,13 @@
             }
         }
         
-        // **PRIORITY 5: TRENDING/VIEW COUNT**
         if (vestData.viewCount && vestData.viewCount > 50) {
             score += Math.min(vestData.viewCount * 4, 1000);
         }
         
-        // **PRIORITY 6: RANDOMNESS** (Diversity)
         const randomFactor = Math.random() * 150;
         score += randomFactor;
         
-        // **PRIORITY 7: AI INTELLIGENCE BOOST**
-        // Low priority until 75% confidence, becomes secondary priority at 100%
         if (learningConfidence >= 75) {
             const intelligentBoost = calculateIntelligentBoost(vestData, vestId);
             score += intelligentBoost;
@@ -828,9 +924,6 @@
         return score;
     }
 
-    // ============================================
-    // LOAD INVESTOR PREFERENCES
-    // ============================================
     async function loadInvestorPreferences() {
         try {
             const profileRef = ref(db, `angelProfiles/${currentUser.uid}`);
@@ -845,9 +938,6 @@
         }
     }
 
-    // ============================================
-    // LOAD AND DISPLAY VESTS
-    // ============================================
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
@@ -880,10 +970,8 @@
         
         displayVests();
     });
-// ============================================
-    // ANALYTICS TRACKING FUNCTIONS
-    // ============================================
 
+    // IMPROVED IMPRESSION TRACKING - 2-3 SECOND STARE
     async function trackImpression(vestId, ownerUID) {
         if (!currentUser || !vestId || !ownerUID) return;
         
@@ -998,6 +1086,7 @@
             if (!snapshot.exists()) {
                 noVestsMsg.innerText = "NO ACTIVE OPPORTUNITIES IN TERMINAL.";
                 noVestsMsg.style.display = "block";
+                hideLoadingScreen();
                 return;
             }
 
@@ -1020,12 +1109,22 @@
                 });
             });
 
-            displayVests();
+            const totalVests = Object.keys(allVests).length;
+            
+            // LAZY LOADING ONLY IF MORE THAN 1000 VESTS
+            if (totalVests > 1000) {
+                await displayVestsLazy();
+            } else {
+                await displayVests();
+            }
+
+            hideLoadingScreen();
 
         } catch (err) {
             console.error("Load Error:", err);
             noVestsMsg.innerText = "PERMISSION DENIED: CHECK FIREBASE RULES.";
             noVestsMsg.style.display = "block";
+            hideLoadingScreen();
         }
     }
 
@@ -1059,7 +1158,8 @@
         return filtered;
     }
 
-    function displayVests() {
+    // LAZY LOADING VERSION FOR 1000+ VESTS
+    async function displayVestsLazy() {
         const container = document.getElementById('vestsContainer');
         const noVestsMsg = document.getElementById('noVests');
         
@@ -1075,131 +1175,157 @@
 
         noVestsMsg.style.display = 'none';
 
-        const preferences = analyzeInvestorPreferences();
-        const learningConfidence = preferences.learningConfidence;
-        const now = Date.now();
-
-        // GROUP ALL VESTS BY THEIR STARTUP CATEGORY
+        // Group vests by category
         const startupCategories = {};
-
         vests.forEach(item => {
             const vestCategory = item.vestData.StartupDetails?.category || 'Other';
-            
             if (!startupCategories[vestCategory]) {
                 startupCategories[vestCategory] = [];
             }
             startupCategories[vestCategory].push(item);
         });
 
-        // SORT CATEGORIES BY PRIORITY
-        // SORT CATEGORIES BY PRIORITY (SUI Match First, then Quality)
-const sortedCategories = Object.entries(startupCategories)
-    .map(([category, vests]) => {
-        // 1. Calculate the 'Quality Heat' of this specific row
-        const totalScore = vests.reduce((sum, v) => sum + v.score, 0);
-        const avgScore = totalScore / vests.length;
+        // Sort categories
+        const sortedCategories = sortCategoriesByPriority(startupCategories);
         
-        // 2. 🛡️ DEEP NESTING ACCESS:
-        // We look specifically at the object nested inside investorPreferences
-        const prefsData = investorPreferences?.preferredCategories;
-        
-        // 3. 🔥 SURGICAL CONVERSION:
-        // Since it's stored as {0: "HealthTech", 1: "MedTech"}, 
-        // Object.values() turns it back into ["HealthTech", "MedTech"]
-        const myPrefsArray = prefsData ? Object.values(prefsData) : [];
+        // Load first 30 vests immediately
+        const initialCategories = sortedCategories.slice(0, 3);
+        for (const categoryData of initialCategories) {
+            await renderCategory(categoryData);
+        }
 
-        // 4. 🎯 SUI MATCH: Compare current row category to Megumi's preferences
-        const isSUICategory = myPrefsArray.includes(category);
+        // Load rest in background
+        setTimeout(async () => {
+            const remainingCategories = sortedCategories.slice(3);
+            for (const categoryData of remainingCategories) {
+                await renderCategory(categoryData);
+                await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
+            }
+        }, 500);
+    }
+
+    async function displayVests() {
+        const container = document.getElementById('vestsContainer');
+        const noVestsMsg = document.getElementById('noVests');
         
-        return { 
-            category, 
-            vests, 
-            totalScore, 
-            avgScore, 
-            isSUICategory 
-        };
-    })
-    .sort((a, b) => {
-        // RULE 1: SUI matched categories (e.g. HealthTech for Megumi) go to the top
-        if (a.isSUICategory && !b.isSUICategory) return -1;
-        if (!a.isSUICategory && b.isSUICategory) return 1;
+        container.innerHTML = '';
         
-        // RULE 2: Within those groups, sort by the highest quality score
-        return b.avgScore - a.avgScore;
-    });
+        const vests = filterAndSortVests();
         
-        // DISPLAY EACH CATEGORY ROW
-        sortedCategories.forEach(({ category, vests, isSUICategory }) => {
-            if (vests.length > 0) {
-                // SEPARATE NEW VESTS (< 24 hours) from REGULAR VESTS
-                const newVests = [];
-                const regularVests = [];
+        if (vests.length === 0) {
+            noVestsMsg.innerText = 'No vests found matching your criteria.';
+            noVestsMsg.style.display = 'block';
+            return;
+        }
+
+        noVestsMsg.style.display = 'none';
+
+        const startupCategories = {};
+        vests.forEach(item => {
+            const vestCategory = item.vestData.StartupDetails?.category || 'Other';
+            if (!startupCategories[vestCategory]) {
+                startupCategories[vestCategory] = [];
+            }
+            startupCategories[vestCategory].push(item);
+        });
+
+        const sortedCategories = sortCategoriesByPriority(startupCategories);
+        
+        for (const categoryData of sortedCategories) {
+            await renderCategory(categoryData);
+        }
+    }
+
+    function sortCategoriesByPriority(startupCategories) {
+        const now = Date.now();
+        
+        return Object.entries(startupCategories)
+            .map(([category, vests]) => {
+                const totalScore = vests.reduce((sum, v) => sum + v.score, 0);
+                const avgScore = totalScore / vests.length;
                 
-                vests.forEach(vest => {
-                    if (vest.vestData.createdAt) {
-                        const createdTime = new Date(vest.vestData.createdAt).getTime();
-                        const hoursSinceCreation = (now - createdTime) / (1000 * 60 * 60);
-                        
-                        if (hoursSinceCreation < 24) {
-                            newVests.push(vest);
-                        } else {
-                            regularVests.push(vest);
-                        }
-                    } else {
-                        regularVests.push(vest);
-                    }
-                });
+                const prefsData = investorPreferences?.preferredCategories;
+                const myPrefsArray = prefsData ? Object.values(prefsData) : [];
+                const isSUICategory = myPrefsArray.includes(category);
                 
-                // Sort both groups by score
-                newVests.sort((a, b) => b.score - a.score);
-                regularVests.sort((a, b) => b.score - a.score);
+                return { 
+                    category, 
+                    vests, 
+                    totalScore, 
+                    avgScore, 
+                    isSUICategory,
+                    now
+                };
+            })
+            .sort((a, b) => {
+                if (a.isSUICategory && !b.isSUICategory) return -1;
+                if (!a.isSUICategory && b.isSUICategory) return 1;
+                return b.avgScore - a.avgScore;
+            });
+    }
+
+    async function renderCategory({ category, vests, isSUICategory, now }) {
+        if (vests.length === 0) return;
+        
+        const newVests = [];
+        const regularVests = [];
+        
+        vests.forEach(vest => {
+            if (vest.vestData.createdAt) {
+                const createdTime = new Date(vest.vestData.createdAt).getTime();
+                const hoursSinceCreation = (now - createdTime) / (1000 * 60 * 60);
                 
-                // DISTRIBUTE 3 NEW VESTS throughout 10 slots
-                // Target positions: 3, 6, 9 (or scattered naturally)
-                const totalSlots = 10;
-                const newVestSlots = [2, 5, 8]; // Positions 3, 6, 9 (0-indexed)
-                
-                const finalVests = [];
-                let newVestIndex = 0;
-                let regularVestIndex = 0;
-                
-                for (let i = 0; i < totalSlots; i++) {
-                    // Check if this position should have a new vest
-                    if (newVestSlots.includes(i) && newVestIndex < newVests.length) {
-                        finalVests.push(newVests[newVestIndex]);
-                        newVestIndex++;
-                    } else if (regularVestIndex < regularVests.length) {
-                        finalVests.push(regularVests[regularVestIndex]);
-                        regularVestIndex++;
-                    } else if (newVestIndex < newVests.length) {
-                        // If we run out of regular vests, fill with new vests
-                        finalVests.push(newVests[newVestIndex]);
-                        newVestIndex++;
-                    } else {
-                        break; // No more vests to add
-                    }
+                if (hoursSinceCreation < 24) {
+                    newVests.push(vest);
+                } else {
+                    regularVests.push(vest);
                 }
-                
-                // Get category emoji
-                const categoryEmoji = getCategoryEmoji(category);
-                
-                // Determine badge based on category status
-                let badge = category;
-                let badgeClass = 'badge-active';
-                
-                if (isSUICategory) {
-                    badge = '🎯 Perfect Match';
-                    badgeClass = 'badge-perfect';
-                }
-                
-                createRow(
-                    finalVests,
-                    `${categoryEmoji} ${category}`,
-                    badge,
-                    badgeClass
-                );
+            } else {
+                regularVests.push(vest);
             }
         });
+        
+        newVests.sort((a, b) => b.score - a.score);
+        regularVests.sort((a, b) => b.score - a.score);
+        
+        const totalSlots = 10;
+        const newVestSlots = [2, 5, 8];
+        
+        const finalVests = [];
+        let newVestIndex = 0;
+        let regularVestIndex = 0;
+        
+        for (let i = 0; i < totalSlots; i++) {
+            if (newVestSlots.includes(i) && newVestIndex < newVests.length) {
+                finalVests.push(newVests[newVestIndex]);
+                newVestIndex++;
+            } else if (regularVestIndex < regularVests.length) {
+                finalVests.push(regularVests[regularVestIndex]);
+                regularVestIndex++;
+            } else if (newVestIndex < newVests.length) {
+                finalVests.push(newVests[newVestIndex]);
+                newVestIndex++;
+            } else {
+                break;
+            }
+        }
+        
+        const categoryEmoji = getCategoryEmoji(category);
+        
+        let badge = category;
+        let badgeClass = 'badge-active';
+        
+        if (isSUICategory) {
+            badge = '🎯 Perfect Match';
+            badgeClass = 'badge-perfect';
+        }
+        
+        createRow(
+            finalVests,
+            `${categoryEmoji} ${category}`,
+            badge,
+            badgeClass
+        );
     }
 
     function getCategoryEmoji(category) {
@@ -1258,7 +1384,7 @@ const sortedCategories = Object.entries(startupCategories)
         });
     }
 
-    function createCard(vestId, vestData) {
+    async function createCard(vestId, vestData) {
         const card = document.createElement('div');
         card.className = 'card';
 
@@ -1268,6 +1394,14 @@ const sortedCategories = Object.entries(startupCategories)
         const initials = startupName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
         const stage = details.stage || 'Growth';
         const category = details.category || 'Tech';
+        const ownerUID = vestData.ownerUID;
+
+        // Load logo from Firebase
+        const logoUrl = await loadStartupLogo(ownerUID);
+        
+        const logoHTML = logoUrl 
+            ? `<div class="logo"><img src="${logoUrl}" alt="${startupName}"></div>`
+            : `<div class="logo">${initials}</div>`;
 
         card.innerHTML = `
             <div class="thumbnail-area">
@@ -1277,7 +1411,7 @@ const sortedCategories = Object.entries(startupCategories)
             <div class="card-content">
                 <div class="hook-text">${main.hook || 'Next-Gen Innovation Opportunity Available'}</div>
                 <div class="startup-info">
-                    <div class="logo">${initials}</div>
+                    ${logoHTML}
                     <div>
                         <div class="startup-name">${startupName}</div>
                         <div class="startup-category">${category}</div>
@@ -1295,19 +1429,28 @@ const sortedCategories = Object.entries(startupCategories)
             </div>
         `;
 
-// Track impression when card is visible
+        // IMPROVED STARE TRACKING - 2-3 SECOND DELAY
+        let stareTimer = null;
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    trackImpression(vestId, vestData.ownerUID);
-                    observer.unobserve(entry.target);
+                    // Start timer when card enters view
+                    stareTimer = setTimeout(() => {
+                        trackImpression(vestId, vestData.ownerUID);
+                        trackVestView(vestId, vestData);
+                    }, 2500); // 2.5 seconds stare time
+                } else {
+                    // Clear timer if user scrolls away
+                    if (stareTimer) {
+                        clearTimeout(stareTimer);
+                        stareTimer = null;
+                    }
                 }
             });
-        }, { threshold: 0.5 });
+        }, { threshold: 0.6 }); // 60% visible
         
         observer.observe(card);
 
-        // Track click
         card.onclick = () => {
             trackClick(vestId, vestData.ownerUID);
             window.location.href = `vest-details.html?id=${vestId}&owner=${vestData.ownerUID}`;
