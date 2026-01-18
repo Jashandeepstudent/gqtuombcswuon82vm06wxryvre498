@@ -6106,8 +6106,7 @@ window.resetModal = function() {
     document.getElementById('modalMenu').style.display = 'block';
 };
 
-// Save Availability Status
-// Save Availability Status
+// Save Availability Status - CORRECTED VERSION
 window.saveStatus = async function() {
     if (!currentUser) return;
     
@@ -6115,12 +6114,15 @@ window.saveStatus = async function() {
     const dateInput = document.getElementById('unavailableDate');
     
     if (!statusSelect) {
+        console.error("❌ Status select not found");
         alert("❌ Error: Status selector not found");
         return;
     }
     
-    const status = statusSelect.value;
+    const selectedStatus = statusSelect.value; // 'active' or 'busy'
     const unavailableDate = dateInput ? dateInput.value : null;
+    
+    console.log("🔍 Selected Status:", selectedStatus); // Debug log
     
     try {
         // Get all vests for this user
@@ -6135,20 +6137,24 @@ window.saveStatus = async function() {
         const vests = vestsSnapshot.val();
         const vestIds = Object.keys(vests);
         
+        console.log("📊 Found vests:", vestIds.length); // Debug log
+        
         // Prepare updates
         const updates = {};
         let activeCount = 0;
         let inactiveCount = 0;
         
         // Handle immediate status change
-        if (status) {
-            // FIXED: Map 'active' to 'live' and 'busy' to 'inactive'
-            const newStatus = status === 'active' ? 'live' : 'inactive';
+        if (selectedStatus) {
+            // CRITICAL FIX: Your database uses "active" and "inactive", not "live"
+            const newStatus = selectedStatus === 'active' ? 'active' : 'inactive';
+            
+            console.log("🔄 Setting all vests to:", newStatus); // Debug log
             
             vestIds.forEach(vestId => {
                 updates[`Vests/${currentUser.uid}/${vestId}/status`] = newStatus;
                 
-                if (newStatus === 'live') {
+                if (newStatus === 'active') {
                     activeCount++;
                 } else {
                     inactiveCount++;
@@ -6158,6 +6164,8 @@ window.saveStatus = async function() {
             // Update founder profile with new active vest count
             updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = activeCount;
             
+            console.log("📝 Applying updates:", updates); // Debug log
+            
             // Apply all updates
             await update(ref(db), updates);
             
@@ -6166,10 +6174,11 @@ window.saveStatus = async function() {
                 cachedFounderData.activeVestsCount = activeCount;
             }
             
-            const statusMessage = status === 'active' 
+            const statusMessage = selectedStatus === 'active' 
                 ? `✅ All vests activated! (${activeCount} active)` 
                 : `⏸️ All vests set to busy/inactive (${inactiveCount} inactive)`;
             
+            console.log("✅ Update successful:", statusMessage); // Debug log
             alert(statusMessage);
         }
         
@@ -6192,8 +6201,7 @@ window.saveStatus = async function() {
                 }
             });
             
-            // Set up the date change
-            scheduleStatusChange(unavailableDate);
+            console.log("📅 Scheduled unavailability set for:", unavailableDate);
             
             alert(`📅 Vests will be set to inactive on ${unavailableDate}`);
         }
@@ -6203,26 +6211,26 @@ window.saveStatus = async function() {
         
         // Refresh dashboard
         if (window.location.hash === '#founder_dashboard' || window.location.hash === '') {
-            showDashboard();
+            console.log("🔄 Refreshing dashboard...");
+            await showDashboard(); // Make it async
         }
         
     } catch (error) {
-        console.error("Error updating availability:", error);
-        alert("❌ Failed to update availability. Please try again.");
+        console.error("❌ Error updating availability:", error);
+        alert("❌ Failed to update availability: " + error.message);
     }
 };
+
 // Schedule status change for a future date
 function scheduleStatusChange(targetDate) {
     const checkInterval = setInterval(async () => {
         const now = new Date();
         const target = new Date(targetDate);
         
-        // Check if we've reached the target date
         if (now >= target) {
             clearInterval(checkInterval);
             
             try {
-                // Set all vests to inactive
                 const vestsRef = ref(db, `Vests/${currentUser.uid}`);
                 const snapshot = await get(vestsRef);
                 
@@ -6231,11 +6239,9 @@ function scheduleStatusChange(targetDate) {
                     const vestIds = Object.keys(snapshot.val());
                     
                     vestIds.forEach(vestId => {
-                        // FIXED: Use 'inactive' instead of 'inactive'
-                        updates[`Vests/${currentUser.uid}/${vestId}/status`] = 'inactive';
+                        updates[`Vests/${currentUser.uid}/${vestId}/status`] = 'inactive'; // Correct status
                     });
                     
-                    // Update active vest count to 0
                     updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = 0;
                     
                     await update(ref(db), updates);
@@ -6246,7 +6252,45 @@ function scheduleStatusChange(targetDate) {
                 console.error("Error applying scheduled status:", error);
             }
         }
-    }, 60000); // Check every minute
+    }, 60000);
+}
+
+async function checkScheduledAvailability() {
+    if (!currentUser) return;
+    
+    try {
+        const profileRef = ref(db, `founderProfile/${currentUser.uid}/scheduledUnavailability`);
+        const snapshot = await get(profileRef);
+        
+        if (snapshot.exists()) {
+            const scheduled = snapshot.val();
+            const targetDate = new Date(scheduled.date);
+            const now = new Date();
+            
+            if (now >= targetDate) {
+                console.log("Applying overdue scheduled unavailability...");
+                
+                const vestsRef = ref(db, `Vests/${currentUser.uid}`);
+                const vestsSnapshot = await get(vestsRef);
+                
+                if (vestsSnapshot.exists()) {
+                    const updates = {};
+                    Object.keys(vestsSnapshot.val()).forEach(vestId => {
+                        updates[`Vests/${currentUser.uid}/${vestId}/status`] = 'inactive'; // Correct status
+                    });
+                    
+                    updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = 0;
+                    updates[`founderProfile/${currentUser.uid}/scheduledUnavailability`] = null;
+                    
+                    await update(ref(db), updates);
+                    
+                    console.log("✅ Scheduled unavailability applied");
+                }
+            }
+        }
+    } catch (error) {
+        console.error("Error checking scheduled availability:", error);
+    }
 }
 // Event listeners for modal
 document.addEventListener('DOMContentLoaded', function() {
@@ -6281,46 +6325,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-async function checkScheduledAvailability() {
-    if (!currentUser) return;
-    
-    try {
-        const profileRef = ref(db, `founderProfile/${currentUser.uid}/scheduledUnavailability`);
-        const snapshot = await get(profileRef);
-        
-        if (snapshot.exists()) {
-            const scheduled = snapshot.val();
-            const targetDate = new Date(scheduled.date);
-            const now = new Date();
-            
-            // If the scheduled date has passed, apply it
-            if (now >= targetDate) {
-                console.log("Applying overdue scheduled unavailability...");
-                
-                // Set all vests to inactive
-                const vestsRef = ref(db, `Vests/${currentUser.uid}`);
-                const vestsSnapshot = await get(vestsRef);
-                
-                if (vestsSnapshot.exists()) {
-                    const updates = {};
-                    Object.keys(vestsSnapshot.val()).forEach(vestId => {
-                        // FIXED: Use 'inactive' status
-                        updates[`Vests/${currentUser.uid}/${vestId}/status`] = 'inactive';
-                    });
-                    
-                    updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = 0;
-                    updates[`founderProfile/${currentUser.uid}/scheduledUnavailability`] = null;
-                    
-                    await update(ref(db), updates);
-                    
-                    console.log("✅ Scheduled unavailability applied");
-                }
-            }
-        }
-    } catch (error) {
-        console.error("Error checking scheduled availability:", error);
-    }
-}
 
    onAuthStateChanged(auth, async (user) => {
     if (user) {
