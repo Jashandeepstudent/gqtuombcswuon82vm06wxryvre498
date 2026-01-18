@@ -83,7 +83,41 @@
     outline: none;
     transition: border-color 0.3s ease;
 }
+/* Status Pill Styling */
+.status-pill-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: #000;
+    border: 1px solid #333;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 10px;
+    transition: all 0.3s ease;
+}
 
+.status-pill-nav.active { color: #fff; border-color: #fff; }
+.status-pill-nav.busy { color: #666; border-color: #222; }
+
+/* The indicator dot */
+.dot-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.active .dot-indicator { 
+    background: #fff; 
+    box-shadow: 0 0 8px #fff; 
+}
+
+.busy .dot-indicator { 
+    background: #ef4444; /* Keep red for busy to ensure it stands out */
+}
 #autoReplyTextarea:focus {
     border-color: #fff; /* High contrast focus */
 }
@@ -8681,7 +8715,12 @@ max-width: 1100px;
             Browse Angel Profiles
         </button>
     </div>
-
+<div id="navStatusPill" class="status-pill-nav ${founderData?.availabilityStatus === 'busy' ? 'busy' : 'active'}">
+            <span class="dot-indicator"></span>
+            <span id="navStatusText">Status: ${founderData?.availabilityStatus === 'busy' ? 'Busy' : 'Active'}</span>
+        </div>
+    </div>
+</div>
     <div class="top-nav-right">
         <div class="nav-icon-wrapper" onclick="window.handleBellClick()">
             <div class="icon-btn">
