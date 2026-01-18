@@ -966,7 +966,7 @@
             document.getElementById('problem').textContent = main.problem || 'Not specified';
             document.getElementById('solution').textContent = main.solution || 'Not specified';
             document.getElementById('advantage').textContent = main.advantage || 'Not specified';
-            document.getElementById('fundAsk').textContent = ' + (main.fundAsk ? Number(main.fundAsk).toLocaleString() : '0');
+           document.getElementById('fundAsk').textContent = (main.fundAsk ? Number(main.fundAsk).toLocaleString() : '0');
             document.getElementById('equityOffered').textContent = main.equityOffered || '0%';
 
             // Startup Details
