@@ -162,7 +162,429 @@
     letter-spacing: 1px;
     font-size: 0.8rem;
 }
+/* ========================================
+   GLOBAL MOBILE RESPONSIVE STYLES
+======================================== */
 
+/* Mobile Breakpoint: 768px and below */
+@media (max-width: 768px) {
+    /* Navigation Bar */
+    .top-nav {
+        padding: 0.75rem 1rem !important;
+        flex-wrap: wrap;
+    }
+    
+    .logo {
+        font-size: 1.3rem !important;
+    }
+    
+    .circular-logo-container {
+        width: 28px !important;
+        height: 28px !important;
+    }
+    
+    .nav-links {
+        display: none !important; /* Hide main navigation on mobile */
+    }
+    
+    .top-nav-right {
+        gap: 0.75rem !important;
+    }
+    
+    .icon-btn {
+        width: 36px !important;
+        height: 36px !important;
+    }
+    
+    .status-pill-nav {
+        padding: 4px 10px !important;
+        font-size: 0.65rem !important;
+    }
+    
+    .btn-browse-angels {
+        padding: 5px 12px !important;
+        font-size: 0.65rem !important;
+        width: auto !important;
+        min-width: 100px !important;
+    }
+    
+    /* Container & Layout */
+    .container {
+        padding: 1.5rem 1rem !important;
+        flex-direction: column !important;
+        gap: 1.5rem !important;
+    }
+    
+    .left-section {
+        width: 100% !important;
+        order: 2; /* Move below main content on mobile */
+    }
+    
+    .right-section {
+        width: 100% !important;
+        max-width: 100% !important;
+        order: 1;
+    }
+    
+    /* Welcome Section */
+    .welcome-text {
+        font-size: 1.6rem !important;
+        line-height: 1.3 !important;
+    }
+    
+    .welcome-text svg {
+        width: 28px !important;
+        height: 28px !important;
+    }
+    
+    .welcome-subtext {
+        font-size: 0.95rem !important;
+    }
+    
+    /* Banners */
+    .banner {
+        padding: 1.5rem !important;
+        flex-direction: column !important;
+        text-align: center !important;
+    }
+    
+    .banner-content h3 {
+        font-size: 1.3rem !important;
+    }
+    
+    .banner-content h3 svg {
+        width: 20px !important;
+        height: 20px !important;
+    }
+    
+    .banner-content p {
+        font-size: 0.9rem !important;
+    }
+    
+    .banner-icon {
+        margin-left: 0 !important;
+        margin-top: 1rem !important;
+        width: 80px !important;
+        height: 80px !important;
+    }
+    
+    .banner-icon svg {
+        width: 45px !important;
+        height: 45px !important;
+    }
+    
+    /* Cards */
+    .card {
+        padding: 1.5rem !important;
+    }
+    
+    .profile-avatar, .startup-logo, .availability-indicator {
+        width: 70px !important;
+        height: 70px !important;
+        font-size: 2rem !important;
+    }
+    
+    .card-title {
+        font-size: 1rem !important;
+    }
+    
+    .card-subtitle {
+        font-size: 0.85rem !important;
+    }
+    
+    .card-btn {
+        padding: 0.75rem 1.25rem !important;
+        font-size: 0.9rem !important;
+    }
+    
+    /* Roadmap */
+    .roadmap {
+        overflow-x: auto;
+        padding: 1rem 0;
+    }
+    
+    .roadmap::before {
+        left: 5% !important;
+        right: 5% !important;
+    }
+    
+    .step-indicator {
+        min-width: 80px;
+    }
+    
+    .step-circle {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 1rem !important;
+    }
+    
+    .step-label {
+        font-size: 0.75rem !important;
+    }
+    
+    /* Form Card */
+    .form-card {
+        padding: 1.5rem !important;
+    }
+    
+    /* Buttons */
+    .buttons {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+    
+    button {
+        padding: 0.75rem 1.25rem !important;
+        font-size: 0.9rem !important;
+    }
+    
+    /* Vest Tabs */
+    .vest-tab {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.8rem !important;
+    }
+    
+    /* Footer */
+    .footer {
+        padding: 2rem 1rem !important;
+    }
+    
+    .footer-content {
+        flex-direction: column !important;
+        gap: 1.5rem !important;
+        text-align: center !important;
+    }
+    
+    .footer-logo-text {
+        font-size: 1.5rem !important;
+    }
+    
+    .footer-links {
+        flex-direction: column !important;
+        gap: 1rem !important;
+    }
+    
+    /* Profile Pages */
+    .edit-profile-container {
+        padding: 1.5rem 1rem !important;
+    }
+    
+    .profile-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+    }
+    
+    .profile-sidebar {
+        position: static !important;
+        order: 2;
+    }
+    
+    .profile-header-card {
+        flex-direction: column !important;
+        text-align: center !important;
+    }
+    
+    .profile-avatar-large, .startup-logo-large {
+        width: 90px !important;
+        height: 90px !important;
+        font-size: 2.5rem !important;
+    }
+    
+    .profile-name, .startup-name-large {
+        font-size: 1.5rem !important;
+    }
+    
+    .dual-section {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Modals */
+    .edit-modal-content, .special-app-popup {
+        width: 95% !important;
+        padding: 1.5rem !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+    }
+    
+    .edit-modal-header {
+        padding: 1rem !important;
+    }
+    
+    .edit-modal-body {
+        padding: 1rem !important;
+    }
+    
+    .edit-modal-footer {
+        padding: 1rem !important;
+        flex-direction: column !important;
+    }
+    
+    .modal-btn-save, .modal-btn-cancel {
+        width: 100% !important;
+    }
+    
+    /* Back Button */
+    .back-to-dash, .back-btn {
+        padding: 0.6rem 1rem !important;
+        font-size: 0.85rem !important;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+    
+    .preview-btn, .share-btn {
+        width: 100% !important;
+    }
+    
+    /* Verification Pages */
+    .verify-page {
+        padding: 2rem 1rem !important;
+    }
+    
+    .verify-title {
+        font-size: 1.8rem !important;
+    }
+    
+    .verify-card {
+        padding: 1.5rem !important;
+    }
+    
+    .verify-option-btn {
+        padding: 1.5rem !important;
+        flex-direction: column !important;
+        text-align: center !important;
+    }
+    
+    .verify-icon {
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    /* Chat/Inbox */
+    .chat-list-container {
+        padding: 1.5rem 1rem !important;
+    }
+    
+    .chat-item {
+        padding: 1rem !important;
+        gap: 1rem !important;
+    }
+    
+    .chat-avatar {
+        width: 48px !important;
+        height: 48px !important;
+        font-size: 1rem !important;
+    }
+    
+    .chat-name {
+        font-size: 1rem !important;
+    }
+    
+    .chat-preview {
+        font-size: 0.85rem !important;
+        max-width: 100% !important;
+    }
+    
+    /* Applications */
+    .manage-vests-page {
+        padding: 1.5rem 1rem !important;
+    }
+    
+    .vest-cards-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    .header-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+    
+    .btn-create-white {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    /* Analytics */
+    .analytics-page {
+        padding: 1.5rem 1rem !important;
+    }
+    
+    .vest-selection-grid, .emergence-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+    }
+    
+    /* Inbox Card */
+    .inbox-card {
+        margin-bottom: 1rem;
+    }
+    
+    /* Team Members */
+    .team-member-row {
+        padding: 0.75rem !important;
+    }
+    
+    .member-avatar-circle {
+        width: 35px !important;
+        height: 35px !important;
+    }
+    
+    .member-name {
+        font-size: 0.9rem !important;
+    }
+    
+    .member-role {
+        font-size: 0.8rem !important;
+    }
+    
+    /* Scrollbar for mobile */
+    ::-webkit-scrollbar {
+        width: 4px !important;
+    }
+}
+
+/* Extra Small Devices: 480px and below */
+@media (max-width: 480px) {
+    .welcome-text {
+        font-size: 1.4rem !important;
+    }
+    
+    .banner-content h3 {
+        font-size: 1.1rem !important;
+    }
+    
+    .card-title {
+        font-size: 0.95rem !important;
+    }
+    
+    .profile-name {
+        font-size: 1.3rem !important;
+    }
+    
+    .verify-title {
+        font-size: 1.5rem !important;
+    }
+}
+
+/* Landscape Mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .top-nav {
+        padding: 0.5rem 1rem !important;
+    }
+    
+    .welcome-section {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .banner {
+        padding: 1rem !important;
+    }
+}
 .modal-btn-cancel:hover {
     border-color: #444;
     color: #fff;
@@ -7644,11 +8066,11 @@ async function showVerificationPage() {
                 border: 1px solid #222;
                 border-radius: 12px;
                 padding: 2rem;
-                display: none;
+                display: none; /* ⭐ HIDDEN BY DEFAULT */
             }
             
             .verification-steps.active {
-                display: block;
+                display: block; /* ⭐ SHOWN WHEN ACTIVE */
                 animation: fadeIn 0.5s;
             }
             
@@ -7695,11 +8117,11 @@ async function showVerificationPage() {
                 padding: 2rem;
                 margin-top: 1.5rem;
                 text-align: center;
-                display: none;
+                display: none; /* ⭐ HIDDEN BY DEFAULT */
             }
             
             .verification-line-box.active {
-                display: block;
+                display: block; /* ⭐ SHOWN WHEN ACTIVE */
             }
             
             .verification-line-text {
@@ -7716,11 +8138,11 @@ async function showVerificationPage() {
             
             .upload-section {
                 margin-top: 2rem;
-                display: none;
+                display: none; /* ⭐ HIDDEN BY DEFAULT */
             }
             
             .upload-section.active {
-                display: block;
+                display: block; /* ⭐ SHOWN WHEN ACTIVE */
             }
             
             .upload-box {
@@ -7767,7 +8189,7 @@ async function showVerificationPage() {
             }
         </style>
         
-    
+        ${createNavBar()}
         
         <div class="verify-page">
             <a href="#founder_dashboard" class="back-to-dash">
@@ -7799,6 +8221,7 @@ async function showVerificationPage() {
                 </button>
             </div>
             
+            <!-- ⭐ STEPS SECTION (Initially Hidden) -->
             <div class="verification-steps" id="verificationSteps">
                 <div class="step-item">
                     <div class="step-number">1</div>
@@ -7806,10 +8229,12 @@ async function showVerificationPage() {
                         <h4>Generate Your Verification Line</h4>
                         <p>Click the button below to get your unique verification phrase. This is a one-time generated line that you'll need to speak in your video.</p>
                         
+                        <!-- ⭐ GENERATE BUTTON (Show if no line exists) -->
                         <button class="verify-btn" onclick="generateVerificationLine()" id="generateLineBtn" ${existingLine ? 'style="display:none;"' : ''}>
                             Generate Verification Line
                         </button>
                         
+                        <!-- ⭐ VERIFICATION LINE DISPLAY -->
                         <div class="verification-line-box ${existingLine ? 'active' : ''}" id="verificationLineBox">
                             <p style="color: #888; margin-bottom: 1rem;">Your Verification Line:</p>
                             <div class="verification-line-text" id="verificationLineText">
@@ -7828,6 +8253,7 @@ async function showVerificationPage() {
                         <h4>Create Your Demo Video</h4>
                         <p>Record a 30-second video talking about your startup. <strong>Remember to speak the verification line shown above in your video.</strong></p>
                         
+                        <!-- ⭐ UPLOAD SECTION (Show after line is generated) -->
                         <div class="upload-section ${existingLine ? 'active' : ''}" id="uploadSection">
                             <div class="upload-box" id="uploadBox" onclick="document.getElementById('videoUpload').click()">
                                 <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-bottom: 1rem;">
@@ -7851,10 +8277,15 @@ async function showVerificationPage() {
     `;
 }
 
+// ⭐ FIX: Make steps visible when clicked
 window.startVideoVerification = function() {
-    document.getElementById('verificationSteps').classList.add('active');
+    const stepsSection = document.getElementById('verificationSteps');
+    if (stepsSection) {
+        stepsSection.classList.add('active');
+        // Scroll to steps
+        stepsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 };
-
 // ==========================================
 // VERIFICATION LINE GENERATION (Updated for Gemini)
 // ==========================================
@@ -11568,78 +11999,92 @@ max-width: 1100px;
     const chatsRef = ref(db, 'Chats');
     
     onValue(chatsRef, async (snapshot) => {
-        // Default Display
-        let displayData = { 
-            title: "Welcome to ScaleVest!", 
-            text: "No New Messages Yet.", 
-            timeAgo: "",
-            isUnread: false
-        };
+    // Default Display
+    let displayData = { 
+        title: "Welcome to ScaleVest!", 
+        text: "No New Messages Yet.", 
+        timeAgo: "",
+        isUnread: false,
+        hasAttachment: false // ⭐ NEW
+    };
 
-        if (snapshot.exists()) {
-            const allChats = snapshot.val();
-            let newestUnreadMsg = null;
+    if (snapshot.exists()) {
+        const allChats = snapshot.val();
+        let newestUnreadMsg = null;
 
-            // Search for Unread Messages
-            Object.keys(allChats).forEach(roomKey => {
-                if (roomKey.includes(currentUser.uid)) {
-                    const roomData = allChats[roomKey];
-                    const msgs = Object.values(roomData).filter(m => m && typeof m === 'object' && m.timestamp);
-                    
-                    msgs.forEach(msg => {
-                        // Priority Check: Is it for me? Is it specifically unread?
-                        if (msg.recipient === currentUser.uid && msg.read === false) {
-                            if (!newestUnreadMsg || msg.timestamp > newestUnreadMsg.timestamp) {
-                                newestUnreadMsg = msg;
-                            }
+        // Search for Unread Messages
+        Object.keys(allChats).forEach(roomKey => {
+            if (roomKey.includes(currentUser.uid)) {
+                const roomData = allChats[roomKey];
+                const msgs = Object.values(roomData).filter(m => m && typeof m === 'object' && m.timestamp);
+                
+                msgs.forEach(msg => {
+                    // Priority Check: Is it for me? Is it specifically unread?
+                    if (msg.recipient === currentUser.uid && msg.read === false) {
+                        if (!newestUnreadMsg || msg.timestamp > newestUnreadMsg.timestamp) {
+                            newestUnreadMsg = msg;
                         }
-                    });
-                }
-            });
-
-            // If we found a priority unread message, display it
-            if (newestUnreadMsg) {
-                try {
-                    let senderName = "An Investor";
-                    const investorSnap = await get(ref(db, `investorProfiles/${newestUnreadMsg.sender}`));
-                    
-                    if (investorSnap.exists()) {
-                        senderName = investorSnap.val().fullName;
-                    } else {
-                        const founderSnap = await get(ref(db, `founderProfile/${newestUnreadMsg.sender}`));
-                        if(founderSnap.exists()) senderName = founderSnap.val().founderUsername || "User";
                     }
+                });
+            }
+        });
 
-                    displayData = {
-                        title: `${senderName} sent a message:`,
-                        text: newestUnreadMsg.text || "Sent an attachment",
-                        timeAgo: timeSince(newestUnreadMsg.timestamp),
-                        isUnread: true
-                    };
-                } catch (e) {
-                    console.error("Error fetching name:", e);
+        // If we found a priority unread message, display it
+        if (newestUnreadMsg) {
+            try {
+                let senderName = "An Investor";
+                const investorSnap = await get(ref(db, `investorProfiles/${newestUnreadMsg.sender}`));
+                
+                if (investorSnap.exists()) {
+                    senderName = investorSnap.val().fullName;
+                } else {
+                    const founderSnap = await get(ref(db, `founderProfile/${newestUnreadMsg.sender}`));
+                    if(founderSnap.exists()) senderName = founderSnap.val().founderUsername || "User";
                 }
+
+                // ⭐ CHECK FOR ATTACHMENT
+                const hasAttachment = !newestUnreadMsg.text && (newestUnreadMsg.fileUrl || newestUnreadMsg.videoUrl || newestUnreadMsg.imageUrl);
+                const messageText = newestUnreadMsg.text || (hasAttachment ? "📎 Sent an attachment" : "Sent a message");
+
+                displayData = {
+                    title: `${senderName} sent a message:`,
+                    text: messageText,
+                    timeAgo: timeSince(newestUnreadMsg.timestamp),
+                    isUnread: true,
+                    hasAttachment: hasAttachment // ⭐ NEW
+                };
+            } catch (e) {
+                console.error("Error fetching name:", e);
             }
         }
+    }
 
-        // UPDATE UI ELEMENT
-        const inboxElement = document.getElementById('inbox-preview-content');
-        if (inboxElement) {
-            const opacity = displayData.isUnread ? "1" : "0.5";
-            const border = displayData.isUnread ? "3px solid #ff006e" : "3px solid #333";
+    // UPDATE UI ELEMENT
+    const inboxElement = document.getElementById('inbox-preview-content');
+    if (inboxElement) {
+        const opacity = displayData.isUnread ? "1" : "0.5";
+        const border = displayData.isUnread ? "3px solid #ff006e" : "3px solid #333";
+        
+        // ⭐ ATTACHMENT ICON (if exists)
+        const attachmentIcon = displayData.hasAttachment 
+            ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+               </svg>`
+            : '';
 
-            inboxElement.style.borderLeft = border;
-            inboxElement.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-                    <strong style="color: #fff; font-size: 0.9rem; line-height:1.2;">${displayData.title}</strong>
-                    <span style="color: #ff006e; font-size: 0.7rem; font-weight: 800; white-space:nowrap; margin-left:10px;">${displayData.timeAgo}</span>
-                </div>
-                <p style="color: #888; font-size: 0.85rem; line-height: 1.4; font-style: italic; opacity:${opacity};">
-                    "${displayData.text}"
-                </p>
-            `;
-        }
-    });
+        inboxElement.style.borderLeft = border;
+        inboxElement.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                <strong style="color: #fff; font-size: 0.9rem; line-height:1.2;">${displayData.title}</strong>
+                <span style="color: #ff006e; font-size: 0.7rem; font-weight: 800; white-space:nowrap; margin-left:10px;">${displayData.timeAgo}</span>
+            </div>
+            <p style="color: #888; font-size: 0.85rem; line-height: 1.4; font-style: italic; opacity:${opacity};">
+                ${attachmentIcon}"${displayData.text}"
+            </p>
+        `;
+    }
+});
+
 // Function to show sub-sections
 window.showAvailabilityDetail = function(sectionId) {
     document.getElementById('modalMenu').style.display = 'none';
