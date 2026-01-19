@@ -2468,26 +2468,29 @@
     letter-spacing: 0.6px;
     text-transform: uppercase;
 
-    background: #ffffff;
-    color: #000000;
-
-    border: 1px solid rgba(0,0,0,0.15);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-
     z-index: 10;
 }
 
-/* Subtle status meaning via border */
+/* Active = Green */
 .status-active {
-    border-color: rgba(0,0,0,0.35);
+    background: #10b981;
+    color: #fff;
+    border: 1px solid #10b981;
 }
 
+/* Inactive = Gray */
 .status-inactive {
-    border-style: dashed;
+    background: #666;
+    color: #fff;
+    border: 1px solid #666;
 }
 
+/* Draft = Red */
 .status-draft {
-    opacity: 0.85;
+    background: #ef4444;
+    color: #fff;
+    border: 1px solid #ef4444;
 }
 /* Pricing */
 .price-section {
@@ -2743,20 +2746,46 @@
     object-fit: cover;
 }
 
+/* ===============================
+   STATUS BADGES (LUXURY)
+================================ */
 .status-badge {
     position: absolute;
     top: 12px;
     left: 12px;
-    padding: 4px 10px;
-    border-radius: 6px;
+
+    padding: 5px 12px;
+    border-radius: 8px;
+
     font-size: 0.7rem;
-    font-weight: 800;
+    font-weight: 900;
+    letter-spacing: 0.6px;
     text-transform: uppercase;
-    color: #fff;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10;
 }
 
-.status-active { background: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
-.status-draft { background: #ff4d4d; box-shadow: 0 0 10px rgba(255, 77, 77, 0.4); }
+/* Active = Green */
+.status-active {
+    background: #10b981;
+    color: #fff;
+    border: 1px solid #10b981;
+}
+
+/* Inactive = Gray */
+.status-inactive {
+    background: #666;
+    color: #fff;
+    border: 1px solid #666;
+}
+
+/* Draft = Red */
+.status-draft {
+    background: #ef4444;
+    color: #fff;
+    border: 1px solid #ef4444;
+}
 
 .vest-card-content { padding: 20px; }
 
@@ -4329,6 +4358,26 @@ window.showTokenShop = async function() {
     `;
 };
 async function showManageVests() {
+    // ⭐ ADD THIS CHECK AT THE VERY START
+    if (!currentUser) {
+        window.location.href = 'login2.html';
+        return;
+    }
+    
+    // Check verification status
+    const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
+    const snapshot = await get(founderRef);
+    
+    if (snapshot.exists()) {
+        const data = snapshot.val();
+        
+        if (data.isVerified === false) {
+            showVerificationBlockPopup('manage your vests');
+            return;
+        }
+    }
+    
+
     document.title = "Manage Your Vests | ScaleVest";
     const container = document.getElementById('dashboardContainer');
     container.style.display = 'block';
@@ -8347,7 +8396,7 @@ async function showVerificationPage() {
             </div>
             
             <!-- ⭐ STEPS SECTION (Initially Hidden) -->
-            <div class="verification-steps" id="verificationSteps">
+            <div class="verification-steps active" id="verificationSteps" style="display: block;">
                 <div class="step-item">
                     <div class="step-number">1</div>
                     <div class="step-content">
@@ -8406,7 +8455,10 @@ async function showVerificationPage() {
 window.startVideoVerification = function() {
     const stepsSection = document.getElementById('verificationSteps');
     if (stepsSection) {
+        // Force show the steps
+        stepsSection.style.display = 'block';
         stepsSection.classList.add('active');
+        
         // Scroll to steps
         stepsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -8924,7 +8976,7 @@ function generateConfetti() {
     return confetti;
 }
 
-window.closeSuccessAndRedirect = function() {
+window.closeSuccessAndRedirect = async function() {  
     const success = document.getElementById('verificationSuccess');
     if (success) success.remove();
     
@@ -8933,6 +8985,34 @@ window.closeSuccessAndRedirect = function() {
     if (banner) {
         banner.remove();
         document.body.style.paddingTop = '0';
+    }
+    
+    // ⭐ AUTO-ACTIVATE ALL VESTS
+    try {
+        const vestsRef = ref(db, `Vests/${currentUser.uid}`);
+        const vestsSnap = await get(vestsRef);
+        
+        if (vestsSnap.exists()) {
+            const vests = vestsSnap.val();
+            const updates = {};
+            let activeCount = 0;
+            
+            // Set all vests to active
+            Object.keys(vests).forEach(vestId => {
+                updates[`Vests/${currentUser.uid}/${vestId}/status`] = 'active';
+                activeCount++;
+            });
+            
+            // Update active vests count in profile
+            updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = activeCount;
+            
+            // Execute bulk update
+            await update(ref(db), updates);
+            
+            console.log(`✅ Activated ${activeCount} vests automatically`);
+        }
+    } catch (error) {
+        console.error("Error auto-activating vests:", error);
     }
     
     window.location.hash = 'founder_dashboard';
@@ -9310,13 +9390,18 @@ window.saveVestChanges = async function() {
         // Update session storage
         sessionStorage.setItem('editVestData', JSON.stringify(vestData));
         
+        // ⭐ CHANGED: Redirect to dashboard instead of showing "Saved"
         alert('✅ Changes saved successfully!');
-        btn.innerHTML = '✓ Saved';
         
-        setTimeout(() => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }, 1500);
+        // Clear edit mode
+        isEditMode = false;
+        currentEditVestId = null;
+        sessionStorage.removeItem('editVestStatus');
+        sessionStorage.removeItem('editVestId');
+        sessionStorage.removeItem('editVestData');
+        
+        // Redirect to dashboard
+        window.location.hash = 'founder_dashboard';
         
     } catch (error) {
         console.error("Save error:", error);
@@ -9325,7 +9410,6 @@ window.saveVestChanges = async function() {
         btn.disabled = false;
     }
 };
-
 window.launchEditedVest = async function() {
     if (!currentEditVestId) return;
     
