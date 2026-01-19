@@ -1,16 +1,14 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Sign in — ScaleVest</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 *{box-sizing:border-box;font-family:Inter}
-body{margin:0;color:#fff}
+body{margin:0;color:#fff;overflow-x:hidden;}
 
 /* VIDEO BG */
 #bgVideo{
@@ -45,31 +43,33 @@ body::before{
   color:#000;
   font-size:14px;
 }
-.auth-btn img{width:18px;height:18px}
 .auth-btn:hover{background:#f9fafb}
 
 /* MODALS */
-.modal-overlay,.email-overlay{
+.modal-overlay, .email-overlay{
   position:fixed;
   inset:0;
   display:flex;
   justify-content:center;
   align-items:center;
+  z-index: 50;
 }
 .email-overlay{
-  background:rgba(0,0,0,.45);
+  background:rgba(0,0,0,.6);
   backdrop-filter:blur(8px);
   display:none;
   z-index:100;
 }
 .email-glass{
-  width:360px;
+  width:380px;
   padding:28px;
   border-radius:20px;
   background:rgba(255,255,255,.15);
   backdrop-filter:blur(20px);
+  border: 1px solid rgba(255,255,255,0.2);
 }
-.email-glass h3{margin-top:0;color:#fff}
+.email-glass h3{margin-top:0;color:#fff;font-size: 22px;}
+.email-glass p{font-size: 13px; margin-bottom: 15px;}
 .email-glass input{
   width:100%;
   padding:12px;
@@ -91,6 +91,7 @@ body::before{
   font-weight:600;
   cursor:pointer;
   font-size:14px;
+  margin-top: 5px;
 }
 .email-glass button:hover{background:#1d4ed8}
 
@@ -109,6 +110,7 @@ ul{
   border-radius:16px;
   display:flex;
   overflow:hidden;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
 }
 .modal-left{
   width:50%;
@@ -134,9 +136,6 @@ ul{
 }
 .modal-right h3{margin-top:0;font-size:24px}
 .modal-right p{font-size:14px;color:#6b7280}
-#authSwitch{cursor:pointer}
-#authSwitch span{color:#2563eb;font-weight:600}
-#authSwitch span:hover{text-decoration:underline}
 
 .divider{
   text-align:center;
@@ -159,21 +158,11 @@ ul{
   background:#e5e7eb;
   z-index:-1;
 }
-.loader{
-  width:42px;
-  height:42px;
-  border:4px solid rgba(255,255,255,.3);
-  border-top:4px solid #60a5fa;
-  border-radius:50%;
-  animation:spin 1s linear infinite;
-  margin:0 auto 14px;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
 
 .error-msg{
-  background:rgba(239,68,68,.1);
-  border:1px solid rgba(239,68,68,.3);
-  color:#ef4444;
+  background:rgba(239,68,68,.2);
+  border:1px solid rgba(239,68,68,0.5);
+  color:#ff9999;
   padding:10px;
   border-radius:8px;
   font-size:13px;
@@ -204,29 +193,24 @@ ul{
 
       <p id="authSwitch">
         Already have an account?
-        <span onclick="switchToSigninUI()">Sign in</span>
+        <span style="color:#2563eb; font-weight:600; cursor:pointer;" onclick="switchToSigninUI()">Sign in</span>
       </p>
 
-      <button class="auth-btn" onclick="googleLogin()">
-        <span>🔵</span> Continue with Google
-      </button>
-      <button class="auth-btn" onclick="emailAuthHandler()">
-        <span>✉️</span> Continue with Email
-      </button>
+<button class="auth-btn" onclick="googleLogin()">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+    Continue with Google
+</button>
 
-      <div class="divider"><span>or</span></div>
-
-      <button class="auth-btn" onclick="appleLogin()">
-        <span>🍎</span> Continue with Apple
-      </button>
-      <button class="auth-btn" onclick="facebookLogin()">
-        <span>📘</span> Continue with Facebook
-      </button>
+<button class="auth-btn" onclick="emailAuthHandler()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 8L10.8906 13.2604C11.5624 13.7083 12.4376 13.7083 13.1094 13.2604L21 8M5 19H19C20.1046 19 21 18.1046 21 17V7C21 5.89543 20.1046 5 19 5H5C3.89543 5 3 5.89543 3 7V17C3 18.1046 3.89543 19 5 19Z" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Continue with Email
+</button>
     </div>
   </div>
 </div>
 
-<!-- SIGNUP -->
 <div class="email-overlay" id="signupModal">
   <div class="email-glass">
     <h3>Create account</h3>
@@ -238,53 +222,54 @@ ul{
       <li id="rule_number">❌ Contains a number</li>
       <li id="rule_special">❌ Contains a special character</li>
     </ul>
-    <button onclick="emailSignup()">Create account</button>
+    <button onclick="emailSignup()">Continue to Mobile</button>
     <p style="text-align:center;font-size:12px;margin-top:12px;color:#fff;">
       <span style="cursor:pointer" onclick="closeModals()">← Back</span>
     </p>
   </div>
 </div>
 
-<!-- SIGNIN -->
+<div class="email-overlay" id="mobileModal">
+  <div class="email-glass">
+    <h3>Verify Mobile</h3>
+    <p>Please enter your mobile number for security verification.</p>
+    <div class="error-msg" id="mobileError"></div>
+    <input id="mobileNumber" type="tel" placeholder="+1 123 456 7890">
+    <div id="recaptcha-container"></div>
+    <button onclick="sendOTP()">Send OTP</button>
+    <p style="text-align:center;font-size:12px;margin-top:12px;color:#fff;">
+      <span style="cursor:pointer" onclick="mobileModal.style.display='none'; signupModal.style.display='flex';">← Back</span>
+    </p>
+  </div>
+</div>
+
+<div class="email-overlay" id="otpModal">
+  <div class="email-glass">
+    <h3>Enter Code</h3>
+    <p>We've sent a 6-digit code to your phone.</p>
+    <div class="error-msg" id="otpError"></div>
+    <input id="otpCode" type="number" placeholder="000000">
+    <button onclick="verifyOTPAndSignup()">Verify & Create Account</button>
+    <p style="text-align:center;font-size:12px;margin-top:12px;color:#fff;">
+      <span style="cursor:pointer" onclick="otpModal.style.display='none'; mobileModal.style.display='flex';">← Resend SMS</span>
+    </p>
+  </div>
+</div>
+
 <div class="email-overlay" id="signinModal">
   <div class="email-glass">
     <h3>Sign in</h3>
     <div class="error-msg" id="signinError"></div>
     <input id="signinEmail" type="email" placeholder="Email" autocomplete="email">
     <input id="signinPassword" type="password" placeholder="Password" autocomplete="current-password">
-
     <button onclick="emailSignin()">Sign in</button>
-
     <p style="text-align:right;font-size:12px;margin-top:8px;">
-      <span style="cursor:pointer;color:#93c5fd" onclick="forgotPassword()">
-        Forgot password?
-      </span>
+      <span style="cursor:pointer;color:#93c5fd" onclick="forgotPassword()">Forgot password?</span>
     </p>
-
     <div class="divider"><span>or</span></div>
-
-    <button class="auth-btn" onclick="googleLogin()">
-      <span>🔵</span> Continue with Google
-    </button>
-
-    
+    <button class="auth-btn" onclick="googleLogin()"><span>🔵</span> Google Sign-In</button>
     <p style="text-align:center;font-size:12px;margin-top:12px;color:#fff;">
       <span style="cursor:pointer" onclick="closeModals()">← Back</span>
-    </p>
-  </div>
-</div>
-
-<!-- VERIFY -->
-<div class="email-overlay" id="verifyingModal">
-  <div class="email-glass" style="text-align:center">
-    <div class="loader"></div>
-    <h3>Verify your email</h3>
-    <p>We sent a verification link to your email. Click the link to continue.</p>
-    <button onclick="checkVerificationStatus()">I've verified my email</button>
-    <button onclick="resendVerification()" style="background:#6b7280;margin-top:8px">Resend email</button>
-    <p id="resendMsg" style="font-size:12px;color:#fff"></p>
-    <p style="text-align:center;font-size:12px;margin-top:12px;color:#fff;">
-      <span style="cursor:pointer" onclick="signOutAndClose()">← Sign out</span>
     </p>
   </div>
 </div>
@@ -293,199 +278,168 @@ ul{
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
-// Initialize Firebase
+// 1. Initialize Firebase
 firebase.initializeApp({
-  apiKey:"AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-  authDomain:"scalevest-163a0.firebaseapp.com",
-  projectId:"scalevest-163a0"
+  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+  authDomain: "scalevest-163a0.firebaseapp.com",
+  projectId: "scalevest-163a0"
 });
 
 const auth = firebase.auth();
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-// Track if we're in the middle of auth flow
+// Globals for multi-step flow
 let isAuthFlowActive = false;
+let tempEmail = "";
+let tempPassword = "";
+let confirmationResult = null;
 
-/* REDIRECT URL - Fixed for GitHub Pages */
-function getRedirectURL() {
-  // Returns the exact current page URL without query parameters
-  return window.location.origin + window.location.pathname;
-}
+// Initialize Invisible ReCaptcha for Phone Auth
+window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+  'size': 'invisible'
+});
 
-/* UI HELPERS */
+/* UI NAVIGATION */
 function emailAuthHandler(){ 
   signupModal.style.display="flex";
   signupError.style.display="none";
 }
-
 function switchToSigninUI(){
   signupModal.style.display="none";
   signinModal.style.display="flex";
   signinError.style.display="none";
-  authTitle.innerText = "Welcome back";
-  authSubtitle.innerText = "Sign in to your account";
 }
-
 function closeModals(){
   signupModal.style.display="none";
   signinModal.style.display="none";
-  verifyingModal.style.display="none";
+  mobileModal.style.display="none";
+  otpModal.style.display="none";
 }
 
-function showVerifying(){
-  signupModal.style.display="none";
-  signinModal.style.display="none";
-  verifyingModal.style.display="flex";
-  resendMsg.innerText = "";
-}
-
+/* PASSWORD VALIDATION */
 function checkPasswordRules(){
   const p = signupPassword.value;
   rule_length.innerText=(p.length>=6?"✅":"❌")+" At least 6 characters";
   rule_number.innerText=(/\d/.test(p)?"✅":"❌")+" Contains a number";
   rule_special.innerText=(/[!@#$%^&*]/.test(p)?"✅":"❌")+" Contains a special character";
 }
-
 function validPassword(p){
   return p.length>=6 && /\d/.test(p) && /[!@#$%^&*]/.test(p);
 }
-
 function showError(elementId, message){
   const el = document.getElementById(elementId);
   el.innerText = message;
   el.style.display = "block";
 }
 
-/* EMAIL SIGNUP - Fixed */
-/* EMAIL SIGNUP - Modified to bypass verification */
+/* STEP 1: CAPTURE EMAIL & PASS */
 async function emailSignup() {
-  const email = signupEmail.value.trim();
-  const password = signupPassword.value;
+  tempEmail = signupEmail.value.trim();
+  tempPassword = signupPassword.value;
 
-  if (!email) {
-    showError('signupError', 'Please enter your email');
+  if (!tempEmail) { showError('signupError', 'Please enter email'); return; }
+  if (!validPassword(tempPassword)) { showError('signupError', 'Invalid password'); return; }
+
+  signupModal.style.display = "none";
+  mobileModal.style.display = "flex";
+}
+
+/* STEP 2: SEND PHONE OTP */
+async function sendOTP() {
+  const phone = mobileNumber.value.trim();
+  if (!phone.startsWith('+')) {
+    showError('mobileError', 'Enter full number with country code (e.g., +1)');
     return;
   }
-  if (!validPassword(password)) {
-    showError('signupError', 'Password does not meet requirements');
-    return;
-  }
 
-  isAuthFlowActive = true;
   try {
-    await auth.createUserWithEmailAndPassword(email, password);
-    // Redirect immediately without sending verification email
-    window.location.href = "business-side.html";
+    const appVerifier = window.recaptchaVerifier;
+    confirmationResult = await auth.signInWithPhoneNumber(phone, appVerifier);
+    mobileModal.style.display = "none";
+    otpModal.style.display = "flex";
   } catch (err) {
-    isAuthFlowActive = false;
-    if (err.code === "auth/email-already-in-use") {
-      showError('signupError', 'Account already exists. Please sign in.');
-      setTimeout(() => {
-        signupModal.style.display = "none";
-        switchToSigninUI();
-      }, 2000);
-    } else {
-      showError('signupError', err.message);
-    }
+    showError('mobileError', err.message);
   }
 }
 
-/* EMAIL SIGNIN - Modified to bypass verification */
+/* STEP 3: VERIFY OTP AND FINALIZE SIGNUP */
+async function verifyOTPAndSignup() {
+  const code = otpCode.value.trim();
+  isAuthFlowActive = true;
+
+  try {
+    // Confirm OTP first
+    await confirmationResult.confirm(code);
+    
+    // Create Email/Password account after mobile is verified
+    await auth.createUserWithEmailAndPassword(tempEmail, tempPassword);
+    
+    window.location.href = "business-side.html";
+  } catch (err) {
+    isAuthFlowActive = false;
+    showError('otpError', "Verification failed: " + err.message);
+  }
+}
+
+/* SIGN IN LOGIC */
 async function emailSignin() {
   const email = signinEmail.value.trim();
   const password = signinPassword.value;
 
-  if (!email || !password) {
-    showError('signinError', 'Please enter email and password');
-    return;
-  }
+  if (!email || !password) { showError('signinError', 'Fields missing'); return; }
 
   isAuthFlowActive = true;
   try {
     await auth.signInWithEmailAndPassword(email, password);
-    // Redirect immediately regardless of verification status
     window.location.href = "mainbusinesshub.html";
   } catch (err) {
     isAuthFlowActive = false;
-    if (err.code === "auth/user-not-found") {
-      showError('signinError', 'Account not found. Please sign up first.');
-    } else if (err.code === "auth/wrong-password") {
-      showError('signinError', 'Incorrect password.');
-    } else {
-      showError('signinError', err.message);
-    }
-  }
-}
-
-/* FORGOT PASSWORD */
-async function forgotPassword() {
-  const email = signinEmail.value.trim();
-  if (!email) {
-    showError('signinError', 'Please enter your email first');
-    return;
-  }
-  try {
-    await auth.sendPasswordResetEmail(email);
-    showError('signinError', '✅ Password reset email sent! Check your inbox.');
-  } catch (err) {
     showError('signinError', err.message);
   }
 }
 
-/* SIGN OUT */
-async function signOutAndClose() {
-  await auth.signOut();
-  closeModals();
-  isAuthFlowActive = false;
-}
-
-/* SOCIAL LOGINS */
+/* SOCIALS */
 async function googleLogin() {
   isAuthFlowActive = true;
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
     await auth.signInWithPopup(provider);
     window.location.href = "mainbusinesshub.html";
-  } catch (err) {
-    isAuthFlowActive = false;
-    alert("Google sign-in failed: " + err.message);
-  }
+  } catch (err) { isAuthFlowActive = false; alert(err.message); }
 }
 
 async function facebookLogin() {
   isAuthFlowActive = true;
   try {
     const provider = new firebase.auth.FacebookAuthProvider();
-    provider.addScope('email');
     await auth.signInWithPopup(provider);
     window.location.href = "mainbusinesshub.html";
-  } catch (err) {
-    isAuthFlowActive = false;
-    alert("Facebook sign-in failed: " + err.message);
-  }
+  } catch (err) { isAuthFlowActive = false; alert(err.message); }
 }
 
 async function appleLogin() {
   isAuthFlowActive = true;
   try {
     const provider = new firebase.auth.OAuthProvider('apple.com');
-    provider.addScope('email');
-    provider.addScope('name');
     await auth.signInWithPopup(provider);
     window.location.href = "mainbusinesshub.html";
-  } catch (err) {
-    isAuthFlowActive = false;
-    alert("Apple sign-in failed: " + err.message);
-  }
+  } catch (err) { isAuthFlowActive = false; alert(err.message); }
 }
 
-/* AUTH STATE LISTENER - Modified to redirect all users */
+/* FORGOT PASSWORD */
+async function forgotPassword() {
+  const email = signinEmail.value.trim();
+  if (!email) { showError('signinError', 'Enter email first'); return; }
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showError('signinError', '✅ Reset email sent!');
+  } catch (err) { showError('signinError', err.message); }
+}
+
+/* AUTH STATE LISTENER */
 auth.onAuthStateChanged(user => {
   if (isAuthFlowActive) return;
-  if (user) {
-    // If the user is logged in, always send them to the hub
-    window.location.href = "mainbusinesshub.html";
-  }
+  if (user) { window.location.href = "mainbusinesshub.html"; }
 });
 </script>
 
