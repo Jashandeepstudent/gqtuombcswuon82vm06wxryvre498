@@ -8492,58 +8492,37 @@ async function showVerificationPage() {
                 </p>
             </div>
             
-            <!-- ⭐ CONDITIONAL RENDERING: Show steps directly if line exists -->
             ${existingLine ? `
-                <div class="verification-steps active" style="display: block;">
-                    <div class="step-item">
-                        <div class="step-number">1</div>
-                        <div class="verify-step-content">
-                            <h4>Your Verification Line</h4>
-                            <p>Speak this exact line in your video:</p>
-                            
-                            <div class="verification-line-box active">
-                                <p style="color: #888; margin-bottom: 1rem;">Your Verification Line:</p>
-                                <div class="verification-line-text">${existingLine}</div>
-                                <p style="color: #666; font-size: 0.85rem; margin-top: 1rem;">
-                                    ⚠️ You must speak this exact line in your video
-                                </p>
-                            </div>
-                            
-                            <div class="upload-section active">
-                                <div class="upload-box" id="uploadBox" onclick="document.getElementById('videoUpload').click()">
-                                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-bottom: 1rem;">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                        <polyline points="17 8 12 3 7 8"></polyline>
-                                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                                    </svg>
-                                    <p style="color: #888; font-size: 1.1rem; margin-bottom: 0.5rem;" id="uploadText">Click to Upload Video</p>
-                                    <small style="color: #555;">Max 100MB • MP4, MOV, AVI</small>
-                                    <input type="file" id="videoUpload" accept="video/*" style="display: none;" onchange="handleVideoUpload(event)">
-                                </div>
-                                
-                                <button class="verify-btn" id="submitVerifyBtn" onclick="submitVideoVerification()" disabled>
-                                    Submit for Verification
-                                </button>
-                            </div>
-                        </div>
+    <div class="verification-steps active" style="display: block;">
+        <div class="step-item">
+            <div class="step-number">1</div>
+            <div class="verify-step-content">
+                <h4>Your Verification Line</h4>
+                <p>Speak this exact line in your video:</p>
+                <div class="verification-line-box active">
+                    <div class="verification-line-text">${existingLine}</div>
+                </div>
+                <div class="upload-section active">
                     </div>
-                </div>
-           ` : ''}
-                <!-- Show initial button if no line exists -->
-                <div class="verify-card">
-                    <button class="verify-option-btn" onclick="startVideoVerification()">
-                        <div class="verify-icon">
-                            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2">
-                                <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                            </svg>
-                        </div>
-                        <div class="verify-option-content">
-                            <h3>ScaleVest Video Script Verification</h3>
-                            <p>Record a 30-second video speaking your unique verification line to prove you're a real founder</p>
-                        </div>
-                    </button>
-                </div>
+            </div>
+        </div>
+    </div>
+` : `
+    <div class="verify-card">
+        <button class="verify-option-btn" onclick="startVideoVerification()">
+            <div class="verify-icon">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2">
+                    <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                </svg>
+            </div>
+            <div class="verify-option-content">
+                <h3>ScaleVest Video Script Verification</h3>
+                <p>Click to start the process</p>
+            </div>
+        </button>
+    </div>
+`}
     
     <div class="verification-steps" id="verificationSteps" style="display: none;">
         <div class="step-item">
