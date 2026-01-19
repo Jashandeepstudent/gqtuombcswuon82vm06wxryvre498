@@ -10250,27 +10250,36 @@ function showVerificationBanner() {
                 font-size: 1rem;
             }
             
-            /* ⭐ COMPACT RED BUTTON */
-            .banner-verify-btn {
-                background: #fff;
-                color: #ef4444; /* Red text */
-                border: none;
-                padding: 0.6rem 1.5rem; /* ⭐ SMALLER PADDING */
-                border-radius: 8px;
-                font-weight: 700;
-                font-size: 0.9rem; /* ⭐ SMALLER FONT */
-                cursor: pointer;
-                transition: all 0.3s;
-                white-space: nowrap; /* ⭐ PREVENT STRETCHING */
-                min-width: auto; /* ⭐ RESET MIN WIDTH */
-                width: auto; /* ⭐ AUTO WIDTH */
-            }
-            
-            .banner-verify-btn:hover {
-                transform: scale(1.05);
-                box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
-                background: #fef2f2; /* Light red on hover */
-            }
+/* ⭐ COMPACT RED BUTTON – FIXED */
+.banner-verify-btn {
+    background: #fff;
+    color: #ef4444;
+    border: none;
+
+    padding: 6px 12px;          /* 🔥 MUCH SMALLER */
+    border-radius: 6px;
+
+    font-weight: 600;           /* lighter than 700 */
+    font-size: 0.8rem;          /* 🔥 smaller font */
+
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+
+    display: inline-flex;       /* 🔥 prevents stretching */
+    align-items: center;
+    justify-content: center;
+
+    width: fit-content;         /* 🔥 auto size to text */
+    min-width: unset;
+    white-space: nowrap;
+}
+
+/* Hover – NO SCALE (scale causes stretch feeling) */
+.banner-verify-btn:hover {
+    background: #fef2f2;
+    box-shadow: 0 3px 8px rgba(239, 68, 68, 0.25);
+}
+
         </style>
         
         <div class="verification-banner">
