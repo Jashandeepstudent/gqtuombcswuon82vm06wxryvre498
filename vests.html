@@ -9612,25 +9612,27 @@ document.addEventListener('click', (e) => {
         }
     }
 });
-document.addEventListener('DOMContentLoaded', () => {
-    const signOutBtn = document.getElementById('sign-out-btn');
+// This listens to clicks on the entire page
+document.addEventListener('click', (event) => {
+    // Check if the clicked element (or its parent) has the ID 'sign-out-btn'
+    if (event.target && event.target.id === 'sign-out-btn') {
+        
+        // Prevent default button behavior
+        event.preventDefault();
 
-    // Check if the button exists to prevent the "null" error
-    if (signOutBtn) {
-        signOutBtn.addEventListener('click', () => {
-            // 1. Sign out from Firebase (Ensure 'auth' is initialized above this)
-            signOut(auth).then(() => {
-                // 2. Clear specific item from localStorage
-                localStorage.removeItem('startupProfileCreated');
-                
-                // 3. Redirect to the index page
-                window.location.href = "https://upscalevest.site/index.html";
-            }).catch((error) => {
-                console.error("Sign out error:", error);
-            });
+        // 1. Firebase Sign Out
+        // Ensure 'auth' is defined globally or imported in this file
+        signOut(auth).then(() => {
+            console.log("Sign out successful");
+
+            // 2. Clear Local Storage
+            localStorage.removeItem('startupProfileCreated');
+
+            // 3. Redirect
+            window.location.href = "https://upscalevest.site/index.html";
+        }).catch((error) => {
+            console.error("Firebase Sign Out Error:", error);
         });
-    } else {
-        console.error("Sign out button not found in the DOM.");
     }
 });
 window.showVestAnalytics = showVestAnalytics;
