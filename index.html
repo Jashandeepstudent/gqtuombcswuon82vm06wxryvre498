@@ -1072,39 +1072,40 @@ const firebaseConfig = {
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
- async function checkAndCreditReferral() {
+async function checkAndCreditReferral() {
     const urlParams = new URLSearchParams(window.location.search);
-    const referrerUid = urlParams.get('uid');
+    const referrerUid = urlParams.get('uid'); // The person who sent the link
     const refCode = urlParams.get('ref');
 
     if (referrerUid && refCode) {
-        // Use a more specific key to track unique referrals
-        const storageKey = `ref_processed_${refCode}`;
-        if (localStorage.getItem(storageKey)) {
-            console.log("Referral already processed for this session.");
-            return; 
+        // Use a unique key to prevent multiple rewards from the same visitor session
+        const uniqueStorageKey = `ref_session_${refCode}`;
+        if (localStorage.getItem(uniqueStorageKey)) {
+            console.log("Referral reward already processed for this session.");
+            return;
         }
 
         try {
-            // Use the database reference to the referrer's profile
+            // Path to the referrer's token count
             const tokenRef = ref(db, `founderProfile/${referrerUid}/scaleTokens`);
             
-            // Use runTransaction to safely increment the tokens
+            // Atomically add 10 tokens
             await runTransaction(tokenRef, (currentTokens) => {
+                // If scaleTokens doesn't exist yet, start at 0 and add 10
                 return (currentTokens || 0) + 10;
             });
 
-            // Mark as processed only AFTER successful transaction
-            localStorage.setItem(storageKey, "true");
-            console.log("Success: 10 ScaleTokens credited to referrer.");
+            // Mark as processed only AFTER the database update succeeds
+            localStorage.setItem(uniqueStorageKey, "true");
+            console.log("Success: 10 ScaleTokens rewarded to " + referrerUid);
         } catch (error) {
-            console.error("Referral credit failed:", error);
+            console.error("Referral processing error:", error);
         }
     }
 }
 
-  // Run immediately on page load
-  checkAndCreditReferral();
+// Make sure this is called immediately after Firebase initializes
+checkAndCreditReferral();
 </body>
 </html>
 
