@@ -3781,19 +3781,26 @@ import {
     const db = getDatabase(app);
     const storage = getStorage(app);
     const auth = getAuth(app);
-const signOutBtn = document.getElementById('sign-out-btn');
-signOutBtn.addEventListener('click', () => {
-    // 1. Sign out from Firebase
-    signOut(auth).then(() => {
-        // 2. Clear specific item from localStorage
-        localStorage.removeItem('startupProfileCreated');
-        
-        // 3. Redirect to the index page
-        window.location.href = "https://upscalevest.site/index.html";
-    }).catch((error) => {
-        console.error("Sign out error:", error);
-        alert("An error occurred while signing out.");
-    });
+document.addEventListener('DOMContentLoaded', () => {
+    const signOutBtn = document.getElementById('sign-out-btn');
+
+    // Check if the button exists to prevent the "null" error
+    if (signOutBtn) {
+        signOutBtn.addEventListener('click', () => {
+            // 1. Sign out from Firebase (Ensure 'auth' is initialized above this)
+            signOut(auth).then(() => {
+                // 2. Clear specific item from localStorage
+                localStorage.removeItem('startupProfileCreated');
+                
+                // 3. Redirect to the index page
+                window.location.href = "https://upscalevest.site/index.html";
+            }).catch((error) => {
+                console.error("Sign out error:", error);
+            });
+        });
+    } else {
+        console.error("Sign out button not found in the DOM.");
+    }
 });
     let currentUser = null;
 let globalUnreadCount = 0;
