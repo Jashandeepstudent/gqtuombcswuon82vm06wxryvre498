@@ -7,167 +7,85 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
-*{box-sizing:border-box;font-family:Inter}
-body{margin:0;color:#fff;overflow-x:hidden;}
+/* BASE STYLES */
+*{box-sizing:border-box;font-family: 'Inter', sans-serif;}
+body{margin:0;color:#111827;overflow-x:hidden;}
 
-/* VIDEO BG */
 #bgVideo{
-  position:fixed;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  z-index:-2;
+    position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:-2;
 }
 body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  background:rgba(10,15,25,.45);
-  z-index:-1;
+    content:""; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:-1;
 }
 
-/* AUTH BUTTONS */
+/* BUTTONS */
 .auth-btn{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  width:100%;
-  padding:13px 16px;
-  margin-bottom:12px;
-  border-radius:10px;
-  border:1px solid #e5e7eb;
-  background:#fff;
-  font-weight:600;
-  cursor:pointer;
-  color:#000;
-  font-size:14px;
+    display:flex; align-items:center; justify-content:center; gap:12px;
+    width:100%; padding:12px 16px; margin-bottom:12px;
+    border-radius:8px; border:1px solid #e5e7eb;
+    background:#fff; font-weight:600; cursor:pointer;
+    color:#374151; font-size:14px; transition: all 0.2s;
 }
-.auth-btn:hover{background:#f9fafb}
+.auth-btn:hover{ background:#f9fafb; border-color: #d1d5db; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 
-/* MODALS */
-.modal-overlay, .email-overlay{
-  position:fixed;
-  inset:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  z-index: 50;
+/* SPECIAL GOOGLE BUTTON */
+.btn-google {
+    border: 2px solid transparent;
+    background-image: linear-gradient(white, white), 
+                      linear-gradient(to right, #4285F4, #EA4335, #FBBC05, #34A853);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
 }
-.email-overlay{
-  background:rgba(0,0,0,.6);
-  backdrop-filter:blur(8px);
-  display:none;
-  z-index:100;
-}
-.email-glass{
-  width:380px;
-  padding:28px;
-  border-radius:20px;
-  background:rgba(255,255,255,.15);
-  backdrop-filter:blur(20px);
-  border: 1px solid rgba(255,255,255,0.2);
-}
-.email-glass h3{margin-top:0;color:#fff;font-size: 22px;}
-.email-glass p{font-size: 13px; margin-bottom: 15px;}
-.email-glass input{
-  width:100%;
-  padding:12px;
-  margin-bottom:10px;
-  border-radius:10px;
-  border:none;
-  background:rgba(255,255,255,.2);
-  color:#fff;
-  font-size:14px;
-}
-.email-glass input::placeholder{color:rgba(255,255,255,.6)}
-.email-glass button{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:12px;
-  background:#2563eb;
-  color:#fff;
-  font-weight:600;
-  cursor:pointer;
-  font-size:14px;
-  margin-top: 5px;
-}
-.email-glass button:hover{background:#1d4ed8}
+.auth-btn img { width: 18px; height: 18px; }
 
-ul{
-  margin:6px 0 14px 14px;
-  padding:0;
-  font-size:12px;
-  line-height:1.6;
-  color:#fff;
+/* PROFESSIONAL MODALS (NO GLASS) */
+.modal-overlay, .email-overlay {
+    position:fixed; inset:0; display:flex; justify-content:center; align-items:center; z-index: 50;
 }
+.email-overlay { background:rgba(0,0,0,0.7); display:none; z-index:100; }
 
-.modal{
-  width:900px;
-  height:520px;
-  background:#fff;
-  border-radius:16px;
-  display:flex;
-  overflow:hidden;
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+.modal-content-prof {
+    width:400px; padding:32px; border-radius:12px;
+    background:#ffffff; color:#111827;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
-.modal-left{
-  width:50%;
-  background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  position:relative;
-}
-.modal-left::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,.25);
-}
-.overlay-text{
-  position:relative;
-  z-index:2;
-  padding:42px;
-  color:#fff;
-}
-.modal-right{
-  width:50%;
-  padding:40px;
-  color:#000;
-}
-.modal-right h3{margin-top:0;font-size:24px}
-.modal-right p{font-size:14px;color:#6b7280}
+.modal-content-prof h3 { margin: 0 0 8px; font-size: 20px; font-weight: 700; color: #111827; }
+.modal-content-prof p { font-size: 14px; color: #6b7280; margin-bottom: 20px; }
 
-.divider{
-  text-align:center;
-  margin:18px 0;
-  position:relative;
+/* INPUTS */
+.input-group { margin-bottom: 16px; }
+.input-group label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px; }
+input, select {
+    width:100%; padding:10px 12px; border-radius:6px;
+    border: 1px solid #d1d5db; background:#fff;
+    color:#111827; font-size:14px; outline: none;
 }
-.divider span{
-  background:#fff;
-  padding:0 10px;
-  font-size:12px;
-  color:#6b7280;
-}
-.divider::before{
-  content:"";
-  position:absolute;
-  top:50%;
-  left:0;
-  right:0;
-  height:1px;
-  background:#e5e7eb;
-  z-index:-1;
-}
+input:focus { border-color: #2563eb; ring: 2px solid #bfdbfe; }
 
-.error-msg{
-  background:rgba(239,68,68,.2);
-  border:1px solid rgba(239,68,68,0.5);
-  color:#ff9999;
-  padding:10px;
-  border-radius:8px;
-  font-size:13px;
-  margin-bottom:12px;
-  display:none;
+/* PHONE INPUT ROW */
+.phone-row { display: flex; gap: 8px; }
+.phone-row select { width: 100px; }
+
+/* MAIN CONTAINER */
+.modal {
+    width:900px; height:520px; background:#fff; border-radius:16px;
+    display:flex; overflow:hidden;
+}
+.modal-left {
+    width:50%; background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    display:flex; align-items:flex-end; padding:40px; color:#fff;
+}
+.modal-right { width:50%; padding:40px; }
+
+.divider {
+    text-align:center; margin:20px 0; position:relative;
+}
+.divider span { background:#fff; padding:0 12px; font-size:12px; color:#9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
+.divider::before { content:""; position:absolute; top:50%; left:0; right:0; height:1px; background:#f3f4f6; z-index:-1; }
+
+.error-msg {
+    background:#fef2f2; border:1px solid #fee2e2; color:#b91c1c;
+    padding:10px; border-radius:6px; font-size:13px; margin-bottom:16px; display:none;
 }
 </style>
 </head>
@@ -175,273 +93,183 @@ ul{
 <body>
 
 <video id="bgVideo" autoplay muted loop playsinline>
-  <source src="loginpage.mp4" type="video/mp4">
+    <source src="loginpage.mp4" type="video/mp4">
 </video>
 
 <div class="modal-overlay">
-  <div class="modal">
-    <div class="modal-left">
-      <div class="overlay-text">
-        <h2>Verified • Secure • Scalable</h2>
-        <p>Join thousands of businesses scaling with confidence</p>
-      </div>
+    <div class="modal">
+        <div class="modal-left">
+            <div>
+                <h2 style="font-size:32px; margin-bottom:10px;">ScaleVest</h2>
+                <p style="opacity:0.9">Verified • Secure • Scalable</p>
+            </div>
+        </div>
+
+        <div class="modal-right">
+            <h3 id="authTitle" style="margin-top:0;">Get Started</h3>
+            <p id="authSubtitle">Join thousands of businesses today.</p>
+
+            <button class="auth-btn btn-google" onclick="googleLogin()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                Continue with Google
+            </button>
+
+            <div class="divider"><span>or</span></div>
+
+            <button class="auth-btn" onclick="emailAuthHandler()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                Continue with Email
+            </button>
+            
+            <p style="text-align:center; font-size:13px; margin-top:20px;">
+                Already have an account? <span style="color:#2563eb; font-weight:600; cursor:pointer;" onclick="switchToSigninUI()">Sign in</span>
+            </p>
+        </div>
     </div>
-
-    <div class="modal-right">
-      <h3 id="authTitle">New to ScaleVest?</h3>
-      <p id="authSubtitle">Create an account to get started</p>
-
-      <p id="authSwitch">
-        Already have an account?
-        <span style="color:#2563eb; font-weight:600; cursor:pointer;" onclick="switchToSigninUI()">Sign in</span>
-      </p>
-
-<button class="auth-btn" onclick="googleLogin()">
-    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
-    Continue with Google
-</button>
-
-<button class="auth-btn" onclick="emailAuthHandler()">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M3 8L10.8906 13.2604C11.5624 13.7083 12.4376 13.7083 13.1094 13.2604L21 8M5 19H19C20.1046 19 21 18.1046 21 17V7C21 5.89543 20.1046 5 19 5H5C3.89543 5 3 5.89543 3 7V17C3 18.1046 3.89543 19 5 19Z" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    Continue with Email
-</button>
-    </div>
-  </div>
 </div>
 
 <div class="email-overlay" id="signupModal">
-  <div class="email-glass">
-    <h3>Create account</h3>
-    <div class="error-msg" id="signupError"></div>
-    <input id="signupEmail" type="email" placeholder="Email" autocomplete="email">
-    <input id="signupPassword" type="password" placeholder="Password" autocomplete="new-password" oninput="checkPasswordRules()">
-    <ul>
-      <li id="rule_length">❌ At least 6 characters</li>
-      <li id="rule_number">❌ Contains a number</li>
-      <li id="rule_special">❌ Contains a special character</li>
-    </ul>
-    <button onclick="emailSignup()">Continue to Mobile</button>
-    <p style="text-align:center;font-size:12px;margin-top:12px;color:#fff;">
-      <span style="cursor:pointer" onclick="closeModals()">← Back</span>
-    </p>
-  </div>
+    <div class="modal-content-prof">
+        <h3>Create Account</h3>
+        <p>Enter your details to continue.</p>
+        <div class="error-msg" id="signupError"></div>
+        <div class="input-group">
+            <label>Email Address</label>
+            <input id="signupEmail" type="email" placeholder="name@company.com">
+        </div>
+        <div class="input-group">
+            <label>Password</label>
+            <input id="signupPassword" type="password" placeholder="••••••••" oninput="checkPasswordRules()">
+        </div>
+        <ul style="color:#6b7280; font-size:11px; list-style:none; padding:0; margin-bottom:20px;">
+            <li id="rule_length">❌ 6+ Characters</li>
+            <li id="rule_number">❌ One Number</li>
+            <li id="rule_special">❌ One Special Character</li>
+        </ul>
+        <button class="auth-btn" style="background:#2563eb; color:#fff; border:none;" onclick="emailSignup()">Continue</button>
+        <p style="text-align:center; margin-top:15px;"><span style="cursor:pointer; font-size:12px;" onclick="closeModals()">Cancel</span></p>
+    </div>
 </div>
 
 <div class="email-overlay" id="mobileModal">
-  <div class="email-glass">
-    <h3>Verify Mobile</h3>
-    <p>Please enter your mobile number for security verification.</p>
-    <div class="error-msg" id="mobileError"></div>
-    <input id="mobileNumber" type="tel" placeholder="+1 123 456 7890">
-    <div id="recaptcha-container"></div>
-    <button onclick="sendOTP()">Send OTP</button>
-    <p style="text-align:center;font-size:12px;margin-top:12px;color:#fff;">
-      <span style="cursor:pointer" onclick="mobileModal.style.display='none'; signupModal.style.display='flex';">← Back</span>
-    </p>
-  </div>
+    <div class="modal-content-prof">
+        <h3>Verify Phone</h3>
+        <p>We'll send a one-time code for security.</p>
+        <div class="error-msg" id="mobileError"></div>
+        <div class="input-group">
+            <label>Mobile Number</label>
+            <div class="phone-row">
+                <select id="countryCode">
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+91">🇮🇳 +91</option>
+                    <option value="+61">🇦🇺 +61</option>
+                    <option value="+971">🇦🇪 +971</option>
+                </select>
+                <input id="mobileNumber" type="tel" placeholder="000 000 0000">
+            </div>
+        </div>
+        <div id="recaptcha-container"></div>
+        <button class="auth-btn" style="background:#2563eb; color:#fff; border:none;" onclick="sendOTP()">Send OTP</button>
+        <p style="text-align:center; margin-top:15px;"><span style="cursor:pointer; font-size:12px;" onclick="mobileModal.style.display='none'; signupModal.style.display='flex';">← Back</span></p>
+    </div>
 </div>
 
 <div class="email-overlay" id="otpModal">
-  <div class="email-glass">
-    <h3>Enter Code</h3>
-    <p>We've sent a 6-digit code to your phone.</p>
-    <div class="error-msg" id="otpError"></div>
-    <input id="otpCode" type="number" placeholder="000000">
-    <button onclick="verifyOTPAndSignup()">Verify & Create Account</button>
-    <p style="text-align:center;font-size:12px;margin-top:12px;color:#fff;">
-      <span style="cursor:pointer" onclick="otpModal.style.display='none'; mobileModal.style.display='flex';">← Resend SMS</span>
-    </p>
-  </div>
+    <div class="modal-content-prof">
+        <h3>Enter OTP</h3>
+        <p>Verification code sent to your mobile.</p>
+        <div class="error-msg" id="otpError"></div>
+        <input id="otpCode" type="number" placeholder="000000" style="text-align:center; font-size:24px; letter-spacing:8px; margin-bottom:20px;">
+        <button class="auth-btn" style="background:#10b981; color:#fff; border:none;" onclick="verifyOTPAndSignup()">Verify & Create</button>
+    </div>
 </div>
 
 <div class="email-overlay" id="signinModal">
-  <div class="email-glass">
-    <h3>Sign in</h3>
-    <div class="error-msg" id="signinError"></div>
-    <input id="signinEmail" type="email" placeholder="Email" autocomplete="email">
-    <input id="signinPassword" type="password" placeholder="Password" autocomplete="current-password">
-    <button onclick="emailSignin()">Sign in</button>
-    <p style="text-align:right;font-size:12px;margin-top:8px;">
-      <span style="cursor:pointer;color:#93c5fd" onclick="forgotPassword()">Forgot password?</span>
-    </p>
-    <div class="divider"><span>or</span></div>
-    <button class="auth-btn" onclick="googleLogin()"><span>🔵</span> Google Sign-In</button>
-    <p style="text-align:center;font-size:12px;margin-top:12px;color:#fff;">
-      <span style="cursor:pointer" onclick="closeModals()">← Back</span>
-    </p>
-  </div>
+    <div class="modal-content-prof">
+        <h3>Welcome Back</h3>
+        <p>Sign in to access your dashboard.</p>
+        <div class="error-msg" id="signinError"></div>
+        <div class="input-group">
+            <label>Email</label>
+            <input id="signinEmail" type="email">
+        </div>
+        <div class="input-group">
+            <label>Password</label>
+            <input id="signinPassword" type="password">
+        </div>
+        <button class="auth-btn" style="background:#2563eb; color:#fff; border:none;" onclick="emailSignin()">Sign In</button>
+        <p style="text-align:center; margin-top:15px; font-size:12px;"><span style="cursor:pointer;" onclick="closeModals()">Cancel</span></p>
+    </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
-// 1. Initialize Firebase
 firebase.initializeApp({
-  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-  authDomain: "scalevest-163a0.firebaseapp.com",
-  projectId: "scalevest-163a0"
+    apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+    authDomain: "scalevest-163a0.firebaseapp.com",
+    projectId: "scalevest-163a0"
 });
 
 const auth = firebase.auth();
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+let tempEmail = "", tempPassword = "", confirmationResult = null;
 
-// Globals for multi-step flow
-let isAuthFlowActive = false;
-let tempEmail = "";
-let tempPassword = "";
-let confirmationResult = null;
+window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { 'size': 'invisible' });
 
-// Initialize Invisible ReCaptcha for Phone Auth
-window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-  'size': 'invisible'
-});
+function emailAuthHandler(){ signupModal.style.display="flex"; }
+function switchToSigninUI(){ signinModal.style.display="flex"; }
+function closeModals(){ document.querySelectorAll('.email-overlay').forEach(el => el.style.display='none'); }
 
-/* UI NAVIGATION */
-function emailAuthHandler(){ 
-  signupModal.style.display="flex";
-  signupError.style.display="none";
-}
-function switchToSigninUI(){
-  signupModal.style.display="none";
-  signinModal.style.display="flex";
-  signinError.style.display="none";
-}
-function closeModals(){
-  signupModal.style.display="none";
-  signinModal.style.display="none";
-  mobileModal.style.display="none";
-  otpModal.style.display="none";
-}
-
-/* PASSWORD VALIDATION */
 function checkPasswordRules(){
-  const p = signupPassword.value;
-  rule_length.innerText=(p.length>=6?"✅":"❌")+" At least 6 characters";
-  rule_number.innerText=(/\d/.test(p)?"✅":"❌")+" Contains a number";
-  rule_special.innerText=(/[!@#$%^&*]/.test(p)?"✅":"❌")+" Contains a special character";
-}
-function validPassword(p){
-  return p.length>=6 && /\d/.test(p) && /[!@#$%^&*]/.test(p);
-}
-function showError(elementId, message){
-  const el = document.getElementById(elementId);
-  el.innerText = message;
-  el.style.display = "block";
+    const p = signupPassword.value;
+    document.getElementById('rule_length').innerHTML = (p.length>=6 ? "✅":"❌") + " 6+ Characters";
+    document.getElementById('rule_number').innerHTML = (/\d/.test(p) ? "✅":"❌") + " One Number";
+    document.getElementById('rule_special').innerHTML = (/[!@#$%^&*]/.test(p) ? "✅":"❌") + " One Special Character";
 }
 
-/* STEP 1: CAPTURE EMAIL & PASS */
 async function emailSignup() {
-  tempEmail = signupEmail.value.trim();
-  tempPassword = signupPassword.value;
-
-  if (!tempEmail) { showError('signupError', 'Please enter email'); return; }
-  if (!validPassword(tempPassword)) { showError('signupError', 'Invalid password'); return; }
-
-  signupModal.style.display = "none";
-  mobileModal.style.display = "flex";
+    tempEmail = signupEmail.value.trim();
+    tempPassword = signupPassword.value;
+    if(!tempEmail || tempPassword.length < 6) { alert("Check your details"); return; }
+    signupModal.style.display = "none";
+    mobileModal.style.display = "flex";
 }
 
-/* STEP 2: SEND PHONE OTP */
 async function sendOTP() {
-  const phone = mobileNumber.value.trim();
-  if (!phone.startsWith('+')) {
-    showError('mobileError', 'Enter full number with country code (e.g., +1)');
-    return;
-  }
+    const code = document.getElementById('countryCode').value;
+    const num = document.getElementById('mobileNumber').value.trim();
+    const fullPhone = code + num;
 
-  try {
-    const appVerifier = window.recaptchaVerifier;
-    confirmationResult = await auth.signInWithPhoneNumber(phone, appVerifier);
-    mobileModal.style.display = "none";
-    otpModal.style.display = "flex";
-  } catch (err) {
-    showError('mobileError', err.message);
-  }
+    try {
+        confirmationResult = await auth.signInWithPhoneNumber(fullPhone, window.recaptchaVerifier);
+        mobileModal.style.display = "none";
+        otpModal.style.display = "flex";
+    } catch (err) { alert(err.message); }
 }
 
-/* STEP 3: VERIFY OTP AND FINALIZE SIGNUP */
 async function verifyOTPAndSignup() {
-  const code = otpCode.value.trim();
-  isAuthFlowActive = true;
-
-  try {
-    // Confirm OTP first
-    await confirmationResult.confirm(code);
-    
-    // Create Email/Password account after mobile is verified
-    await auth.createUserWithEmailAndPassword(tempEmail, tempPassword);
-    
-    window.location.href = "business-side.html";
-  } catch (err) {
-    isAuthFlowActive = false;
-    showError('otpError', "Verification failed: " + err.message);
-  }
+    const code = otpCode.value;
+    try {
+        await confirmationResult.confirm(code);
+        await auth.createUserWithEmailAndPassword(tempEmail, tempPassword);
+        window.location.href = "business-side.html";
+    } catch (err) { alert("Invalid OTP"); }
 }
 
-/* SIGN IN LOGIC */
 async function emailSignin() {
-  const email = signinEmail.value.trim();
-  const password = signinPassword.value;
-
-  if (!email || !password) { showError('signinError', 'Fields missing'); return; }
-
-  isAuthFlowActive = true;
-  try {
-    await auth.signInWithEmailAndPassword(email, password);
-    window.location.href = "mainbusinesshub.html";
-  } catch (err) {
-    isAuthFlowActive = false;
-    showError('signinError', err.message);
-  }
+    try {
+        await auth.signInWithEmailAndPassword(signinEmail.value, signinPassword.value);
+        window.location.href = "mainbusinesshub.html";
+    } catch (err) { alert(err.message); }
 }
 
-/* SOCIALS */
 async function googleLogin() {
-  isAuthFlowActive = true;
-  try {
     const provider = new firebase.auth.GoogleAuthProvider();
     await auth.signInWithPopup(provider);
     window.location.href = "mainbusinesshub.html";
-  } catch (err) { isAuthFlowActive = false; alert(err.message); }
 }
-
-async function facebookLogin() {
-  isAuthFlowActive = true;
-  try {
-    const provider = new firebase.auth.FacebookAuthProvider();
-    await auth.signInWithPopup(provider);
-    window.location.href = "mainbusinesshub.html";
-  } catch (err) { isAuthFlowActive = false; alert(err.message); }
-}
-
-async function appleLogin() {
-  isAuthFlowActive = true;
-  try {
-    const provider = new firebase.auth.OAuthProvider('apple.com');
-    await auth.signInWithPopup(provider);
-    window.location.href = "mainbusinesshub.html";
-  } catch (err) { isAuthFlowActive = false; alert(err.message); }
-}
-
-/* FORGOT PASSWORD */
-async function forgotPassword() {
-  const email = signinEmail.value.trim();
-  if (!email) { showError('signinError', 'Enter email first'); return; }
-  try {
-    await auth.sendPasswordResetEmail(email);
-    showError('signinError', '✅ Reset email sent!');
-  } catch (err) { showError('signinError', err.message); }
-}
-
-/* AUTH STATE LISTENER */
-auth.onAuthStateChanged(user => {
-  if (isAuthFlowActive) return;
-  if (user) { window.location.href = "mainbusinesshub.html"; }
-});
 </script>
-
 </body>
 </html>
