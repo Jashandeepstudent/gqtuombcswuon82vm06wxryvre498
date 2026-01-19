@@ -103,7 +103,6 @@
             margin-bottom: 20px;
             padding-left: 10px;
         }
-/* Verification Overlay */
 .verification-lock {
     display: none;
     position: fixed;
@@ -111,8 +110,8 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.98); /* Nearly solid white */
-    z-index: 9999; /* Highest priority */
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    z-index: 9999;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -121,36 +120,47 @@
 }
 
 .lock-content {
-    max-width: 450px;
-    padding: 40px;
+    max-width: 500px;
+    padding: 50px 40px;
     background: white;
-    border-radius: 20px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: lockBounce 0.6s ease-out;
+}
+
+@keyframes lockBounce {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
 }
 
 .lock-icon {
-    font-size: 60px;
-    margin-bottom: 20px;
+    font-size: 80px;
+    margin-bottom: 25px;
+    animation: lockShake 2s infinite;
+}
+
+@keyframes lockShake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
 }
 
 .lock-title {
-    font-size: 1.8rem;
-    color: #1a1a1a;
-    margin-bottom: 15px;
-    font-weight: 700;
+    font-size: 2rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 20px;
+    font-weight: 800;
 }
 
 .lock-text {
-    color: #666;
-    margin-bottom: 30px;
-    line-height: 1.6;
+    color: #555;
+    margin-bottom: 35px;
+    line-height: 1.8;
+    font-size: 1.05rem;
 }
-        .row-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1a1a1a;
-        }
-
         .row-badge {
             padding: 6px 14px;
             border-radius: 20px;
@@ -898,7 +908,7 @@
         <div class="lock-icon">🔒</div>
         <h2 class="lock-title">Verification Required</h2>
         <p class="lock-text">You cannot access the Angel Directory until your account is verified. Please complete your verification process in the Founder Dashboard.</p>
-        <button class="submit-pitch-btn" onclick="window.location.href='dashboard.html'">
+        <button class="submit-pitch-btn" onclick="window.location.href='vests.html'">
             Return to Dashboard
         </button>
     </div>
@@ -1490,20 +1500,22 @@ searchBox.addEventListener('input', (e) => {
     }
 });
 
-        async function loadUserCategory() {
-            try {
-                const startupRef = ref(database, `startupProfile/${currentUser.uid}`);
-                const snapshot = await get(startupRef);
-                
-                if (snapshot.exists()) {
-                    const profile = snapshot.val();
-                    currentUserCategory = profile.category;
-                }
-            } catch (error) {
-                console.error('Error loading user category:', error);
-            }
+async function loadUserCategory() {
+    try {
+        const startupRef = ref(database, `startupProfile/${currentUser.uid}`);
+        const snapshot = await get(startupRef);
+        
+        if (snapshot.exists()) {
+            const profile = snapshot.val();
+            currentUserCategory = profile.category; // This gets the startup's category
+            console.log('✅ User startup category:', currentUserCategory);
+        } else {
+            console.log('⚠️ No startup profile found');
         }
-
+    } catch (error) {
+        console.error('Error loading user category:', error);
+    }
+}
         async function loadAngelProfiles() {
             try {
                 const angelProfilesRef = ref(database, 'angelProfiles');
@@ -1748,142 +1760,154 @@ function displayRows() {
     const preferences = analyzeFounderPreferences();
     const learningConfidence = preferences.learningConfidence;
 
-    const categories = {
-        featured: [],
-        trending: [],
-        new: [],
-        active: [],
-        regular: [],
-        suiMatch: [], // Perfect SUI category matches
-        onlineNow: [], // Investors online in last 10 minutes
-        dailyActive: [], // Logged in today (daily boost)
-        matchingPattern: [], // AI behavior matching
-        pitchedSimilar: [], // Similar to pitched investors
-        preferredCategory: [], // AI learned categories
-        highReputation: [], // 10k+ reputation
-        fastResponders: [] // Quick reply history
-    };
+   const categories = {
+    featured: [],
+    trending: [],
+    new: [],
+    active: [],
+    regular: [],
+    suiMatch: [], // Perfect SUI category matches
+    onlineNow: [], // Investors online in last 10 minutes
+    dailyActive: [], // Logged in today (daily boost)
+    matchingPattern: [], // AI behavior matching
+    pitchedSimilar: [], // Similar to pitched investors
+    preferredCategory: [], // AI learned categories
+    highReputation: [], // 10k+ reputation
+    fastResponders: [] // Quick reply history
+};
 
-    // Categorize profiles with MAXIMUM INTELLIGENCE
-    profiles.forEach(item => {
-        const intelligentBoost = calculateIntelligentBoost(item.profile, item.userId);
-        const now = Date.now();
-        
-        // Check online status
+const assignedInvestors = new Set(); // ✅ Track assigned investors to prevent duplicates
 
-// ============================================
-// ✅ COMBINED: Firebase Presence + Profile Fallback
-// ============================================
-
-const presenceData = onlineStatusMap[item.userId] || {};
-
-// **🔥 CHECK ONLINE NOW** (Presence first, then profile fallback)
-let isOnlineNow = presenceData.online === true;
-
-if (!isOnlineNow && item.profile.lastUpdated) {
-    // Fallback: Check if active in last 10 minutes from profile
-    const lastUpdate = new Date(item.profile.lastUpdated).getTime();
-    const minutesSince = (now - lastUpdate) / (1000 * 60);
-    isOnlineNow = minutesSince < 10;
-}
-
-// **📅 CHECK DAILY ACTIVITY** (Presence first, then profile fallback)
-let isDailyActive = presenceData.todayLogin === true;
-
-if (!isDailyActive && item.profile.lastUpdated && !isOnlineNow) {
-    // Fallback: Check if logged in today from profile
-    const lastUpdate = new Date(item.profile.lastUpdated).getTime();
-    const daysSince = (now - lastUpdate) / (1000 * 60 * 60 * 24);
-    isDailyActive = daysSince < 1;
-}
-        
-        // **PRIORITY 1: ONLINE NOW** (Super active investors)
-        if (isOnlineNow) {
-            categories.onlineNow.push(item);
-        }
-        
-        // **PRIORITY 2: SUI MATCHMAKING** - Perfect category match
-        const hasSUIMatch = currentUserCategory && 
-                           item.profile.preferredCategories && 
-                           Array.isArray(item.profile.preferredCategories) &&
-                           item.profile.preferredCategories.includes(currentUserCategory);
-        
-        if (hasSUIMatch && !isOnlineNow) {
-            categories.suiMatch.push(item);
-        }
-        
-        // **PRIORITY 3: DAILY ACTIVE** - Logged in today
-        if (isDailyActive && !isOnlineNow && !hasSUIMatch) {
-            categories.dailyActive.push(item);
-        }
-        
-        // **PRIORITY 4: AI PATTERN MATCHING** - Behavior-based
-        if (learningConfidence >= 30 && intelligentBoost > 500 && !isOnlineNow && !hasSUIMatch && !isDailyActive) {
-            categories.matchingPattern.push(item);
-        }
-        
-        // **PRIORITY 5: HIGH REPUTATION** - Proven investors
-        const reputation = item.profile.replyReputation || 0;
-        if (reputation >= 10000 && !isOnlineNow && !hasSUIMatch && !isDailyActive && intelligentBoost <= 500) {
-            categories.highReputation.push(item);
-        }
-        
-        // **PRIORITY 6: TRADITIONAL CATEGORIZATION**
-        if (!isOnlineNow && !hasSUIMatch && !isDailyActive && intelligentBoost <= 500 && reputation < 10000) {
-            categories[item.category].push(item);
-        }
-    });
+// Categorize profiles with MAXIMUM INTELLIGENCE
+profiles.forEach(item => {
+    const intelligentBoost = calculateIntelligentBoost(item.profile, item.userId);
+    const now = Date.now();
+    
+    // ============================================
+    // ✅ COMBINED: Firebase Presence + Profile Fallback
+    // ============================================
+    const presenceData = onlineStatusMap[item.userId] || {};
+    
+    // **🔥 CHECK ONLINE NOW** (Presence first, then profile fallback)
+    let isOnlineNow = presenceData.online === true;
+    if (!isOnlineNow && item.profile.lastUpdated) {
+        const lastUpdate = new Date(item.profile.lastUpdated).getTime();
+        const minutesSince = (now - lastUpdate) / (1000 * 60);
+        isOnlineNow = minutesSince < 10;
+    }
+    
+    // **📅 CHECK DAILY ACTIVITY** (Presence first, then profile fallback)
+    let isDailyActive = presenceData.todayLogin === true;
+    if (!isDailyActive && item.profile.lastUpdated && !isOnlineNow) {
+        const lastUpdate = new Date(item.profile.lastUpdated).getTime();
+        const daysSince = (now - lastUpdate) / (1000 * 60 * 60 * 24);
+        isDailyActive = daysSince < 1;
+    }
+    
+    // **🎯 CHECK SUI MATCHMAKING** - Perfect category match
+    const hasSUIMatch = currentUserCategory && 
+                       item.profile.preferredCategories && 
+                       Array.isArray(item.profile.preferredCategories) &&
+                       item.profile.preferredCategories.includes(currentUserCategory);
+    
+    // ============================================
+    // **CORRECTED PRIORITY ORDER** (No Duplicates)
+    // ============================================
+    
+    // **PRIORITY 1: SUI MATCHMAKING** - Perfect category match (HIGHEST)
+    if (hasSUIMatch && !assignedInvestors.has(item.userId)) {
+        categories.suiMatch.push(item);
+        assignedInvestors.add(item.userId);
+        return; // ✅ Stop here, don't assign to other categories
+    }
+    
+    // **PRIORITY 2: ONLINE NOW** - Super active investors
+    if (isOnlineNow && !assignedInvestors.has(item.userId)) {
+        categories.onlineNow.push(item);
+        assignedInvestors.add(item.userId);
+        return; // ✅ Stop here
+    }
+    
+    // **PRIORITY 3: AI PATTERN MATCHING** - Behavior-based learning
+    if (learningConfidence >= 30 && intelligentBoost > 500 && !assignedInvestors.has(item.userId)) {
+        categories.matchingPattern.push(item);
+        assignedInvestors.add(item.userId);
+        return; // ✅ Stop here
+    }
+    
+    // **PRIORITY 4: DAILY ACTIVE** - Logged in today
+    if (isDailyActive && !assignedInvestors.has(item.userId)) {
+        categories.dailyActive.push(item);
+        assignedInvestors.add(item.userId);
+        return; // ✅ Stop here
+    }
+    
+    // **PRIORITY 5: HIGH REPUTATION** - Proven investors (10k+)
+    const reputation = item.profile.replyReputation || 0;
+    if (reputation >= 10000 && !assignedInvestors.has(item.userId)) {
+        categories.highReputation.push(item);
+        assignedInvestors.add(item.userId);
+        return; // ✅ Stop here
+    }
+    
+    // **PRIORITY 6: TRADITIONAL CATEGORIZATION** (Featured, Trending, New, Active)
+    if (!assignedInvestors.has(item.userId)) {
+        categories[item.category].push(item);
+        assignedInvestors.add(item.userId);
+    }
+});
 
     // ========================================
     // **DISPLAY ORDER - PRIORITY BASED**
     // ========================================
     
-    // 🔥 **ROW 1: INVESTORS ONLINE NOW** (Highest Priority)
-    if (categories.onlineNow.length > 0) {
-        categories.onlineNow.sort((a, b) => b.score - a.score);
-        createRow(
-            categories.onlineNow.slice(0, 20), 
-            '🔥 Active Now', 
-            'Live', 
-            'badge-featured'
-        );
-    }
-    
-    // 🎯 **ROW 2: SUI PERFECT MATCHES**
-    if (categories.suiMatch.length > 0) {
-        categories.suiMatch.sort((a, b) => b.score - a.score);
-        createRow(
-            categories.suiMatch.slice(0, 20), 
-            `🎯  Perfect Match: ${currentUserCategory || 'Your Category'}`, 
-            'SUI Match', 
-            'badge-featured'
-        );
-    }
-    
-    // ⚡ **ROW 3: ACTIVE TODAY** (Daily boost investors)
-    if (categories.dailyActive.length > 0) {
-        categories.dailyActive.sort((a, b) => b.score - a.score);
-        createRow(
-            categories.dailyActive.slice(0, 15), 
-            '⚡ Active Today', 
-            'Active', 
-            'badge-active'
-        );
-    }
+   // ========================================
+// **DISPLAY ORDER - CORRECT PRIORITY**
+// ========================================
 
-    // 🤖 **ROW 4-6: AI-POWERED PERSONALIZED ROWS** (Show when confidence >= 30%)
-    if (learningConfidence >= 30) {
-        
-        // Row 4: "Investors Matching Your Behavior"
-        if (categories.matchingPattern.length > 0) {
-            categories.matchingPattern.sort((a, b) => b.score - a.score);
-            createRow(
-                categories.matchingPattern.slice(0, 15), 
-                `🤖 Picked for You (${Math.round(learningConfidence)}% Confidence)`, 
-                'AI Match', 
-                'badge-trending'
-            );
-        }
+// 🎯 **ROW 1: SUI PERFECT MATCHES** (HIGHEST PRIORITY)
+if (categories.suiMatch.length > 0) {
+    categories.suiMatch.sort((a, b) => b.score - a.score);
+    createRow(
+        categories.suiMatch.slice(0, 20), 
+        `🎯 Perfect Match: ${currentUserCategory || 'Your Category'}`, 
+        'SUI Match', 
+        'badge-featured'
+    );
+}
+
+// 🔥 **ROW 2: INVESTORS ONLINE NOW**
+if (categories.onlineNow.length > 0) {
+    categories.onlineNow.sort((a, b) => b.score - a.score);
+    createRow(
+        categories.onlineNow.slice(0, 20), 
+        '🔥 Active Now', 
+        'Live', 
+        'badge-active'
+    );
+}
+
+// 🤖 **ROW 3: AI PICKED FOR YOU** (Remove confidence %)
+if (learningConfidence >= 30 && categories.matchingPattern.length > 0) {
+    categories.matchingPattern.sort((a, b) => b.score - a.score);
+    createRow(
+        categories.matchingPattern.slice(0, 15), 
+        '🤖 AI Picked for You', // Removed confidence text
+        'AI Match', 
+        'badge-trending'
+    );
+}
+
+// ⚡ **ROW 4: ACTIVE TODAY**
+if (categories.dailyActive.length > 0) {
+    categories.dailyActive.sort((a, b) => b.score - a.score);
+    createRow(
+        categories.dailyActive.slice(0, 15), 
+        '⚡ Active Today', 
+        'Active', 
+        'badge-active'
+    );
+}
         
         // Row 5: "Similar to [InvestorName] You Pitched"
         const pitchedInvestors = Object.keys(founderBehaviorData.pitchedTo);
@@ -2422,7 +2446,53 @@ window.handleViewProfile = async function(userId) {
     document.getElementById('pitchModal').style.display = 'block';
 }
 
-
+async function checkPitchEligibility(investorId) {
+    try {
+        // 1. Get investor's pitch settings
+        const investorRef = ref(database, `angelProfiles/${investorId}`);
+        const investorSnap = await get(investorRef);
+        
+        if (!investorSnap.exists()) {
+            throw new Error("Investor not found");
+        }
+        
+        const investor = investorSnap.val();
+        const pitchCooldown = investor.pitchCooldown || 0; // days
+        const dailyLimit = investor.dailyPitchReceive || 999; // max pitches per day
+        
+        // 2. Check if user already pitched this investor
+        const userPitchRef = ref(database, `pitchHistory/${currentUser.uid}/${investorId}`);
+        const pitchSnap = await get(userPitchRef);
+        
+        if (pitchSnap.exists()) {
+            const lastPitch = pitchSnap.val();
+            const lastPitchTime = new Date(lastPitch.timestamp).getTime();
+            const cooldownMs = pitchCooldown * 24 * 60 * 60 * 1000;
+            const timeLeft = (lastPitchTime + cooldownMs) - Date.now();
+            
+            if (timeLeft > 0) {
+                const daysLeft = Math.ceil(timeLeft / (1000 * 60 * 60 * 24));
+                throw new Error(`You already pitched this investor. Please wait ${daysLeft} day(s) before pitching again.`);
+            }
+        }
+        
+        // 3. Check daily pitch limit
+        const today = new Date().toISOString().split('T')[0];
+        const pitchCountRef = ref(database, `investorDailyPitches/${investorId}/${today}`);
+        const countSnap = await get(pitchCountRef);
+        
+        const currentCount = countSnap.exists() ? countSnap.val().count : 0;
+        
+        if (currentCount >= dailyLimit) {
+            throw new Error(`This investor has reached their daily pitch limit (${dailyLimit}). Please try again tomorrow.`);
+        }
+        
+        return { allowed: true, currentCount };
+        
+    } catch (error) {
+        return { allowed: false, error: error.message };
+    }
+}
 
 document.getElementById('submitPitchBtn').onclick = async function() {
     if (!selectedApplication || !selectedInvestor) {
@@ -2430,10 +2500,18 @@ document.getElementById('submitPitchBtn').onclick = async function() {
         return;
     }
     
+    // ✅ CHECK ELIGIBILITY FIRST
+    const eligibility = await checkPitchEligibility(selectedInvestor);
+    
+    if (!eligibility.allowed) {
+        alert(eligibility.error);
+        return;
+    }
+    
     const modal = document.getElementById('pitchModal');
     modal.querySelector('.modal-content').innerHTML = `
         <div class="sending-animation">
-            
+            <div class="spinner"></div>
             <h3>🚀 Sending in Progress...</h3>
             <p>Analyzing compatibility and preparing your pitch</p>
         </div>
@@ -2453,7 +2531,7 @@ document.getElementById('submitPitchBtn').onclick = async function() {
         await set(investorInboxRef, {
             appId: selectedApplication,
             founderId: currentUser.uid,
-             read: false,
+            read: false,
             founderName: appData.founderName || "Unknown Founder",
             startupName: appData.startupName || "Unnamed Startup",
             vestHook: appData.appHook || "No hook provided",
@@ -2471,6 +2549,24 @@ document.getElementById('submitPitchBtn').onclick = async function() {
         await update(investorProfileRef, {
             PitchedCount: increment(1),
             lastUpdated: new Date().toISOString()
+        });
+
+        // ✅ 4. RECORD PITCH HISTORY (for cooldown tracking)
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Track in user's pitch history
+        await set(ref(database, `pitchHistory/${currentUser.uid}/${selectedInvestor}`), {
+            timestamp: new Date().toISOString(),
+            appId: selectedApplication
+        });
+        
+        // Increment investor's daily pitch count
+        const dailyCountRef = ref(database, `investorDailyPitches/${selectedInvestor}/${today}`);
+        await runTransaction(dailyCountRef, (current) => {
+            if (current === null) {
+                return { count: 1, date: today };
+            }
+            return { count: (current.count || 0) + 1, date: today };
         });
 
         // Success Animation
@@ -2501,7 +2597,6 @@ document.getElementById('submitPitchBtn').onclick = async function() {
         `;
     }
 };
-
 window.closeProfileModal = function() {
     if (profileViewStartTime && selectedInvestor) {
         const timeSpent = Math.floor((Date.now() - profileViewStartTime) / 1000);
