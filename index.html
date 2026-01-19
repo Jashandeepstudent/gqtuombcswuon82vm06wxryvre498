@@ -1057,55 +1057,55 @@ if (localStorage.getItem("businessProfileCreated") === "true") {
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
   import { getDatabase, ref, runTransaction } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-  authDomain: "scalevest-163a0.firebaseapp.com",
-  databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-  projectId: "scalevest-163a0",
-  storageBucket: "scalevest-163a0.firebasestorage.app",
-  messagingSenderId: "938358950124",
-  appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
-  measurementId: "G-QD3TWBZHR0"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+    authDomain: "scalevest-163a0.firebaseapp.com",
+    databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+    projectId: "scalevest-163a0",
+    storageBucket: "scalevest-163a0.firebasestorage.app",
+    messagingSenderId: "938358950124",
+    appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
+    measurementId: "G-QD3TWBZHR0"
+  };
 
-  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-async function checkAndCreditReferral() {
+  async function checkAndCreditReferral() {
     const urlParams = new URLSearchParams(window.location.search);
-    const referrerUid = urlParams.get('uid'); // The person who sent the link
+    const referrerUid = urlParams.get('uid'); 
     const refCode = urlParams.get('ref');
 
-    if (referrerUid && refCode) {
-        // Use a unique key to prevent multiple rewards from the same visitor session
-        const uniqueStorageKey = `ref_session_${refCode}`;
-        if (localStorage.getItem(uniqueStorageKey)) {
-            console.log("Referral reward already processed for this session.");
-            return;
-        }
+    console.log("Checking referral for UID:", referrerUid); // Debug log
 
-        try {
-            // Path to the referrer's token count
-            const tokenRef = ref(db, `founderProfile/${referrerUid}/scaleTokens`);
-            
-            // Atomically add 10 tokens
-            await runTransaction(tokenRef, (currentTokens) => {
-                // If scaleTokens doesn't exist yet, start at 0 and add 10
-                return (currentTokens || 0) + 10;
-            });
+    if (referrerUid) {
+      // Use a unique key based on the referrer UID to prevent double-claiming
+      const uniqueStorageKey = `ref_claimed_${referrerUid}`;
+      
+      if (localStorage.getItem(uniqueStorageKey)) {
+        console.log("Referral already credited in this browser.");
+        return;
+      }
 
-            // Mark as processed only AFTER the database update succeeds
-            localStorage.setItem(uniqueStorageKey, "true");
-            console.log("Success: 10 ScaleTokens rewarded to " + referrerUid);
-        } catch (error) {
-            console.error("Referral processing error:", error);
-        }
+      try {
+        const tokenRef = ref(db, `founderProfile/${referrerUid}/scaleTokens`);
+        
+        await runTransaction(tokenRef, (currentTokens) => {
+          // If null or undefined, start at 0 and add 10
+          return (currentTokens || 0) + 10;
+        });
+
+        localStorage.setItem(uniqueStorageKey, "true");
+        console.log("SUCCESS: 10 ScaleTokens rewarded to:", referrerUid);
+      } catch (error) {
+        console.error("Referral Error:", error);
+      }
     }
-}
+  }
 
-// Make sure this is called immediately after Firebase initializes
-checkAndCreditReferral();
+  // EXECUTE
+  checkAndCreditReferral();
+</script>
 </body>
 </html>
 
