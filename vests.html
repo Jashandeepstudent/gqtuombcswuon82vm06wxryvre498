@@ -8610,19 +8610,17 @@ window.submitVideoVerification = async function() {
         // Step 4: Call Gemini API to verify speech
         updateVerificationLoader('Analyzing speech with AI...', 60);
         
-        const response = await fetch('https://gemini-sigma-plum.vercel.app/api/videogemini', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: 'verifyVideo',
-                data: {
-                    videoBase64: videoBase64,
-                    expectedLine: verificationLine
-                }
-            })
-        });
+       const response = await fetch('https://gemini-sigma-plum.vercel.app/api/videogemini', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        action: 'verifyVideo',
+        data: {
+            videoUrl: videoUrl, // SEND THE URL HERE
+            expectedLine: verificationLine
+        }
+    })
+});
         
         const result = await response.json();
         
