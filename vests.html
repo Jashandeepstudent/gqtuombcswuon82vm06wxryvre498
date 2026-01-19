@@ -8670,7 +8670,7 @@ onAuthStateChanged(auth, async (user) => {
                     title: '',
                     about: '',
                     createdAt: new Date().toISOString(),
-                    isVerified: false  
+                    isVerified: false  // ⭐ AUTO-CREATE
                 };
                 
                 await update(ref(db, `founderProfile/${user.uid}`), cachedFounderData);
@@ -8681,12 +8681,21 @@ onAuthStateChanged(auth, async (user) => {
             } else {
                 cachedFounderData = founderSnapshot.val();
                 
-                // ⭐ START VERIFICATION TIMER IF NOT VERIFIED
+                // ⭐ AUTO-CREATE isVerified IF IT DOESN'T EXIST
+                if (cachedFounderData.isVerified === undefined) {
+                    console.log("⚠️ isVerified field missing. Auto-creating...");
+                    cachedFounderData.isVerified = false;
+                    await update(ref(db, `founderProfile/${user.uid}`), {
+                        isVerified: false
+                    });
+                }
+                
+                // ⭐ START 30-SECOND TIMER IF NOT VERIFIED
                 if (cachedFounderData.isVerified === false) {
-                    console.log("⚠️ User is unverified. Starting 1-minute timer...");
+                    console.log("⚠️ User is unverified. Starting 30-second timer...");
                     setTimeout(() => {
                         checkAndBlockUnverifiedUser(user.uid);
-                    }, 60000); // 1 minute = 60000ms
+                    }, 30000); // ⭐ CHANGED TO 30 SECONDS (30000ms)
                 }
                 
                 if (!cachedFounderData.founderUsername) {
@@ -8741,7 +8750,6 @@ onAuthStateChanged(auth, async (user) => {
         }
     }
 });
-
 async function globalScheduleChecker() {
     if (!currentUser) return;
     
@@ -9630,7 +9638,6 @@ async function checkAndBlockUnverifiedUser(uid) {
     }
 }
 
-// Show unignorable verification alert
 function showVerificationAlert() {
     const alert = document.createElement('div');
     alert.id = 'verificationMegaAlert';
@@ -9652,19 +9659,19 @@ function showVerificationAlert() {
             
             .verification-alert-box {
                 background: #0a0a0a;
-                border: 2px solid #ff006e;
+                border: 2px solid #ef4444; /* ⭐ RED BORDER */
                 border-radius: 20px;
                 padding: 3rem;
                 max-width: 500px;
                 text-align: center;
-                box-shadow: 0 0 50px rgba(255, 0, 110, 0.5);
+                box-shadow: 0 0 50px rgba(239, 68, 68, 0.5); /* ⭐ RED GLOW */
             }
             
             .verification-alert-icon {
                 width: 80px;
                 height: 80px;
                 margin: 0 auto 2rem;
-                background: rgba(255, 0, 110, 0.1);
+                background: rgba(239, 68, 68, 0.15); /* ⭐ RED BACKGROUND */
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
@@ -9674,7 +9681,7 @@ function showVerificationAlert() {
             .verification-alert-title {
                 font-size: 2rem;
                 font-weight: 800;
-                color: #fff;
+                color: #ef4444; /* ⭐ RED TITLE */
                 margin-bottom: 1rem;
             }
             
@@ -9700,13 +9707,13 @@ function showVerificationAlert() {
             }
             
             .btn-verify-now {
-                background: linear-gradient(135deg, #ff006e, #8338ec);
+                background: linear-gradient(135deg, #ef4444, #dc2626); /* ⭐ RED GRADIENT */
                 color: #fff;
             }
             
             .btn-verify-now:hover {
                 transform: translateY(-2px);
-                box-shadow: 0 10px 30px rgba(255, 0, 110, 0.4);
+                box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4); /* ⭐ RED SHADOW */
             }
             
             .btn-cancel {
@@ -9722,7 +9729,7 @@ function showVerificationAlert() {
         <div class="verification-mega-alert">
             <div class="verification-alert-box">
                 <div class="verification-alert-icon">
-                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2">
+                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                         <line x1="12" y1="9" x2="12" y2="13"></line>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
@@ -9746,7 +9753,6 @@ function showVerificationAlert() {
     
     document.body.appendChild(alert);
 }
-
 window.dismissVerificationAlert = function() {
     const alert = document.getElementById('verificationMegaAlert');
     if (alert) alert.remove();
@@ -9776,13 +9782,13 @@ function showVerificationBanner() {
                 top: 0;
                 left: 0;
                 width: 100%;
-                background: linear-gradient(135deg, #ff006e, #8338ec);
+                background: linear-gradient(135deg, #ef4444, #dc2626); /* ⭐ RED GRADIENT */
                 padding: 1rem 2rem;
                 z-index: 10000;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                box-shadow: 0 5px 20px rgba(255, 0, 110, 0.3);
+                box-shadow: 0 5px 20px rgba(239, 68, 68, 0.4); /* ⭐ RED SHADOW */
                 animation: slideDown 0.5s ease;
             }
             
@@ -9813,20 +9819,26 @@ function showVerificationBanner() {
                 font-size: 1rem;
             }
             
+            /* ⭐ COMPACT RED BUTTON */
             .banner-verify-btn {
                 background: #fff;
-                color: #000;
+                color: #ef4444; /* Red text */
                 border: none;
-                padding: 0.75rem 1.5rem;
+                padding: 0.6rem 1.5rem; /* ⭐ SMALLER PADDING */
                 border-radius: 8px;
                 font-weight: 700;
+                font-size: 0.9rem; /* ⭐ SMALLER FONT */
                 cursor: pointer;
                 transition: all 0.3s;
+                white-space: nowrap; /* ⭐ PREVENT STRETCHING */
+                min-width: auto; /* ⭐ RESET MIN WIDTH */
+                width: auto; /* ⭐ AUTO WIDTH */
             }
             
             .banner-verify-btn:hover {
                 transform: scale(1.05);
                 box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+                background: #fef2f2; /* Light red on hover */
             }
         </style>
         
@@ -9839,7 +9851,7 @@ function showVerificationBanner() {
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
                 </div>
-                <span class="banner-text">Not Verified - Please verify to continue using ScaleVest</span>
+                <span class="banner-text">⚠️ Not Verified - Please verify to continue using ScaleVest</span>
             </div>
             <button class="banner-verify-btn" onclick="startVerification()">Verify Now</button>
         </div>
