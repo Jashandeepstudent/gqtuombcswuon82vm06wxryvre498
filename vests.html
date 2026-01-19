@@ -6598,7 +6598,7 @@ async function checkScheduledAvailability() {
             now.setHours(0, 0, 0, 0);
             targetDate.setHours(0, 0, 0, 0);
             
-            // If the scheduled date has arrived or passed
+            // ⭐ CHECK IF DATE HAS PASSED (not just equals)
             if (now >= targetDate) {
                 console.log("⏰ Applying scheduled unavailability...");
                 
@@ -6613,15 +6613,22 @@ async function checkScheduledAvailability() {
                     
                     updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = 0;
                     updates[`founderProfile/${currentUser.uid}/availabilityStatus`] = 'busy';
-                    updates[`founderProfile/${currentUser.uid}/scheduledUnavailability`] = null; // Clear it
+                    updates[`founderProfile/${currentUser.uid}/scheduledUnavailability`] = null;
                     
                     await update(ref(db), updates);
                     
                     console.log("✅ Scheduled unavailability applied");
                     
-                    // Update UI
+                    // ⭐ SHOW ALERT TO USER
+                    alert("🔒 Your scheduled unavailability has been applied. All vests are now inactive.");
+                    
                     if (window.updateNavStatusUI) {
                         window.updateNavStatusUI('busy');
+                    }
+                    
+                    // ⭐ REFRESH DASHBOARD
+                    if (window.location.hash === '#founder_dashboard' || !window.location.hash) {
+                        window.location.reload();
                     }
                 }
             }
@@ -6630,7 +6637,6 @@ async function checkScheduledAvailability() {
         console.error("Error checking scheduled availability:", error);
     }
 }
-
 // Update the modal reset function to clear inputs
 window.resetModal = function() {
     // Hide sub-sections
@@ -8633,10 +8639,12 @@ window.handleBrowseAngels = async function() {
 };
 window.showVestAnalytics = showVestAnalytics;
 
-   onAuthStateChanged(auth, async (user) => {
+
+
+onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
-          setUserPresence(user);
+        setUserPresence(user);
         isInitialLoad = false;
         startNotificationListener();
         startApplicationReplyListener();
@@ -8661,25 +8669,33 @@ window.showVestAnalytics = showVestAnalytics;
                     email: email,
                     title: '',
                     about: '',
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    isVerified: false  
                 };
                 
                 await update(ref(db, `founderProfile/${user.uid}`), cachedFounderData);
                 
-                // Hide loading screen and show User ID setup
                 document.getElementById('loadingScreen').classList.add('hidden');
                 showUserIdSetupModal();
-                return; // Stop here until userId is set
+                return;
             } else {
                 cachedFounderData = founderSnapshot.val();
                 
-if (!cachedFounderData.founderUsername) {
-                console.log("⚠️ No founderUsername found. Triggering setup modal.");
-                document.getElementById('loadingScreen').classList.add('hidden'); // Hide spinner so they see modal
-                showUsernameSetupModal(); 
-                return; // STOP EXECUTION HERE. Do not load dashboard.
-            }
-                // If profile exists but no userId, show popup
+                // ⭐ START VERIFICATION TIMER IF NOT VERIFIED
+                if (cachedFounderData.isVerified === false) {
+                    console.log("⚠️ User is unverified. Starting 1-minute timer...");
+                    setTimeout(() => {
+                        checkAndBlockUnverifiedUser(user.uid);
+                    }, 60000); // 1 minute = 60000ms
+                }
+                
+                if (!cachedFounderData.founderUsername) {
+                    console.log("⚠️ No founderUsername found. Triggering setup modal.");
+                    document.getElementById('loadingScreen').classList.add('hidden');
+                    showUsernameSetupModal(); 
+                    return;
+                }
+                
                 if (!cachedFounderData.userId) {
                     document.getElementById('loadingScreen').classList.add('hidden');
                     showUserIdSetupModal();
@@ -8723,6 +8739,26 @@ if (!cachedFounderData.founderUsername) {
             }, 2000);
             isInitialLoad = false;
         }
+    }
+});
+
+async function globalScheduleChecker() {
+    if (!currentUser) return;
+    
+    try {
+        await checkScheduledAvailability();
+    } catch (error) {
+        console.error("Background check error:", error);
+    }
+}
+
+// Run check every hour (3600000ms)
+setInterval(globalScheduleChecker, 3600000);
+
+// Also run on visibility change (when user returns to tab)
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && currentUser) {
+        checkScheduledAvailability();
     }
 });
 // =========================================================
