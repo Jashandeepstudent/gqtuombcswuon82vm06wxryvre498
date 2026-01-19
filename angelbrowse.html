@@ -1430,42 +1430,51 @@ searchBox.addEventListener('input', (e) => {
     
     displayRows();
 });
-        onAuthStateChanged(auth, async (user) => {
+       onAuthStateChanged(auth, async (user) => {
     if (!user) {
         window.location.href = 'login2.html';
-    } else {
-        currentUser = user;
+        return;
+    } 
 
-        // --- START VERIFICATION CHECK ---
-        try {
-            const userRef = ref(database, `users/${user.uid}`);
-            const userSnap = await get(userRef);
+    currentUser = user;
+    const lockOverlay = document.getElementById('verificationLock');
+
+    try {
+        // 1. Fetch verification status FIRST
+        // Make sure this path matches where you store 'isVerified'
+        const userRef = ref(database, `users/${user.uid}`);
+        const userSnap = await get(userRef);
+        
+        const userData = userSnap.exists() ? userSnap.val() : null;
+
+        // 2. HARD LOCK LOGIC
+        // If data is missing OR isVerified is explicitly false
+        if (!userData || userData.isVerified === false) {
+            console.log("🛑 Access Denied: User is not verified.");
+            lockOverlay.style.display = 'flex';
             
-            if (userSnap.exists()) {
-                const userData = userSnap.val();
-                
-                // If isVerified is false OR doesn't exist yet
-                if (userData.isVerified === false) {
-                    document.getElementById('verificationLock').style.display = 'flex';
-                    return; // Stop further execution
-                }
-            } else {
-                // If user node doesn't exist, safety lock it
-                document.getElementById('verificationLock').style.display = 'flex';
-                return;
-            }
-        } catch (error) {
-            console.error("Verification check failed:", error);
+            // Remove the loading message so it doesn't look like it's still trying
+            document.getElementById('loadingMessage').style.display = 'none';
+            
+            return; // 🔥 CRITICAL: Stops the rest of the script from running
         }
-        // --- END VERIFICATION CHECK ---
+
+        // 3. ONLY IF VERIFIED: Load the app
+        console.log("✅ Access Granted: User is verified.");
+        lockOverlay.style.display = 'none'; // Ensure it's hidden
 
         await loadUserCategory();
         await loadFounderBehavior(); 
-        loadAngelProfiles();
+        loadAngelProfiles(); // Only runs if verified
         loadOnlineStatus();
         setUserPresence(user);
         startBrowseTimeTracking();
         autoOpenProfile();
+
+    } catch (error) {
+        console.error("Verification check failed:", error);
+        // Safety lock on error
+        lockOverlay.style.display = 'flex';
     }
 });
 
