@@ -9,7 +9,7 @@
 <style>
 /* BASE STYLES */
 *{box-sizing:border-box;font-family: 'Inter', sans-serif;}
-body{margin:0;color:#111827;overflow-x:hidden;}
+body{margin:0;color:#111827;overflow-x:hidden; background: #000;}
 
 #bgVideo{
     position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:-2;
@@ -18,7 +18,7 @@ body::before{
     content:""; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:-1;
 }
 
-/* BUTTONS */
+/* AUTH BUTTONS */
 .auth-btn{
     display:flex; align-items:center; justify-content:center; gap:12px;
     width:100%; padding:12px 16px; margin-bottom:12px;
@@ -28,7 +28,6 @@ body::before{
 }
 .auth-btn:hover{ background:#f9fafb; border-color: #d1d5db; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 
-/* SPECIAL GOOGLE BUTTON */
 .btn-google {
     border: 2px solid transparent;
     background-image: linear-gradient(white, white), 
@@ -38,66 +37,53 @@ body::before{
 }
 .auth-btn img { width: 18px; height: 18px; }
 
-/* PROFESSIONAL MODALS (NO GLASS) */
+/* MODALS */
 .modal-overlay, .email-overlay {
-    position:fixed; inset:0; display:flex; justify-content:center; align-items:center; z-index: 50;
+    position:fixed; inset:0; display:flex; justify-content:center; align-items:center; z-index: 50; padding: 20px;
 }
-.email-overlay { background:rgba(0,0,0,0.7); display:none; z-index:100; }
+.email-overlay { background:rgba(0,0,0,0.8); display:none; z-index:100; overflow-y: auto; }
 
 .modal-content-prof {
-    width:400px; padding:32px; border-radius:12px;
+    width:100%; max-width:400px; padding:32px; border-radius:12px;
     background:#ffffff; color:#111827;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
-.modal-content-prof h3 { margin: 0 0 8px; font-size: 20px; font-weight: 700; color: #111827; }
-.modal-content-prof p { font-size: 14px; color: #6b7280; margin-bottom: 20px; }
 
-/* INPUTS */
-.input-group { margin-bottom: 16px; }
+/* MAIN CONTAINER RESPONSIVENESS */
+.modal {
+    width:100%; max-width:900px; height: auto; min-height:520px; 
+    background:#fff; border-radius:16px; display:flex; overflow:hidden;
+}
+.modal-left {
+    width: 50%; background: url('scalevestauth.png') no-repeat center center;
+    background-size: cover; display: flex; align-items: flex-end; padding: 40px;
+    color: #fff; position: relative; z-index: 1;
+}
+.modal-left::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); z-index: -1;
+}
+.modal-right { width:50%; padding:40px; display: flex; flex-direction: column; justify-content: center; }
+
+/* MOBILE BREAKPOINT */
+@media (max-width: 768px) {
+    .modal { flex-direction: column; max-width: 450px; height: auto; }
+    .modal-left { width: 100%; height: 180px; padding: 20px; }
+    .modal-right { width: 100%; padding: 30px 20px; }
+    .modal-left h2 { font-size: 24px !important; }
+}
+
+.input-group { margin-bottom: 16px; text-align: left; }
 .input-group label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px; }
 input, select {
-    width:100%; padding:10px 12px; border-radius:6px;
-    border: 1px solid #d1d5db; background:#fff;
-    color:#111827; font-size:14px; outline: none;
+    width:100%; padding:10px 12px; border-radius:6px; border: 1px solid #d1d5db; font-size:14px; outline: none;
 }
-input:focus { border-color: #2563eb; ring: 2px solid #bfdbfe; }
 
-/* PHONE INPUT ROW */
 .phone-row { display: flex; gap: 8px; }
 .phone-row select { width: 100px; }
 
-/* MAIN CONTAINER */
-.modal {
-    width:900px; height:520px; background:#fff; border-radius:16px;
-    display:flex; overflow:hidden;
-}
-.modal-left {
-    width: 50%;
-    /* Set your image here */
-    background: url('scalevestauth.png') no-repeat center center;
-    background-size: cover;
-    display: flex;
-    align-items: flex-end;
-    padding: 40px;
-    color: #fff;
-    position: relative;
-    z-index: 1;
-}
-
-/* Add a dark overlay so the white text "ScaleVest" remains easy to read */
-.modal-left::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
-    z-index: -1;
-}
-.modal-right { width:50%; padding:40px; }
-
-.divider {
-    text-align:center; margin:20px 0; position:relative;
-}
-.divider span { background:#fff; padding:0 12px; font-size:12px; color:#9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
+.divider { text-align:center; margin:20px 0; position:relative; }
+.divider span { background:#fff; padding:0 12px; font-size:12px; color:#9ca3af; }
 .divider::before { content:""; position:absolute; top:50%; left:0; right:0; height:1px; background:#f3f4f6; z-index:-1; }
 
 .error-msg {
@@ -113,18 +99,18 @@ input:focus { border-color: #2563eb; ring: 2px solid #bfdbfe; }
     <source src="loginpage.mp4" type="video/mp4">
 </video>
 
-<div class="modal-overlay">
+<div class="modal-overlay" id="mainOverlay">
     <div class="modal">
-<div class="modal-left">
-    <div style="position: relative; z-index: 2;">
-        <h2 style="font-size:32px; margin-bottom:10px; font-weight: 700; letter-spacing: -0.5px;">ScaleVest</h2>
-        <p style="opacity:0.9; font-size: 14px; font-weight: 500;">Verified • Secure • Scalable</p>
-    </div>
-</div>
+        <div class="modal-left">
+            <div style="position: relative; z-index: 2;">
+                <h2 style="font-size:32px; margin-bottom:10px; font-weight: 700; letter-spacing: -0.5px;">ScaleVest</h2>
+                <p style="opacity:0.9; font-size: 14px; font-weight: 500;">Verified • Secure • Scalable</p>
+            </div>
+        </div>
 
         <div class="modal-right">
-            <h3 id="authTitle" style="margin-top:0;">Get Started</h3>
-            <p id="authSubtitle">Join thousands of businesses today.</p>
+            <h3 style="margin-top:0; font-size: 22px;">Get Started</h3>
+            <p style="color: #6b7280; font-size: 14px; margin-bottom: 24px;">Join thousands of businesses today.</p>
 
             <button class="auth-btn btn-google" onclick="googleLogin()">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
@@ -158,20 +144,20 @@ input:focus { border-color: #2563eb; ring: 2px solid #bfdbfe; }
             <label>Password</label>
             <input id="signupPassword" type="password" placeholder="••••••••" oninput="checkPasswordRules()">
         </div>
-        <ul style="color:#6b7280; font-size:11px; list-style:none; padding:0; margin-bottom:20px;">
+        <ul style="color:#6b7280; font-size:11px; list-style:none; padding:0; margin-bottom:20px; line-height: 1.6;">
             <li id="rule_length">❌ 6+ Characters</li>
             <li id="rule_number">❌ One Number</li>
             <li id="rule_special">❌ One Special Character</li>
         </ul>
         <button class="auth-btn" style="background:#2563eb; color:#fff; border:none;" onclick="emailSignup()">Continue</button>
-        <p style="text-align:center; margin-top:15px;"><span style="cursor:pointer; font-size:12px;" onclick="closeModals()">Cancel</span></p>
+        <button class="auth-btn" style="background:transparent; color:#6b7280; border:none; margin-top:5px;" onclick="closeModals()">Cancel</button>
     </div>
 </div>
 
 <div class="email-overlay" id="mobileModal">
     <div class="modal-content-prof">
         <h3>Verify Phone</h3>
-        <p>We'll send a one-time code for security.</p>
+        <p>Confirm your phone to finalize registration.</p>
         <div class="error-msg" id="mobileError"></div>
         <div class="input-group">
             <label>Mobile Number</label>
@@ -180,7 +166,6 @@ input:focus { border-color: #2563eb; ring: 2px solid #bfdbfe; }
                     <option value="+1">🇺🇸 +1</option>
                     <option value="+44">🇬🇧 +44</option>
                     <option value="+91">🇮🇳 +91</option>
-                    <option value="+61">🇦🇺 +61</option>
                     <option value="+971">🇦🇪 +971</option>
                 </select>
                 <input id="mobileNumber" type="tel" placeholder="000 000 0000">
@@ -188,24 +173,25 @@ input:focus { border-color: #2563eb; ring: 2px solid #bfdbfe; }
         </div>
         <div id="recaptcha-container"></div>
         <button class="auth-btn" style="background:#2563eb; color:#fff; border:none;" onclick="sendOTP()">Send OTP</button>
-        <p style="text-align:center; margin-top:15px;"><span style="cursor:pointer; font-size:12px;" onclick="mobileModal.style.display='none'; signupModal.style.display='flex';">← Back</span></p>
+        <button class="auth-btn" style="background:transparent; color:#6b7280; border:none; margin-top:5px;" onclick="cancelFlow()">Cancel</button>
     </div>
 </div>
 
 <div class="email-overlay" id="otpModal">
     <div class="modal-content-prof">
         <h3>Enter OTP</h3>
-        <p>Verification code sent to your mobile.</p>
+        <p>We've sent a code to your mobile.</p>
         <div class="error-msg" id="otpError"></div>
-        <input id="otpCode" type="number" placeholder="000000" style="text-align:center; font-size:24px; letter-spacing:8px; margin-bottom:20px;">
+        <input id="otpCode" type="number" placeholder="000000" style="text-align:center; font-size:24px; letter-spacing:4px; margin-bottom:20px;">
         <button class="auth-btn" style="background:#10b981; color:#fff; border:none;" onclick="verifyOTPAndSignup()">Verify & Create</button>
+        <button class="auth-btn" style="background:transparent; color:#6b7280; border:none; margin-top:5px;" onclick="cancelFlow()">Cancel Registration</button>
     </div>
 </div>
 
 <div class="email-overlay" id="signinModal">
     <div class="modal-content-prof">
         <h3>Welcome Back</h3>
-        <p>Sign in to access your dashboard.</p>
+        <p>Sign in to your account.</p>
         <div class="error-msg" id="signinError"></div>
         <div class="input-group">
             <label>Email</label>
@@ -216,7 +202,7 @@ input:focus { border-color: #2563eb; ring: 2px solid #bfdbfe; }
             <input id="signinPassword" type="password">
         </div>
         <button class="auth-btn" style="background:#2563eb; color:#fff; border:none;" onclick="emailSignin()">Sign In</button>
-        <p style="text-align:center; margin-top:15px; font-size:12px;"><span style="cursor:pointer;" onclick="closeModals()">Cancel</span></p>
+        <button class="auth-btn" style="background:transparent; color:#6b7280; border:none; margin-top:5px;" onclick="closeModals()">Cancel</button>
     </div>
 </div>
 
@@ -231,13 +217,28 @@ firebase.initializeApp({
 });
 
 const auth = firebase.auth();
-let tempEmail = "", tempPassword = "", confirmationResult = null;
+let confirmationResult = null;
 
 window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { 'size': 'invisible' });
 
+// Check for existing flow on page load
+window.onload = () => {
+    const savedStep = localStorage.getItem('authStep');
+    if(savedStep === 'OTP_PENDING') {
+        otpModal.style.display = "flex";
+    }
+};
+
 function emailAuthHandler(){ signupModal.style.display="flex"; }
-function switchToSigninUI(){ signinModal.style.display="flex"; }
+function switchToSigninUI(){ closeModals(); signinModal.style.display="flex"; }
 function closeModals(){ document.querySelectorAll('.email-overlay').forEach(el => el.style.display='none'); }
+
+function cancelFlow() {
+    localStorage.removeItem('authStep');
+    localStorage.removeItem('tempEmail');
+    localStorage.removeItem('tempPass');
+    closeModals();
+}
 
 function checkPasswordRules(){
     const p = signupPassword.value;
@@ -247,9 +248,13 @@ function checkPasswordRules(){
 }
 
 async function emailSignup() {
-    tempEmail = signupEmail.value.trim();
-    tempPassword = signupPassword.value;
-    if(!tempEmail || tempPassword.length < 6) { alert("Check your details"); return; }
+    const email = signupEmail.value.trim();
+    const pass = signupPassword.value;
+    if(!email || pass.length < 6) return;
+    
+    localStorage.setItem('tempEmail', email);
+    localStorage.setItem('tempPass', pass);
+    
     signupModal.style.display = "none";
     mobileModal.style.display = "flex";
 }
@@ -261,6 +266,7 @@ async function sendOTP() {
 
     try {
         confirmationResult = await auth.signInWithPhoneNumber(fullPhone, window.recaptchaVerifier);
+        localStorage.setItem('authStep', 'OTP_PENDING');
         mobileModal.style.display = "none";
         otpModal.style.display = "flex";
     } catch (err) { alert(err.message); }
@@ -268,18 +274,22 @@ async function sendOTP() {
 
 async function verifyOTPAndSignup() {
     const code = otpCode.value;
+    const email = localStorage.getItem('tempEmail');
+    const pass = localStorage.getItem('tempPass');
+
     try {
         await confirmationResult.confirm(code);
-        await auth.createUserWithEmailAndPassword(tempEmail, tempPassword);
+        await auth.createUserWithEmailAndPassword(email, pass);
+        localStorage.clear();
         window.location.href = "business-side.html";
-    } catch (err) { alert("Invalid OTP"); }
+    } catch (err) { alert("Invalid OTP or Session Expired. Please try again."); }
 }
 
 async function emailSignin() {
     try {
         await auth.signInWithEmailAndPassword(signinEmail.value, signinPassword.value);
         window.location.href = "mainbusinesshub.html";
-    } catch (err) { alert(err.message); }
+    } catch (err) { alert("Login failed: " + err.message); }
 }
 
 async function googleLogin() {
@@ -290,4 +300,3 @@ async function googleLogin() {
 </script>
 </body>
 </html>
-
