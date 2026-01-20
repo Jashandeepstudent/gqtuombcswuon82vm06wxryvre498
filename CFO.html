@@ -1076,7 +1076,7 @@ async function runOnboarding(userId) {
             displayCFOName(cfoName);
             cfoPopup.style.display = "none";
             welcomeOverlay.style.display = "none";
-        } catch (error) {
+        catch (error) {
             console.error("Error saving CFO:", error);
             alert("Failed to save CFO.");
         }
