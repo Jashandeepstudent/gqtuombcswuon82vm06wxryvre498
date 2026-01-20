@@ -10517,232 +10517,135 @@ window.addTokensToDB = async function(amount, planType, paidAmount) {
 // RAZORPAY PAYMENT CHECKOUT UI
 // ==========================================
 window.openPaymentCheckout = function(planType, investorCount, amount, paymentFor) {
-    // paymentFor can be: 'emergence' or 'tokens'
-    
     const modal = document.createElement('div');
-    modal.className = 'edit-modal show';
+    modal.className = 'sv-payment-overlay';
     modal.id = 'paymentModal';
-    
+
     const planNames = {
-        'alpha': 'Alpha Emergence',
-        'steady': 'Steady Emergence',
-        'critical': 'Super Critical Emergence',
-        'small': 'Small Token Bundle',
-        'medium': 'Medium Token Bundle',
-        'large': 'Large Token Bundle'
+        'alpha': 'Alpha Emergence', 'steady': 'Steady Emergence', 'critical': 'Super Critical',
+        'small': 'Small Bundle', 'medium': 'Medium Bundle', 'large': 'Large Bundle'
     };
+    const planName = planNames[planType] || 'Standard Plan';
     
-    const planName = planNames[planType] || 'Purchase';
-    
+    // State to track selection
+    let selectedMethod = 'card'; 
+
     modal.innerHTML = `
         <style>
-            .checkout-container {
-                background: linear-gradient(180deg, #0f0f0f, #1a1a1a);
-                border-radius: 24px;
-                max-width: 480px;
-                width: 95%;
-                color: #fff;
-                overflow: hidden;
-                border: 1px solid rgba(255,255,255,0.1);
-                box-shadow: 0 40px 120px rgba(0,0,0,0.9);
+            .sv-payment-overlay {
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+                display: flex; align-items: center; justify-content: center; z-index: 10000;
+                font-family: 'Inter', -apple-system, sans-serif;
             }
+            .sv-payment-card {
+                background: #fff; width: 100%; max-width: 440px; border-radius: 24px;
+                overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+                animation: svSlideUp 0.3s ease-out;
+            }
+            .sv-plan-summary {
+                background: #000; color: #fff; padding: 32px; text-align: center;
+            }
+            .sv-plan-label { font-size: 12px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.6; margin-bottom: 8px; }
+            .sv-plan-name { font-size: 24px; font-weight: 800; margin-bottom: 16px; }
+            .sv-price-tag { 
+                display: inline-block; background: #fff; color: #000; 
+                padding: 8px 20px; border-radius: 100px; font-weight: 900; font-size: 28px; 
+            }
+            .sv-method-section { padding: 32px; background: #f9f9f9; }
+            .sv-section-title { 
+                font-size: 11px; font-weight: 700; color: #000; 
+                text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; display: block;
+            }
+            .sv-method-list { display: flex; flex-direction: column; gap: 12px; }
+            .sv-method-item {
+                background: #fff; border: 2px solid #eee; border-radius: 16px;
+                padding: 16px; display: flex; align-items: center; gap: 16px;
+                cursor: pointer; transition: all 0.2s; position: relative;
+            }
+            .sv-method-item:hover { border-color: #000; transform: translateX(5px); }
+            .sv-method-item.active { border-color: #000; background: #f0f0f0; }
+            .sv-method-item.active::after {
+                content: '✓'; position: absolute; right: 20px; font-weight: 900; color: #000;
+            }
+            .sv-icon-box { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+            .sv-method-info b { font-size: 15px; color: #000; display: block; }
+            .sv-method-info span { font-size: 12px; color: #777; }
             
-            .checkout-header {
-                background: linear-gradient(135deg, #ff006e, #8338ec);
-                padding: 2rem;
-                text-align: center;
+            .sv-pay-btn {
+                width: 100%; background: #000; color: #fff; border: none;
+                padding: 20px; font-weight: 700; font-size: 16px; cursor: pointer;
+                transition: opacity 0.2s;
             }
-            
-            .checkout-header h2 {
-                font-size: 1.8rem;
-                font-weight: 800;
-                margin: 0 0 0.5rem 0;
+            .sv-pay-btn:hover { opacity: 0.9; }
+            .sv-cancel-link {
+                display: block; text-align: center; padding: 16px;
+                font-size: 13px; color: #999; text-decoration: none; cursor: pointer;
             }
-            
-            .checkout-header p {
-                color: rgba(255,255,255,0.9);
-                font-size: 0.95rem;
-            }
-            
-            .checkout-body {
-                padding: 2rem;
-            }
-            
-            .price-display {
-                text-align: center;
-                margin-bottom: 2rem;
-                padding: 1.5rem;
-                background: rgba(255,255,255,0.05);
-                border-radius: 16px;
-                border: 1px solid rgba(255,255,255,0.1);
-            }
-            
-            .price-label {
-                color: #888;
-                font-size: 0.85rem;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                margin-bottom: 0.5rem;
-            }
-            
-            .price-amount {
-                font-size: 3rem;
-                font-weight: 800;
-                background: linear-gradient(135deg, #fff, #aaa);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-            }
-            
-            .payment-methods {
-                margin-bottom: 2rem;
-            }
-            
-            .payment-methods h3 {
-                font-size: 0.9rem;
-                color: #888;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                margin-bottom: 1rem;
-            }
-            
-            .method-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.75rem;
-            }
-            
-            .method-btn {
-                background: rgba(255,255,255,0.08);
-                border: 1px solid rgba(255,255,255,0.15);
-                padding: 1rem;
-                border-radius: 12px;
-                cursor: pointer;
-                transition: all 0.3s;
-                text-align: center;
-                color: #fff;
-            }
-            
-            .method-btn:hover {
-                background: rgba(255,255,255,0.15);
-                border-color: #ff006e;
-                transform: translateY(-2px);
-            }
-            
-            .method-icon {
-                font-size: 1.5rem;
-                margin-bottom: 0.5rem;
-            }
-            
-            .method-name {
-                font-size: 0.85rem;
-                font-weight: 600;
-            }
-            
-            .checkout-footer {
-                padding: 0 2rem 2rem 2rem;
-                display: flex;
-                gap: 1rem;
-            }
-            
-            .pay-btn {
-                flex: 1;
-                background: linear-gradient(135deg, #ff006e, #8338ec);
-                border: none;
-                padding: 1rem;
-                border-radius: 12px;
-                color: #fff;
-                font-weight: 800;
-                font-size: 1rem;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-            
-            .pay-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 15px 40px rgba(255,0,110,0.4);
-            }
-            
-            .cancel-btn {
-                background: rgba(255,255,255,0.1);
-                border: 1px solid rgba(255,255,255,0.2);
-                padding: 1rem 1.5rem;
-                border-radius: 12px;
-                color: #fff;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-            
-            .cancel-btn:hover {
-                background: rgba(255,255,255,0.15);
-            }
-            
-            .security-badge {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 0.5rem;
-                margin-top: 1rem;
-                color: #666;
-                font-size: 0.8rem;
-            }
+            @keyframes svSlideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         </style>
-        
-        <div class="checkout-container">
-            <div class="checkout-header">
-                <h2>${planName}</h2>
-                <p>${paymentFor === 'emergence' ? `Send to ${investorCount} investors` : `Get ${investorCount} Scale Tokens`}</p>
+
+        <div class="sv-payment-card">
+            <div class="sv-plan-summary">
+                <div class="sv-plan-label">Selected Strategy</div>
+                <div class="sv-plan-name">${planName}</div>
+                <div class="sv-price-tag">₹${amount}</div>
             </div>
-            
-            <div class="checkout-body">
-                <div class="price-display">
-                    <div class="price-label">Total Amount</div>
-                    <div class="price-amount">₹${amount}</div>
-                </div>
-                
-                <div class="payment-methods">
-                    <h3>Select Payment Method</h3>
-                    <div class="method-grid">
-                        <div class="method-btn">
-                            <div class="method-icon">💳</div>
-                            <div class="method-name">Card</div>
+
+            <div class="sv-method-section">
+                <span class="sv-section-title">Payment Methods:</span>
+                <div class="sv-method-list">
+                    <div class="sv-method-item active" onclick="selectSvMethod(this, 'card')">
+                        <div class="sv-icon-box">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
                         </div>
-                        <div class="method-btn">
-                            <div class="method-icon">🏦</div>
-                            <div class="method-name">Net Banking</div>
+                        <div class="sv-method-info"><b>Credit / Debit Card</b><span>Visa, Mastercard, RuPay</span></div>
+                    </div>
+
+                    <div class="sv-method-item" onclick="selectSvMethod(this, 'netbanking')">
+                        <div class="sv-icon-box">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><path d="M3 21h18M3 10h18M5 10V21M19 10V21M9 10V21M15 10V21M12 3l7 7H5l7-7z"/></svg>
                         </div>
-                        <div class="method-btn">
-                            <div class="method-icon">📱</div>
-                            <div class="method-name">UPI</div>
+                        <div class="sv-method-info"><b>Net Banking</b><span>All Major Indian Banks</span></div>
+                    </div>
+
+                    <div class="sv-method-item" onclick="selectSvMethod(this, 'wallet')">
+                        <div class="sv-icon-box">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#003087"><path d="M20.007 21.003h-8.411a1.2 1.2 0 0 1-1.192-1.018l-1.957-13.06a1.2 1.2 0 0 1 1.192-1.38h3.331c4.187 0 6.641 2.051 6.641 5.485 0 3.328-2.316 5.467-5.597 5.467h-1.072l-.37 2.476h2.164c3.085 0 5.418 1.173 5.418 4.314 0 3.14-2.333 4.314-5.418 4.314z"/></svg>
                         </div>
-                        <div class="method-btn">
-                            <div class="method-icon">💰</div>
-                            <div class="method-name">Wallet</div>
+                        <div class="sv-method-info"><b>PayPal</b><span>International Payments</span></div>
+                    </div>
+
+                    <div class="sv-method-item" onclick="selectSvMethod(this, 'upi')">
+                        <div class="sv-icon-box">
+                            <svg width="24" height="24" viewBox="0 0 24 24">
+                                <path d="M12 2L2 22h20L12 2z" fill="#FF9933" opacity="0.8"/>
+                                <path d="M12 8L5 22h14L12 8z" fill="#FFFFFF"/>
+                                <path d="M12 14l-3 8h6l-3-8z" fill="#128807"/>
+                            </svg>
                         </div>
+                        <div class="sv-method-info"><b>UPI Transfer</b><span>GooglePay, PhonePe, Paytm</span></div>
                     </div>
                 </div>
-                
-                <div class="security-badge">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                    <span>Secured by Razorpay</span>
-                </div>
             </div>
-            
-            <div class="checkout-footer">
-                <button class="cancel-btn" onclick="document.getElementById('paymentModal').remove()">
-                    Cancel
-                </button>
-                <button class="pay-btn" onclick="window.initRazorpay('${planType}', ${investorCount}, ${amount}, '${paymentFor}')">
-                    Proceed to Pay
-                </button>
-            </div>
+
+            <button class="sv-pay-btn" onclick="window.initRazorpay('${planType}', ${investorCount}, ${amount}, '${paymentFor}')">
+                PROCEED TO SECURE PAYMENT
+            </button>
+            <a class="sv-cancel-link" onclick="document.getElementById('paymentModal').remove()">Cancel Transaction</a>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
+};
+
+// Selection Logic Helper
+window.selectSvMethod = function(element, method) {
+    // Remove active class from all
+    document.querySelectorAll('.sv-method-item').forEach(item => item.classList.remove('active'));
+    // Add to clicked
+    element.classList.add('active');
+    console.log("Selected Method:", method);
 };
 // ==========================================
 // RAZORPAY PAYMENT HANDLER
@@ -10814,17 +10717,13 @@ window.initRazorpay = function(planType, investorCount, amount, paymentFor) {
     
     const rzp = new Razorpay(options);
     
-    rzp.on('payment.failed', function(response) {
-        console.error("❌ Payment Failed:", response.error);
-        alert('Payment Failed: ' + response.error.description);
-        
-        // Close modal safely
-        const paymentModal = document.getElementById('paymentModal');
-        if (paymentModal) {
-            paymentModal.remove();
-        }
+   rzp.on('payment.failed', function(response) {
+        // ✅ YOUR SPECIFIC ERROR ALERT
+        alert("❌ Payment Failed: Failed to launch Emergence. Your transaction could not be completed.");
+        const pModal = document.getElementById('paymentModal');
+        if (pModal) pModal.remove();
     });
-    
+
     rzp.open();
 };
 window.showVestAnalytics = showVestAnalytics;
