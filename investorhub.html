@@ -2265,8 +2265,11 @@ window.submitVideoVerification = async function() {
 // Helper function to upload file to Firebase Storage
 async function uploadFileToStorage(file, folder) {
     try {
-        const filename = `${currentUser.uid}_${Date.now()}.${file.name.split('.').pop()}`;
-        const storageReference = sRef(storage, `${folder}/${filename}`);
+        const filename = `${Date.now()}.${file.name.split('.').pop()}`;
+        
+        // ⭐ THE FIX: Add currentUser.uid into the path string
+        // This matches your rule: folder/userId/filename
+        const storageReference = sRef(storage, `${folder}/${currentUser.uid}/${filename}`);
         
         await uploadBytes(storageReference, file);
         const downloadURL = await getDownloadURL(storageReference);
