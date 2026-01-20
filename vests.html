@@ -399,46 +399,167 @@
     }
     
     /* Modals */
-    .edit-modal-content, .special-app-popup {
-        width: 95% !important;
-        padding: 1.5rem !important;
-        max-height: 90vh !important;
-        overflow-y: auto !important;
+  /* ======================================
+   MODAL CONTENT – PREMIUM CARD
+====================================== */
+.edit-modal-content,
+.special-app-popup {
+    width: 95% !important;
+    max-width: 460px !important;
+    padding: 1.6rem !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+
+    background: linear-gradient(180deg, #0b0b0b, #111) !important;
+    border-radius: 22px !important;
+    color: #ffffff !important;
+
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    box-shadow:
+        0 40px 120px rgba(0,0,0,0.85),
+        inset 0 1px 0 rgba(255,255,255,0.04) !important;
+
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif !important;
+    animation: modalFloatIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ======================================
+   HEADER
+====================================== */
+.edit-modal-header {
+    padding: 1.2rem 1.2rem 0.9rem !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+.edit-modal-header h3 {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.4px;
+}
+
+/* ======================================
+   BODY
+====================================== */
+.edit-modal-body {
+    padding: 1.4rem 1.2rem !important;
+    text-align: center;
+}
+
+.edit-modal-body p {
+    color: #d1d5db !important;
+    font-size: 1.05rem !important;
+    line-height: 1.75 !important;
+}
+
+/* ======================================
+   TIMER / HIGHLIGHT
+====================================== */
+.edit-modal-body .timer,
+.edit-modal-body .highlight {
+    margin: 1.6rem 0 !important;
+    font-size: 2.2rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 1px !important;
+
+    background: linear-gradient(90deg, #ff006e, #ff4d9d) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+
+    animation: pulseGlow 1.6s infinite;
+}
+
+/* ======================================
+   FOOTER
+====================================== */
+.edit-modal-footer {
+    padding: 1.2rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.8rem !important;
+}
+
+/* ======================================
+   PRIMARY + SECONDARY BUTTONS
+====================================== */
+.modal-btn-save,
+.preview-btn,
+.share-btn {
+    width: 100% !important;
+    padding: 0.95rem !important;
+    border-radius: 14px !important;
+
+    background: linear-gradient(90deg, #ff006e, #ff4d9d) !important;
+    color: #ffffff !important;
+
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    border: none !important;
+
+    cursor: pointer !important;
+    transition: all 0.25s ease !important;
+}
+
+.modal-btn-save:hover,
+.preview-btn:hover,
+.share-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 14px 40px rgba(255,0,110,0.35) !important;
+}
+
+/* CANCEL / BACK */
+.modal-btn-cancel,
+.back-to-dash,
+.back-btn {
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.85rem !important;
+
+    background: rgba(255,255,255,0.06) !important;
+    color: #e5e7eb !important;
+
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    border-radius: 12px !important;
+
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.modal-btn-cancel:hover,
+.back-to-dash:hover,
+.back-btn:hover {
+    background: rgba(255,255,255,0.14) !important;
+}
+
+/* ======================================
+   ACTION BUTTON GROUP
+====================================== */
+.action-buttons {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.8rem !important;
+    width: 100% !important;
+}
+
+/* ======================================
+   ANIMATIONS
+====================================== */
+@keyframes modalFloatIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.94);
     }
-    
-    .edit-modal-header {
-        padding: 1rem !important;
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
-    
-    .edit-modal-body {
-        padding: 1rem !important;
-    }
-    
-    .edit-modal-footer {
-        padding: 1rem !important;
-        flex-direction: column !important;
-    }
-    
-    .modal-btn-save, .modal-btn-cancel {
-        width: 100% !important;
-    }
-    
-    /* Back Button */
-    .back-to-dash, .back-btn {
-        padding: 0.6rem 1rem !important;
-        font-size: 0.85rem !important;
-    }
-    
-    /* Action Buttons */
-    .action-buttons {
-        flex-direction: column !important;
-        width: 100% !important;
-    }
-    
-    .preview-btn, .share-btn {
-        width: 100% !important;
-    }
-    
+}
+
+@keyframes pulseGlow {
+    0% { opacity: 0.85; }
+    50% { opacity: 1; }
+    100% { opacity: 0.85; }
+}
+
     /* Verification Pages */
     .verify-page {
         padding: 2rem 1rem !important;
