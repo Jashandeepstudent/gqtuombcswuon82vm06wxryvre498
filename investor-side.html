@@ -1,2922 +1,965 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | ScaleVest</title>
+    <title>ScaleVest | Investor-Side</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-black: #050505;
+            --surface: rgba(10, 10, 11, 0.85);
+            --accent-blue: #007bff;
+            --accent-green: #00ffaa;
+            --text-main: #ffffff;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a4d3c 0%, #1a5f7a 50%, #2e8b9e 100%);
-            color: #fff;
-            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-black);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
         }
 
-        /* Top Navigation */
-        .top-nav {
-            background: linear-gradient(90deg, #0a2f23, #134e4a, #0f766e);
-            padding: 1.2rem 3rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(16, 185, 129, 0.3);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        }
-
-        .logo {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #10b981;
-            cursor: pointer;
-            letter-spacing: 1px;
-            transition: all 0.3s;
-            text-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
-        }
-
-        .logo:hover {
-            transform: scale(1.05);
-            text-shadow: 0 0 30px rgba(16, 185, 129, 0.8);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2.5rem;
-            align-items: center;
-        }
-
-        .nav-link {
-            color: #a7f3d0;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s;
-            position: relative;
-            cursor: pointer;
-            font-size: 0.95rem;
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: #10b981;
-            transition: width 0.3s;
-        }
-
-        .nav-link:hover {
-            color: #10b981;
-        }
-
-        .nav-link:hover::after {
-            width: 100%;
-        }
-
-        .dropdown {
-            position: relative;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: #134e4a;
-            min-width: 220px;
-            border-radius: 12px;
-            margin-top: 1rem;
-            box-shadow: 0 10px 40px rgba(16, 185, 129, 0.2);
-            border: 1px solid rgba(16, 185, 129, 0.3);
+        /* --- GLOBAL CINEMATIC BACKGROUND --- */
+        .video-bg-container {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -2;
             overflow: hidden;
-            z-index: 1000;
         }
 
-        .dropdown-content.show {
-            display: block !important;
-            animation: fadeIn 0.3s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .dropdown-item {
-            padding: 1rem 1.5rem;
-            color: #a7f3d0;
-            text-decoration: none;
-            display: block;
-            transition: all 0.3s;
-            cursor: pointer;
-            border-left: 3px solid transparent;
-        }
-
-        .dropdown-item:hover {
-            background: rgba(16, 185, 129, 0.2);
-            border-left-color: #10b981;
-            padding-left: 2rem;
-            color: #10b981;
-        }
-
-        .top-nav-right {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-        }
-
-        .icon-btn {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: rgba(16, 185, 129, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        .icon-btn:hover {
-            background: #10b981;
-            border-color: #10b981;
-            transform: translateY(-3px) scale(1.1);
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
-        }
-
-        .icon-btn:hover svg {
-            stroke: #fff;
-        }
-
-        .profile-dropdown {
-            position: relative;
-        }
-
-        .profile-dropdown-content {
-            display: none;
+        .video-bg-element {
+            min-width: 100%; min-height: 100%;
+            width: auto; height: auto;
             position: absolute;
-            top: 100%;
-            right: 0;
-            background: #134e4a;
-            min-width: 300px;
-            border-radius: 12px;
-            margin-top: 1rem;
-            box-shadow: 0 10px 40px rgba(16, 185, 129, 0.2);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            padding: 1rem;
-            animation: fadeIn 0.3s;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+            filter: saturate(0.6) brightness(0.2) blur(5px);
         }
+.investor-select-wrapper {
+    position: relative;
+    width: 100%;
+}
 
-        .profile-dropdown-content.show {
-            display: block;
-        }
+.investor-select-wrapper::after {
+    content: "▾";
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #aaa;
+    font-size: 16px;
+}
 
-        .profile-info {
-            padding: 1rem;
-            border-bottom: 1px solid rgba(16, 185, 129, 0.2);
-            margin-bottom: 1rem;
-        }
 
-        .profile-username {
-            font-weight: 600;
-            font-size: 1.2rem;
-            color: #10b981;
-        }
+:root {
+    /* Core scaling */
+    --ui-radius: clamp(12px, 3vw, 18px);
+    --ui-padding: clamp(12px, 4vw, 20px);
+    --ui-gap: clamp(10px, 3vw, 18px);
+    --ui-font: clamp(14px, 3.8vw, 16px);
+}
 
-        .profile-userid {
-            color: #6ee7b7;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-        }
+/* -------- RESET -------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    max-width: 100%;
+}
 
-        .switch-btn {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: #fff;
-            border: none;
-            padding: 0.9rem;
-            width: 100%;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            transition: all 0.3s;
-            font-size: 0.95rem;
-        }
+html {
+    font-size: var(--ui-font);
+    -webkit-text-size-adjust: 100%;
+}
 
-        .switch-btn:hover {
-            background: linear-gradient(135deg, #059669, #047857);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
-        }
+body {
+    margin: 0;
+    min-height: 100svh;
+    overflow-x: hidden;
+    background: #0b0b0b;
+    color: #fff;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+}
 
-        .profile-section {
-            padding: 0.5rem 0;
-        }
+/* -------- GLOBAL CONTAINER AUTO-CENTER -------- */
+section, main, .container, .wrapper {
+    width: 100%;
+    max-width: 1200px;
+    margin-inline: auto;
+    padding: var(--ui-padding);
+}
 
-        .profile-link {
-            padding: 0.9rem 1rem;
-            display: block;
-            color: #a7f3d0;
-            text-decoration: none;
-            border-radius: 8px;
-            transition: all 0.3s;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .profile-link:hover {
-            background: rgba(16, 185, 129, 0.2);
-            padding-left: 1.5rem;
-            color: #10b981;
-        }
-
-        /* Main Container */
-.container {
+/* -------- AUTO FIX FLEX & GRID -------- */
+.flex, .row {
     display: flex;
-    align-items: flex-start;
-    gap: 3rem;
-    max-width: 1800px;
-    margin: 0 auto;
-    padding: 3rem;
+    flex-wrap: wrap;
+    gap: var(--ui-gap);
 }
 
-
-.left-section {
-    width: 380px;
-    flex-shrink: 0;
+.grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--ui-gap);
 }
 
-
-.right-section {
-    flex: 1;
-    min-width: 0;
+/* -------- GLOBAL INPUT / SELECT / TEXTAREA -------- */
+input,
+select,
+textarea {
+    width: 100%;
+    min-height: 48px;
+    padding: 14px 16px;
+    font-size: 1rem;
+    border-radius: var(--ui-radius);
+    border: 1px solid rgba(255,255,255,0.15);
+    background: #111;
+    color: #fff;
+    outline: none;
 }
 
+/* Prevent mobile zoom */
+input, textarea, select {
+    font-size: 16px;
+}
 
-        .welcome-section {
-            margin-bottom: 3rem;
+/* -------- BUTTON AUTO FIX -------- */
+button {
+    width: 100%;
+    min-height: 48px;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--ui-radius);
+    border: none;
+    cursor: pointer;
+}
+
+/* -------- CARD AUTO FIX -------- */
+.card, .box, .panel {
+    width: 100%;
+    border-radius: calc(var(--ui-radius) + 4px);
+    padding: var(--ui-padding);
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(14px);
+}
+
+/* -------- MODAL AUTO FIT -------- */
+.modal {
+    width: 100%;
+    max-width: min(92vw, 520px);
+    margin: auto;
+    border-radius: calc(var(--ui-radius) + 6px);
+}
+
+/* -------- IMAGES & MEDIA -------- */
+img, video, canvas {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--ui-radius);
+}
+
+/* -------- TABLE AUTO SCROLL -------- */
+table {
+    width: 100%;
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+}
+
+/* -------- DESKTOP SCALE UP -------- */
+@media (min-width: 768px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+#invType {
+    width: 100%;
+    padding: 16px 50px 16px 18px;
+    border-radius: 14px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: linear-gradient(145deg, #0d0d0d, #141414);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    appearance: none;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+/* Hover */
+#invType:hover {
+    border-color: rgba(0,255,255,0.4);
+}
+
+/* Focus */
+#invType:focus {
+    border-color: #00f0ff;
+    box-shadow: 0 0 0 3px rgba(0,240,255,0.15);
+}
+
+/* Options */
+#invType option {
+    background: #0f0f0f;
+    color: #fff;
+}
+
+/* Disabled option */
+#invType option[disabled] {
+    color: #777;
+}
+        .video-overlay-filter {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, 
+                rgba(5, 5, 5, 0.95) 0%, 
+                rgba(5, 5, 5, 0.4) 50%, 
+                rgba(5, 5, 5, 0.95) 100%);
+            z-index: -1;
         }
 
-        .welcome-text {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
+        /* --- NAVIGATION --- */
+        nav {
+            position: fixed;
+            top: 0; width: 100%; z-index: 1000;
+            padding: 1.5rem 5%;
+            background: rgba(5, 5, 5, 0.7);
+            backdrop-filter: blur(30px);
+            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .nav-logo { font-weight: 900; font-size: 1.5rem; letter-spacing: -1.5px; display: flex; align-items: center; }
+        .logo-icon { background: linear-gradient(135deg, var(--accent-blue), var(--accent-green)); color: #000; padding: 4px 10px; border-radius: 8px; margin-right: 12px; font-weight: 900; }
+
+        .btn-nav {
+            padding: 0.8rem 1.8rem; border-radius: 50px; border: 1px solid var(--accent-blue);
+            background: transparent; color: #fff; font-weight: 700; cursor: pointer; transition: var(--transition);
+        }
+        .btn-nav:hover { background: var(--accent-blue); box-shadow: 0 0 20px var(--accent-blue); }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            padding: 15rem 5% 10rem;
+            text-align: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            background: rgba(0,255,170,0.1); border: 1px solid var(--accent-green);
+            padding: 8px 20px; border-radius: 50px; display: inline-block;
+            color: var(--accent-green); font-size: 0.8rem; font-weight: 700; margin-bottom: 2rem;
+            letter-spacing: 2px;
+        }
+
+        h1 {
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            font-weight: 900;
+            line-height: 0.95;
+            margin-bottom: 2rem;
+            letter-spacing: -4px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, var(--accent-blue), var(--accent-green));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .welcome-subtext {
-            color: #6ee7b7;
-            font-size: 1.1rem;
+        .hero-subtitle { color: var(--text-dim); font-size: 1.4rem; max-width: 850px; margin: 0 auto; font-weight: 500; }
+
+        /* --- FULL SCREEN VIDEO CONTENT STACK --- */
+        .content-stack-full { width: 100vw; margin-top: 5rem; }
+
+        .section-header {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            margin-bottom: 4rem;
+            text-align: center;
+            letter-spacing: -2px;
+            text-transform: uppercase;
         }
 
-        /* Cards */
-        .card {
-            background: rgba(16, 185, 129, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 2.5rem;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            transition: all 0.4s;
+        .massive-video-card {
             position: relative;
-            overflow: hidden;
-            margin-bottom: 2rem;
-        }
-/* --- MODAL STYLES --- */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85); /* Dark dimming */
-    backdrop-filter: blur(15px); /* Strong blur */
-    z-index: 9999;
-    display: none; /* Hidden unless JS activates it */
-    align-items: center; justify-content: center;
-}
-
-.modal-box {
-    background: rgba(15, 23, 42, 0.9);
-    border: 1px solid #10b981;
-    box-shadow: 0 0 50px rgba(16, 185, 129, 0.2);
-    padding: 3rem;
-    border-radius: 30px;
-    text-align: center;
-    max-width: 450px;
-    width: 90%;
-    animation: zoomIn 0.4s ease;
-}
-
-.modal-box h2 { font-size: 1.8rem; margin-bottom: 10px; color: #fff; }
-.modal-box p { color: #94a3b8; margin-bottom: 25px; }
-
-.modal-box input {
-    width: 100%; padding: 15px; border-radius: 12px;
-    background: rgba(255,255,255,0.05); border: 1px solid #334155;
-    color: #fff; font-size: 1.1rem; text-align: center; letter-spacing: 1px;
-    margin-bottom: 20px; outline: none;
-}
-
-.modal-box input:focus { border-color: #10b981; }
-
-.modal-btn {
-    width: 100%; padding: 15px; border-radius: 12px;
-    background: linear-gradient(135deg, #10b981, #0ea5e9);
-    color: #fff; font-weight: 800; border: none; cursor: pointer;
-    font-size: 1rem; letter-spacing: 1px;
-}
-
-@keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
-            transform: scaleX(0);
-            transition: transform 0.4s;
-        }
-
-        .card:hover::before {
-            transform: scaleX(1);
-        }
-
-        .card:hover {
-            border-color: rgba(16, 185, 129, 0.5);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 40px rgba(16, 185, 129, 0.2);
-        }
-.nav-icon-wrapper {
-    position: relative;
-    display: inline-block;
-    cursor: pointer;
-}
-
-.notif-badge {
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 10px;
-    height: 10px;
-    background-color: #ef4444; /* Bright Red */
-    border: 2px solid #0a2f23; /* Matches header bg for cut-out effect */
-    border-radius: 50%;
-    display: none; /* Hidden by default */
-    z-index: 10;
-    box-shadow: 0 0 5px rgba(239, 68, 68, 0.5);
-}
-
-.notif-badge.active {
-    display: block;
-}
-        .profile-avatar {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #10b981, #3b82f6);
-            color: #fff;
+            height: 100vh;
+            overflow: hidden;
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin: 0 auto 1.5rem;
-            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
         }
 
-        .card-title {
-            text-align: center;
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            color: #10b981;
-        }
-
-        .card-subtitle {
-            text-align: center;
-            color: #6ee7b7;
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card-btn {
-            background: transparent;
-            color: #10b981;
-            border: 2px solid #10b981;
-            padding: 0.9rem 1.5rem;
-            width: 100%;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 700;
-            transition: all 0.3s;
-            font-size: 0.95rem;
-        }
-
-        .card-btn:hover {
-            background: #10b981;
-            color: #fff;
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.3);
-        }
-
-        /* Profile Progress */
-        .progress-section {
-            margin-bottom: 1.5rem;
-        }
-
-        .progress-label {
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-            color: #a7f3d0;
-        }
-
-        .progress-bar {
-            background: rgba(16, 185, 129, 0.2);
-            border-radius: 10px;
-            height: 10px;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-        }
-
-        .progress-fill {
-            background: linear-gradient(90deg, #10b981, #3b82f6);
-            height: 100%;
-            width: 75%;
-            border-radius: 10px;
-            transition: width 0.5s;
-        }
-
-        .progress-text {
-            text-align: center;
-            font-size: 0.85rem;
-            color: #6ee7b7;
-        }
-
-        /* Quick Links */
-        .quick-links {
-            list-style: none;
-        }
-
-        .quick-links li {
-            margin-bottom: 0.8rem;
-        }
-
-        .quick-links a {
-            display: flex;
-            align-items: center;
-            padding: 0.8rem;
-            color: #a7f3d0;
-            text-decoration: none;
-            border-radius: 8px;
-            transition: all 0.3s;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-
-        .quick-links a:hover {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10b981;
-            border-color: #10b981;
-            transform: translateX(5px);
-        }
-
-        .quick-links a::before {
-            content: "→";
-            margin-right: 0.8rem;
-            font-weight: bold;
-        }
-
-        /* Banners */
-        .banner {
-            background: rgba(16, 185, 129, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 3rem;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.4s;
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 2rem;
-        }
-
-        .banner::before {
-            content: '';
+        .massive-video-card video {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(180deg, #10b981, #3b82f6);
-            transform: scaleY(0);
-            transition: transform 0.4s;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0.5;
+            z-index: 1;
         }
 
-        .banner:hover::before {
-            transform: scaleY(1);
+        .video-overlay-text {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            width: 90%;
         }
 
-        .banner:hover {
-            border-color: rgba(16, 185, 129, 0.5);
-            transform: translateX(10px);
-            box-shadow: 0 10px 40px rgba(16, 185, 129, 0.2);
+        .video-overlay-text h2 {
+            font-size: clamp(2rem, 7vw, 6rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -3px;
+            line-height: 0.9;
         }
 
-        .banner-content h3 {
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-            font-weight: 700;
-            color: #10b981;
+        /* --- HANDSHAKE ACTION UI --- */
+        .response-row { display: flex; gap: 15px; justify-content: center; margin-top: 40px; }
+        .btn-reply {
+            padding: 18px 45px; border-radius: 100px; border: 2px solid #fff;
+            background: rgba(255,255,255,0.05); color: #fff; font-weight: 800; cursor: pointer;
+            text-transform: uppercase; transition: 0.3s;
+        }
+        .btn-yes { border-color: var(--accent-green); color: var(--accent-green); }
+        .btn-yes:hover { background: var(--accent-green); color: #000; box-shadow: 0 0 40px var(--accent-green); }
+        .btn-no:hover { border-color: #ff4d4d; color: #ff4d4d; }
+
+        .rep-boost {
+            margin-top: 35px; font-weight: 800; color: var(--accent-blue);
+            letter-spacing: 3px; font-size: 0.8rem; text-transform: uppercase;
         }
 
-.logo {
-    display: flex;         /* Allows image and text to sit side-by-side */
-    align-items: center;   /* Centers them vertically */
-    gap: 12px;             /* Space between the image and the text */
-    font-size: 2rem;
-    font-weight: 700;
-    color: #10b981;
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: all 0.3s;
-    text-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
-}
-
-.nav-logo-img {
-    height: 40px;
-    width: 40px;            /* Set width equal to height for a perfect circle */
-    aspect-ratio: 1 / 1;    /* Forces the square shape before rounding */
-    border-radius: 50%;     /* This makes it round */
-    object-fit: cover;      /* Changed from 'contain' to 'cover' so the image fills the circle without gaps */
-    filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.3));
-    border: 1px solid rgba(16, 185, 129, 0.3); /* Optional: adds a slight border to define the circle */
-}
-/* Ensure the logo doesn't shrink on small screens */
-@media (max-width: 480px) {
-    .nav-logo-img {
-        height: 30px;
-    }
-    .logo {
-        font-size: 1.5rem;
-    }
-}
-/* === PROFILE CARD TEXT VISIBILITY BOOST === */
-
-/* User ID */
-.user-id-badge {
-    text-align: center;
-    margin: 0.6rem 0 1.2rem;
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #38bdf8; /* Sky Blue */
-    letter-spacing: 1px;
-    text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
-}
-
-/* Stats row */
-.stat-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 1.2rem 0;
-    padding: 0.8rem 1rem;
-    border-radius: 12px;
-    background: rgba(56, 189, 248, 0.12);
-    border: 1px solid rgba(56, 189, 248, 0.35);
-}
-
-/* Stat label */
-.stat-label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #7dd3fc; /* Light blue */
-    letter-spacing: 0.5px;
-}
-.applications-card {
-    position: relative; /* Essential for the bottom box */
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start; /* Align items to top to make room for bottom box */
-    background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
-    border: 1px solid #333;
-    padding: 24px;
-    padding-bottom: 50px; /* Add extra padding at bottom for the box */
-    border-radius: 16px;
-    transition: all 0.3s ease;
-    min-height: 160px;
-}
-
-.applications-card:hover {
-    border-color: #00CED1;
-    background: linear-gradient(135deg, #1a1a1a 0%, #202020 100%);
-}
-
-/* The small box at the bottom */
-.latest-badge-bottom {
-    position: absolute;
-    bottom: 20px;
-    left: 24px;
-    background: #00CED1; /* Solid background makes it look like a small box */
-    color: #000; /* Dark text on bright background */
-    font-size: 9px;
-    font-weight: 900;
-    letter-spacing: 1px;
-    padding: 4px 10px;
-    border-radius: 4px;
-    text-transform: uppercase;
-}
-
-.banner-content h3 {
-    font-size: 1.6rem;
-    margin-bottom: 8px;
-    color: #fff;
-}
-
-.banner-content p {
-    color: #888;
-    font-size: 0.9rem;
-    max-width: 80%;
-}
-
-.banner-icon svg {
-    width: 45px;
-    height: 45px;
-    stroke: #00CED1;
-    opacity: 0.9;
-}
-/* Stat value */
-.stat-val {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: #38bdf8; /* Strong blue */
-    text-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
-}
-.inbox-card-hover {
-    transition: transform 0.2s, border-color 0.2s;
-}
-.inbox-card-hover:hover {
-    transform: translateY(-5px);
-    border-color: #10b981;
-    background: rgba(16, 185, 129, 0.08);
-}
-#profileName {
-    color: #38bdf8;
-    text-shadow: 0 0 12px rgba(56, 189, 248, 0.7);
-}
-        .banner-content p {
-            color: #a7f3d0;
-            line-height: 1.8;
-            font-size: 1.05rem;
-        }
-
-        .banner-icon {
-            width: 100px;
-            height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(16, 185, 129, 0.1);
-            border-radius: 20px;
-            border: 2px solid rgba(16, 185, 129, 0.3);
-            flex-shrink: 0;
-            margin-left: 2rem;
-        }
-
-        .banner-icon svg {
-            width: 60px;
-            height: 60px;
-            stroke: #10b981;
-        }
-
-        /* Footer */
-        .footer {
-            background: rgba(16, 185, 129, 0.05);
-            border-top: 1px solid rgba(16, 185, 129, 0.2);
-            padding: 3rem;
-            margin-top: 4rem;
-        }
-/* Enhanced Avatar Styles */
-.profile-avatar {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #10b981, #3b82f6);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.5rem;
-    font-weight: 800;
-    margin: 0 auto 1.5rem;
-    box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
-    overflow: hidden; /* CRITICAL: Clips the image to the circle */
-    position: relative;
-    border: 2px solid rgba(16, 185, 129, 0.5);
-}
-
-.profile-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* CRITICAL: Prevents image stretching */
-    display: block;
-}
-        .footer-content {
-            max-width: 1800px;
+        /* --- "WHAT IS?" MATRIX GRID --- */
+        .what-is-section {
+            padding: 10rem 5%;
+            max-width: 1300px;
             margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
-        .footer-logo {
+        .what-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .small-box {
+            position: relative;
+            height: 450px;
+            border-radius: 40px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            padding: 50px;
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            justify-content: flex-end;
+            background: rgba(255,255,255,0.02);
+            backdrop-filter: blur(15px);
+            transition: var(--transition);
+        }
+/* --- HERO CTA BUTTON --- */
+    .btn-hero-start {
+        margin-top: 2.5rem;
+        padding: 1.2rem 3.5rem;
+        
+        /* Shape & Border */
+        background: rgba(255, 255, 255, 0.03); /* Very subtle glass bg */
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 100px;
+        cursor: pointer;
+        
+        /* Font Styling */
+        font-size: 1.3rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        
+        /* THE GRADIENT TEXT MAGIC (Same as "Investor Side") */
+        background-image: linear-gradient(to right, var(--accent-blue), var(--accent-green));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-hero-start:hover {
+        transform: scale(1.05);
+        border-color: var(--accent-green);
+        box-shadow: 0 0 30px rgba(0, 255, 170, 0.15);
+    }
+        .small-box:hover { border-color: var(--accent-blue); transform: translateY(-10px); }
+
+.small-box video {
+    width: 100%;       /* Makes video fill the container width */
+    height: 200px;     /* Set a specific height */
+    object-fit: cover; /* Prevents stretching, crops like a photo */
+    border-radius: 12px;
+    display: block;    /* Ensures no weird bottom spacing */
+    background: #000;  /* Placeholder color while loading */
+}
+
+.what-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+        .small-box h3 { font-size: 2.5rem; color: var(--accent-green); margin-bottom: 20px; font-weight: 900; letter-spacing: -1px; }
+        .small-box p { color: var(--text-dim); font-size: 1.2rem; line-height: 1.5; font-weight: 500; }
+
+        /* --- STEPS SECTION (SHORT CARDS) --- */
+        .steps-section {
+            padding: 5rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
         }
 
-        .footer-logo-text {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #10b981;
-            text-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
-        }
-
-        .footer-company {
-            color: #6ee7b7;
-            font-size: 0.9rem;
-        }
-
-        .footer-links {
+        .steps-grid {
             display: flex;
-            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 60px; /* Gap for arrows */
+            margin-top: 50px;
         }
 
-        .footer-link {
-            color: #a7f3d0;
-            text-decoration: none;
-            transition: all 0.3s;
-            font-weight: 500;
+        .step-card {
+            position: relative;
+            flex: 0 1 280px; /* Fixed width */
+            height: 220px; /* SHORT HEIGHT */
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            overflow: visible; /* Visible for arrows */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #000;
+            transition: var(--transition);
         }
-.icon-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: rgba(16, 185, 129, 0.1);
+
+        .step-card video {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 20px;
+            object-fit: cover;
+            opacity: 0.3;
+            z-index: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-green);
+            box-shadow: 0 10px 30px rgba(0, 255, 170, 0.15);
+        }
+        .logo-image {
+    height: 40px;    /* Adjust height to fit your navbar design */
+    width: auto;     /* Maintains the aspect ratio */
+    display: block;  /* Removes extra whitespace below the image */
+}
+
+.nav-logo {
     display: flex;
     align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    overflow: hidden; /* This clips the image to the circle */
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    transition: all 0.3s;
+    gap: 10px;       /* Adds space between the logo and the text */
 }
+        .step-card:hover video { opacity: 0.5; }
 
-.icon-btn img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-        .footer-link:hover {
-            color: #10b981;
+        .step-content {
+            position: relative;
+            z-index: 2;
         }
 
-        @media (max-width: 1024px) {
-            .container {
-                flex-direction: column;
-                padding: 2rem 1.5rem;
-                gap: 2rem;
-            }
+        .step-number {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--accent-green);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            display: block;
+        }
 
-            .left-section {
-                width: 100%;
-            }
+        .step-desc {
+            font-size: 0.95rem;
+            color: #ddd;
+            line-height: 1.3;
+            font-weight: 600;
+        }
 
-            .top-nav {
-                padding: 1rem 1.5rem;
-            }
+        /* ARROW STYLING */
+        .arrow-icon {
+            position: absolute;
+            z-index: 10;
+            font-size: 2.5rem;
+            color: var(--accent-blue);
+            text-shadow: 0 0 10px var(--accent-blue);
+            right: -45px; /* Outside card */
+            top: 50%;
+            transform: translateY(-50%);
+        }
 
-            .nav-links {
-                display: none;
-            }
+        .step-card:last-child .arrow-icon { display: none; }
 
-            .banner {
-                padding: 2rem;
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .banner-icon {
-                margin-left: 0;
-                margin-top: 1.5rem;
+        @media (max-width: 1000px) {
+            .steps-grid { flex-direction: column; align-items: center; gap: 50px; }
+            .arrow-icon {
+                right: auto; left: 50%; top: auto; bottom: -45px;
+                transform: translateX(-50%) rotate(90deg);
             }
         }
-.edit-pencil {
-    cursor: pointer;
-    width: 18px;
-    height: 18px;
-    stroke: #10b981;
-    transition: transform 0.2s;
-}
-.edit-pencil:hover { transform: scale(1.2); stroke: #38bdf8; }
 
-.hidden-section { display: none !important; }
+        /* --- FINAL CTA SECTION --- */
+        .final-cta-section {
+            width: 100vw;
+            height: 80vh; /* Big full screen feel */
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            cursor: pointer;
+            transition: 0.3s;
+            overflow: hidden;
+        }
 
-/* Grid for the 3 edit cards */
-.edit-profile-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    margin-top: 2rem;
-}
-        @media (max-width: 480px) {
-            .welcome-text {
-                font-size: 1.8rem;
-            }
+        .final-cta-section:hover {
+            opacity: 0.9;
+        }
+        
+        /* Scale text on hover slightly */
+        .final-cta-section:hover h2 { transform: scale(1.05); transition: 0.5s; }
 
-            .banner-content h3 {
-                font-size: 1.4rem;
-            }
+        .final-cta-section video {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0.6;
+            z-index: 0;
+        }
+
+        /* --- FOOTER & SUCCESS --- */
+/* --- FOOTER --- */
+    footer {
+        background: #020202; /* Very dark background */
+        border-top: 1px solid rgba(0, 255, 170, 0.15); /* Greenish top border */
+        padding: 6rem 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* The "Strong" ScaleVest Text */
+    .footer-brand {
+        font-size: clamp(3rem, 6vw, 5rem);
+        font-weight: 900;
+        letter-spacing: -3px;
+        margin-bottom: 1.5rem;
+        display: inline-block;
+        /* The Blue-Green Gradient */
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        /* The Glow Effect */
+        filter: drop-shadow(0 0 25px rgba(0, 255, 170, 0.3));
+    }
+
+    /* The UnioraX Subtitle */
+    .footer-legal {
+        color: var(--text-dim);
+        font-size: 0.8rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        font-weight: 700;
+        opacity: 0.7;
+    }
+
+        #successOverlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-black); z-index: 10000; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
+        }
+
+        .full-progress-bar { width: 350px; height: 2px; background: rgba(255,255,255,0.1); margin-top: 30px; border-radius: 10px; overflow: hidden; }
+        .progress-fill { width: 0%; height: 100%; background: var(--accent-green); box-shadow: 0 0 20px var(--accent-green); animation: fillProgress 3s forwards; }
+        @keyframes fillProgress { to { width: 100%; } }
+
+        @media (max-width: 900px) {
+            .what-grid { grid-template-columns: 1fr; }
+            .massive-video-card { height: 60vh; }
         }
     </style>
 </head>
 <body>
-<div id="editIdentityModal" class="modal-overlay">
-    <div class="modal-box">
-        <h2>Identity Settings</h2>
+    <div class="video-bg-container">
+        <video autoplay muted loop playsinline class="video-bg-element">
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-data-processing-blue-and-green-44147-large.mp4" type="video/mp4">
+        </video>
+        <div class="video-overlay-filter"></div>
+    </div>
+
+    <nav>
+   <div class="nav-logo">
+    <img src="ScaleVestLogo.png" alt="ScaleVest Logo" class="logo-image">
+    <div>ScaleVest</div>
+</div>
+           </nav>
+
+<section class="hero">
+        <div class="hero-badge">The ScaleVest | 2026</div>
+        <h1>ScaleVest <br><span class="gradient-text">Investor Side</span></h1>
+        <p class="hero-subtitle">
+            The first Next-Gen Investor-Founders Connecting Platform
+        </p>
         
-        <div style="margin-bottom: 20px;">
-            <label class="progress-label" style="display: block; margin-bottom: 10px;">Profile Picture</label>
-            <input type="file" id="photoUploadInput" accept="image/*" style="display: none;">
-            <button class="card-btn" onclick="document.getElementById('photoUploadInput').click()">
-                CHOOSE IMAGE
-            </button>
-            <div id="uploadStatus" style="font-size: 0.8rem; color: #38bdf8; margin-top: 10px;"></div>
+        <button class="btn-hero-start" onclick="triggerAngelSetup()">GET STARTED</button>
+    </section>
+
+    <div class="content-stack-full">
+        <h2 class="section-header">Inside ScaleVest Investor-Side</h2>
+
+        <div class="massive-video-card">
+            <video autoplay muted loop playsinline>
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay-text">
+                <h2>Browse Verified<br><span class="gradient-text">Startups Vests</span></h2>
+            </div>
         </div>
 
-        <input type="text" id="editFullName" placeholder="Full Name">
-      
-        
-        <button class="modal-btn" id="saveIdentityBtn" onclick="updateProfileSection('identity')">UPDATE IDENTITY</button>
-        <button class="modal-btn" style="background:transparent; margin-top:10px;" onclick="closeModal('editIdentityModal')">CANCEL</button>
-    </div>
-</div>
+        <div class="massive-video-card">
+            <video autoplay muted loop playsinline>
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay-text">
+                <h2>Schedule In-App Q&A<br>& <span class="gradient-text">Meetings with Founders</span></h2>
+            </div>
+        </div>
 
-<div id="editInvestmentModal" class="modal-overlay">
-    <div class="modal-box">
-        <h2>Financial Settings</h2>
-        <input type="number" id="editNetWorth" placeholder="Net Worth ($)">
-        <input type="number" id="editMinInv" placeholder="Min Investment ($)">
-        <input type="number" id="editMaxInv" placeholder="Max Investment ($)">
-        <input type="text" id="editPreferred" placeholder="Preferred Startups (e.g. AI, SaaS)">
-        <button class="modal-btn" onclick="updateProfileSection('investment')">UPDATE FINANCIALS</button>
-        <button class="modal-btn" style="background:transparent; margin-top:10px;" onclick="closeModal('editInvestmentModal')">CANCEL</button>
-    </div>
-</div>
-<div id="loadingScreen" style="
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-    background: #0a2f23; display: flex; flex-direction: column; 
-    align-items: center; justify-content: center; z-index: 10000;
-    transition: opacity 0.8s ease;
-">
-    <div class="logo" style="margin-bottom: 25px; animation: pulse 1.5s infinite;">ScaleVest</div>
-    
-    <div style="width: 250px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; position: relative;">
-        <div id="loadingProgress" style="
-            width: 0%; height: 100%; background: #10b981; 
-            box-shadow: 0 0 15px #10b981; transition: width 0.4s ease;
-        "></div>
-    </div>
-    
-    <p id="loadingStatus" style="margin-top: 15px; color: #a7f3d0; letter-spacing: 2px; font-size: 0.7rem; text-transform: uppercase;">
-       Loading Data...
-    </p>
-</div>
-<div id="userIdModal" class="modal-overlay">
-    <div class="modal-box">
-        <h2>Identity Verification</h2>
-        <p>Please establish your unique Investor ID to access the terminal.</p>
-        
-        <input type="text" id="newUserIdInput" placeholder="e.g. VEST_007" maxlength="15">
-        <button class="modal-btn" onclick="saveUserID()">INITIALIZE ID</button>
-    </div>
-</div>
-   <nav class="top-nav">
-    <div class="logo">
-        <img src="ScaleVestLogo.png" alt="ScaleVest Logo" class="nav-logo-img">
-        <span>ScaleVest</span>
-    </div>
+        <div class="massive-video-card">
+            <video autoplay muted loop playsinline>
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay-text">
+                <h2>Make Angel Profile<br>& Let Founders <span class="gradient-text">Directly Pitch You</span></h2>
+            </div>
+        </div>
 
-    <div class="nav-links">
-        <a href="#dashboard" class="nav-link">Dashboard</a>
-        <a href="#projects" class="nav-link">Projects</a>
-        <a href="#analytics" class="nav-link">Analytics</a>
+        <div class="massive-video-card">
+            <video autoplay muted loop playsinline>
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay-text">
+                <h2>Receive Applications<br>with <span class="gradient-text">Vests Attached</span></h2>
+                
+                <div class="response-row">
+                    <button class="btn-reply btn-yes" onclick="alert('Handshake Initiated...')">YES</button>
+                    <button class="btn-reply" onclick="alert('Signal Declined.')">NO</button>
+                    <button class="btn-reply" onclick="alert('Saved to Queue.')">LATER</button>
+                </div>
+                
+                <p class="rep-boost">Boost Angel Reputation with Every Response</p>
+            </div>
+        </div>
 
-        <div class="dropdown">
-            <span class="nav-link" onclick="toggleDropdown('mainDropdown'); event.stopPropagation();">
-                More ▾
-            </span>
-            <div class="dropdown-content" id="mainDropdown">
-                <a href="#settings" class="dropdown-item">Settings</a>
-                <a href="#help" class="dropdown-item">Help Center</a>
-                <a href="#support" class="dropdown-item">Support</a>
-                <a href="#billing" class="dropdown-item">Billing</a>
+        <div class="massive-video-card">
+            <video autoplay muted loop playsinline>
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay-text">
+                <h2>Set Daily Application Limits<br>or <span style="color: #ff4d4d;">Unavailability Mode</span></h2>
             </div>
         </div>
     </div>
 
-<div class="top-nav-right">
-<div class="icon-btn" onclick="window.handleBrowseVests()" 
-     style="width: auto; padding: 0 1.2rem; border-radius: 20px;">
-    <span style="color: #10b981; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap;">
-        Browse Vests
-    </span>
-</div>
-
-
-<div class="nav-icon-wrapper" onclick="window.handleBellClick()">
-    <div class="icon-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-        </svg>
-    </div>
-    <div class="notif-badge" id="navBellBadge"></div>
-</div>
-
-    <div class="icon-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
+  <div class="massive-video-card">
+            <video autoplay muted loop playsinline>
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay-text">
+                <h2>AND MANY MORE! <br> <span style="color: #ff4d4d;"></span></h2>
+            </div>
+        </div>
     </div>
 
-        <div class="profile-dropdown">
-            <div class="icon-btn" onclick="toggleProfileDropdown()">
-                <div style="font-size:1.2rem;font-weight:600;color:#10b981;">U</div>
+
+<section class="what-is-section">
+    <h2 class="section-header" style="text-align: left;">What Is?</h2>
+    <div class="what-grid">
+        <div class="small-box">
+            <video autoplay muted loop playsinline preload="auto">
+                <source src="vestthink.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <h3>What is a Vest?</h3>
+            <p>A Vest is a visual representative of the founders and their startup logic, bundling audited bank data and code repositories into a decision-ready asset.</p>
+        </div>
+
+        <div class="small-box">
+            <video autoplay muted loop playsinline preload="auto">
+                <source src="applicationthink.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <h3>What is Application?</h3>
+            <p>Funding Applications are a founder's humble request for an investor to view their specific startup Vest and initiate a secure funding handshake.</p>
+        </div>
+    </div>
+</section>
+
+    <section class="steps-section">
+        <h2 class="section-header">Getting Started Steps</h2>
+        
+        <div class="steps-grid">
+            
+            <div class="step-card">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" type="video/mp4">
+                </video>
+                <div class="step-content">
+                    <span class="step-number">Step 1</span>
+                    <p class="step-desc">Create Angel Profile & Thesis.</p>
+                </div>
+               
             </div>
 
-            <div class="profile-dropdown-content" id="profileDropdown">
-                <div class="profile-info">
-                    <div class="profile-username" id="navProfileName">John Doe</div>
-                    <div class="profile-userid" id="navProfileId">USER_12345</div>
+            <div class="step-card">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4" type="video/mp4">
+                </video>
+                <div class="step-content">
+                    <span class="step-number">Step 2</span>
+                    <p class="step-desc">AI Filters Incoming Vests.</p>
+                </div>
+               
+            </div>
+
+            <div class="step-card">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" type="video/mp4">
+                </video>
+                <div class="step-content">
+                    <span class="step-number">Step 3</span>
+                    <p class="step-desc">Receive Application Alerts.</p>
+                </div>
+               
+            </div>
+
+            <div class="step-card">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4" type="video/mp4">
+                </video>
+                <div class="step-content">
+                    <span class="step-number">Step 4</span>
+                    <p class="step-desc">Review Audited Data.</p>
+                </div>
+               
+            </div>
+
+            <div class="step-card">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4" type="video/mp4">
+                </video>
+                <div class="step-content">
+                    <span class="step-number">Step 5</span>
+                    <p class="step-desc">Accept Handshake.</p>
+                </div>
+             
+            </div>
+
+            <div class="step-card">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4" type="video/mp4">
+                </video>
+                <div class="step-content">
+                    <span class="step-number">Step 6</span>
+                    <p class="step-desc">Q&A and Meetings.</p>
+                </div>
+          
+            </div>
+
+            <div class="step-card">
+                <video autoplay muted loop playsinline>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4" type="video/mp4">
+                </video>
+                <div class="step-content">
+                    <span class="step-number">Step 7</span>
+                    <p class="step-desc">Transfer Capital.</p>
+                </div>
                 </div>
 
-                <button class="switch-btn">Switch Account</button>
-
-                <div class="profile-section">
-                    <a href="#profile" class="profile-link">My Profile</a>
-                    <a href="#settings" class="profile-link">Settings</a>
-                    <a href="#logout" class="profile-link">Log Out</a>
-                </div>
-            </div>
         </div>
-    </div>
-</nav>
+    </section>
 
-    <!-- Main Container -->
-    <div class="container">
-       <!-- Left Sidebar -->
-<div class="left-section">
-
-    <div class="card profile-card">
-        <div class="profile-avatar" id="profileAvatar">
-            <span></span> 
-        </div>
-        
-        <div class="card-title" id="profileName">Loading...</div>
-        <div class="user-id-badge" id="profileId">Checking ID...</div>
-
-        <div class="stat-row">
-            <span class="stat-label">Net Worth</span>
-            <span class="stat-val" id="profileNetWorth">...</span>
-        </div>
-        
-       <button class="card-btn" onclick="enterEditMode()">Edit Profile</button>
-    </div>
-
-    <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border: 2px solid #10b981; padding: 20px;">
-        <div style="font-size: 0.8rem; letter-spacing: 2px; color: #a7f3d0; margin-bottom: 20px; font-weight: 700; text-transform: uppercase;">
-            Profile Progress
-        </div>
-
-        <div class="progress-label" style="margin-bottom: 15px; font-weight: 700; color: #10b981;">STATUS: READY</div>
-        
-        <div class="progress-bar" style="width: 80%; height: 12px; margin-bottom: 10px; background: rgba(16, 185, 129, 0.1);">
-            <div class="progress-fill" style="width: 100%; height: 100%; background: #10b981; box-shadow: 0 0 15px #10b981;"></div>
-        </div>
-        
-        <div class="progress-text" style="color: #fff; font-weight: 800; margin-bottom: 25px;">100% COMPLETE</div>
-
-        <div id="launchActionArea" style="width: 100%;">
-            <button class="card-btn" id="launchBtn" onclick="launchAngelProfile()" style="background: #10b981; color: #fff; width: 100%; border: none; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 8px;">
-                LAUNCH ANGEL PROFILE
-            </button>
+  <div class="final-cta-section" onclick="triggerAngelSetup()">
+        <video autoplay muted loop playsinline>
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" type="video/mp4">
+        </video>
+        <div class="video-overlay-text">
+            <h2 style="font-size: 5rem;">ARE YOU AN <br><span class="gradient-text">INVESTOR?</span></h2>
         </div>
     </div>
 
-    <div class="card inbox-card-hover" onclick="window.location.hash='#founder_chatlist'" style="cursor: pointer; position: relative;">
-        <div class="card-title" style="text-align: left; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
-            <span>Latest Message</span>
-            <div id="dashInboxDot" style="width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: none; box-shadow: 0 0 5px #ef4444;"></div>
-        </div>
-
-        <div id="dashInboxContent" style="min-height: 60px; display: flex; flex-direction: column; justify-content: center;">
-            <p style="color: #6ee7b7; font-size: 0.9rem; font-style: italic;">Checking inbox...</p>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-title" style="text-align: left; margin-bottom: 1.5rem;">
-            Quick Links
-        </div>
-        <ul class="quick-links">
-            <li><a href="#dashboard">Dashboard</a></li>
-            <li><a href="#projects">My Projects</a></li>
-            <li><a href="#analytics">Analytics</a></li>
-            <li><a href="#settings">Settings</a></li>
-            <li><a href="#notifications">Notifications</a></li>
-            <li><a href="#help">Help Center</a></li>
-        </ul>
-    </div>
-
-</div>
-
-        <!-- Right Section -->
-        <div class="right-section">
-            <!-- Welcome Section -->
-            <div class="welcome-section">
-               <h1 class="welcome-text" id="welcomeUser">Welcome!</h1>
-                <p class="welcome-subtext">Let's make today productive and achieve your goals</p>
-            </div>
-
-            <!-- Banners -->
-           <div class="banner" onclick="window.location.href='applications-inbox.html'" style="cursor: pointer;">
-    <div class="banner-content">
-        <h3>Applications Inbox</h3>
-        <p>Review and manage incoming funding requests from founders and startups.</p>
-        
-        <div class="latest-badge-bottom">LATEST APPLICATIONS</div>
-    </div>
-    <div class="banner-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-            <polyline points="10 9 9 9 8 9"></polyline>
-        </svg>
-    </div>
-</div>
-
-            <div class="banner">
-                <div class="banner-content">
-                    <h3>Track Your Progress</h3>
-                    <p>Monitor your performance with real-time analytics and detailed insights.</p>
-                </div>
-                <div class="banner-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                        <line x1="12" y1="20" x2="12" y2="10"></line>
-                        <line x1="18" y1="20" x2="18" y2="4"></line>
-                        <line x1="6" y1="20" x2="6" y2="16"></line>
-                    </svg>
-                </div>
-            </div>
-
-            <div class="banner">
-                <div class="banner-content">
-                    <h3>Connect With Team</h3>
-                    <p>Collaborate seamlessly with your team members and stay in sync with updates.</p>
-                </div>
-                <div class="banner-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-logo">
-                <div class="footer-logo-text">ScaleVest</div>
-                <div class="footer-company">UnioraX Private Limited</div>
-            </div>
-            <div class="footer-links">
-                <a href="#about" class="footer-link">About</a>
-                <a href="#contact" class="footer-link">Contact</a>
-                <a href="#privacy" class="footer-link">Privacy</a>
-                <a href="#terms" class="footer-link">Terms</a>
-            </div>
+<footer>
+        <div class="footer-brand">ScaleVest</div>
+        <div class="footer-legal">
+            UNIORAX PRIVATE LIMITED &copy; ALL RIGHTS RESERVED
         </div>
     </footer>
 
-    <script>
-        function toggleDropdown(id) {
-            const dropdown = document.getElementById(id);
-            dropdown.classList.toggle('show');
-        }
-
-        function toggleProfileDropdown() {
-            const dropdown = document.getElementById('profileDropdown');
-            dropdown.classList.toggle('show');
-        }
-
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.dropdown')) {
-                document.querySelectorAll('.dropdown-content').forEach(dd => {
-                    dd.classList.remove('show');
-                });
-            }
-            if (!e.target.closest('.profile-dropdown')) {
-                const dropdown = document.getElementById('profileDropdown');
-                if (dropdown) dropdown.classList.remove('show');
-            }
-        });
-<script>
-
-</script>
-
+    <div id="successOverlay">
+        <h1 style="font-size: 3.5rem; letter-spacing: -4px;">INITIALIZING <span class="gradient-text">Profile</span></h1>
+        <p style="color: var(--text-dim);">Configuring Side....</p>
+        <div class="full-progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+    </div>
+<div id="investorModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:11000; align-items:center; justify-content:center; backdrop-filter: blur(10px);">
+    <div style="background:var(--surface); padding: 3rem; border-radius: 30px; border: 1px solid var(--accent-blue); width: 90%; max-width: 500px; text-align: center;">
+        <h2 style="margin-bottom: 1.5rem; letter-spacing: -2px;">CREATE <span class="gradient-text">ANGEL PROFILE</span></h2>
+        
+        <input type="text" id="invName" placeholder="Full Name" style="width:100%; padding:15px; margin-bottom:15px; border-radius:10px; border:1px solid var(--border); background:#111; color:white;">
+        
+        <input type="number" id="invAge" placeholder="Age" style="width:100%; padding:15px; margin-bottom:15px; border-radius:10px; border:1px solid var(--border); background:#111; color:white;">
+        
+<div class="investor-select-wrapper">
+    <select id="invType">
+        <option value="" disabled selected>Select Investor Type</option>
+        <option value="Individual Investor">Individual Investor (Personal Funds)</option>
+        <option value="Angel Investor">Angel Investor (Early Stage Startups)</option>
+        <option value="Venture Capital">Venture Capital (High Growth Focus & Funds)</option>
+        <option value="Peer-to-Peer Investor">Peer-to-Peer Investor (Direct Lending)</option>
+        <option value="Private Equity">Private Equity (Strategic Guidance)</option>
+        <option value="Institutional Investor">Institutional Investor (Large Scale Fund)</option>
+        <option value="Activist Investor">Activist Investor (Strategic Board Influence)</option>
+    </select>
+</div>
+        <button class="btn-hero-start" style="width:100%; margin-top:0;" onclick="saveInvestorProfile()">CREATE PROFILE</button>
+        <p onclick="document.getElementById('investorModal').style.display='none'" style="margin-top:20px; color:var(--text-dim); cursor:pointer; font-size:0.8rem;">CANCEL</p>
+    </div>
+</div>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, get, update, onValue, remove, set, onDisconnect,runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-
-/* 🔐 Firebase config */
-const firebaseConfig = {
-    apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-    authDomain: "scalevest-163a0.firebaseapp.com",
-    databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-    projectId: "scalevest-163a0",
-    storageBucket: "scalevest-163a0.firebasestorage.app",
-    messagingSenderId: "938358950124",
-    appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const auth = getAuth(app);
-const storage = getStorage(app);
-
-let currentUser = null;
-let currentUserUID = null;
-let globalUnreadCount = 0;
-let presenceListeners = [];
-
-// =========================================================
-// 1. NOTIFICATION & BELL LOGIC
-// =========================================================
-
-// Handle clicking the Bell Icon
-window.handleBellClick = async function() {
-    // 1. Instant UI Feedback (Hide badge immediately)
-    const badge = document.getElementById('navBellBadge');
-    if(badge) {
-        badge.style.display = 'none'; // Force hide
-        badge.classList.remove('active');
-    }
-    
-    // 2. Navigate to the chat list
-    window.location.hash = 'founder_chatlist'; 
-};
-
-function startNotificationListener() {
-    const chatsRef = ref(db, 'Chats');
-    
-    onValue(chatsRef, (snapshot) => {
-        if (!snapshot.exists() || !currentUser) {
-            updateNotificationBadge(0);
-            return;
-        }
-
-        const allChats = snapshot.val();
-        let unreadCount = 0;
-
-        Object.keys(allChats).forEach(roomKey => {
-            if (roomKey.includes(currentUser.uid)) {
-                const messages = allChats[roomKey];
-                Object.values(messages).forEach(msg => {
-                    // Check if message is for ME and NOT read
-                    if (msg && msg.recipient === currentUser.uid && msg.read !== true) {
-                        unreadCount++;
-                    }
-                });
-            }
-        });
-
-        globalUnreadCount = unreadCount;
-        updateNotificationBadge(unreadCount);
-    });
-}
-
-function updateNotificationBadge(count) {
-    const badge = document.getElementById('navBellBadge');
-    if (!badge) return;
-
-    // Only show if count > 0 AND we aren't currently viewing the chat list
-    if (count > 0 && window.location.hash !== '#founder_chatlist') {
-        badge.style.display = 'block';
-        badge.classList.add('active');
-    } else {
-        badge.style.display = 'none';
-        badge.classList.remove('active');
-    }
-}
-
-// =========================================================
-// 2. CHAT LIST LOGIC (With Online Count & Mark Read)
-// =========================================================
-
-window.showInvestorChatList = async function () {
-    const container = document.querySelector('.right-section');
-    const leftSection = document.querySelector('.left-section');
-    const footer = document.querySelector('.footer'); // Select Footer
-
-    // 1. HIDE SIDEBAR, FOOTER & EXPAND VIEW
-    if (leftSection) leftSection.style.display = 'none';
-    if (footer) footer.style.display = 'none'; // Hide Footer
-    
-    if (container) {
-        container.style.maxWidth = '1000px'; 
-        container.style.margin = '0 auto';   
-    }
-    
-    // Hide Dashboard Elements
-    document.querySelector('.welcome-section').style.display = 'none';
-    document.querySelectorAll('.banner').forEach(el => el.style.display = 'none');
-    
-    // Cleanup old listeners
-    if (presenceListeners.length > 0) {
-        presenceListeners.forEach(unsub => unsub());
-        presenceListeners = [];
-    }
-
-    container.innerHTML = `
-        <div style="text-align:center; padding: 50px;">
-            <p style="color:#10b981; font-weight:bold;">Loading Conversations...</p>
-        </div>`;
-
-    try {
-        const chatsRef = ref(db, 'Chats');
-        const snapshot = await get(chatsRef);
-        const allChats = snapshot.val() || {};
-        const chatMap = new Map();
-
-        // Process Chats
-        Object.keys(allChats).forEach(roomKey => {
-            if (!roomKey.includes(currentUser.uid)) return;
-
-            const messages = Object.values(allChats[roomKey]).filter(m => m.timestamp);
-            if (!messages.length) return;
-
-            messages.sort((a, b) => a.timestamp - b.timestamp);
-            const lastMsg = messages[messages.length - 1];
-
-            const parts = roomKey.split('_');
-            const otherUid = parts.find(p => p !== 'chat' && p !== currentUser.uid);
-            if (!otherUid) return;
-
-            chatMap.set(otherUid, {
-                roomKey,
-                otherUid,
-                lastMessage: lastMsg.text?.trim() || "Sent an attachment",
-                timestamp: lastMsg.timestamp,
-                isUnread: !lastMsg.readBy || !lastMsg.readBy[currentUser.uid]
-            });
-        });
-
-        const myChats = Array.from(chatMap.values()).sort((a, b) => b.timestamp - a.timestamp);
-
-        // Fetch Profiles
-        const profileMap = {};
-        await Promise.all(
-            myChats.map(async chat => {
-                const uid = chat.otherUid;
-                let snap = await get(ref(db, `founderProfile/${uid}`));
-                if (!snap.exists()) snap = await get(ref(db, `investorProfiles/${uid}`));
-
-                if (snap.exists()) {
-                    const data = snap.val();
-                    profileMap[uid] = {
-                        name: data.founderUsername || data.fullName || "User",
-                        photo: data.photoURL || data.founderImage || null
-                    };
-                } else {
-                    profileMap[uid] = { name: "Unknown User", photo: null };
-                }
-            })
-        );
-
-        // Render List
-        let html = `
-            <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 16px; padding: 2rem; position: relative; margin-top: 20px;">
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <div>
-                        <h2 style="color:#fff; margin:0; font-size:1.8rem;">Investor Inbox</h2>
-                         <p style="color:#a7f3d0; font-size:0.9rem; margin:5px 0 0 0;">Manage your conversations</p>
-                    </div>
-
-                     <button onclick="window.location.hash='dashboard'" 
-                            style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;"
-                            onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'; this.style.borderColor='#ef4444';"
-                            onmouseout="this.style.background='transparent'; this.style.borderColor='rgba(255,255,255,0.2)';">
-                        ✕
-                    </button>
-                </div>
-
-                <div id="liveOnlineCounter" style="background:#064e3b; color:#10b981; padding:8px 16px; border-radius:20px; font-size:0.85rem; font-weight:700; border:1px solid #10b981; width: fit-content; margin-bottom: 20px;">
-                    <span style="color:#10b981;">●</span> 0 Online
-                </div>
-
-                <div style="display:flex; flex-direction:column; gap:10px;">
-        `;
-
-        if (myChats.length === 0) {
-            html += `<p style="text-align:center; color:#6ee7b7; padding:20px;">No messages yet.</p>`;
-        } else {
-            myChats.forEach(chat => {
-                const profile = profileMap[chat.otherUid];
-                const displayName = profile.name;
-                const photoHtml = profile.photo 
-                    ? `<img src="${profile.photo}" style="width:100%; height:100%; object-fit:cover;">` 
-                    : `<div style="display:flex;align-items:center;justify-content:center;background:#10b981;width:100%;height:100%;color:white;font-weight:bold;">${displayName[0]}</div>`;
-                
-                const time = new Date(chat.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                const unreadStyle = chat.isUnread ? 'border-left: 4px solid #ef4444; background: rgba(255,255,255,0.05);' : '';
-                const isOnlineId = `status-dot-${chat.otherUid}`;
-
-                html += `
-                    <div class="chat-item-row"
-                         onclick="window.openChatAndMarkRead('${chat.otherUid}', '${chat.roomKey}')" 
-                         style="display:flex; align-items:center; gap:15px; padding:15px; border-radius:8px; cursor:pointer; transition:0.2s; position: relative; ${unreadStyle}"
-                         onmouseover="this.style.backgroundColor='rgba(16, 185, 129, 0.1)'"
-                         onmouseout="this.style.backgroundColor='transparent'">
-                        
-                        <div style="position: relative; width:50px; height:50px;">
-                            <div style="width:100%; height:100%; border-radius:50%; overflow:hidden; border:1px solid #333;">
-                                ${photoHtml}
-                            </div>
-                            <div id="${isOnlineId}" class="status-indicator" style="
-                                position: absolute; bottom: 0; right: 0; 
-                                width: 12px; height: 12px; background: #666; 
-                                border: 2px solid #000; border-radius: 50%;
-                            "></div>
-                        </div>
-
-                        <div style="flex:1;">
-                            <div style="display:flex; justify-content:space-between;">
-                                <strong style="color:#fff; font-size:1rem;">${displayName}</strong>
-                                <span style="color:#666; font-size:0.8rem;">${time}</span>
-                            </div>
-                            <div style="color:#aaa; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">
-                                ${chat.isUnread ? '<span style="color:#ef4444;font-weight:bold;">New: </span>' : ''}
-                                ${chat.lastMessage}
-                            </div>
-                        </div>
-
-                        <button onclick="deleteConversation('${chat.roomKey}', event)" 
-                                style="background: transparent; border: none; padding: 5px; cursor: pointer; opacity: 0.6; transition: 0.2s;"
-                                onmouseover="this.style.opacity='1'; this.style.color='#ef4444';"
-                                onmouseout="this.style.opacity='0.6'; this.style.color='inherit';">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                        </button>
-                    </div>
-                `;
-            });
-        }
-        
-        html += `</div></div>`;
-        container.innerHTML = html;
-
-        // Setup Presence Listeners
-        const updateOnlineCounter = () => {
-            const onlineCount = document.querySelectorAll('.status-indicator[data-online="true"]').length;
-            const counterEl = document.getElementById('liveOnlineCounter');
-            if(counterEl) {
-                counterEl.innerHTML = `<span style="color:${onlineCount > 0 ? '#10b981' : '#6b7280'};">●</span> ${onlineCount} Online`;
-            }
-        };
-
-        myChats.forEach(chat => {
-            const uid = chat.otherUid;
-            const refPres = ref(db, `presence/${uid}`);
-            const unsub = onValue(refPres, (snap) => {
-                const isOnline = snap.exists() && snap.val().online;
-                const dot = document.getElementById(`status-dot-${uid}`);
-                if (dot) {
-                    dot.style.background = isOnline ? '#10b981' : '#666';
-                    dot.style.boxShadow = isOnline ? '0 0 5px #10b981' : 'none';
-                    dot.setAttribute('data-online', isOnline ? 'true' : 'false');
-                    updateOnlineCounter();
-                }
-            });
-            presenceListeners.push(unsub);
-        });
-
-    } catch (err) {
-        console.error("Chat list error:", err);
-        container.innerHTML = `<p style="color:red">Failed to load chats.</p>`;
-    }
-};
-// =========================================================
-// 3. MARK READ & OPEN CHAT
-// =========================================================
-
-window.openChatAndMarkRead = async function(uid, roomKey) {
-    if (!currentUser) return;
-
-    try {
-        const roomRef = ref(db, `Chats/${roomKey}`);
-        const snapshot = await get(roomRef);
-        
-        if (snapshot.exists()) {
-            const updates = {};
-            const messages = snapshot.val();
-            
-            // Find all unread messages for ME and set read: true
-            Object.keys(messages).forEach(msgId => {
-                const msg = messages[msgId];
-                if (msg.recipient === currentUser.uid && msg.read !== true) {
-                    updates[`${msgId}/read`] = true;
-                }
-            });
-
-            // If there are updates, send to Firebase
-            if (Object.keys(updates).length > 0) {
-                await update(roomRef, updates);
-            }
-        }
-    } catch (e) {
-        console.error("Error marking read:", e);
-    }
-
-    // Redirect to chat page
-    window.location.href = `chat.html?recipient=${uid}&room=${roomKey}`;
-};
-
-// Helper for delete
-window.deleteConversation = async function(roomKey, event) {
-    event.stopPropagation(); 
-    if(!confirm("Delete this conversation?")) return;
-    try {
-        await remove(ref(db, `Chats/${roomKey}`));
-        window.showInvestorChatList(); 
-    } catch(e) {
-        console.error(e);
-        alert("Error deleting chat");
-    }
-};
-
-// =========================================================
-// 4. CORE AUTH & ROUTING
-// =========================================================
-
-async function setUserPresence(user) {
-    // 1. Manage Real-time Presence
-    const presenceRef = ref(db, `presence/${user.uid}`);
-    set(presenceRef, { 
-        online: true, 
-        lastSeen: serverTimestamp() 
-    });
-    
-    // Ensure they show as offline when they disconnect
-    onDisconnect(presenceRef).set({ 
-        online: false, 
-        lastSeen: serverTimestamp() 
-    });
-
-    // 2. Update Login Stats (Streak & Today's Status)
-    const statsRef = ref(db, `users/${user.uid}/stats`);
-    
-    try {
-        await runTransaction(statsRef, (currentData) => {
-            const now = new Date();
-            const todayStr = now.toISOString().split('T')[0]; // e.g., "2026-01-16"
-            
-            if (!currentData) {
-                return { todayLogin: true, loginStreak: 1, lastLoginDate: todayStr };
-            }
-
-            // If they already logged in today, don't change the streak
-            if (currentData.lastLoginDate === todayStr) {
-                return { ...currentData, todayLogin: true };
-            }
-
-            // Check if they logged in yesterday to continue the streak
-            const yesterday = new Date();
-            yesterday.setDate(now.getDate() - 1);
-            const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-            let newStreak = currentData.loginStreak || 0;
-            if (currentData.lastLoginDate === yesterdayStr) {
-                newStreak += 1;
-            } else {
-                newStreak = 1; // Streak broken, reset to 1
-            }
-
-            return {
-                todayLogin: true,
-                loginStreak: newStreak,
-                lastLoginDate: todayStr
-            };
-        });
-    } catch (error) {
-        console.error("Streak update failed:", error);
-    }
-}
-
-function updateProgress(percent, status) {
-    const bar = document.getElementById("loadingProgress");
-    const text = document.getElementById("loadingStatus");
-    if (bar) bar.style.width = percent + "%";
-    if (text) text.innerText = status;
-}
-// =========================================================
-// VERIFICATION BANNER SYSTEM
-// =========================================================
-
-function showVerificationBanner() {
-    // Remove existing banner if any
-    const existingBanner = document.getElementById('verificationBanner');
-    if (existingBanner) existingBanner.remove();
-
-    const banner = document.createElement('div');
-    banner.id = 'verificationBanner';
-    banner.innerHTML = `
-        <style>
-            .verification-banner {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                background: linear-gradient(135deg, #ef4444, #dc2626);
-                color: #fff;
-                padding: 15px 20px;
-                z-index: 10001;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 20px;
-                box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
-                animation: bannerSlideDown 0.5s ease;
-            }
-            
-            @keyframes bannerSlideDown {
-                from { transform: translateY(-100%); }
-                to { transform: translateY(0); }
-            }
-            
-            .banner-icon-box {
-                width: 40px;
-                height: 40px;
-                background: rgba(255, 255, 255, 0.2);
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                animation: iconPulse 2s infinite;
-            }
-            
-            @keyframes iconPulse {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.1); }
-            }
-            
-            .banner-text {
-                font-weight: 700;
-                font-size: 1rem;
-                letter-spacing: 0.5px;
-            }
-            
-            .banner-verify-btn {
-                background: #fff;
-                color: #ef4444;
-                border: none;
-                padding: 10px 25px;
-                border-radius: 8px;
-                font-weight: 800;
-                cursor: pointer;
-                transition: all 0.3s;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                font-size: 0.85rem;
-            }
-            
-            .banner-verify-btn:hover {
-                transform: scale(1.05);
-                box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
-            }
-        </style>
-        
-        <div class="verification-banner">
-            <div class="banner-icon-box">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                    <line x1="12" y1="9" x2="12" y2="13"></line>
-                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-            </div>
-            
-            <span class="banner-text">⚠️ Account Unverified - Limited Access</span>
-            
-            <button class="banner-verify-btn" onclick="startVerification()">
-                Verify Now
-            </button>
-        </div>
-    `;
-    
-    document.body.insertBefore(banner, document.body.firstChild);
-    document.body.style.paddingTop = '70px'; // Push content down
-}
-
-
-
-// =========================================================
-// BLOCKING POPUP FOR UNVERIFIED USERS
-// =========================================================
-
-async function checkAndBlockUnverifiedUser(uid) {
-    const investorRef = ref(db, `investorProfiles/${uid}`);
-    const snapshot = await get(investorRef);
-    
-    if (!snapshot.exists()) return;
-    
-    const data = snapshot.val();
-    
-    // Only block if still unverified
-    if (data.isVerified === false) {
-        showVerificationBlockPopup('access full features');
-    }
-}
-
-function showVerificationBlockPopup(feature) {
-    // Prevent duplicate popups
-    if (document.getElementById('verificationBlockPopup')) return;
-    
-    const popup = document.createElement('div');
-    popup.id = 'verificationBlockPopup';
-    popup.innerHTML = `
-        <style>
-            .block-popup-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100vw;
-                height: 100vh;
-                background: rgba(0, 0, 0, 0.95);
-                backdrop-filter: blur(15px);
-                z-index: 999999;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                animation: fadeIn 0.4s ease;
-            }
-            
-            .block-popup-box {
-                background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
-                border: 2px solid #ef4444;
-                border-radius: 24px;
-                padding: 3rem;
-                max-width: 500px;
-                width: 90%;
-                text-align: center;
-                box-shadow: 0 30px 60px rgba(239, 68, 68, 0.4);
-                animation: popupScale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            }
-            
-            @keyframes popupScale {
-                from { transform: scale(0.8); opacity: 0; }
-                to { transform: scale(1); opacity: 1; }
-            }
-            
-            .block-icon {
-                width: 100px;
-                height: 100px;
-                margin: 0 auto 2rem;
-                background: rgba(239, 68, 68, 0.15);
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                animation: iconBounce 1s infinite;
-            }
-            
-            @keyframes iconBounce {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-10px); }
-            }
-            
-            .block-title {
-                font-size: 2rem;
-                font-weight: 800;
-                color: #ef4444;
-                margin-bottom: 1rem;
-                text-transform: uppercase;
-                letter-spacing: 2px;
-            }
-            
-            .block-message {
-                color: #aaa;
-                font-size: 1.1rem;
-                line-height: 1.8;
-                margin-bottom: 2.5rem;
-            }
-            
-            .block-feature-highlight {
-                color: #10b981;
-                font-weight: 700;
-            }
-            
-            .block-verify-btn {
-                background: linear-gradient(135deg, #ef4444, #dc2626);
-                color: #fff;
-                border: none;
-                padding: 18px 40px;
-                border-radius: 12px;
-                font-weight: 800;
-                font-size: 1rem;
-                cursor: pointer;
-                transition: all 0.3s;
-                width: 100%;
-                text-transform: uppercase;
-                letter-spacing: 1.5px;
-                margin-bottom: 1rem;
-            }
-            
-            .block-verify-btn:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
-            }
-            
-            .block-cancel-btn {
-                background: transparent;
-                color: #666;
-                border: 1px solid #333;
-                padding: 12px 30px;
-                border-radius: 10px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-            
-            .block-cancel-btn:hover {
-                border-color: #666;
-                color: #aaa;
-            }
-        </style>
-        
-        <div class="block-popup-overlay">
-            <div class="block-popup-box">
-                <div class="block-icon">
-                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
-                    </svg>
-                </div>
-                
-                <h2 class="block-title">Access Restricted</h2>
-                
-                <p class="block-message">
-                    You need to <strong class="block-feature-highlight">verify your account</strong> 
-                    to ${feature}. 
-                    <br><br>
-                    Verification helps us maintain a trusted community of investors.
-                </p>
-                
-                <button class="block-verify-btn" onclick="redirectToVerification()">
-                    Start Verification
-                </button>
-                
-                <button class="block-cancel-btn" onclick="closeBlockPopup()">
-                    Maybe Later
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(popup);
-}
-
-window.redirectToVerification = function() {
-    closeBlockPopup();
-    window.location.hash = 'scalevest_verify';
-};
-
-window.closeBlockPopup = function() {
-    const popup = document.getElementById('verificationBlockPopup');
-    if (popup) {
-        popup.style.animation = 'fadeIn 0.3s ease reverse';
-        setTimeout(() => popup.remove(), 300);
-    }
-};
-// ⭐ UPDATED: Block unverified users from browsing vests
-window.handleBrowseVests = async function() {
-    if (!currentUser) {
-        window.location.href = 'login2.html';
-        return;
-    }
-    
-    // Check verification status
-    const investorRef = ref(db, `investorProfiles/${currentUser.uid}`);
-    const snapshot = await get(investorRef);
-    
-    if (snapshot.exists()) {
-        const data = snapshot.val();
-        
-        if (data.isVerified === false) {
-            showVerificationBlockPopup('browse startup vests');
-            return;
-        }
-    }
-    
-    // If verified, allow access
-    window.location.href = 'vestbrowse.html';
-};
-async function showVerificationPage() {
-    const container = document.querySelector('.right-section');
-    const leftSection = document.querySelector('.left-section');
-    const footer = document.querySelector('.footer');
-
-    if (leftSection) leftSection.style.display = 'none';
-    if (footer) footer.style.display = 'none';
-    
-    if (container) {
-        container.style.maxWidth = '1000px'; 
-        container.style.margin = '0 auto';   
-    }
-    
-    document.querySelector('.welcome-section').style.display = 'none';
-    document.querySelectorAll('.banner').forEach(el => el.style.display = 'none');
-    
-    document.title = "Verify Your Account | ScaleVest";
-    
-    // ⭐ CHECK if verification line already exists
-    const investorRef = ref(db, `investorProfiles/${currentUser.uid}`);
-    const snapshot = await get(investorRef);
-    const existingLine = snapshot.exists() ? snapshot.val().verificationLine : null;
-    
-    container.innerHTML = `
-        <style>
-            .verify-page {
-                max-width: 800px;
-                margin: 0 auto;
-                padding: 3rem;
-                min-height: 100vh;
-            }
-            
-            .back-to-dash {
-                display: inline-flex;
-                align-items: center;
-                gap: 10px;
-                color: #10b981;
-                text-decoration: none;
-                font-weight: 600;
-                margin-bottom: 2rem;
-                transition: all 0.3s;
-            }
-            
-            .back-to-dash:hover {
-                color: #34d399;
-                transform: translateX(-5px);
-            }
-            
-            .verify-header {
-                text-align: center;
-                margin-bottom: 3rem;
-            }
-            
-            .verify-title {
-                font-size: 2.5rem;
-                font-weight: 800;
-                color: #fff;
-                margin-bottom: 1rem;
-            }
-            
-            .verify-subtitle {
-                color: #888;
-                font-size: 1.1rem;
-                line-height: 1.6;
-            }
-            
-            .verify-card {
-                background: #0a0a0a;
-                border: 1px solid #222;
-                border-radius: 16px;
-                padding: 3rem;
-                margin-bottom: 2rem;
-            }
-            
-            .verify-option-btn {
-                background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-                border: 2px solid #333;
-                color: #fff;
-                padding: 2rem;
-                border-radius: 12px;
-                cursor: pointer;
-                transition: all 0.3s;
-                width: 100%;
-                text-align: left;
-                margin-bottom: 1.5rem;
-                display: flex;
-                align-items: center;
-                gap: 1.5rem;
-            }
-            
-            .verify-option-btn:hover {
-                border-color: #10b981;
-                transform: translateX(10px);
-                box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
-            }
-            
-            .verify-icon {
-                width: 60px;
-                height: 60px;
-                background: rgba(16, 185, 129, 0.1);
-                border-radius: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                flex-shrink: 0;
-            }
-            
-            .verify-option-content h3 {
-                font-size: 1.3rem;
-                margin-bottom: 0.5rem;
-            }
-            
-            .verify-option-content p {
-                color: #888;
-                font-size: 0.95rem;
-                line-height: 1.5;
-            }
-            
-            .verify-step-content {
-                display: block !important;
-                color: #fff;
-                flex: 1;
-            }
-
-            .verification-steps {
-                margin-top: 30px;
-                background: #0f0f0f;
-                border: 1px solid #333;
-                border-radius: 12px;
-                padding: 30px;
-                opacity: 0;
-                transform: translateY(20px);
-                transition: all 0.4s ease;
-            }
-
-            .verification-steps.active {
-                opacity: 1;
-                transform: translateY(0);
-            }
-
-            .step-item {
-                display: flex;
-                gap: 20px;
-                margin-bottom: 30px;
-                border-bottom: 1px solid #222;
-                padding-bottom: 30px;
-            }
-
-            .step-item:last-child {
-                border-bottom: none;
-                margin-bottom: 0;
-            }
-
-            .step-number {
-                width: 35px;
-                height: 35px;
-                background: #10b981;
-                color: #fff;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-                flex-shrink: 0;
-            }
-
-            .verify-btn {
-                background: linear-gradient(135deg, #10b981, #059669);
-                color: #fff;
-                border: none;
-                padding: 12px 25px;
-                border-radius: 8px;
-                font-weight: 600;
-                cursor: pointer;
-                margin-top: 15px;
-                transition: all 0.3s;
-            }
-
-            .verify-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
-            }
-
-            .verify-btn:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
-
-            .verification-line-box, .upload-section {
-                display: none;
-                margin-top: 20px;
-            }
-
-            .verification-line-box.active, .upload-section.active {
-                display: block;
-                animation: fadeIn 0.5s ease;
-            }
-
-            .verification-line-text {
-                font-family: monospace;
-                font-size: 1.4rem;
-                font-weight: bold;
-                color: #fff;
-                background: #1a1a1a;
-                padding: 15px;
-                border-radius: 8px;
-                border: 1px dashed #555;
-                margin: 10px 0;
-            }
-
-            .upload-box {
-                border: 2px dashed #444;
-                border-radius: 10px;
-                padding: 40px;
-                text-align: center;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                background: #0a0a0a;
-                margin-bottom: 20px;
-            }
-
-            .upload-box:hover {
-                border-color: #10b981;
-                background: #111;
-            }
-
-            .upload-box.has-file {
-                border-style: solid;
-                border-color: #10b981;
-            }
-
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-        </style>
-        
-        <div class="verify-page">
-            <a href="#dashboard" class="back-to-dash">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-                Back to Dashboard
-            </a>
-            
-            <div class="verify-header">
-                <h1 class="verify-title">Investor Verification</h1>
-                <p class="verify-subtitle">
-                    Complete verification to unlock full access to ScaleVest features
-                </p>
-            </div>
-            
-            ${existingLine ? `
-                <div class="verification-steps active" style="display: block;">
-                    <div class="step-item">
-                        <div class="step-number">1</div>
-                        <div class="verify-step-content">
-                            <h4>Your Verification Line</h4>
-                            <p>Speak this exact line in your video:</p>
-                            <div class="verification-line-box active">
-                                <div class="verification-line-text">${existingLine}</div>
-                            </div>
-                            <div class="upload-section active">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            ` : `
-                <div class="verify-card">
-                    <button class="verify-option-btn" onclick="startVideoVerification()">
-                        <div class="verify-icon">
-                            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
-                                <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                            </svg>
-                        </div>
-                        <div class="verify-option-content">
-                            <h3>ScaleVest Video Script Verification</h3>
-                            <p>Click to start the verification process</p>
-                        </div>
-                    </button>
-                </div>
-            `}
-        
-            <div class="verification-steps" id="verificationSteps" style="display: none;">
-                <div class="step-item">
-                    <div class="step-number">1</div>
-                    
-                    <div class="verify-step-content">
-                        <h4>Generate Your Verification Line</h4>
-                        <p>Click the button below to get your unique verification phrase. This is a one-time generated line that you'll need to speak in your video.</p>
-                        
-                        <button class="verify-btn" onclick="generateVerificationLine()" id="generateLineBtn">
-                            Generate Verification Line
-                        </button>
-                        
-                        <div class="verification-line-box" id="verificationLineBox">
-                            <p style="color: #888; margin-bottom: 1rem;">Your Verification Line:</p>
-                            <div class="verification-line-text" id="verificationLineText"></div>
-                            <p style="color: #666; font-size: 0.85rem; margin-top: 1rem;">
-                                ⚠️ You must speak this exact line in your video
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="step-item">
-                    <div class="step-number">2</div>
-                    
-                    <div class="verify-step-content">
-                        <h4>Create Your Verification Video</h4>
-                        <p>Record a 30-second video introducing yourself as an investor. <strong>Remember to speak the verification line shown above in your video.</strong></p>
-                        
-                        <div class="upload-section" id="uploadSection">
-                            <div class="upload-box" id="uploadBox" onclick="document.getElementById('videoUpload').click()">
-                                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-bottom: 1rem;">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="17 8 12 3 7 8"></polyline>
-                                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                                </svg>
-                                <p style="color: #888; font-size: 1.1rem; margin-bottom: 0.5rem;" id="uploadText">Click to Upload Video</p>
-                                <small style="color: #555;">Max 100MB • MP4, MOV, AVI</small>
-                                <input type="file" id="videoUpload" accept="video/*" style="display: none;" onchange="handleVideoUpload(event)">
-                            </div>
-                            
-                            <button class="verify-btn" id="submitVerifyBtn" onclick="submitVideoVerification()" disabled>
-                                Submit for Verification
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-window.generateVerificationLine = async function() {
-    const btn = document.getElementById('generateLineBtn');
-    if (!btn) return;
-    
-    btn.innerHTML = 'Generating...';
-    btn.disabled = true;
-    
-    try {
-        const response = await fetch('https://gemini-sigma-plum.vercel.app/api/videogemini', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'generateLine' })
-        });
-        
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.error || 'Failed to generate line');
-        }
-        
-        const verificationLine = result.verificationLine;
-        
-        // ⭐ SAVE TO INVESTOR PROFILE
-        if (currentUser) {
-            await update(ref(db, `investorProfiles/${currentUser.uid}`), {
-                verificationLine: verificationLine,
-                verificationLineCreatedAt: Date.now()
-            });
-        }
-        
-        document.getElementById('verificationLineText').textContent = verificationLine;
-        document.getElementById('verificationLineBox').classList.add('active');
-        document.getElementById('uploadSection').classList.add('active');
-        btn.style.display = 'none';
-        
-        alert('✅ Verification line generated! Please speak this line in your video.');
-        
-    } catch (error) {
-        console.error('Error generating line:', error);
-        alert(`Failed: ${error.message}`); 
-        btn.innerHTML = 'Generate Verification Line';
-        btn.disabled = false;
-    }
-};
-window.submitVideoVerification = async function() {
-    if (!uploadedVideoFile) {
-        alert('❌ Please upload a video first');
-        return;
-    }
-    
-    const btn = document.getElementById('submitVerifyBtn');
-    btn.innerHTML = 'Processing...';
-    btn.disabled = true;
-    
-    showVerificationLoader();
-    
-    try {
-        // Upload to Storage
-        updateVerificationLoader('Uploading to secure storage...', 30);
-        const videoUrl = await uploadFileToStorage(uploadedVideoFile, 'investor-verification-videos');
-        
-        // Get verification line
-        const investorRef = ref(db, `investorProfiles/${currentUser.uid}`);
-        const snapshot = await get(investorRef);
-        const verificationLine = snapshot.val().verificationLine;
-        
-        // Call Vercel API
-        updateVerificationLoader('AI is analyzing your video...', 60);
-        
-        const response = await fetch('https://gemini-sigma-plum.vercel.app/api/videogemini', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                action: 'verifyVideo',
-                data: {
-                    videoUrl: videoUrl,
-                    expectedLine: verificationLine
-                }
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (!result.success) throw new Error(result.error || 'Verification failed');
-        
-        // Handle Result
-        if (result.containsVerificationLine && result.matchPercentage >= 80) {
-            await update(ref(db, `investorProfiles/${currentUser.uid}`), {
-                isVerified: true,
-                verifiedAt: Date.now(),
-                verificationVideoUrl: videoUrl,
-                verificationTranscript: result.transcript
-            });
-            hideVerificationLoader();
-            showVerificationSuccess();
-        } else {
-            hideVerificationLoader();
-            showVerificationFailed(verificationLine, result.transcript, result.matchPercentage);
-        }
-        
-    } catch (error) {
-        console.error('Verification error:', error);
-        hideVerificationLoader();
-        alert('❌ Error: ' + error.message);
-        btn.innerHTML = 'Submit for Verification';
-        btn.disabled = false;
-    }
-};
-// Helper function to upload file to Firebase Storage
-async function uploadFileToStorage(file, folder) {
-    try {
-        const filename = `${currentUser.uid}_${Date.now()}.${file.name.split('.').pop()}`;
-        const storageReference = sRef(storage, `${folder}/${filename}`);
-        
-        await uploadBytes(storageReference, file);
-        const downloadURL = await getDownloadURL(storageReference);
-        
-        return downloadURL;
-    } catch (error) {
-        throw new Error('Upload failed: ' + error.message);
-    }
-}
-window.closeSuccessAndRedirect = async function() {  
-    const success = document.getElementById('verificationSuccess');
-    if (success) success.remove();
-    
-    // Remove verification banner
-    const banner = document.getElementById('verificationBanner');
-    if (banner) {
-        banner.remove();
-        document.body.style.paddingTop = '0';
-    }
-    
-    window.location.hash = 'dashboard';
-    window.location.reload();
-};
-window.startVideoVerification = function() {
-const stepsSection = document.getElementById('verificationSteps');
-    if (stepsSection) {
-        // 1. Show the section
-        stepsSection.style.display = 'block';
-        
-        // 2. Add active class for animation (optional CSS)
-        // Small timeout ensures the browser registers display:block before adding opacity
-        setTimeout(() => {
-            stepsSection.classList.add('active');
-        }, 10);
-
-        // 3. Scroll to it smoothly
-        stepsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-        console.error("Error: verificationSteps element not found!");
-    }
-};
-
-onAuthStateChanged(auth, async (user) => {
-    updateProgress(20, "Authenticating...");
-    
-    if (user) {
-        currentUser = user;
-        currentUserUID = user.uid;
-        setUserPresence(user);
-        checkAngelStatus();
-        startNotificationListener(); 
-        startDashboardInboxListener();
-        startApplicationInboxListener();
-
-        // ⭐ CHECK INVESTOR PROFILE & VERIFICATION STATUS
-        const investorRef = ref(db, `investorProfiles/${user.uid}`);
-        const investorSnapshot = await get(investorRef);
-
-        if (!investorSnapshot.exists()) {
-            // New user - create profile with isVerified: false
-            await update(investorRef, {
-                isVerified: false,
-                createdAt: Date.now(),
-                fullName: user.displayName || "Investor",
-                email: user.email
-            });
-            
-            // Show banner and load dashboard
-            showVerificationBanner();
-            document.getElementById('loadingScreen').classList.add('hidden');
-            
-            // Check for userID setup
-            showUserIdSetupModal();
-            
-            // Block after 10 seconds
-            setTimeout(() => {
-                checkAndBlockUnverifiedUser(user.uid);
-            }, 10000);
-            
-            return;
-        } else {
-            const investorData = investorSnapshot.val();
-            
-            // ⭐ AUTO-CREATE isVerified IF MISSING
-            if (investorData.isVerified === undefined) {
-                await update(investorRef, { isVerified: false });
-                investorData.isVerified = false;
-            }
-            
-            // ⭐ VERIFICATION LOGIC
-            if (investorData.isVerified === false) {
-                showVerificationBanner();
-                console.log("⚠️ Unverified: Blocking popup will trigger in 10 seconds.");
-                setTimeout(() => {
-                    checkAndBlockUnverifiedUser(user.uid);
-                }, 10000); 
-            } else {
-                // Remove banner if verified
-                const banner = document.getElementById('verificationBanner');
-                if (banner) {
-                    banner.remove();
-                    document.body.style.paddingTop = '0';
-                }
-            }
-        }
-
-        // Handle hash routing
-        window.addEventListener('hashchange', () => {
-            if (window.location.hash === '#founder_chatlist') {
-                window.showInvestorChatList();
-            } else if (window.location.hash === '#scalevest_verify') {
-                document.body.style.background = "#000";
-                showVerificationPage();
-            } else if (window.location.hash === '#dashboard' || window.location.hash === '') {
-                location.reload(); 
-            }
-        });
-
-        const hash = window.location.hash;
-        
-        if (hash === '#founder_chatlist') {
-            window.showInvestorChatList();
-            document.getElementById("loadingScreen").style.display = 'none';
-        } else if (hash === '#scalevest_verify') {
-            document.body.style.background = "#000";
-            showVerificationPage();
-        } else {
-            try {
-                updateProgress(50, "Fetching Profile...");
-                await loadUserProfile(user.uid);
-                updateProgress(100, "Ready");
-                setTimeout(() => {
-                    const loader = document.getElementById("loadingScreen");
-                    if(loader) {
-                        loader.style.opacity = "0";
-                        setTimeout(() => loader.style.display = "none", 800);
-                    }
-                }, 500);
-            } catch (e) {
-                console.error(e);
-            }
-        }
-    } else {
-        window.location.href = "login3.html";
-    }
-});
-window.toggleDropdown = (id) => document.getElementById(id)?.classList.toggle('show');
-window.toggleProfileDropdown = () => document.getElementById('profileDropdown')?.classList.toggle('show');
-window.openEditIdentity = () => document.getElementById('editIdentityModal').style.display = 'flex';
-window.openEditInvestment = () => document.getElementById('editInvestmentModal').style.display = 'flex';
-window.closeModal = (id) => document.getElementById(id).style.display = 'none';
-
-async function loadUserProfile(uid) {
-    const avatarDiv = document.getElementById("profileAvatar");
-    try {
-        const snapshot = await get(ref(db, "investorProfiles/" + uid));
-        if (snapshot.exists()) {
-            const data = snapshot.val();
-            const fullName = data.fullName || "Investor";
-            const initials = fullName.charAt(0).toUpperCase();
-
-            document.getElementById("profileName").innerText = fullName;
-            document.getElementById("profileNetWorth").innerText = data.netWorth ? `$${data.netWorth}` : "$0.00";
-            document.getElementById("profileId").innerText = data.userID || "ID Pending";
-            document.getElementById("navProfileName").innerText = fullName;
-            document.getElementById("navProfileId").innerText = data.userID || "ID Pending";
-            document.getElementById("welcomeUser").innerText = `Welcome, ${fullName.split(' ')[0]}!`;
-
-            if (data.photoURL) {
-                avatarDiv.innerHTML = `<img src="${data.photoURL}" style="width:100%; height:100%; object-fit:cover;">`;
-                document.querySelector(".profile-dropdown .icon-btn").innerHTML = `<img src="${data.photoURL}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-            } else {
-                avatarDiv.innerHTML = `<span>${initials}</span>`;
-            }
-            if (!data.userID) document.getElementById("userIdModal").style.display = "flex";
-        }
-    } catch (err) { console.error("Load Error:", err); }
-}
-
-window.enterEditMode = async () => {
-    updateProgress(50, "Opening Edit Terminal...");
-    const rightSection = document.querySelector('.right-section');
-    const snapshot = await get(ref(db, `investorProfiles/${currentUserUID}`));
-    const data = snapshot.exists() ? snapshot.val() : {};
-
-    document.querySelector('.welcome-section').style.display = 'none';
-    document.querySelectorAll('.banner').forEach(b => b.style.display = 'none');
-
-    rightSection.innerHTML = `
-        <h1 class="welcome-text">Profile Terminal</h1>
-        <div class="edit-profile-grid">
-            <div class="card">
-                <div class="card-title" style="display:flex; justify-content:space-between;">
-                    Identity Setup
-                    <svg class="edit-pencil" onclick="openEditIdentity()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                </div>
-                <div class="stat-row"><span class="stat-label">Name</span><span class="stat-val">${data.fullName || '---'}</span></div>
-                <div class="stat-row"><span class="stat-label">UserId</span><span class="stat-val">${data.userID || '---'}</span></div>
-            </div>
-            <div class="card">
-                <div class="card-title" style="display:flex; justify-content:space-between;">
-                    Financial Profile
-                    <svg class="edit-pencil" onclick="openEditInvestment()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                </div>
-                <div class="stat-row"><span class="stat-label">Net Worth</span><span class="stat-val">$${data.netWorth || '0'}</span></div>
-                <div class="stat-row"><span class="stat-label">Sector</span><span class="stat-val">${data.preferredCategories || 'None'}</span></div>
-            </div>
-            <div class="card" style="border: 1px solid #38bdf8; text-align:center;">
-                <button class="card-btn" onclick="location.reload()">EXIT TERMINAL</button>
-            </div>
-        </div>
-    `;
-
-    document.getElementById('editFullName').value = data.fullName || "";
-    document.getElementById('editNetWorth').value = data.netWorth || "";
-    document.getElementById('editMinInv').value = data.minInvestment || "";
-    document.getElementById('editMaxInv').value = data.maxInvestment || "";
-    document.getElementById('editPreferred').value = data.preferredCategories || "";
-};
-
-document.getElementById('photoUploadInput').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const status = document.getElementById('uploadStatus');
-    status.innerText = "⏳ Uploading...";
-    try {
-        const storageRef = sRef(storage, `investor-Photos/${currentUserUID}`);
-        await uploadBytes(storageRef, file);
-        uploadedPhotoURL = await getDownloadURL(storageRef);
-        status.innerText = "✅ Upload Successful! Click Update to Confirm.";
-        status.style.color = "#10b981";
-    } catch (err) {
-        console.error(err);
-        status.innerText = "❌ Upload Failed";
-    }
-});
-function startDashboardInboxListener() {
-    const inboxDiv = document.getElementById('dashInboxContent');
-    const dot = document.getElementById('dashInboxDot');
-    
-    // Listen to all chats to find the latest one
-    onValue(ref(db, 'Chats'), async (snapshot) => {
-        if (!snapshot.exists()) {
-            inboxDiv.innerHTML = `<p style="color:#666; font-size:0.9rem;">No messages yet.</p>`;
-            return;
-        }
-
-        const allChats = snapshot.val();
-        let latestMsg = null;
-        let latestTimestamp = 0;
-
-        // 1. Find the newest message across ALL rooms
-        Object.keys(allChats).forEach(roomKey => {
-            if (roomKey.includes(currentUser.uid)) {
-                const messages = Object.values(allChats[roomKey]);
-                messages.forEach(msg => {
-                    if (msg.timestamp > latestTimestamp) {
-                        latestTimestamp = msg.timestamp;
-                        latestMsg = msg;
-                    }
-                });
-            }
-        });
-
-        if (!latestMsg) {
-            inboxDiv.innerHTML = `<p style="color:#666; font-size:0.9rem;">No messages yet.</p>`;
-            return;
-        }
-
-        // 2. Determine Sender Name
-        let senderName = "You";
-        if (latestMsg.sender !== currentUser.uid) {
-            // Check cache or fetch
-            try {
-                let snap = await get(ref(db, `founderProfile/${latestMsg.sender}`));
-                if (!snap.exists()) snap = await get(ref(db, `investorProfiles/${latestMsg.sender}`));
-                
-                if (snap.exists()) {
-                    const d = snap.val();
-                    senderName = d.founderUsername || d.fullName || "User";
-                } else {
-                    senderName = "Unknown";
-                }
-            } catch (e) { console.error(e); }
-        }
-
-        // 3. Determine Time Ago
-        const seconds = Math.floor((Date.now() - latestMsg.timestamp) / 1000);
-        let timeString = seconds < 60 ? "Just now" : 
-                         seconds < 3600 ? `${Math.floor(seconds/60)}m ago` :
-                         seconds < 86400 ? `${Math.floor(seconds/3600)}h ago` :
-                         `${Math.floor(seconds/86400)}d ago`;
-
-        // 4. Update UI
-        const isUnread = (latestMsg.recipient === currentUser.uid && latestMsg.read !== true);
-        
-        // Show/Hide Red Dot on Card Header
-        if(dot) dot.style.display = isUnread ? 'block' : 'none';
-
-        inboxDiv.innerHTML = `
-            <div style="display:flex; align-items:center; gap: 10px; margin-bottom: 5px;">
-                <span style="font-weight: 700; color: #fff; font-size: 0.95rem;">${senderName}</span>
-                <span style="font-size: 0.75rem; color: #6ee7b7; background: rgba(16,185,129,0.1); padding: 2px 6px; border-radius: 4px;">${timeString}</span>
-            </div>
-            <div style="
-                color: ${isUnread ? '#fff' : '#94a3b8'}; 
-                font-weight: ${isUnread ? '700' : '400'};
-                font-size: 0.9rem; 
-                line-height: 1.4;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-                overflow: hidden;
-            ">
-                ${isUnread ? '<span style="color:#ef4444;">●</span> ' : ''}${latestMsg.text}
-            </div>
-        `;
-    });
-}
-window.updateProfileSection = async (type) => {
-    if (!currentUserUID) return;
-    const saveBtn = type === 'identity' ? document.getElementById('saveIdentityBtn') : event.target;
-    saveBtn.disabled = true;
-
-    let updates = {};
-    if (type === 'identity') {
-        const name = document.getElementById('editFullName').value;
-        if (!name) return alert("Name is required");
-        updates = { fullName: name, lastUpdated: new Date().toISOString() };
-        if (uploadedPhotoURL) updates.photoURL = uploadedPhotoURL;
-    } else {
-        updates = {
-            netWorth: document.getElementById('editNetWorth').value,
-            minInvestment: document.getElementById('editMinInv').value,
-            maxInvestment: document.getElementById('editMaxInv').value,
-            preferredCategories: document.getElementById('editPreferred').value,
-            lastUpdated: new Date().toISOString()
-        };
-    }
-
-    try {
-        const paths = [`investorProfiles/${currentUserUID}`, `angelProfiles/${currentUserUID}`];
-        for (const path of paths) {
-            const snap = await get(ref(db, path));
-            if (snap.exists() || path.includes('investorProfiles')) {
-                await update(ref(db, path), updates);
-            }
-        }
-        alert("Sync Complete!");
-        location.reload();
-    } catch (e) { alert("Error: " + e.message); }
-    finally { saveBtn.disabled = false; }
-};
-
-// Import necessary Firebase functions if using modules
-// import { get, ref } from "firebase/database"; 
-
-// 1. Function to check status and update UI
-window.checkAngelStatus = async () => {
-    const launchBtn = document.getElementById('launchBtn');
-    
-    if (!currentUserUID) return; // Wait for auth
-
-    try {
-        // Check the 'angelProfiles' node to see if they are already live
-        const snap = await get(ref(db, `angelProfiles/${currentUserUID}`));
-        
-        if (snap.exists()) {
-            const data = snap.val();
-            
-            // Check if status is Live
-            if (data.status === "Live") {
-                convertToViewButton(launchBtn);
-            }
-        }
-    } catch (e) {
-        console.error("Error checking status:", e);
-    }
-};
-// =========================================================
-// APPLICATION INBOX NOTIFICATION SYSTEM
-// =========================================================
-
-// Track which applications we've already shown popups for
-let shownApplicationPopups = new Set(JSON.parse(localStorage.getItem('shownAppPopups') || '[]'));
-
-/**
- * APPLICATION INBOX NOTIFICATION SYSTEM
- * Logic: Shows popup if status is 'completed' AND read is false/undefined.
- * Persistence: Updates Firebase on dismissal.
- */
-
-function startApplicationInboxListener() {
-    if (!currentUser) return;
-
-    // POINT TO THE CORRECT NODE: investorInbox/[Your_UID]
-    const inboxRef = ref(db, `investorInbox/${currentUser.uid}`);
-
-    onValue(inboxRef, async (snapshot) => {
-        if (!snapshot.exists()) return;
-
-        const allInboxApps = snapshot.val() || {};
-
-        for (const [appId, appData] of Object.entries(allInboxApps)) {
-            
-            // 1. Check if the app is unread (read: false)
-            const isUnread = appData.read === false;
-
-            if (isUnread) {
-                // 2. Only show if user is on the dashboard
-                const isDashboard = window.location.hash === '#dashboard' || window.location.hash === '';
-                
-                if (isDashboard) {
-                    // Prevent duplicate popups
-                    if (document.getElementById('newAppPopup')) return;
-
-                    const founderName = appData.founderName || 'A Founder';
-                    const startupName = appData.startupName || 'Unnamed Startup';
-                    const founderId = appData.founderId;
-
-                    // Show the popup
-                    showNewApplicationPopup(appData, founderName, appId, founderId);
-                }
-            }
-        }
-    });
-}
-function showNewApplicationPopup(appData, founderName, appId, founderId) {
-    // Prevent duplicate popups from stacking
-    if (document.getElementById('newAppPopup')) return;
-    
-    const popup = document.createElement('div');
-    popup.id = 'newAppPopup';
-    popup.innerHTML = `
-        <style>
-            .new-app-popup-overlay {
-                position: fixed;
-                top: 0; left: 0;
-                width: 100vw; height: 100vh;
-                background: rgba(0, 0, 0, 0.95);
-                backdrop-filter: blur(10px);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 999999;
-                animation: popupFadeIn 0.4s ease;
-            }
-            @keyframes popupFadeIn { from { opacity: 0; } to { opacity: 1; } }
-            
-            .new-app-popup-box {
-                background: linear-gradient(135deg, #0a2f23 0%, #134e4a 100%);
-                border: 2px solid #10b981;
-                border-radius: 24px;
-                width: 90%;
-                max-width: 520px;
-                position: relative;
-                overflow: hidden;
-                box-shadow: 0 30px 60px rgba(16, 185, 129, 0.3);
-                animation: popupSlideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            }
-            @keyframes popupSlideUp {
-                from { transform: translateY(50px) scale(0.9); opacity: 0; }
-                to { transform: translateY(0) scale(1); opacity: 1; }
-            }
-            
-            .popup-content-area { padding: 50px 40px; text-align: center; }
-            
-            .popup-new-tag {
-                display: inline-block;
-                background: linear-gradient(135deg, #10b981, #059669);
-                color: #fff;
-                padding: 8px 20px;
-                border-radius: 20px;
-                font-size: 0.75rem;
-                font-weight: 800;
-                text-transform: uppercase;
-                letter-spacing: 1.5px;
-                margin-bottom: 2rem;
-                animation: tagPulse 1.5s infinite;
-            }
-            @keyframes tagPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-            
-            .popup-main-title {
-                font-size: 2rem; font-weight: 800; color: #fff;
-                margin-bottom: 2rem; line-height: 1.3;
-            }
-            
-            .popup-message-text { color: #a7f3d0; font-size: 1.1rem; line-height: 1.8; margin-bottom: 3rem; }
-            .popup-app-highlight { color: #10b981; font-weight: 700; }
-            .popup-founder-highlight { color: #3b82f6; font-weight: 700; }
-            
-            .popup-action-btn {
-                background: linear-gradient(135deg, #10b981, #059669);
-                color: #fff; border: none; padding: 18px 50px;
-                border-radius: 12px; font-weight: 800; font-size: 1rem;
-                text-transform: uppercase; letter-spacing: 1.5px;
-                cursor: pointer; transition: all 0.3s; width: 100%;
-            }
-            .popup-action-btn:hover { transform: translateY(-3px); background: linear-gradient(135deg, #059669, #047857); }
-        </style>
-        
-        <div class="new-app-popup-overlay">
-            <div class="new-app-popup-box" onclick="event.stopPropagation()">
-                <div class="popup-content-area">
-                    <div class="popup-new-tag">📥 NEW APPLICATION</div>
-                    <h2 class="popup-main-title">New Funding Request!</h2>
-                    <p class="popup-message-text">
-                        <strong class="popup-founder-highlight">${founderName}</strong> has submitted a funding application 
-                        <strong class="popup-app-highlight">"${appData.appName || 'Funding Proposal'}"</strong>
-                        <br><br>
-                        Please check the <strong>Applications Inbox</strong> to review the full details.
-                    </p>
-                    <button class="popup-action-btn" onclick="markAppAsRead('${founderId}', '${appId}')">
-                        OK, Got It!
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(popup);
-}
-
-window.markAppAsRead = async function(founderId, appId) {
-    try {
-        // Update the 'read' status inside investorInbox
-        const appRef = ref(db, `investorInbox/${currentUser.uid}/${appId}`);
-        await update(appRef, { read: true });
-
-        // Remove UI
-        const popup = document.getElementById('newAppPopup');
-        if (popup) {
-            popup.style.animation = 'popupFadeIn 0.3s ease reverse';
-            setTimeout(() => popup.remove(), 300);
-        }
-    } catch (error) {
-        console.error("Error marking as read:", error);
-        document.getElementById('newAppPopup')?.remove();
-    }
-};
-// 2. Helper function to change the button appearance and behavior
-function convertToViewButton(btn) {
-    btn.innerText = "View Profile";
-    btn.classList.add("btn-success"); 
-    btn.disabled = false;
-    
-    btn.onclick = () => {
-        // This adds '?view=ID' to the end of the URL
-        window.location.href = `angelbrowse.html?view=${currentUserUID}`;
+    // 1. Import Firebase Modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+        authDomain: "scalevest-163a0.firebaseapp.com",
+        databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+        projectId: "scalevest-163a0",
+        storageBucket: "scalevest-163a0.firebasestorage.app",
+        messagingSenderId: "938358950124",
+        appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
+        measurementId: "G-QD3TWBZHR0"
     };
-}
 
-// 3. Your existing launch function (kept mostly the same)
-// ⭐ UPDATED: Block unverified users from launching angel profile
-window.launchAngelProfile = async () => {
-    const launchBtn = document.getElementById('launchBtn');
-    
-    // Check verification status FIRST
-    const investorRef = ref(db, `investorProfiles/${currentUserUID}`);
-    const investorSnap = await get(investorRef);
-    
-    if (investorSnap.exists()) {
-        const investorData = investorSnap.val();
-        
-        if (investorData.isVerified === false) {
-            showVerificationBlockPopup('launch your Angel Profile');
+    // Initialize
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const auth = getAuth(app);
+
+    let currentUser = null;
+    let authReady = false;
+
+    // Monitor Auth State - Runs on page load
+    onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        authReady = true;
+        console.log("Auth System Ready. User Status:", user ? "Logged In" : "Guest");
+    });
+
+    // 2. Trigger Logic (Attached to window so HTML buttons can access it)
+    window.triggerAngelSetup = async function() {
+        // Guard: Wait for Firebase to check login status
+        if (!authReady) {
+            console.log("Waiting for auth response...");
             return;
         }
-    }
-    
-    // If verified, proceed with launch
-    launchBtn.disabled = true;
-    launchBtn.innerText = "Launching...";
 
-    try {
-        const snap = await get(ref(db, `investorProfiles/${currentUserUID}`));
-        
-        if (snap.exists()) {
-            const angelData = { 
-                ...snap.val(), 
-                status: "Live", 
-                launchedAt: new Date().toISOString() 
-            };
-            
-            await update(ref(db, `angelProfiles/${currentUserUID}`), angelData);
-            
-            alert("Your Angel Profile is LIVE!");
-            convertToViewButton(launchBtn);
+        if (!currentUser) {
+            // Not logged in -> Send to login
+            window.location.href = "login3.html";
+        } else {
+            // Logged in -> Check if profile exists in Database
+            try {
+                const profileRef = ref(database, 'investorProfiles/' + currentUser.uid);
+                const snapshot = await get(profileRef);
+
+                if (snapshot.exists()) {
+                    // Profile already exists -> Fast track to config
+                    window.location.href = "investorconfig.html";
+                } else {
+                    // New Investor -> Show the collection modal
+                    document.getElementById('investorModal').style.display = 'flex';
+                }
+            } catch (error) {
+                console.error("Database fetch error:", error);
+                // Fallback: Show modal anyway if database check fails
+                document.getElementById('investorModal').style.display = 'flex';
+            }
         }
-    } catch (e) { 
-        console.error(e); 
-        launchBtn.disabled = false;
-        launchBtn.innerText = "Launch Angel Profile";
-    }
-};
-// 4. IMPORTANT: Call the check function on load
-// Ensure this runs AFTER currentUserUID is defined (e.g., inside onAuthStateChanged)
-document.addEventListener('DOMContentLoaded', () => {
-    // If currentUserUID is already set globally:
-    if(typeof currentUserUID !== 'undefined') checkAngelStatus();
-});
-window.saveUserID = async () => {
-    const newId = document.getElementById("newUserIdInput").value.trim().toUpperCase();
-    if (newId.length < 3) return alert("Min 3 characters");
-    await update(ref(db, `investorProfiles/${currentUserUID}`), { userID: newId });
-    location.reload();
-};
+    };
 
-function startVerification() {
-    window.location.hash = 'scalevest_verify';
-}
+    // 3. Save Data (Collecting name, age, and investorType)
+    window.saveInvestorProfile = async function() {
+        const name = document.getElementById('invName').value;
+        const age = document.getElementById('invAge').value;
+        const type = document.getElementById('invType').value;
 
+        if (!name || !age || !type) {
+            alert("Please fill all Details to Continue.");
+            return;
+        }
 
+        // Switch UI to processing mode
+        document.getElementById('investorModal').style.display = 'none';
+        document.getElementById('successOverlay').style.display = 'flex';
+
+        try {
+            // Reference: investorProfiles/{UID}
+            const profileRef = ref(database, 'investorProfiles/' + currentUser.uid);
+
+            await set(profileRef, {
+                fullName: name,
+                age: age,
+                investorType: type, 
+                uid: currentUser.uid,
+                timestamp: Date.now()
+            });
+
+            // Cinematic redirect delay
+            setTimeout(() => {
+                window.location.href = "investorconfig.html";
+            }, 3200);
+
+        } catch (error) {
+            console.error("Save error:", error);
+            alert("System Error: Check security rules or connection.");
+            document.getElementById('successOverlay').style.display = 'none';
+        }
+    };
 </script>
-
-
 </body>
 </html>
