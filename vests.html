@@ -4692,218 +4692,137 @@ window.openTokenCheckout = function(bundle, price, tokens) {
 
 // Universal Payment Checkout
 function openPaymentCheckout(itemName, price, type, extraData) {
+    // 1. Create the modal container (Full screen white overlay)
     const modal = document.createElement('div');
-    modal.className = 'edit-modal show';
     modal.id = 'checkoutModal';
+    // Tailwind: fixed, full screen, high z-index, white background with slight transparency for glass effect
+    modal.className = 'fixed inset-0 z-[10000] flex items-center justify-center bg-white/95 backdrop-blur-md p-4 antialiased font-sans';
+
     modal.innerHTML = `
-        <style>
-            .checkout-container {
-                background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-                border: 1px solid #333;
-                border-radius: 20px;
-                max-width: 500px;
-                overflow: hidden;
-            }
+        <div class="w-full max-w-lg bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden relative">
             
-            .checkout-header {
-                background: linear-gradient(135deg, #ff006e, #8338ec);
-                padding: 2rem;
-                text-align: center;
-                color: #fff;
-            }
-            
-            .checkout-title {
-                font-size: 1.8rem;
-                font-weight: 800;
-                margin-bottom: 0.5rem;
-            }
-            
-            .checkout-subtitle {
-                opacity: 0.9;
-                font-size: 0.95rem;
-            }
-            
-            .checkout-body {
-                padding: 2rem;
-            }
-            
-            .price-display {
-                text-align: center;
-                padding: 2rem;
-                background: #000;
-                border-radius: 16px;
-                margin-bottom: 2rem;
-            }
-            
-            .price-amount {
-                font-size: 3rem;
-                font-weight: 800;
-                color: #fff;
-                margin-bottom: 0.5rem;
-            }
-            
-            .price-label {
-                color: #888;
-                font-size: 0.9rem;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-            }
-            
-            .payment-methods {
-                margin-bottom: 2rem;
-            }
-            
-            .method-title {
-                color: #666;
-                font-size: 0.85rem;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                margin-bottom: 1rem;
-            }
-            
-            .method-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
-            }
-            
-            .method-card {
-                background: #111;
-                border: 2px solid #222;
-                border-radius: 12px;
-                padding: 1rem;
-                text-align: center;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-            
-            .method-card:hover {
-                border-color: #ff006e;
-                transform: translateY(-2px);
-            }
-            
-            .method-card.selected {
-                border-color: #10b981;
-                background: rgba(16, 185, 129, 0.1);
-            }
-            
-            .method-icon {
-                font-size: 2rem;
-                margin-bottom: 0.5rem;
-            }
-            
-            .method-name {
-                color: #fff;
-                font-size: 0.9rem;
-                font-weight: 600;
-            }
-            
-            .checkout-btn {
-                width: 100%;
-                padding: 1.25rem;
-                background: linear-gradient(135deg, #10b981, #059669);
-                color: #fff;
-                border: none;
-                border-radius: 12px;
-                font-size: 1.1rem;
-                font-weight: 800;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-            
-            .checkout-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
-            }
-            
-            .checkout-btn:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
-            
-            .secure-badge {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 0.5rem;
-                margin-top: 1rem;
-                color: #666;
-                font-size: 0.85rem;
-            }
-        </style>
-        
-        <div class="checkout-container">
-            <button class="modal-close" onclick="this.closest('.edit-modal').remove()" 
-                    style="position: absolute; top: 15px; right: 15px; z-index: 10;">×</button>
-            
-            <div class="checkout-header">
-                <div class="checkout-title">${itemName} ${type === 'tokens' ? 'Bundle' : 'Plan'}</div>
-                <div class="checkout-subtitle">Complete your purchase securely</div>
-            </div>
-            
-            <div class="checkout-body">
-                <div class="price-display">
-                    <div class="price-amount">₹${price}</div>
-                    <div class="price-label">Total Amount</div>
-                </div>
+            <button onclick="document.getElementById('checkoutModal').remove()" 
+                class="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div class="pt-12 pb-8 px-8 text-center border-b border-gray-50">
+                <p class="text-xs font-bold tracking-[0.2em] text-indigo-600 uppercase mb-2">
+                    ${type === 'tokens' ? 'Token Bundle' : 'Premium Subscription'}
+                </p>
+                <h2 class="text-3xl font-black text-gray-900 mb-6 leading-tight">${itemName}</h2>
                 
-                <div class="payment-methods">
-                    <div class="method-title">Select Payment Method</div>
-                    <div class="method-grid">
-                        <div class="method-card" data-method="upi" onclick="selectPaymentMethod('upi', this)">
-                            <div class="method-icon">📱</div>
-                            <div class="method-name">UPI</div>
+                <div class="inline-flex flex-col items-center">
+                    <div class="flex items-start text-gray-900">
+                        <span class="text-2xl font-bold mt-2 mr-1">₹</span>
+                        <span class="text-6xl font-black tracking-tighter">${price}</span>
+                    </div>
+                    <p class="text-sm font-semibold text-gray-400 uppercase tracking-widest mt-2">Total Amount</p>
+                </div>
+            </div>
+
+            <div class="p-8 bg-gray-50/30">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-[0.15em] mb-5 text-center">Select Payment Method</h3>
+                
+                <div class="space-y-3" id="paymentMethodList">
+                    
+                    <div onclick="window.selectPaymentMethod('card', this)" 
+                         class="group flex items-center justify-between p-4 bg-white border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-indigo-500 hover:shadow-md transition-all duration-200">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 flex items-center justify-center bg-gray-50 rounded-xl group-hover:bg-indigo-50 transition-colors">
+                                <img src="card.svg" alt="Card" class="w-7 h-7">
+                            </div>
+                            <span class="font-bold text-gray-700">Credit / Debit Card</span>
                         </div>
-                        <div class="method-card" data-method="card" onclick="selectPaymentMethod('card', this)">
-                            <div class="method-icon">💳</div>
-                            <div class="method-name">Card</div>
-                        </div>
-                        <div class="method-card" data-method="netbanking" onclick="selectPaymentMethod('netbanking', this)">
-                            <div class="method-icon">🏦</div>
-                            <div class="method-name">NetBanking</div>
-                        </div>
-                        <div class="method-card" data-method="wallet" onclick="selectPaymentMethod('wallet', this)">
-                            <div class="method-icon">👛</div>
-                            <div class="method-name">Wallet</div>
+                        <div class="radio-indicator w-6 h-6 border-2 border-gray-200 rounded-full flex items-center justify-center group-[.selected]:border-indigo-600 group-[.selected]:bg-indigo-600 transition-all">
+                             <div class="w-2 h-2 bg-white rounded-full"></div>
                         </div>
                     </div>
+
+                    <div onclick="window.selectPaymentMethod('netbanking', this)" 
+                         class="group flex items-center justify-between p-4 bg-white border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-indigo-500 hover:shadow-md transition-all duration-200">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 flex items-center justify-center bg-gray-50 rounded-xl group-hover:bg-indigo-50 transition-colors">
+                                <img src="netbank.svg" alt="NetBanking" class="w-7 h-7">
+                            </div>
+                            <span class="font-bold text-gray-700">Net Banking</span>
+                        </div>
+                        <div class="radio-indicator w-6 h-6 border-2 border-gray-200 rounded-full flex items-center justify-center group-[.selected]:border-indigo-600 group-[.selected]:bg-indigo-600 transition-all">
+                             <div class="w-2 h-2 bg-white rounded-full"></div>
+                        </div>
+                    </div>
+
+                    <div onclick="window.selectPaymentMethod('paypal', this)" 
+                         class="group flex items-center justify-between p-4 bg-white border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-indigo-500 hover:shadow-md transition-all duration-200">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 flex items-center justify-center bg-gray-50 rounded-xl group-hover:bg-indigo-50 transition-colors">
+                                <img src="paypal.svg" alt="PayPal" class="w-7 h-7">
+                            </div>
+                            <span class="font-bold text-gray-700">PayPal</span>
+                        </div>
+                        <div class="radio-indicator w-6 h-6 border-2 border-gray-200 rounded-full flex items-center justify-center group-[.selected]:border-indigo-600 group-[.selected]:bg-indigo-600 transition-all">
+                             <div class="w-2 h-2 bg-white rounded-full"></div>
+                        </div>
+                    </div>
+
+                    <div onclick="window.selectPaymentMethod('upi', this)" 
+                         class="group flex items-center justify-between p-4 bg-white border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-indigo-500 hover:shadow-md transition-all duration-200">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 flex items-center justify-center bg-gray-50 rounded-xl group-hover:bg-indigo-50 transition-colors">
+                                <img src="upi.svg" alt="UPI" class="w-7 h-7">
+                            </div>
+                            <span class="font-bold text-gray-700">UPI / Google Pay</span>
+                        </div>
+                        <div class="radio-indicator w-6 h-6 border-2 border-gray-200 rounded-full flex items-center justify-center group-[.selected]:border-indigo-600 group-[.selected]:bg-indigo-600 transition-all">
+                             <div class="w-2 h-2 bg-white rounded-full"></div>
+                        </div>
+                    </div>
+
                 </div>
-                
-                <button class="checkout-btn" id="proceedPayBtn" onclick="proceedToPayment('${itemName}', ${price}, '${type}', '${extraData}')" disabled>
-                    Proceed to Payment
+
+                <button id="proceedPayBtn" disabled 
+                    onclick="proceedToPayment('${itemName}', ${price}, '${type}', '${extraData}')"
+                    class="w-full mt-8 py-4.5 py-4 bg-gray-900 text-white text-lg font-bold rounded-2xl hover:bg-black transition-all transform active:scale-[0.98] disabled:opacity-20 disabled:cursor-not-allowed shadow-xl shadow-gray-200">
+                    Pay Securely
                 </button>
-                
-                <div class="secure-badge">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                    Secured by Razorpay
+
+                <div class="mt-6 flex items-center justify-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+                    Secure 256-bit Encrypted
                 </div>
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
 }
 
-// Select Payment Method
+/**
+ * Handle selection of payment method
+ */
 let selectedPaymentMethod = null;
+
 window.selectPaymentMethod = function(method, element) {
     selectedPaymentMethod = method;
     
-    // Update UI
-    document.querySelectorAll('.method-card').forEach(card => {
-        card.classList.remove('selected');
+    // 1. Reset all cards
+    const cards = document.querySelectorAll('#paymentMethodList > div');
+    cards.forEach(card => {
+        card.classList.remove('selected', 'border-indigo-500', 'shadow-md');
+        card.classList.add('border-gray-100');
     });
-    element.classList.add('selected');
-    
-    // Enable button
-    document.getElementById('proceedPayBtn').disabled = false;
-};
 
+    // 2. Highlight selected card
+    element.classList.add('selected', 'border-indigo-500', 'shadow-md');
+    element.classList.remove('border-gray-100');
+
+    // 3. Enable the payment button
+    const payBtn = document.getElementById('proceedPayBtn');
+    payBtn.disabled = false;
+    
+    // Small haptic-like effect
+    console.log(`Payment method selected: ${method}`);
+};
 // Proceed to Razorpay Payment
 window.proceedToPayment = async function(itemName, price, type, extraData) {
     if (!selectedPaymentMethod) {
@@ -4916,7 +4835,7 @@ window.proceedToPayment = async function(itemName, price, type, extraData) {
     btn.disabled = true;
     
     // Razorpay Test Key (Replace with your key)
-    const RAZORPAY_KEY = 'rzp_test_mXk8s9Lp2nQv5r'; // ⚠️ Replace this!
+    const RAZORPAY_KEY = 'rzp_test_1DP5mmOlF5G5ag'; // ⚠️ Replace this!
     
     const options = {
         key: RAZORPAY_KEY,
