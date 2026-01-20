@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <title>ScaleVest CFO</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -876,12 +877,152 @@ function updateProductUI(analytics) {
             `Momentum: ${analytics.trendingSelling.name} is the current trending product!`;
     }
 }
+// --- Subscription & Trial Logic ---
+async function checkSubscriptionStatus(userId) {
+    const cfoRef = ref(db, `BusinessOwners/${userId}/CFO`);
+    const snapshot = await get(cfoRef);
+    
+    if (!snapshot.exists()) return;
+    
+    const data = snapshot.val();
+    const now = new Date();
+    const expiryDate = new Date(data.expiryDate);
+
+    // If trial/plan expired
+    if (now > expiryDate) {
+        // Update database to unpaid status
+        const { update } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+        await update(cfoRef, { cfopaid: false });
+        showSubscriptionOverlay(data.plan);
+    }
+}
+
+function showSubscriptionOverlay(expiredPlan) {
+    const overlay = document.createElement('div');
+    overlay.id = "subscription-wall";
+    overlay.style.cssText = `
+        position: fixed; inset: 0; z-index: 20000; 
+        background: rgba(10, 14, 39, 0.98); backdrop-filter: blur(20px);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 20px; text-align: center; font-family: sans-serif;
+    `;
+
+    const message = expiredPlan === "freeTrial" 
+        ? "Your 14-day free trial has ended. I hope you liked ScaleVest CFO and it helped you make profits!" 
+        : `Your ${expiredPlan} plan has expired.`;
+
+    overlay.innerHTML = `
+        <div class="card" style="max-width: 900px; border: 1px solid #3b82f6;">
+            <h2 style="color: #fff; margin-bottom: 10px;">Access Blocked</h2>
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 30px;">${message}<br>Please upgrade your plan to continue using your AI CFO.</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: left;">
+                
+                <div class="card" style="border: 1px solid rgba(255,255,255,0.1); position: relative;">
+                    <span style="position: absolute; top: 10px; right: 10px; background: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 10px;">50% OFF</span>
+                    <h3 style="color: #3b82f6;">Monthly</h3>
+                    <p style="font-size: 24px; margin: 10px 0;">₹199 <del style="font-size: 14px; opacity: 0.5;">₹399</del></p>
+                    <ul style="font-size: 12px; opacity: 0.8; padding-left: 15px;">
+                        <li>Access Unlimited CFO</li>
+                        <li>1 Month Duration</li>
+                    </ul>
+                    <button onclick="processPayment('monthly', 30)" style="width:100%; margin-top:15px; padding:10px; background:#3b82f6; border:none; color:white; border-radius:8px; cursor:pointer;">Upgrade Now</button>
+                </div>
+
+                <div class="card" style="border: 1px solid #3b82f6; position: relative; background: rgba(59, 130, 246, 0.05);">
+                    <span style="position: absolute; top: 10px; right: 10px; background: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 10px;">50% OFF</span>
+                    <h3 style="color: #3b82f6;">Half-Yearly</h3>
+                    <p style="font-size: 24px; margin: 10px 0;">₹499 <del style="font-size: 14px; opacity: 0.5;">₹999</del></p>
+                    <ul style="font-size: 12px; opacity: 0.8; padding-left: 15px;">
+                        <li>Access Unlimited CFO</li>
+                        <li>6 Months Duration</li>
+                        <li style="color: #4ade80; font-weight:bold;">Save ₹500 vs Monthly</li>
+                    </ul>
+                    <button onclick="processPayment('halfYearly', 180)" style="width:100%; margin-top:15px; padding:10px; background:#3b82f6; border:none; color:white; border-radius:8px; cursor:pointer;">Upgrade Now</button>
+                </div>
+
+                <div class="card" style="border: 1px solid #fb923c; position: relative;">
+                    <span style="position: absolute; top: 10px; right: 10px; background: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 10px;">50% OFF</span>
+                    <h3 style="color: #fb923c;">Yearly</h3>
+                    <p style="font-size: 24px; margin: 10px 0;">₹999 <del style="font-size: 14px; opacity: 0.5;">₹2000</del></p>
+                    <ul style="font-size: 12px; opacity: 0.8; padding-left: 15px;">
+                        <li>Access Unlimited CFO</li>
+                        <li>12 Months Duration</li>
+                        <li style="color: #4ade80; font-weight:bold;">Save ₹200 vs Monthly</li>
+                        <li style="color: #4ade80; font-weight:bold;">Save ₹500 vs Half-Yearly</li>
+                    </ul>
+                    <button onclick="processPayment('yearly', 365)" style="width:100%; margin-top:15px; padding:10px; background:#fb923c; border:none; color:white; border-radius:8px; cursor:pointer;">Upgrade Now</button>
+                </div>
+
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+window.processPayment = async (planName, days) => {
+    const user = auth.currentUser;
+    if (!user) return alert("User not authenticated.");
+
+    // Amount mapping (Price in Paise: 19900 = ₹199)
+    const prices = {
+        'monthly': 19900,
+        'halfYearly': 49900,
+        'yearly': 99900
+    };
+
+    const options = {
+        "key": "rzp_test_1DP5mmOlF5G5ag", // Replace with your Razorpay Test Key ID
+        "amount": prices[planName], 
+        "currency": "INR",
+        "name": "ScaleVest CFO",
+        "description": `Upgrade to ${planName} Plan`,
+        "image": "https://your-logo-url.com/logo.png",
+        "handler": async function (response) {
+            // THIS CODE RUNS ONLY ON SUCCESS
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + days);
+
+            try {
+                const { update } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+                
+                // Update Firebase Nodes
+                await update(ref(db, `BusinessOwners/${user.uid}/CFO`), {
+                    cfopaid: true,
+                    plan: planName,
+                    expiryDate: expiryDate.toISOString(),
+                    lastPaymentId: response.razorpay_payment_id // Storing for records
+                });
+
+                alert(`Payment Successful! Your ${planName} plan is now active.`);
+                location.reload(); // Refresh to remove the blocked popup
+            } catch (error) {
+                console.error("Database Update Failed:", error);
+                alert("Payment received, but failed to update account. Please contact support.");
+            }
+        },
+        "prefill": {
+            "name": document.getElementById('user-name-display').innerText,
+            "email": user.email
+        },
+        "theme": {
+            "color": "#3b82f6" // Matches your blue theme
+        }
+    };
+
+    const rzp1 = new Razorpay(options);
+    rzp1.on('payment.failed', function (response) {
+        alert("Payment Failed: " + response.error.description);
+    });
+    rzp1.open();
+};
 // --- Auth State Logic ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
         runOnboarding(user.uid);
         fetchAnalytics(user.uid); 
         fetchRevenuePulse(user.uid);
+         checkSubscriptionStatus(user.uid);
         setupProductAnalysisNavigation(user.uid);
 setupFinanceReportNavigation(user.uid);
         fetchExpiryAlerts(user.uid);
@@ -987,29 +1128,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 4. Save Logic
-    startBtn.addEventListener('click', async () => {
+   startBtn.addEventListener('click', async () => {
         if (!checkbox.checked) return;
         const cfoName = cfoInput.value.trim() || "Mark";
 
         try {
-            // Import set function
             const { set } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
             
-            // Store under BusinessOwners/user.id/CFO/name
+            // Calculate 14 days from now
+            const trialExpiry = new Date();
+            trialExpiry.setSeconds(expiryDate.getSeconds() + 40);
+
             await set(ref(db, `BusinessOwners/${userId}/CFO`), {
                 name: cfoName,
-                trialStarted: new Date().toISOString()
+                trialStarted: new Date().toISOString(),
+                expiryDate: trialExpiry.toISOString(),
+                cfopaid: true,
+                plan: "freeTrial"
             });
 
             displayCFOName(cfoName);
             cfoPopup.style.display = "none";
-            welcomeOverlay.style.display = "none"; // Also hide the overlay
+            welcomeOverlay.style.display = "none";
         } catch (error) {
             console.error("Error saving CFO:", error);
-            alert("Failed to save CFO. Please try again.");
+            alert("Failed to save CFO.");
         }
     });
-  }
+
 
   function startIntroSequence(textEl, overlayEl, popupEl) {
       setTimeout(() => {
@@ -1323,13 +1469,11 @@ function processFinancialData(sales, prices, inventory) {
     
     let totalRevenue = 0;
     let totalCosts = 0;
-    let totalExpenses = 0;
     let weeklyRevenue = 0;
     let previousWeekRevenue = 0;
     let monthlyRevenue = 0;
     
     const productRevenue = {};
-    const transactions = []; // FIXED: Initialize transactions array
     const weeklySales = Array(7).fill(0);
     const monthlySales = Array(4).fill(0);
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -1340,30 +1484,13 @@ function processFinancialData(sales, prices, inventory) {
         const revenue = parseFloat(sale.revenue) || 0;
         const productId = sale.productId;
         const quantity = parseInt(sale.quantity) || 0;
-        const productName = inventory[productId]?.name || "Unknown Product";
         
         totalRevenue += revenue;
-        
-        // Add revenue transaction
-        transactions.push({
-            category: productName,
-            amount: revenue,
-            type: "revenue"
-        });
         
         // Calculate costs
         if (prices[productId]) {
             const costPrice = parseFloat(prices[productId].costPrice) || 0;
-            const costAmount = costPrice * quantity;
-            totalCosts += costAmount;
-            totalExpenses += costAmount;
-            
-            // Add expense transaction
-            transactions.push({
-                category: productName + " (Cost)",
-                amount: -costAmount,
-                type: "expense"
-            });
+            totalCosts += (costPrice * quantity);
         }
         
         // Weekly tracking
@@ -1385,6 +1512,7 @@ function processFinancialData(sales, prices, inventory) {
         }
         
         // Product revenue
+        const productName = inventory[productId]?.name || "Unknown Product";
         if (!productRevenue[productName]) {
             productRevenue[productName] = { revenue: 0, quantity: 0, costs: 0 };
         }
@@ -1404,7 +1532,6 @@ function processFinancialData(sales, prices, inventory) {
     return {
         totalRevenue,
         totalCosts,
-        totalExpenses,
         netProfit,
         profitMargin,
         weeklyRevenue,
@@ -1412,7 +1539,6 @@ function processFinancialData(sales, prices, inventory) {
         monthlyRevenue,
         weeklySales,
         monthlySales,
-        transactions, // FIXED: Now returns transactions array
         productRevenue: Object.entries(productRevenue)
             .sort((a, b) => b[1].revenue - a[1].revenue)
             .slice(0, 10)
@@ -1595,347 +1721,82 @@ function generateExecutiveSummary(data) {
     const data = window.financeData;
     if (!data) return;
 
+    // 1. Show Animation / Hide Input
     const loadingEl = document.getElementById('pdf-loading');
+    const inputArea = document.querySelector('#export-modal .card > *:not(#pdf-loading)');
     if(loadingEl) loadingEl.style.display = 'block';
     
+    // 2. Create the Certificate (Static Title)
     const pdfContainer = document.createElement('div');
-    pdfContainer.style.background = '#ffffff';
+    pdfContainer.style.background = '#040711';
 
-    // SHARED STYLES - ONLY ONCE AT THE TOP
-    const sharedStyles = `
+    const page1 = document.createElement('div');
+    page1.innerHTML = `
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            .page { 
-    width: 210mm; 
-    height: 296.8mm; 
-    background: white; 
-    padding: 25mm; 
-    font-family: 'Inter', sans-serif; 
-    color: #1a1a1a; 
-    position: relative; 
-    overflow: hidden; 
-}
-/* This is the new magic class */
-.page-break {
-    page-break-after: always;
-}
-            .header-bar { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 3px solid #0052cc; margin-bottom: 25px; }
-            .logo { font-size: 24px; font-weight: 800; color: #0052cc; letter-spacing: -0.5px; }
-            .page-num { font-size: 11px; color: #666; font-weight: 500; }
-            .section-title { font-size: 22px; font-weight: 700; color: #0052cc; margin: 25px 0 15px 0; text-transform: uppercase; letter-spacing: 0.5px; }
-            .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
-            .metric-card { background: #f8f9fa; border-left: 4px solid #0052cc; padding: 15px; }
-            .metric-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
-            .metric-value { font-size: 26px; font-weight: 700; color: #1a1a1a; }
-            .metric-change { font-size: 12px; margin-top: 5px; }
-            .positive { color: #00875a; }
-            .negative { color: #de350b; }
-            table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 11px; }
-            thead { background: #0052cc; color: white; }
-            th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0; }
-            th { font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-            tbody tr:hover { background: #f5f5f5; }
-            .text-block { line-height: 1.6; font-size: 11px; color: #333; margin: 12px 0; }
-            .highlight-box { background: #e6f2ff; border-left: 4px solid #0052cc; padding: 15px; margin: 15px 0; }
-            .warning-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; }
-            .chart-placeholder { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; margin: 15px 0; }
-            .footer-bar { position: absolute; bottom: 15mm; left: 25mm; right: 25mm; padding-top: 10px; border-top: 1px solid #ddd; font-size: 9px; color: #999; display: flex; justify-content: space-between; }
-            .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
-            .signature-block { width: 45%; }
-            .signature-line { border-top: 2px solid #000; margin-top: 50px; padding-top: 8px; font-size: 11px; }
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Great+Vibes&display=swap');
+            .cert-wrapper { background: radial-gradient(circle at top,#101a40,#040711); padding: 40px; display: flex; justify-content: center; font-family: 'Inter', sans-serif; color: white; }
+            .certificate { width: 850px; background: linear-gradient(180deg,#0e1640,#070b1c); border-radius: 26px; padding: 55px; border: 2px solid rgba(0,229,255,.25); box-shadow: 0 0 100px rgba(0,229,255,.2); position: relative; }
+            .header { text-align: center; }
+            .header h1 { font-size: 40px; margin: 0; color: white; letter-spacing: 2px; }
+            .header h2 { font-size: 24px; color: #00e5ff; margin: 10px 0; text-transform: uppercase; letter-spacing: 3px; text-shadow: 0 0 15px rgba(0,229,255,0.6); }
+            .badge-wrapper { display: flex; justify-content: center; margin: 40px 0; }
+            .cfo-badge { width: 180px; height: 180px; border-radius: 50%; border: 4px solid #c9a227; background: #0f1c44; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 40px rgba(0,229,255,0.5); }
+            .cfo-badge h2 { font-size: 50px; color: #00e5ff; margin: 0; text-shadow: 0 0 10px #00e5ff; }
+            .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 30px 0; }
+            .stat-box { background: rgba(255,255,255,.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(0,229,255,.2); text-align: center; }
+            .stat-box p { font-size: 18px; font-weight: 700; margin-top: 5px; }
+            .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 50px; }
+            .sig { font-family: 'Great Vibes', cursive; font-size: 35px; border-bottom: 1px solid #555; }
+            .gold-seal { width: 100px; height: 100px; background: radial-gradient(circle, #ffdf8c, #c9a227); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; font-weight: 800; font-size: 10px; text-align: center; box-shadow: 0 0 30px rgba(201,162,39,0.5); }
         </style>
-    `;
-
-    const revenueTransactions = (data.transactions || []).filter(t => t.amount > 0).slice(0, 5);
-    const expenseTransactions = (data.transactions || []).filter(t => t.amount < 0).slice(0, 6);
-
-    // BUILD ALL PAGES - STYLES ONLY AT THE START
-    pdfContainer.innerHTML = sharedStyles + `
-        <!-- PAGE 1: COVER -->
-        <div class="page" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-            <div style="font-size: 14px; font-weight: 600; letter-spacing: 3px; margin-bottom: 10px;">CONFIDENTIAL</div>
-            <div style="font-size: 52px; font-weight: 800; margin: 20px 0; line-height: 1.2;">EXECUTIVE<br>FINANCIAL REPORT</div>
-            <div style="width: 100px; height: 4px; background: white; margin: 25px 0;"></div>
-            <div style="font-size: 16px; font-weight: 500; margin-bottom: 40px;">Q${Math.ceil(new Date().getMonth() / 3)} ${new Date().getFullYear()} • Fiscal Analysis & Strategic Recommendations</div>
-            <div style="margin-top: 60px; font-size: 14px;">
-                <div style="margin-bottom: 8px;"><strong>Prepared by:</strong> ScaleVest AI CFO</div>
-                <div style="margin-bottom: 8px;"><strong>Report Date:</strong> ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
-                <div><strong>Company:</strong> ScaleVest Analytics</div>
-            </div>
-            <div style="position: absolute; bottom: 30px; font-size: 10px; opacity: 0.8;">This report contains proprietary and confidential information</div>
-        </div>
-
-        <!-- PAGE 2: EXECUTIVE SUMMARY -->
-        <div class="page">
-            <div class="header-bar">
-                <div class="logo">SCALEVEST</div>
-                <div class="page-num">Page 2 of 6</div>
-            </div>
-            <h1 style="font-size: 32px; font-weight: 800; color: #0052cc; margin-bottom: 20px;">Executive Summary</h1>
-            
-            <div class="metric-grid">
-                <div class="metric-card">
-                    <div class="metric-label">Total Revenue</div>
-                    <div class="metric-value">$${data.totalRevenue.toLocaleString()}</div>
-                    <div class="metric-change positive">↑ ${data.weeklyGrowth}% WoW</div>
+        <div class="cert-wrapper">
+            <div class="certificate">
+                <div class="header">
+                    <h1>ScaleVest</h1>
+                    <h2>Business Finance Certificate</h2>
+                    <div style="color: #93a4c8; letter-spacing: 2px; font-size: 12px;"></div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-label">Net Profit</div>
-                    <div class="metric-value">$${data.netProfit.toLocaleString()}</div>
-                    <div class="metric-change positive">↑ ${(data.profitMargin * 0.8).toFixed(1)}%</div>
+                <div class="badge-wrapper">
+                    <div class="cfo-badge"><h2>CFO</h2></div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-label">Profit Margin</div>
-                    <div class="metric-value">${data.profitMargin}%</div>
-                    <div class="metric-change positive">Healthy</div>
+                <div class="stats-grid">
+                    <div class="stat-box"><small>REVENUE</small><p>$${data.totalRevenue.toLocaleString()}</p></div>
+                    <div class="stat-box"><small>NET PROFIT</small><p>$${data.netProfit.toLocaleString()}</p></div>
+                    <div class="stat-box"><small>MARGIN</small><p>${data.profitMargin}%</p></div>
+                    <div class="stat-box"><small>GROWTH</small><p>${data.weeklyGrowth}%</p></div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-label">Growth Rate</div>
-                    <div class="metric-value">${data.weeklyGrowth}%</div>
-                    <div class="metric-change positive">Above Target</div>
+                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; border: 1px solid rgba(0,229,255,0.2);">
+                    <h4 style="color: #00e5ff; margin-bottom: 10px;">CFO ANALYSIS</h4>
+                    <p style="font-size: 14px; line-height: 1.5; color: #cbd5e1;">${document.getElementById('executive-summary').innerText.split('.')[0]}. Enterprise stability is verified.</p>
                 </div>
-            </div>
-
-            <div class="highlight-box">
-                <h3 style="font-weight: 700; margin-bottom: 10px; color: #0052cc;">Key Findings</h3>
-                <p class="text-block">${document.getElementById('executive-summary').innerText}</p>
-            </div>
-
-            <div class="section-title">Financial Performance Overview</div>
-            <p class="text-block">Our financial analysis for the current period demonstrates strong operational performance with revenue growth exceeding industry benchmarks. The company maintains a healthy profit margin of ${data.profitMargin}%, positioning us favorably within our market segment.</p>
-            
-            <div class="warning-box">
-                <h4 style="font-weight: 600; margin-bottom: 8px; color: #856404;">Strategic Considerations</h4>
-                <p class="text-block" style="margin: 0;">Management should monitor cash flow trends and maintain focus on operational efficiency to sustain current growth trajectory.</p>
-            </div>
-
-            <div class="footer-bar">
-                <span>ScaleVest Financial Report • ${new Date().getFullYear()}</span>
-                <span>Confidential & Proprietary</span>
-            </div>
-        </div>
-
-        <!-- PAGE 3: REVENUE ANALYSIS -->
-        <div class="page">
-            <div class="header-bar">
-                <div class="logo">SCALEVEST</div>
-                <div class="page-num">Page 3 of 6</div>
-            </div>
-            <h2 class="section-title">Revenue Analysis & Breakdown</h2>
-            
-            <div class="chart-placeholder">Revenue Trend Visualization</div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Revenue Stream</th>
-                        <th>Current Period</th>
-                        <th>Previous Period</th>
-                        <th>Change</th>
-                        <th>% of Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${revenueTransactions.length > 0 ? revenueTransactions.map(t => `
-                        <tr>
-                            <td style="font-weight: 600;">${t.category}</td>
-                            <td>$${t.amount.toLocaleString()}</td>
-                            <td>$${(t.amount * 0.92).toFixed(0).toLocaleString()}</td>
-                            <td class="positive">+8.7%</td>
-                            <td>${((t.amount / data.totalRevenue) * 100).toFixed(1)}%</td>
-                        </tr>
-                    `).join('') : '<tr><td colspan="5" style="text-align: center;">No revenue data available</td></tr>'}
-                </tbody>
-            </table>
-
-            <div class="section-title">Revenue Composition</div>
-            <p class="text-block">Revenue diversification remains strong across multiple business segments. This balanced portfolio reduces concentration risk and provides stability.</p>
-
-            <div class="highlight-box">
-                <h4 style="font-weight: 600; margin-bottom: 8px;">CFO Recommendation</h4>
-                <p class="text-block" style="margin: 0;">Continue investment in high-margin segments while maintaining operational excellence across all revenue streams.</p>
-            </div>
-
-            <div class="footer-bar">
-                <span>ScaleVest Financial Report • ${new Date().getFullYear()}</span>
-                <span>Confidential & Proprietary</span>
-            </div>
-        </div>
-
-        <!-- PAGE 4: EXPENSE ANALYSIS -->
-        <div class="page">
-            <div class="header-bar">
-                <div class="logo">SCALEVEST</div>
-                <div class="page-num">Page 4 of 6</div>
-            </div>
-            <h2 class="section-title">Expense Analysis & Cost Management</h2>
-            
-            <div class="metric-grid">
-                <div class="metric-card">
-                    <div class="metric-label">Total Expenses</div>
-                    <div class="metric-value">$${(data.totalExpenses || 0).toLocaleString()}</div>
+                <div class="footer">
+                    <div><div class="sig">ScaleVest AI</div><div style="font-size: 12px; color: #888;">Authorized Signature</div></div>
+                    <div class="gold-seal">OFFICIAL<br>VERIFIED</div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-label">Operating Costs</div>
-                    <div class="metric-value">$${((data.totalExpenses || 0) * 0.7).toFixed(0).toLocaleString()}</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Cost Efficiency</div>
-                    <div class="metric-value">${(((data.totalExpenses || 0) / data.totalRevenue) * 100).toFixed(1)}%</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Budget Variance</div>
-                    <div class="metric-value positive">-3.2%</div>
-                </div>
-            </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Expense Category</th>
-                        <th>Amount</th>
-                        <th>Budget</th>
-                        <th>Variance</th>
-                        <th>% of Revenue</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${expenseTransactions.length > 0 ? expenseTransactions.map(t => `
-                        <tr>
-                            <td style="font-weight: 600;">${t.category}</td>
-                            <td>$${Math.abs(t.amount).toLocaleString()}</td>
-                            <td>$${(Math.abs(t.amount) * 1.05).toFixed(0).toLocaleString()}</td>
-                            <td class="positive">-${(5 + Math.random() * 3).toFixed(1)}%</td>
-                            <td>${((Math.abs(t.amount) / data.totalRevenue) * 100).toFixed(1)}%</td>
-                        </tr>
-                    `).join('') : '<tr><td colspan="5" style="text-align: center;">No expense data available</td></tr>'}
-                </tbody>
-            </table>
-
-            <div class="section-title">Cost Optimization Insights</div>
-            <p class="text-block">Expense management remains disciplined with effective cost control measures and scalability of our business model.</p>
-
-            <div class="footer-bar">
-                <span>ScaleVest Financial Report • ${new Date().getFullYear()}</span>
-                <span>Confidential & Proprietary</span>
-            </div>
-        </div>
-
-        <!-- PAGE 5: CASH FLOW -->
-        <div class="page">
-            <div class="header-bar">
-                <div class="logo">SCALEVEST</div>
-                <div class="page-num">Page 5 of 6</div>
-            </div>
-            <h2 class="section-title">Cash Flow Statement & Projections</h2>
-            
-            <div class="chart-placeholder">Cash Flow Trend & 12-Month Forecast</div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
-                <div>
-                    <h4 style="font-weight: 600; margin-bottom: 10px; color: #0052cc;">Operating Cash Flow</h4>
-                    <table style="font-size: 10px;">
-                        <tr><td>Cash from Operations</td><td style="text-align: right; font-weight: 600;">$${(data.netProfit * 1.2).toFixed(0).toLocaleString()}</td></tr>
-                        <tr><td>Working Capital Changes</td><td style="text-align: right;">$${(data.netProfit * 0.1).toFixed(0).toLocaleString()}</td></tr>
-                        <tr style="border-top: 2px solid #0052cc;"><td><strong>Net Operating CF</strong></td><td style="text-align: right; font-weight: 700;">$${(data.netProfit * 1.3).toFixed(0).toLocaleString()}</td></tr>
-                    </table>
-                </div>
-                <div>
-                    <h4 style="font-weight: 600; margin-bottom: 10px; color: #0052cc;">Investment Activity</h4>
-                    <table style="font-size: 10px;">
-                        <tr><td>Capital Expenditures</td><td style="text-align: right;">($${(data.totalRevenue * 0.08).toFixed(0).toLocaleString()})</td></tr>
-                        <tr><td>Asset Acquisitions</td><td style="text-align: right;">($${(data.totalRevenue * 0.05).toFixed(0).toLocaleString()})</td></tr>
-                        <tr style="border-top: 2px solid #0052cc;"><td><strong>Net Investing CF</strong></td><td style="text-align: right; font-weight: 700;">($${(data.totalRevenue * 0.13).toFixed(0).toLocaleString()})</td></tr>
-                    </table>
-                </div>
-            </div>
-
-            <div class="highlight-box">
-                <h4 style="font-weight: 600; margin-bottom: 10px;">12-Month Cash Flow Projection</h4>
-                <p class="text-block">Based on current trajectory, we project sustained positive cash flow with strong liquidity for strategic initiatives.</p>
-            </div>
-
-            <div class="footer-bar">
-                <span>ScaleVest Financial Report • ${new Date().getFullYear()}</span>
-                <span>Confidential & Proprietary</span>
-            </div>
-        </div>
-
-        <!-- PAGE 6: CERTIFICATION -->
-        <div class="page">
-            <div class="header-bar">
-                <div class="logo">SCALEVEST</div>
-                <div class="page-num">Page 6 of 6</div>
-            </div>
-            <h2 class="section-title">Strategic Recommendations & Certification</h2>
-            
-            <div class="highlight-box">
-                <h4 style="font-weight: 600; margin-bottom: 10px;">CFO Strategic Recommendations</h4>
-                <ol style="margin-left: 20px; line-height: 1.8; font-size: 11px;">
-                    <li><strong>Revenue Acceleration:</strong> Capitalize on ${data.weeklyGrowth}% growth momentum by expanding high-margin product lines.</li>
-                    <li><strong>Operational Excellence:</strong> Maintain current profit margin of ${data.profitMargin}% through process optimization.</li>
-                    <li><strong>Capital Allocation:</strong> Deploy resources toward R&D and market expansion.</li>
-                    <li><strong>Risk Management:</strong> Implement hedging strategies and establish contingency reserves.</li>
-                    <li><strong>Stakeholder Value:</strong> Target sustainable growth while maintaining fiscal discipline.</li>
-                </ol>
-            </div>
-
-            <div style="margin: 30px 0; padding: 20px; background: #f8f9fa; border-left: 4px solid #00875a;">
-                <h4 style="font-weight: 600; margin-bottom: 10px; color: #00875a;">Financial Health Score: ${data.profitMargin > 25 ? 'A+' : data.profitMargin > 20 ? 'A' : 'B+'}</h4>
-                <p class="text-block">The company demonstrates exceptional financial performance. Current trajectory supports growth initiatives.</p>
-            </div>
-
-            <div class="signature-section">
-                <div class="signature-block">
-                    <div class="signature-line" style="font-family: 'Brush Script MT', cursive; font-size: 24px; border-top: none; margin-top: 0;">ScaleVest AI CFO</div>
-                    <div style="border-top: 2px solid #000; padding-top: 8px; margin-top: 5px;">
-                        <strong>ScaleVest AI CFO</strong><br>
-                        Chief Financial Officer<br>
-                        ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </div>
-                </div>
-                <div class="signature-block">
-                    <div style="width: 120px; height: 120px; border: 3px solid #0052cc; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-                        <div style="text-align: center; font-size: 10px; font-weight: 700;">
-                            CERTIFIED<br>ACCURATE<br>
-                            <div style="font-size: 16px; color: #0052cc; margin-top: 5px;">✓</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-top: 30px; font-size: 9px; color: #666; line-height: 1.5; border-top: 1px solid #ddd; padding-top: 15px;">
-                <strong>Certification Statement:</strong> ScaleVest AI CFO certifies that this report accurately represents the financial position and results of operations for the period ended ${new Date().toLocaleDateString()}. All information has been reviewed and verified in accordance with GAAP standards.
-            </div>
-
-            <div class="footer-bar">
-                <span>ScaleVest Financial Report • ${new Date().getFullYear()}</span>
-                <span>Confidential & Proprietary</span>
             </div>
         </div>
     `;
+    pdfContainer.appendChild(page1);
 
-    // GENERATE PDF
-const opt = {
-    margin: 0,
-    filename: `${reportName}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { 
-        scale: 2, 
-        useCORS: true, 
-        letterRendering: true,
-        scrollY: 0
-    },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    // ADD THIS LINE:
-    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-};
+    // 3. Page 2 (Dashboard Copy)
+    const page2 = document.createElement('div');
+    page2.style.cssText = 'page-break-before: always; background: #0a0e27; padding: 20px;';
+    page2.appendChild(document.getElementById('dashboard-container').cloneNode(true));
+    pdfContainer.appendChild(page2);
+
+    // 4. Generate PDF
+    const opt = {
+        margin: 0,
+        filename: `${reportName}.pdf`, // CUSTOM NAME ONLY IN DOWNLOAD URL
+        html2canvas: { scale: 2, useCORS: true, scrollY: 0, backgroundColor: '#040711' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
 
     html2pdf().set(opt).from(pdfContainer).save().then(() => {
+        // Reset Modal
         if(loadingEl) loadingEl.style.display = 'none';
         document.getElementById('export-modal').style.display = 'none';
-        alert("✅ Executive Report Generated Successfully!\n\nYour professional CFO report has been downloaded.");
+        alert("Verification Complete. Check your downloads.");
     });
 }
 
@@ -2659,7 +2520,7 @@ async function askCFO(userInput) {
 
             <div class="card alert-card">
                 <div class="card-title alert-title">EXPIRY ALERT</div>
-                <div class="alert-text"></div>
+                <div class="alert-text">Milk Powder (Expires in 48h)</div>
             </div>
 
 <div class="card momentum-card" id="product-analysis-card" style="cursor: pointer;">
