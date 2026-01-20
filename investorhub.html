@@ -2327,6 +2327,25 @@ window.closeSuccessAndRedirect = async function() {
     window.location.hash = 'dashboard';
     window.location.reload();
 };
+window.startVideoVerification = function() {
+const stepsSection = document.getElementById('verificationSteps');
+    if (stepsSection) {
+        // 1. Show the section
+        stepsSection.style.display = 'block';
+        
+        // 2. Add active class for animation (optional CSS)
+        // Small timeout ensures the browser registers display:block before adding opacity
+        setTimeout(() => {
+            stepsSection.classList.add('active');
+        }, 10);
+
+        // 3. Scroll to it smoothly
+        stepsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        console.error("Error: verificationSteps element not found!");
+    }
+};
+
 onAuthStateChanged(auth, async (user) => {
     updateProgress(20, "Authenticating...");
     
