@@ -10154,97 +10154,62 @@ function isRelatedCategory(cat1, cat2) {
     return false;
 }
 // ==========================================
-// LAUNCH EMERGENCE - MAIN FUNCTION
+// LAUNCH EMERGENCE AFTER PAYMENT SUCCESS
 // ==========================================
-
 window.launchEmergence = async function(planType, investorCount, paymentMethod) {
     if (!window.selectedApplicationId) {
-        alert("❌ Please select an application first!");
+        alert("❌ No application selected!");
         return;
     }
     
-    const launchBtn = document.getElementById('launchEmergenceBtn');
-    launchBtn.innerHTML = 'Launching... 🚀';
-    launchBtn.disabled = true;
-    
     try {
-        // 1. Get user's startup category
-        const startupRef = ref(db, `startupProfile/${currentUser.uid}`);
-        const startupSnap = await get(startupRef);
-        const userCategory = startupSnap.val()?.category || 'Other';
+        // Show processing state
+        const processingModal = document.createElement('div');
+        processingModal.className = 'edit-modal show';
+        processingModal.id = 'processingModal';
+        processingModal.innerHTML = `
+            <div class="edit-modal-content" style="text-align:center; padding:3rem;">
+                <div class="spinner" style="margin: 0 auto 1.5rem auto;"></div>
+                <h3>Processing Your Emergence...</h3>
+                <p style="color:#888;">Sending your application to ${investorCount} investors</p>
+            </div>
+        `;
+        document.body.appendChild(processingModal);
         
-        // 2. Find matching investors
-        const matchedInvestors = await findMatchingInvestors(userCategory, investorCount);
-        
-        if (matchedInvestors.length === 0) {
-            alert("❌ No investors found. Please try again later.");
-            return;
-        }
-        
-        // 3. Get application data
-        const appRef = ref(db, `Applications/${currentUser.uid}/${window.selectedApplicationId}`);
-        const appSnap = await get(appRef);
-        const appData = appSnap.val();
-        
-        // 4. Send to each investor's inbox
-        const timestamp = Date.now();
-        const updates = {};
-        
-        matchedInvestors.forEach(investorId => {
-            const messageId = push(ref(db, `InvestorInbox/${investorId}`)).key;
-            updates[`InvestorInbox/${investorId}/${messageId}`] = {
-                applicationId: window.selectedApplicationId,
-                founderId: currentUser.uid,
-                appName: appData.appName,
-                appHook: appData.appHook,
-                vestId: appData.vestId,
-                timestamp: timestamp,
-                read: false,
-                emergenceType: planType
-            };
-        });
-        
-        // 5. Deduct tokens if token payment
+        // If using tokens, deduct them
         if (paymentMethod === 'tokens') {
             const tokenCost = {
-                'tiny': 100,
-                'small': 200,
-                'medium': 320
+                'small': 100,
+                'medium': 200,
+                'critical': 320
             }[planType];
             
             const currentTokens = await getLiveTokens();
-            updates[`founderProfile/${currentUser.uid}/scaleTokens`] = currentTokens - tokenCost;
+            await update(ref(db, `founderProfile/${currentUser.uid}`), {
+                scaleTokens: currentTokens - tokenCost
+            });
         }
         
-        // 6. Update cooldown
-        updates[`founderProfile/${currentUser.uid}/lastEmergenceDate`] = timestamp;
-        updates[`founderProfile/${currentUser.uid}/emergenceCount`] = (cachedFounderData?.emergenceCount || 0) + 1;
+        // Update emergence timestamp and cooldown
+        await update(ref(db, `founderProfile/${currentUser.uid}`), {
+            lastEmergenceDate: Date.now()
+        });
         
-        // 7. Track launch
-        const launchId = push(ref(db, `EmergenceLaunches/${currentUser.uid}`)).key;
-        updates[`EmergenceLaunches/${currentUser.uid}/${launchId}`] = {
-            applicationId: window.selectedApplicationId,
-            planType,
-            investorsSent: matchedInvestors,
-            timestamp,
-            paymentMethod
-        };
+        // Success!
+        processingModal.remove();
         
-        // 8. Execute all updates
-        await update(ref(db), updates);
-        
-        // 9. Show success animation
-        document.querySelector('.edit-modal').remove();
-        showRocketLaunchAnimation(matchedInvestors.length);
+        alert(`✅ Success! Your application has been sent to ${investorCount} investors!`);
+        window.location.hash = 'founder_dashboard';
         
     } catch (error) {
-        console.error("Launch error:", error);
-        alert("❌ Launch failed. Please try again.");
-        launchBtn.innerHTML = 'Launch Emergence 🚀';
-        launchBtn.disabled = false;
+        console.error("Launch Error:", error);
+        
+        const processingModal = document.getElementById('processingModal');
+        if (processingModal) processingModal.remove();
+        
+        alert("❌ Failed to launch emergence: " + error.message);
     }
-};
-// ==========================================
+};// ==========================================
 // ROCKET LAUNCH SUCCESS ANIMATION
 // ==========================================
 
@@ -10371,61 +10336,36 @@ function showRocketLaunchAnimation(investorCount) {
     }, 5000);
 }
 
-window.addTokensToDB = async function(amount, bundleType, price) {
+// ==========================================
+// ADD TOKENS AFTER SUCCESSFUL PAYMENT
+// ==========================================
+window.addTokensToDB = async function(amount, planType, paidAmount) {
     if (!currentUser) return;
     
     try {
-        // 1. Get current token count
         const currentTokens = await getLiveTokens();
         const newTotal = currentTokens + amount;
-        const timestamp = Date.now();
         
-        // 2. Create unique IDs for global and user-specific history
-        const transactionId = push(ref(db, 'TokenTransactions')).key;
-        const purchaseId = push(ref(db, `founderProfile/${currentUser.uid}/tokenPurchaseHistory`)).key;
+        await update(ref(db, `founderProfile/${currentUser.uid}`), {
+            scaleTokens: newTotal
+        });
         
-        // 3. Prepare atomic updates
-        const updates = {};
-        
-        // Update user's token count
-        updates[`founderProfile/${currentUser.uid}/scaleTokens`] = newTotal;
-        
-        // Add to user's purchase history
-        updates[`founderProfile/${currentUser.uid}/tokenPurchaseHistory/${purchaseId}`] = {
-            amount: amount,
-            bundleType: bundleType,
-            price: price,
-            timestamp: timestamp,
-            transactionId: transactionId,
-            status: "completed"
-        };
-        
-        // Add to global transactions log (Root level)
-        updates[`TokenTransactions/${transactionId}`] = {
-            userId: currentUser.uid,
-            bundleType: bundleType,
-            tokensAdded: amount,
-            price: price,
-            timestamp: timestamp,
-            paymentMethod: "razorpay", // Placeholder for payment integration
-            userEmail: currentUser.email || "unknown"
-        };
-        
-        // 4. Execute all updates atomically
-        await update(ref(db), updates);
-        
-        // 5. Update local cache for UI responsiveness
-        if (cachedFounderData) {
-            cachedFounderData.scaleTokens = newTotal;
+        // Show success message
+        if (window.showSuccessToast) {
+            window.showSuccessToast(`✅ Added ${amount} tokens! New balance: ${newTotal}`);
+        } else {
+            alert(`✅ Success! Added ${amount} tokens. New balance: ${newTotal}`);
         }
         
-        // 6. Show success and refresh shop
-        alert(`✅ Success! ${amount} tokens added.\nNew Balance: ${newTotal} tokens`);
-        showTokenShop(); 
+        // Redirect to token shop to see updated balance
+        setTimeout(() => {
+            window.location.hash = 'token_shop';
+            window.showTokenShop();
+        }, 1500);
         
-    } catch (error) {
-        console.error("Transaction Error:", error);
-        alert("❌ Transaction failed. Please try again or contact support.");
+    } catch (e) {
+        console.error("Token addition error:", e);
+        alert("❌ Failed to add tokens. Please contact support with your payment ID.");
     }
 };
 // ==========================================
@@ -10664,7 +10604,7 @@ window.openPaymentCheckout = function(planType, investorCount, amount, paymentFo
 // ==========================================
 window.initRazorpay = function(planType, investorCount, amount, paymentFor) {
     const options = {
-        key: "rzp_test_1DP5mmOlF5G5ag", // ⚠️ REPLACE with your Razorpay Test Key
+        key: "rzp_test_1DP5mmOlF5G5ag", // ⚠️ REPLACE with your actual Razorpay Test Key
         amount: amount * 100, // Razorpay works in paise
         currency: "INR",
         name: "ScaleVest",
@@ -10672,14 +10612,18 @@ window.initRazorpay = function(planType, investorCount, amount, paymentFor) {
         image: "ScaleVestLogo.png",
         handler: async function(response) {
             // Payment Success
-            console.log("Payment Successful:", response);
+            console.log("✅ Payment Successful:", response.razorpay_payment_id);
             
-            // Close payment modal
-            document.getElementById('paymentModal')?.remove();
+            // Close payment modal safely
+            const paymentModal = document.getElementById('paymentModal');
+            if (paymentModal) {
+                paymentModal.remove();
+            }
             
-            // Show processing
+            // Show processing state
             const processing = document.createElement('div');
             processing.className = 'edit-modal show';
+            processing.id = 'processingPayment';
             processing.innerHTML = `
                 <div class="edit-modal-content" style="text-align:center; padding:3rem;">
                     <div class="spinner" style="margin: 0 auto 1.5rem auto;"></div>
@@ -10689,14 +10633,24 @@ window.initRazorpay = function(planType, investorCount, amount, paymentFor) {
             `;
             document.body.appendChild(processing);
             
-            // Execute the appropriate action
-            if (paymentFor === 'emergence') {
-                await window.launchEmergence(planType, investorCount, 'cash');
-            } else if (paymentFor === 'tokens') {
-                await window.addTokensToDB(investorCount, planType, amount);
+            try {
+                // Execute the appropriate action based on paymentFor
+                if (paymentFor === 'emergence') {
+                    await window.launchEmergence(planType, investorCount, 'cash');
+                } else if (paymentFor === 'tokens') {
+                    await window.addTokensToDB(investorCount, planType, amount);
+                }
+                
+                // Remove processing modal
+                const proc = document.getElementById('processingPayment');
+                if (proc) proc.remove();
+                
+            } catch (error) {
+                console.error("Post-payment error:", error);
+                const proc = document.getElementById('processingPayment');
+                if (proc) proc.remove();
+                alert("❌ Payment successful but processing failed. Please contact support.");
             }
-            
-            processing.remove();
         },
         prefill: {
             name: cachedFounderData?.founderUsername || "",
@@ -10716,8 +10670,14 @@ window.initRazorpay = function(planType, investorCount, amount, paymentFor) {
     const rzp = new Razorpay(options);
     
     rzp.on('payment.failed', function(response) {
+        console.error("❌ Payment Failed:", response.error);
         alert('Payment Failed: ' + response.error.description);
-        document.getElementById('paymentModal')?.remove();
+        
+        // Close modal safely
+        const paymentModal = document.getElementById('paymentModal');
+        if (paymentModal) {
+            paymentModal.remove();
+        }
     });
     
     rzp.open();
