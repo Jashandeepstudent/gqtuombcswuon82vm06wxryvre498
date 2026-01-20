@@ -881,160 +881,96 @@ function updateProductUI(analytics) {
 async function checkSubscriptionStatus(userId) {
     const cfoRef = ref(db, `BusinessOwners/${userId}/CFO`);
     const snapshot = await get(cfoRef);
-    
     if (!snapshot.exists()) return;
     
     const data = snapshot.val();
+    if (!data.expiryDate) return;
+
     const now = new Date();
     const expiryDate = new Date(data.expiryDate);
 
-    // If trial/plan expired
     if (now > expiryDate) {
-        // Update database to unpaid status
-        const { update } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
-        await update(cfoRef, { cfopaid: false });
+        if (data.cfopaid !== false) {
+            await update(cfoRef, { cfopaid: false });
+        }
         showSubscriptionOverlay(data.plan);
     }
 }
 
 function showSubscriptionOverlay(expiredPlan) {
+    if (document.getElementById('subscription-wall')) return;
     const overlay = document.createElement('div');
     overlay.id = "subscription-wall";
-    overlay.style.cssText = `
-        position: fixed; inset: 0; z-index: 20000; 
-        background: rgba(10, 14, 39, 0.98); backdrop-filter: blur(20px);
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        padding: 20px; text-align: center; font-family: sans-serif;
-    `;
+    overlay.style.cssText = `position: fixed; inset: 0; z-index: 20000; background: rgba(10, 14, 39, 0.98); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center; padding: 20px; text-align: center;`;
 
     const message = expiredPlan === "freeTrial" 
-        ? "Your 14-day free trial has ended. I hope you liked ScaleVest CFO and it helped you make profits!" 
+        ? "Your 40-second free trial has ended! Upgrade to keep using ScaleVest CFO." 
         : `Your ${expiredPlan} plan has expired.`;
 
     overlay.innerHTML = `
         <div class="card" style="max-width: 900px; border: 1px solid #3b82f6;">
-            <h2 style="color: #fff; margin-bottom: 10px;">Access Blocked</h2>
-            <p style="color: rgba(255,255,255,0.7); margin-bottom: 30px;">${message}<br>Please upgrade your plan to continue using your AI CFO.</p>
-            
+            <h2 style="color: #fff;">Access Blocked</h2>
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 30px;">${message}</p>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: left;">
-                
-                <div class="card" style="border: 1px solid rgba(255,255,255,0.1); position: relative;">
-                    <span style="position: absolute; top: 10px; right: 10px; background: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 10px;">50% OFF</span>
-                    <h3 style="color: #3b82f6;">Monthly</h3>
-                    <p style="font-size: 24px; margin: 10px 0;">₹199 <del style="font-size: 14px; opacity: 0.5;">₹399</del></p>
-                    <ul style="font-size: 12px; opacity: 0.8; padding-left: 15px;">
-                        <li>Access Unlimited CFO</li>
-                        <li>1 Month Duration</li>
-                    </ul>
-                    <button onclick="processPayment('monthly', 30)" style="width:100%; margin-top:15px; padding:10px; background:#3b82f6; border:none; color:white; border-radius:8px; cursor:pointer;">Upgrade Now</button>
+                <div class="card" style="border: 1px solid rgba(255,255,255,0.1);">
+                    <h3>Monthly</h3>
+                    <p>₹199 <del>₹399</del></p>
+                    <button onclick="processPayment('monthly', 30)" class="launch-btn">Upgrade</button>
                 </div>
-
-                <div class="card" style="border: 1px solid #3b82f6; position: relative; background: rgba(59, 130, 246, 0.05);">
-                    <span style="position: absolute; top: 10px; right: 10px; background: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 10px;">50% OFF</span>
-                    <h3 style="color: #3b82f6;">Half-Yearly</h3>
-                    <p style="font-size: 24px; margin: 10px 0;">₹499 <del style="font-size: 14px; opacity: 0.5;">₹999</del></p>
-                    <ul style="font-size: 12px; opacity: 0.8; padding-left: 15px;">
-                        <li>Access Unlimited CFO</li>
-                        <li>6 Months Duration</li>
-                        <li style="color: #4ade80; font-weight:bold;">Save ₹500 vs Monthly</li>
-                    </ul>
-                    <button onclick="processPayment('halfYearly', 180)" style="width:100%; margin-top:15px; padding:10px; background:#3b82f6; border:none; color:white; border-radius:8px; cursor:pointer;">Upgrade Now</button>
+                <div class="card" style="border: 1px solid #3b82f6;">
+                    <h3>6 Months</h3>
+                    <p>₹499 <del>₹999</del></p>
+                    <button onclick="processPayment('halfYearly', 180)" class="launch-btn">Upgrade</button>
                 </div>
-
-                <div class="card" style="border: 1px solid #fb923c; position: relative;">
-                    <span style="position: absolute; top: 10px; right: 10px; background: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 10px;">50% OFF</span>
-                    <h3 style="color: #fb923c;">Yearly</h3>
-                    <p style="font-size: 24px; margin: 10px 0;">₹999 <del style="font-size: 14px; opacity: 0.5;">₹2000</del></p>
-                    <ul style="font-size: 12px; opacity: 0.8; padding-left: 15px;">
-                        <li>Access Unlimited CFO</li>
-                        <li>12 Months Duration</li>
-                        <li style="color: #4ade80; font-weight:bold;">Save ₹200 vs Monthly</li>
-                        <li style="color: #4ade80; font-weight:bold;">Save ₹500 vs Half-Yearly</li>
-                    </ul>
-                    <button onclick="processPayment('yearly', 365)" style="width:100%; margin-top:15px; padding:10px; background:#fb923c; border:none; color:white; border-radius:8px; cursor:pointer;">Upgrade Now</button>
+                <div class="card" style="border: 1px solid #fb923c;">
+                    <h3>Yearly</h3>
+                    <p>₹999 <del>₹2000</del></p>
+                    <button onclick="processPayment('yearly', 365)" class="launch-btn">Upgrade</button>
                 </div>
-
             </div>
-        </div>
-    `;
+        </div>`;
     document.body.appendChild(overlay);
 }
 
 window.processPayment = async (planName, days) => {
     const user = auth.currentUser;
-    if (!user) return alert("User not authenticated.");
+    if (!user) return alert("Please log in.");
 
-    // Amount mapping (Price in Paise: 19900 = ₹199)
-    const prices = {
-        'monthly': 19900,
-        'halfYearly': 49900,
-        'yearly': 99900
-    };
-
+    const prices = { 'monthly': 19900, 'halfYearly': 49900, 'yearly': 99900 };
     const options = {
-        "key": "rzp_test_1DP5mmOlF5G5ag", // Replace with your Razorpay Test Key ID
-        "amount": prices[planName], 
+        "key": "rzp_test_1DP5mmOlF5G5ag", 
+        "amount": prices[planName],
         "currency": "INR",
         "name": "ScaleVest CFO",
-        "description": `Upgrade to ${planName} Plan`,
-        "image": "https://your-logo-url.com/logo.png",
         "handler": async function (response) {
-            // THIS CODE RUNS ONLY ON SUCCESS
-            const expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + days);
-
-            try {
-                const { update } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
-                
-                // Update Firebase Nodes
-                await update(ref(db, `BusinessOwners/${user.uid}/CFO`), {
-                    cfopaid: true,
-                    plan: planName,
-                    expiryDate: expiryDate.toISOString(),
-                    lastPaymentId: response.razorpay_payment_id // Storing for records
-                });
-
-                alert(`Payment Successful! Your ${planName} plan is now active.`);
-                location.reload(); // Refresh to remove the blocked popup
-            } catch (error) {
-                console.error("Database Update Failed:", error);
-                alert("Payment received, but failed to update account. Please contact support.");
-            }
+            const newExpiry = new Date();
+            newExpiry.setDate(newExpiry.getDate() + days);
+            await update(ref(db, `BusinessOwners/${user.uid}/CFO`), {
+                cfopaid: true,
+                plan: planName,
+                expiryDate: newExpiry.toISOString()
+            });
+            alert("Payment Successful!");
+            location.reload();
         },
-        "prefill": {
-            "name": document.getElementById('user-name-display').innerText,
-            "email": user.email
-        },
-        "theme": {
-            "color": "#3b82f6" // Matches your blue theme
-        }
+        "theme": { "color": "#3b82f6" }
     };
-
-    const rzp1 = new Razorpay(options);
-    rzp1.on('payment.failed', function (response) {
-        alert("Payment Failed: " + response.error.description);
-    });
-    rzp1.open();
+    new Razorpay(options).open();
 };
 // --- Auth State Logic ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
+        checkSubscriptionStatus(user.uid);
+        setInterval(() => checkSubscriptionStatus(user.uid), 5000); // Check every 5s for trial end
+        
         runOnboarding(user.uid);
         fetchAnalytics(user.uid); 
         fetchRevenuePulse(user.uid);
-         checkSubscriptionStatus(user.uid);
         setupProductAnalysisNavigation(user.uid);
-setupFinanceReportNavigation(user.uid);
+        setupFinanceReportNavigation(user.uid);
         fetchExpiryAlerts(user.uid);
         fetchPricingAnalysis(user.uid);
-        fetchStockRadar(user.uid); 
-        
-        // Refresh all alerts every hour
-        setInterval(() => {
-            fetchExpiryAlerts(user.uid);
-            fetchPricingAnalysis(user.uid);
-            fetchStockRadar(user.uid); 
-        }, 3600000); // 1 hour
+        fetchStockRadar(user.uid);
     } else {
         window.location.href = "login.html";
     }
@@ -1097,7 +1033,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if(trendCard) trendCard.onclick = () => { overlay.style.display = 'flex'; loadTrends(); };
 });
- async function runOnboarding(userId) {
+async function runOnboarding(userId) {
     const nameSpan = document.getElementById('user-name-display');
     const welcomeOverlay = document.getElementById('onboarding-overlay');
     const welcomeText = document.getElementById('welcome-text');
@@ -1106,39 +1042,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const startBtn = document.getElementById('start-cfo-btn');
     const checkbox = document.getElementById('terms-check');
 
-    try {
-      // 1. Fetch Name from /BusinessOwners/user.id/name
-      const snapshot = await get(ref(db, `BusinessOwners/${userId}/name`));
-      const userName = snapshot.exists() ? snapshot.val() : "Partner";
-      nameSpan.innerText = userName;
+    const snap = await get(ref(db, `BusinessOwners/${userId}/name`));
+    nameSpan.innerText = snap.exists() ? snap.val() : "Partner";
 
-      // 2. Check if CFO is already named
-      const cfoSnapshot = await get(ref(db, `BusinessOwners/${userId}/CFO/name`));
-      
-      if (cfoSnapshot.exists()) {
-        // Skip onboarding if already set
+    const cfoSnap = await get(ref(db, `BusinessOwners/${userId}/CFO/name`));
+    if (cfoSnap.exists()) {
         welcomeOverlay.style.display = "none";
-        displayCFOName(cfoSnapshot.val());
-      } else {
-        // 3. Cinematic Intro Sequence
+        displayCFOName(cfoSnap.val());
+    } else {
         startIntroSequence(welcomeText, welcomeOverlay, cfoPopup);
-      }
-    } catch (error) {
-      console.error("Database Error:", error);
     }
 
-    // 4. Save Logic
-   startBtn.addEventListener('click', async () => {
+    startBtn.addEventListener('click', async () => {
         if (!checkbox.checked) return;
         const cfoName = cfoInput.value.trim() || "Mark";
+        const trialExpiry = new Date();
+        trialExpiry.setSeconds(trialExpiry.getSeconds() + 40); // 40 Seconds Trial
 
         try {
-            const { set } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
-            
-            // Calculate 14 days from now
-            const trialExpiry = new Date();
-            trialExpiry.setSeconds(expiryDate.getSeconds() + 40);
-
             await set(ref(db, `BusinessOwners/${userId}/CFO`), {
                 name: cfoName,
                 trialStarted: new Date().toISOString(),
@@ -1146,7 +1067,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 cfopaid: true,
                 plan: "freeTrial"
             });
-
+            displayCFOName(cfoName);
+            cfoPopup.style.display = "none";
+            welcomeOverlay.style.display = "none";
+        } catch (e) { console.error(e); }
+    });
+}
             displayCFOName(cfoName);
             cfoPopup.style.display = "none";
             welcomeOverlay.style.display = "none";
