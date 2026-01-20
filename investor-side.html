@@ -406,11 +406,21 @@ table {
     }
         .small-box:hover { border-color: var(--accent-blue); transform: translateY(-10px); }
 
-        .small-box video {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover; z-index: -1; opacity: 0.25;
-        }
+.small-box video {
+    width: 100%;       /* Makes video fill the container width */
+    height: 200px;     /* Set a specific height */
+    object-fit: cover; /* Prevents stretching, crops like a photo */
+    border-radius: 12px;
+    display: block;    /* Ensures no weird bottom spacing */
+    background: #000;  /* Placeholder color while loading */
+}
+
+.what-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
 
         .small-box h3 { font-size: 2.5rem; color: var(--accent-green); margin-bottom: 20px; font-weight: 900; letter-spacing: -1px; }
         .small-box p { color: var(--text-dim); font-size: 1.2rem; line-height: 1.5; font-weight: 500; }
@@ -695,27 +705,27 @@ table {
 
 
 <section class="what-is-section">
-        <h2 class="section-header" style="text-align: left;">What Is?</h2>
-        <div class="what-grid">
-            <div class="small-box">
-                <video autoplay muted loop playsinline>
-                    <source src="vestthink.mp4" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-                <h3>What is a Vest?</h3>
-                <p>A Vest is a visual representative of the founders and their startup logic, bundling audited bank data and code repositories into a decision-ready asset.</p>
-            </div>
-
-            <div class="small-box">
-                <video autoplay muted loop playsinline>
-                    <source src="applicationthink.mp4" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-                <h3>What is Application?</h3>
-                <p>Funding Applications are a founder's humble request for an investor to view their specific startup Vest and initiate a secure funding handshake.</p>
-            </div>
+    <h2 class="section-header" style="text-align: left;">What Is?</h2>
+    <div class="what-grid">
+        <div class="small-box">
+            <video autoplay muted loop playsinline preload="auto">
+                <source src="vestthink.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <h3>What is a Vest?</h3>
+            <p>A Vest is a visual representative of the founders and their startup logic, bundling audited bank data and code repositories into a decision-ready asset.</p>
         </div>
-    </section>
+
+        <div class="small-box">
+            <video autoplay muted loop playsinline preload="auto">
+                <source src="applicationthink.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <h3>What is Application?</h3>
+            <p>Funding Applications are a founder's humble request for an investor to view their specific startup Vest and initiate a secure funding handshake.</p>
+        </div>
+    </div>
+</section>
 
     <section class="steps-section">
         <h2 class="section-header">Getting Started Steps</h2>
