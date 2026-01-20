@@ -61,7 +61,308 @@
     background: #000;
     border-bottom: 1px solid #222;
 }
+/* ==========================================
+   PREMIUM PAYMENT OVERLAY
+========================================== */
+.payment-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(15px);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s ease;
+}
 
+.payment-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.payment-modal {
+    background: #ffffff;
+    width: 90%;
+    max-width: 650px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+    transform: scale(0.9);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.payment-overlay.active .payment-modal {
+    transform: scale(1);
+}
+
+/* Header */
+.payment-header {
+    background: #000;
+    color: #fff;
+    padding: 30px 40px;
+    position: relative;
+}
+
+.payment-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 2rem;
+    cursor: pointer;
+    transition: 0.2s;
+    line-height: 1;
+}
+
+.payment-close-btn:hover {
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.payment-plan-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.payment-plan-icon {
+    width: 70px;
+    height: 70px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.payment-plan-details h2 {
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+}
+
+.payment-plan-price {
+    font-size: 1.3rem;
+    color: #10b981;
+    font-weight: 700;
+}
+
+/* Payment Methods Section */
+.payment-body {
+    padding: 40px;
+    background: #f9f9f9;
+}
+
+.payment-section-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #666;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+.payment-methods-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.payment-method-card {
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px 25px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.payment-method-card:hover {
+    border-color: #000;
+    transform: translateX(5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.payment-method-card.selected {
+    border-color: #000;
+    background: #fafafa;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.payment-method-card.selected::after {
+    content: '✓';
+    position: absolute;
+    right: 20px;
+    width: 28px;
+    height: 28px;
+    background: #10b981;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 1rem;
+}
+
+.payment-icon-wrapper {
+    width: 50px;
+    height: 50px;
+    background: #f5f5f5;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.payment-method-info {
+    flex: 1;
+}
+
+.payment-method-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 3px;
+}
+
+.payment-method-subtitle {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* Footer */
+.payment-footer {
+    background: #fff;
+    padding: 25px 40px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.payment-secure-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.payment-proceed-btn {
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.payment-proceed-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.payment-proceed-btn:not(:disabled):hover {
+    background: #333;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Processing Overlay */
+.payment-processing-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.98);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.payment-processing-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.processing-spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid #f0f0f0;
+    border-top: 5px solid #000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+.processing-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 5px;
+}
+
+.processing-subtext {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+    .payment-modal {
+        width: 95%;
+        max-height: 95vh;
+        overflow-y: auto;
+    }
+    
+    .payment-header,
+    .payment-body,
+    .payment-footer {
+        padding: 20px;
+    }
+    
+    .payment-plan-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .payment-footer {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .payment-proceed-btn {
+        width: 100%;
+    }
+}
 .edit-modal-header h3 {
     font-size: 1.2rem;
     font-weight: 600;
@@ -4524,7 +4825,6 @@ window.toggleCoFounders = function(hasCoFounders) {
 
 
 
-// 1. FOUNDER EMERGENCE (CASH SHOP)
 window.showFounderEmergence = async function() {
     const tokens = await getLiveTokens();
     const container = document.getElementById('dashboardContainer');
@@ -4554,7 +4854,7 @@ window.showFounderEmergence = async function() {
                         <div class="price-row"><span class="old-price">₹300</span><span class="discount-pill">Launch OFF</span></div>
                         <span class="new-price">₹150</span>
                     </div>
-<button class="buy-btn-premium" onclick="openEmergenceCheckout('Alpha', 150)">Choose Alpha</button>
+                    <button class="buy-btn-premium" onclick="openPaymentModal('Alpha', 150, 'emergence')">Choose Alpha</button>
                 </div>
 
                 <div class="emergence-card bundle-card featured">
@@ -4571,7 +4871,7 @@ window.showFounderEmergence = async function() {
                         <div class="price-row"><span class="old-price">₹400</span><span class="discount-pill">Launch OFF</span></div>
                         <span class="new-price">₹200</span>
                     </div>
-<button class="buy-btn-premium" onclick="openEmergenceCheckout('Steady', 200)">Choose Steady</button>
+                    <button class="buy-btn-premium" onclick="openPaymentModal('Steady', 200, 'emergence')">Choose Steady</button>
                 </div>
 
                 <div class="emergence-card bundle-card">
@@ -4585,7 +4885,7 @@ window.showFounderEmergence = async function() {
                         <div class="price-row"><span class="old-price">₹699</span><span class="discount-pill">Launch OFF</span></div>
                         <span class="new-price">₹350</span>
                     </div>
-<button class="buy-btn-premium" onclick="openEmergenceCheckout('Critical', 350)">Go Super Critical</button>
+                    <button class="buy-btn-premium" onclick="openPaymentModal('Super Critical', 350, 'emergence')">Go Super Critical</button>
                 </div>
             </div>
         </div>
@@ -5148,7 +5448,6 @@ window.showTokenShop = async function() {
             </div>
 
             <div class="emergence-grid">
-                <!-- Small Bundle -->
                 <div class="emergence-card bundle-card">
                     <div class="bundle-image-wrapper">
                         <img src="chest1.svg" alt="Small Chest" class="chest-img">
@@ -5156,10 +5455,9 @@ window.showTokenShop = async function() {
                     <h2 class="plan-title">Small Bundle</h2>
                     <div class="token-amount">80 Scale Tokens</div>
                     <div class="price-section"><span class="new-price">₹50</span></div>
-<button class="buy-btn-premium" onclick="openTokenCheckout('Small', 50, 80)">Buy Now</button>
+                    <button class="buy-btn-premium" onclick="openPaymentModal('Small Bundle', 50, 'tokens', 80)">Buy Now</button>
                 </div>
 
-                <!-- Medium Bundle -->
                 <div class="emergence-card bundle-card featured">
                     <div class="bundle-image-wrapper">
                         <img src="chest2.svg" alt="Medium Chest" class="chest-img">
@@ -5167,10 +5465,9 @@ window.showTokenShop = async function() {
                     <h2 class="plan-title">Medium Bundle</h2>
                     <div class="token-amount">180 Scale Tokens</div>
                     <div class="price-section"><span class="new-price">₹150</span></div>
-<button class="buy-btn-premium" onclick="openTokenCheckout('Medium', 150, 180)">Buy Now</button>
+                    <button class="buy-btn-premium" onclick="openPaymentModal('Medium Bundle', 150, 'tokens', 180)">Buy Now</button>
                 </div>
 
-                <!-- Large Bundle -->
                 <div class="emergence-card bundle-card">
                     <div class="bundle-image-wrapper">
                         <img src="chest3.svg" alt="Large Chest" class="chest-img">
@@ -5178,7 +5475,7 @@ window.showTokenShop = async function() {
                     <h2 class="plan-title">Large Bundle</h2>
                     <div class="token-amount">500 Scale Tokens</div>
                     <div class="price-section"><span class="new-price">₹400</span></div>
-<button class="buy-btn-premium" onclick="openTokenCheckout('Large', 400, 500)">Buy Now</button>
+                    <button class="buy-btn-premium" onclick="openPaymentModal('Large Bundle', 400, 'tokens', 500)">Buy Now</button>
                 </div>
             </div>
         </div>
@@ -16919,6 +17216,248 @@ window.closeFullScreenPDF = function() {
 function startVerification() {
     window.location.href = "https://upscalevest.site/vests.html#scalevest_verify";
 }
+// ==========================================
+// PAYMENT MODAL SYSTEM
+// ==========================================
+
+let currentPaymentData = null;
+
+window.openPaymentModal = function(planName, price, shopType, tokenAmount = null) {
+    // Store payment data
+    currentPaymentData = {
+        planName: planName,
+        price: price,
+        shopType: shopType,
+        tokenAmount: tokenAmount
+    };
+    
+    // Create modal if doesn't exist
+    let modal = document.getElementById('paymentOverlay');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'paymentOverlay';
+        modal.className = 'payment-overlay';
+        
+        modal.innerHTML = `
+            <div class="payment-modal">
+                <div class="payment-header">
+                    <button class="payment-close-btn" onclick="closePaymentModal()">×</button>
+                    <div class="payment-plan-info">
+                        <div class="payment-plan-icon">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"></path>
+                            </svg>
+                        </div>
+                        <div class="payment-plan-details">
+                            <h2 id="paymentPlanName"></h2>
+                            <div class="payment-plan-price" id="paymentPlanPrice"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="payment-body">
+                    <div class="payment-section-title">Choose Payment Method</div>
+                    
+                    <div class="payment-methods-grid">
+                        <!-- Card Payment -->
+                        <div class="payment-method-card" onclick="selectPaymentMethod('card')">
+                            <div class="payment-icon-wrapper">
+                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                                </svg>
+                            </div>
+                            <div class="payment-method-info">
+                                <div class="payment-method-title">Credit / Debit Card</div>
+                                <div class="payment-method-subtitle">Visa, Mastercard, Rupay</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Net Banking -->
+                        <div class="payment-method-card" onclick="selectPaymentMethod('netbanking')">
+                            <div class="payment-icon-wrapper">
+                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2">
+                                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                </svg>
+                            </div>
+                            <div class="payment-method-info">
+                                <div class="payment-method-title">Net Banking</div>
+                                <div class="payment-method-subtitle">All major banks supported</div>
+                            </div>
+                        </div>
+                        
+                        <!-- PayPal -->
+                        <div class="payment-method-card" onclick="selectPaymentMethod('paypal')">
+                            <div class="payment-icon-wrapper">
+                                <svg width="30" height="30" viewBox="0 0 24 24" fill="#003087">
+                                    <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72a.77.77 0 0 1 .76-.653h5.555c3.72 0 6.214 1.78 6.214 5.13 0 3.87-2.857 6.562-7.005 6.562H7.39l-.849 6.578a.641.641 0 0 1-.633.74h-.832zm9.007-7.85c2.857 0 5.215-2.097 5.215-5.714 0-2.857-1.78-4.545-4.897-4.545h-3.795l-1.78 10.259h5.257z"/>
+                                </svg>
+                            </div>
+                            <div class="payment-method-info">
+                                <div class="payment-method-title">PayPal</div>
+                                <div class="payment-method-subtitle">Fast & secure international</div>
+                            </div>
+                        </div>
+                        
+                        <!-- UPI -->
+                        <div class="payment-method-card" onclick="selectPaymentMethod('upi')">
+                            <div class="payment-icon-wrapper">
+                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M12 6v12M16 10l-4 4-4-4"></path>
+                                </svg>
+                            </div>
+                            <div class="payment-method-info">
+                                <div class="payment-method-title">UPI</div>
+                                <div class="payment-method-subtitle">Google Pay, PhonePe, Paytm</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="payment-footer">
+                    <div class="payment-secure-badge">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        Secure Payment
+                    </div>
+                    <button class="payment-proceed-btn" id="paymentProceedBtn" disabled onclick="processPayment()">
+                        Proceed to Pay
+                    </button>
+                </div>
+                
+                <!-- Processing Overlay -->
+                <div class="payment-processing-overlay" id="paymentProcessing">
+                    <div class="processing-spinner"></div>
+                    <div class="processing-text">Processing Payment...</div>
+                    <div class="processing-subtext">Please do not close this window</div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+    
+    // Update modal content
+    document.getElementById('paymentPlanName').textContent = planName;
+    document.getElementById('paymentPlanPrice').textContent = `₹${price}`;
+    
+    // Reset selection
+    document.querySelectorAll('.payment-method-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    document.getElementById('paymentProceedBtn').disabled = true;
+    
+    // Show modal
+    setTimeout(() => modal.classList.add('active'), 10);
+};
+
+window.closePaymentModal = function() {
+    const modal = document.getElementById('paymentOverlay');
+    if (modal) {
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 400);
+    }
+    currentPaymentData = null;
+};
+
+let selectedPaymentMethod = null;
+
+window.selectPaymentMethod = function(method) {
+    selectedPaymentMethod = method;
+    
+    // Update UI
+    document.querySelectorAll('.payment-method-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    event.currentTarget.classList.add('selected');
+    
+    // Enable proceed button
+    document.getElementById('paymentProceedBtn').disabled = false;
+};
+
+window.processPayment = async function() {
+    if (!selectedPaymentMethod || !currentPaymentData) return;
+    
+    const processingOverlay = document.getElementById('paymentProcessing');
+    const proceedBtn = document.getElementById('paymentProceedBtn');
+    
+    // Show processing
+    processingOverlay.classList.add('active');
+    proceedBtn.disabled = true;
+    
+    try {
+        // Simulate payment processing (2-3 seconds)
+        await new Promise(resolve => setTimeout(resolve, 2500));
+        
+        // SIMULATE: 80% success rate
+        const isSuccess = Math.random() > 0.2;
+        
+        if (isSuccess) {
+            // Success - Handle based on shop type
+            if (currentPaymentData.shopType === 'tokens') {
+                // Add tokens
+                await addTokensToDB(currentPaymentData.tokenAmount);
+            } else if (currentPaymentData.shopType === 'emergence') {
+                // Activate emergence plan (you can add custom logic here)
+                alert(`✅ ${currentPaymentData.planName} Plan Activated!\nWe are sending your application now.`);
+            }
+            
+            // Close modal
+            closePaymentModal();
+            
+            // Show success toast
+            if (window.showSuccessToast) {
+                window.showSuccessToast(`Payment Successful! ${currentPaymentData.planName} activated.`);
+            }
+            
+        } else {
+            // Payment Failed
+            throw new Error('Payment processing failed');
+        }
+        
+    } catch (error) {
+        console.error('Payment error:', error);
+        
+        // Hide processing
+        processingOverlay.classList.remove('active');
+        
+        // Show error state
+        processingOverlay.innerHTML = `
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="margin-bottom: 20px;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            <div class="processing-text" style="color: #ef4444;">Payment Failed</div>
+            <div class="processing-subtext">Transaction could not be completed</div>
+            <button class="payment-proceed-btn" onclick="retryPayment()" style="margin-top: 20px;">
+                Try Again
+            </button>
+            <button class="payment-proceed-btn" onclick="closePaymentModal()" style="margin-top: 10px; background: #666;">
+                Back to Shop
+            </button>
+        `;
+        processingOverlay.classList.add('active');
+    }
+};
+
+window.retryPayment = function() {
+    // Reset processing overlay
+    const processingOverlay = document.getElementById('paymentProcessing');
+    processingOverlay.innerHTML = `
+        <div class="processing-spinner"></div>
+        <div class="processing-text">Processing Payment...</div>
+        <div class="processing-subtext">Please do not close this window</div>
+    `;
+    processingOverlay.classList.remove('active');
+    
+    // Re-enable button
+    document.getElementById('paymentProceedBtn').disabled = false;
+};
 </script>
 
 </body>
