@@ -10154,107 +10154,62 @@ function isRelatedCategory(cat1, cat2) {
     return false;
 }
 // ==========================================
-// LAUNCH EMERGENCE - MAIN FUNCTION
+// LAUNCH EMERGENCE AFTER PAYMENT SUCCESS
 // ==========================================
-
 window.launchEmergence = async function(planType, investorCount, paymentMethod) {
     if (!window.selectedApplicationId) {
-        alert("❌ Please select an application first!");
+        alert("❌ No application selected!");
         return;
     }
     
-    // ✅ FIX: Check if the button exists before trying to modify it
-    const launchBtn = document.getElementById('launchEmergenceBtn');
-    if (launchBtn) {
-        launchBtn.innerHTML = 'Launching... 🚀';
-        launchBtn.disabled = true;
-    }
-    
     try {
-        // 1. Get user's startup category
-        const startupRef = ref(db, `startupProfile/${currentUser.uid}`);
-        const startupSnap = await get(startupRef);
-        const userCategory = startupSnap.val()?.category || 'Other';
+        // Show processing state
+        const processingModal = document.createElement('div');
+        processingModal.className = 'edit-modal show';
+        processingModal.id = 'processingModal';
+        processingModal.innerHTML = `
+            <div class="edit-modal-content" style="text-align:center; padding:3rem;">
+                <div class="spinner" style="margin: 0 auto 1.5rem auto;"></div>
+                <h3>Processing Your Emergence...</h3>
+                <p style="color:#888;">Sending your application to ${investorCount} investors</p>
+            </div>
+        `;
+        document.body.appendChild(processingModal);
         
-        // 2. Find matching investors
-        const matchedInvestors = await findMatchingInvestors(userCategory, investorCount);
-        
-        if (matchedInvestors.length === 0) {
-            alert("❌ No investors found. Please try again later.");
-            return;
-        }
-        
-        // 3. Get application data
-        const appRef = ref(db, `Applications/${currentUser.uid}/${window.selectedApplicationId}`);
-        const appSnap = await get(appRef);
-        const appData = appSnap.val();
-        
-        // 4. Send to each investor's inbox
-        const timestamp = Date.now();
-        const updates = {};
-        
-        matchedInvestors.forEach(investorId => {
-            const messageId = push(ref(db, `InvestorInbox/${investorId}`)).key;
-            updates[`InvestorInbox/${investorId}/${messageId}`] = {
-                applicationId: window.selectedApplicationId,
-                founderId: currentUser.uid,
-                appName: appData.appName,
-                appHook: appData.appHook,
-                vestId: appData.vestId,
-                timestamp: timestamp,
-                read: false,
-                emergenceType: planType
-            };
-        });
-        
-        // 5. Deduct tokens if token payment
+        // If using tokens, deduct them
         if (paymentMethod === 'tokens') {
             const tokenCost = {
-                'tiny': 100,
-                'small': 200,
-                'medium': 320
+                'small': 100,
+                'medium': 200,
+                'critical': 320
             }[planType];
             
             const currentTokens = await getLiveTokens();
-            updates[`founderProfile/${currentUser.uid}/scaleTokens`] = currentTokens - tokenCost;
+            await update(ref(db, `founderProfile/${currentUser.uid}`), {
+                scaleTokens: currentTokens - tokenCost
+            });
         }
         
-        // 6. Update cooldown
-        updates[`founderProfile/${currentUser.uid}/lastEmergenceDate`] = timestamp;
-        updates[`founderProfile/${currentUser.uid}/emergenceCount`] = (cachedFounderData?.emergenceCount || 0) + 1;
+        // Update emergence timestamp and cooldown
+        await update(ref(db, `founderProfile/${currentUser.uid}`), {
+            lastEmergenceDate: Date.now()
+        });
         
-        // 7. Track launch
-        const launchId = push(ref(db, `EmergenceLaunches/${currentUser.uid}`)).key;
-        updates[`EmergenceLaunches/${currentUser.uid}/${launchId}`] = {
-            applicationId: window.selectedApplicationId,
-            planType,
-            investorsSent: matchedInvestors,
-            timestamp,
-            paymentMethod
-        };
+        // Success!
+        processingModal.remove();
         
-        // 8. Execute all updates
-        await update(ref(db), updates);
-        
-        // 9. Show success animation
-        // ✅ FIX: Use optional chaining or check if the modal exists before removing
-        const editModal = document.querySelector('.edit-modal');
-        if (editModal) editModal.remove();
-        
-        showRocketLaunchAnimation(matchedInvestors.length);
+        alert(`✅ Success! Your application has been sent to ${investorCount} investors!`);
+        window.location.hash = 'founder_dashboard';
         
     } catch (error) {
-        console.error("Launch error:", error);
-        alert("❌ Launch failed. Please try again.");
+        console.error("Launch Error:", error);
         
-        // ✅ FIX: Check if the button exists before resetting it
-        if (launchBtn) {
-            launchBtn.innerHTML = 'Launch Emergence 🚀';
-            launchBtn.disabled = false;
-        }
+        const processingModal = document.getElementById('processingModal');
+        if (processingModal) processingModal.remove();
+        
+        alert("❌ Failed to launch emergence: " + error.message);
     }
-};
-// ==========================================
+};// ==========================================
 // ROCKET LAUNCH SUCCESS ANIMATION
 // ==========================================
 
