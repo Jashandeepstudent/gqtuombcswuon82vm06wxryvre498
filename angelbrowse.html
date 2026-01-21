@@ -697,6 +697,11 @@
     font-weight: 600;
     font-size: 0.75rem;
 }
+/* Hide the back button specifically when the loading screen is active */
+.loading.active ~ .container .back-dashboard-btn,
+.loading.active + .back-dashboard-btn {
+    display: none;
+}
 .back-dashboard-btn {
     position: fixed; /* Changed from absolute */
     top: 20px;
