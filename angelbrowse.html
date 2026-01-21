@@ -1690,28 +1690,24 @@ async function loadUserCategory() {
 }
 async function loadAngelProfiles() {
     try {
-        // Show loader before fetching
-        const loadingMessage = document.getElementById('loadingMessage');
-        loadingMessage.style.display = 'flex'; 
-
         const angelProfilesRef = ref(database, 'angelProfiles');
         const snapshot = await get(angelProfilesRef);
-
-        // Hide loader once data is ready
-        loadingMessage.style.display = 'none';
 
         if (snapshot.exists()) {
             allProfiles = snapshot.val();
             displayRows();
+            
+            // ✅ Hide loading AFTER rows are displayed
+            loadingMessage.style.display = 'none';
         } else {
-            rowsContainer.innerHTML = '<div class="loading">No angel profiles found.</div>';
+            loadingMessage.textContent = 'No angel profiles found.';
         }
     } catch (error) {
         console.error('Error loading angel profiles:', error);
-        document.getElementById('loadingMessage').innerHTML = 
-            '<div style="color: #DC143C;">⚠️ Error loading profiles. Please refresh.</div>';
+        loadingMessage.textContent = 'Error loading profiles. Please try again.';
     }
 }
+
 
 async function loadOnlineStatus() {
     try {
