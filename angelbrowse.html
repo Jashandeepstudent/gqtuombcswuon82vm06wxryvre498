@@ -68,7 +68,56 @@
             border-color: #00CED1;
             box-shadow: 0 4px 15px rgba(0,206,209,0.4);
         }
+.loading {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    z-index: 9998;
+    align-items: center;
+    justify-content: center;
+}
 
+.loading.active {
+    display: flex;
+}
+
+.loading-content {
+    text-align: center;
+    color: white;
+}
+
+.loading-spinner {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 30px;
+    position: relative;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.loading-spinner::before {
+    content: '🚀';
+    font-size: 60px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: float 2s ease-in-out infinite;
+}
+
+.loading-text {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.loading-subtext {
+    font-size: 1rem;
+    opacity: 0.8;
+}
         .search-container {
             max-width: 600px;
             margin: 0 auto 40px;
@@ -649,10 +698,10 @@
     font-size: 0.75rem;
 }
 .back-dashboard-btn {
-    position: absolute;
+    position: fixed; /* Changed from absolute */
     top: 20px;
     left: 20px;
-    padding: 10px 20px;
+    padding: 12px 24px;
     background: #ffffff;
     border: 2px solid #ddd;
     border-radius: 30px;
@@ -661,7 +710,7 @@
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    z-index: 100;
+    z-index: 999; /* Above everything except modals */
 }
 
 .back-dashboard-btn:hover {
@@ -990,7 +1039,13 @@
             <input type="text" id="searchBox" class="search-box" placeholder="Search by name or User ID...">
         </div>
         
-        <div id="loadingMessage" class="loading">Loading angel profiles...</div>
+<div id="loadingMessage" class="loading active">
+    <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading Angel Profiles...</div>
+        <div class="loading-subtext">Finding the perfect investors for you</div>
+    </div>
+</div>
         <div id="rowsContainer"></div>
     </div>
 
@@ -1558,6 +1613,36 @@ async function recordClick(investorId) {
         console.error('Error recording click:', error);
     }
 }
+// At the top with globals, add:
+let alreadyImpressionedInvestors = new Set();
+let alreadyClickedInvestors = new Set();
+
+// Load existing tracking data on auth
+async function loadExistingTracking(userId) {
+    try {
+        // Load all investors this user already viewed
+        const impressionsRef = ref(database, `founderBehavior/${userId}/profileViews`);
+        const snapshot = await get(impressionsRef);
+        
+        if (snapshot.exists()) {
+            Object.keys(snapshot.val()).forEach(investorId => {
+                alreadyImpressionedInvestors.add(investorId);
+            });
+        }
+        
+        // Load clicks
+        const clicksRef = ref(database, `founderBehavior/${userId}/clickedProfiles`);
+        const clickSnap = await get(clicksRef);
+        
+        if (clickSnap.exists()) {
+            Object.keys(clickSnap.val()).forEach(investorId => {
+                alreadyClickedInvestors.add(investorId);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading tracking:', error);
+    }
+}
        onAuthStateChanged(auth, async (user) => {
     if (!user) {
         window.location.href = 'login2.html';
@@ -1655,19 +1740,18 @@ async function loadAngelProfiles() {
 }
 
 
+let presenceUpdateTimeout = null;
+
 async function loadOnlineStatus() {
     try {
-        // Listen to ALL presence statuses in real-time
         const presenceRef = ref(database, 'presence');
         
         onValue(presenceRef, (snapshot) => {
             if (snapshot.exists()) {
                 const presenceData = snapshot.val();
                 
-                // Update our online status map with FULL presence data
                 Object.keys(presenceData).forEach(userId => {
                     const userPresence = presenceData[userId];
-                    
                     onlineStatusMap[userId] = {
                         online: userPresence.online === true,
                         todayLogin: userPresence.todayLogin === true,
@@ -1676,24 +1760,19 @@ async function loadOnlineStatus() {
                     };
                 });
                 
-                const onlineCount = Object.values(onlineStatusMap).filter(p => p.online).length;
-                const todayLoginCount = Object.values(onlineStatusMap).filter(p => p.todayLogin).length;
-                
-                console.log('✅ Presence updated:');
-                console.log(`   🔥 Online NOW: ${onlineCount} investors`);
-                console.log(`   📅 Logged in today: ${todayLoginCount} investors`);
-                
-                // ✅ REFRESH UI IMMEDIATELY when presence changes
-                if (allProfiles && Object.keys(allProfiles).length > 0) {
-                    displayRows();
-                }
+                // ✅ DEBOUNCE: Wait 3 seconds before updating UI
+                clearTimeout(presenceUpdateTimeout);
+                presenceUpdateTimeout = setTimeout(() => {
+                    if (allProfiles && Object.keys(allProfiles).length > 0) {
+                        displayRows();
+                    }
+                }, 3000); // 3 second delay
             }
         });
     } catch (error) {
-        console.error('❌ Error loading online status:', error);
+        console.error('Error loading presence:', error);
     }
 }
-
 
       // ============================================
 // ULTIMATE COMBINED SCORING ALGORITHM
@@ -2011,7 +2090,7 @@ function displayRows() {
     if (learningConfidence >= 30 && categories.matchingPattern.length > 0) {
         categories.matchingPattern.sort((a, b) => b.score - a.score);
         createRow(
-            categories.matchingPattern.slice(0, 15), 
+            categories.matchingPattern.slice(0, 10), 
             '🤖 AI Picked for You', // Removed confidence text
             'AI Match', 
             'badge-trending'
@@ -2573,22 +2652,32 @@ async function checkPitchEligibility(investorId) {
         }
         
         const investor = investorSnap.val();
-        const pitchCooldown = investor.pitchCooldown || 0; // days
+         const cooldownSettings = investor.pitchCooldown || { unit: 'days', value: 0 };
         const dailyLimit = investor.dailyPitchReceive || 999; // max pitches per day
         
         // 2. Check if user already pitched this investor
-        const userPitchRef = ref(database, `pitchHistory/${currentUser.uid}/${investorId}`);
-        const pitchSnap = await get(userPitchRef);
+         const pitchHistoryRef = ref(database, `pitchHistory/${currentUser.uid}/${investorId}`);
+        const pitchSnap = await get(pitchHistoryRef);
         
         if (pitchSnap.exists()) {
             const lastPitch = pitchSnap.val();
             const lastPitchTime = new Date(lastPitch.timestamp).getTime();
-            const cooldownMs = pitchCooldown * 24 * 60 * 60 * 1000;
+            
+            // Calculate cooldown in milliseconds
+            let cooldownMs = 0;
+            if (cooldownSettings.unit === 'days') {
+                cooldownMs = cooldownSettings.value * 24 * 60 * 60 * 1000;
+            } else if (cooldownSettings.unit === 'months') {
+                cooldownMs = cooldownSettings.value * 30 * 24 * 60 * 60 * 1000;
+            } else if (cooldownSettings.unit === 'hours') {
+                cooldownMs = cooldownSettings.value * 60 * 60 * 1000;
+            }
+            
             const timeLeft = (lastPitchTime + cooldownMs) - Date.now();
             
             if (timeLeft > 0) {
                 const daysLeft = Math.ceil(timeLeft / (1000 * 60 * 60 * 24));
-                throw new Error(`You already pitched this investor. Please wait ${daysLeft} day(s) before pitching again.`);
+                throw new Error(`Cooldown active! Wait ${daysLeft} day(s) to pitch again.`);
             }
         }
         
