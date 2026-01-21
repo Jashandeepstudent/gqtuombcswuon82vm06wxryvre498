@@ -3876,24 +3876,49 @@ window.startVerification = function() {
 window.toggleTheme = function() {
     const btn = document.getElementById('themeSwitcherBtn');
     const actionButtons = document.querySelectorAll('.action-btn');
+    const body = document.body;
+    const topNav = document.querySelector('.top-nav');
+    
+    // Check current state based on button text
     const isBlueMode = btn.innerText.includes('BLUE');
 
     if (isBlueMode) {
-        // Change to Blue Mode (Blue background, Green text)
-        actionButtons.forEach(btn => {
-            btn.style.background = '#1e3a8a'; // Deep Blue
-            btn.style.borderColor = '#1d4ed8';
-            btn.style.color = '#22c55e';      // Green Text
+        // --- APPLY BLUE THEME ---
+        
+        // 1. Change Global Background Gradient
+        body.style.background = "linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #1e40af 100%)";
+        
+        // 2. Change Top Nav Background
+        if(topNav) topNav.style.background = "linear-gradient(90deg, #020617, #1e3a8a, #1e40af)";
+        
+        // 3. Update Quick Action Buttons (Blue BG, Green Text)
+        actionButtons.forEach(button => {
+            button.style.background = '#1e3a8a'; 
+            button.style.borderColor = '#3b82f6';
+            button.style.color = '#22c55e'; // Green text/icons
         });
+
+        // 4. Update Modal Button
         btn.innerText = "SWITCH TO ORIGINAL THEME";
         btn.style.background = "linear-gradient(135deg, #3b82f6, #1d4ed8)";
+        
     } else {
-        // Change back to Original (Green background, Blue text)
-        actionButtons.forEach(btn => {
-            btn.style.background = '#22c55e'; // Green
-            btn.style.borderColor = '#16a34a';
-            btn.style.color = '#1e3a8a';      // Blue Text
+        // --- APPLY ORIGINAL GREEN THEME ---
+        
+        // 1. Restore Original Background Gradient
+        body.style.background = "linear-gradient(135deg, #0a4d3c 0%, #1a5f7a 50%, #2e8b9e 100%)";
+        
+        // 2. Restore Top Nav Background
+        if(topNav) topNav.style.background = "linear-gradient(90deg, #0a2f23, #134e4a, #0f766e)";
+        
+        // 3. Restore Quick Action Buttons (Green BG, Blue Text)
+        actionButtons.forEach(button => {
+            button.style.background = '#22c55e'; 
+            button.style.borderColor = '#16a34a';
+            button.style.color = '#1e3a8a'; // Blue text/icons
         });
+
+        // 4. Update Modal Button
         btn.innerText = "SWITCH TO BLUE THEME";
         btn.style.background = "linear-gradient(135deg, #10b981, #059669)";
     }
@@ -3910,7 +3935,7 @@ window.handleLogout = async function() {
         try {
             await auth.signOut();
             localStorage.removeItem('investorProfileCreated');
-            window.location.href = "login3.html";
+            window.location.href = "investor-side.html";
         } catch (error) {
             console.error("Logout failed", error);
         }
