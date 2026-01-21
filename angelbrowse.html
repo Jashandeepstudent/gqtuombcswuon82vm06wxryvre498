@@ -1573,17 +1573,7 @@ function setupImpressionTracking() {
 }
 
 // Increment impression in Firebase
-async function incrementImpression(investorId) {
-    try {
-        const impressionRef = ref(database, `angelProfiles/${investorId}/impressions`);
-        await runTransaction(impressionRef, (current) => {
-            return (current || 0) + 1;
-        });
-        console.log(`📊 Impression counted for ${investorId}`);
-    } catch (error) {
-        console.error('Error tracking impression:', error);
-    }
-}
+
 
 // Increment click when profile is viewed
 async function incrementProfileClick(investorId) {
