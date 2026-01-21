@@ -697,13 +697,10 @@
     font-weight: 600;
     font-size: 0.75rem;
 }
-/* Hide the back button specifically when the loading screen is active */
-.loading.active ~ .container .back-dashboard-btn,
-.loading.active + .back-dashboard-btn {
-    display: none;
-}
+
 .back-dashboard-btn {
-    position: fixed; /* Changed from absolute */
+    display: none;
+    position: fixed; 
     top: 20px;
     left: 20px;
     padding: 12px 24px;
@@ -1748,8 +1745,10 @@ async function loadAngelProfiles() {
             allProfiles = snapshot.val();
             displayRows();
             
-            // ✅ Hide loading AFTER rows are displayed
+            // ✅ Hide loading message
             loadingMessage.style.display = 'none';
+            // ✅ SHOW the back button now that content is ready
+            document.querySelector('.back-dashboard-btn').style.display = 'block';
         } else {
             loadingMessage.textContent = 'No angel profiles found.';
         }
@@ -1758,7 +1757,6 @@ async function loadAngelProfiles() {
         loadingMessage.textContent = 'Error loading profiles. Please try again.';
     }
 }
-
 
 let presenceUpdateTimeout = null;
 
