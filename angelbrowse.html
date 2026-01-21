@@ -5,11 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Browse Angel Investors</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden; /* Prevents tiny horizontal scroll gaps */
+}
 
         body {
             font-family: 'Inter', 'Segoe UI', sans-serif;
@@ -71,23 +77,17 @@
 .loading {
     display: none;
     position: fixed;
-    /* Force to all four corners */
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    /* Ensure it covers full width/height regardless of parent containers */
-    width: 100vw;
-    height: 100vh;
+    top: 0 !important;   /* !important ensures no JS or other CSS overrides this */
+    left: 0 !important;
+    width: 100vw;        /* Viewport Width - 100% of actual screen */
+    height: 100vh;       /* Viewport Height - 100% of actual screen */
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    /* Set z-index higher than the back button (999) */
-    z-index: 10000; 
+    z-index: 99999;      /* Increased to stay above EVERYTHING */
     align-items: center;
     justify-content: center;
-    /* Prevent interaction with background elements */
-    pointer-events: all;
+    margin: 0;
+    padding: 0;
 }
-
 .loading.active {
     display: flex;
 }
@@ -511,12 +511,20 @@
             transform: scale(1.05);
         }
 
-        .loading {
-            text-align: center;
-            color: #333;
-            font-size: 1.3rem;
-            margin-top: 50px;
-        }
+.loading {
+    display: none;
+    position: fixed;
+    top: 0 !important;   /* !important ensures no JS or other CSS overrides this */
+    left: 0 !important;
+    width: 100vw;        /* Viewport Width - 100% of actual screen */
+    height: 100vh;       /* Viewport Height - 100% of actual screen */
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    z-index: 99999;      /* Increased to stay above EVERYTHING */
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
 
         .modal {
             display: none;
