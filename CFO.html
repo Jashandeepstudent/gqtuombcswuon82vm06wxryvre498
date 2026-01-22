@@ -1112,7 +1112,7 @@ function updateCountdownDisplay(seconds, planType) {
     
     // You can display this in your header or anywhere
     // Example: Show in console for now (you can create a UI element for this)
-    console.log(`⏱️ ${planType} ends in: ${days}d ${hours}h ${minutes}m ${secs}s`);
+    //console.log(`⏱️ ${planType} ends in: ${days}d ${hours}h ${minutes}m ${secs}s`);
     
     // Optional: Update a visible element
     const countdownEl = document.getElementById('cfo-countdown-display');
@@ -1349,17 +1349,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 2000);
   }
 
-  function displayCFOName(name) {
-      const header = document.querySelector('.header');
-      const existingLabel = document.getElementById('cfo-display-label');
-      if (existingLabel) existingLabel.remove();
 
-      const cfoLabel = document.createElement('div');
-      cfoLabel.id = "cfo-display-label";
-      cfoLabel.style = "font-size: 14px; color: rgba(255,255,255,0.7); margin-top: 5px; font-weight: 500;";
-      cfoLabel.innerHTML = `<span style="color: #3b82f6; font-weight: 700;">${name}</span> - Your CFO`;
-      header.appendChild(cfoLabel);
-  }
 
 // Fetch all products and calculate sales
 async function fetchProductAnalysis(userId) {
@@ -1517,10 +1507,13 @@ function displayProductAnalysis(products) {
 }
 
 // Setup navigation
+// Setup navigation
 function setupProductAnalysisNavigation(userId) {
     const card = document.getElementById('product-analysis-card');
     const page = document.getElementById('product-analysis-page');
     const backBtn = document.getElementById('back-btn');
+    
+    if (!card || !page || !backBtn) return; // Safety check
     
     card.addEventListener('click', async () => {
         // Show page
@@ -1547,7 +1540,6 @@ function setupProductAnalysisNavigation(userId) {
         document.body.style.overflow = 'auto';
     });
 }
-
 // ========== FINANCE REPORT FUNCTIONS ==========
 
 function setupFinanceReportNavigation(userId) {
@@ -2176,7 +2168,17 @@ async function fetchPricingAnalysis(userId) {
         console.error("Error fetching pricing analysis:", error);
     }
 }
+function displayCFOName(name) {
+    const header = document.querySelector('.header');
+    const existingLabel = document.getElementById('cfo-display-label');
+    if (existingLabel) existingLabel.remove();
 
+    const cfoLabel = document.createElement('div');
+    cfoLabel.id = "cfo-display-label";
+    cfoLabel.style = "font-size: 14px; color: rgba(255,255,255,0.7); margin-top: 5px; font-weight: 500;";
+    cfoLabel.innerHTML = `<span style="color: #3b82f6; font-weight: 700;">${name}</span> - Your CFO`;
+    header.appendChild(cfoLabel);
+}
 function updatePricingCard(prices, issues) {
     const momentumCard = document.querySelector('.momentum-card');
     const momentumText = momentumCard.querySelector('.momentum-text');
