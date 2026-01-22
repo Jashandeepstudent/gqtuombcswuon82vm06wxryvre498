@@ -166,40 +166,67 @@
         }
     });
 
-    async function loadInbox() {
-        const inboxRef = ref(db, `investorInbox/${auth.currentUser.uid}`);
-        onValue(inboxRef, async (snapshot) => {
-            const listDiv = document.getElementById('inboxList');
-            listDiv.innerHTML = "";
-            if (!snapshot.exists()) {
-                listDiv.innerHTML = "<p style='color:#999; text-align:center;'>No applications in queue.</p>";
-                return;
-            }
-            const entries = Object.entries(snapshot.val()).sort((a, b) => b[1].timestamp - a[1].timestamp);
-            for (const [id, pitch] of entries) {
+ async function loadInbox() {
+    const inboxRef = ref(db, `investorInbox/${auth.currentUser.uid}`);
+    const listDiv = document.getElementById('inboxList');
+
+    // Use onValue for real-time updates
+    onValue(inboxRef, async (snapshot) => {
+        // Clear previous list or loader
+        listDiv.innerHTML = "";
+
+        // 1. Check if snapshot exists and actually has children
+        if (!snapshot.exists() || snapshot.val() === null) {
+            listDiv.innerHTML = `
+                <div style="text-align:center; padding: 60px 20px; color:#999; animation: fadeIn 0.5s ease;">
+                    <div style="font-size: 4rem; margin-bottom: 20px; filter: grayscale(1); opacity: 0.5;">📂</div>
+                    <h3 style="color:#000; margin-bottom:10px; font-weight:800;">No applications found</h3>
+                    <p style="max-width:300px; margin: 0 auto; line-height:1.5;">Startup pitches sent to your profile will appear here in real-time.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // 2. Prepare data and sort
+        const data = snapshot.val();
+        const entries = Object.entries(data).sort((a, b) => b[1].timestamp - a[1].timestamp);
+
+        // 3. Render Cards
+        for (const [id, pitch] of entries) {
+            try {
+                // Fetch current startup profile (for the latest logo/name)
                 const startupSnap = await get(ref(db, `startupProfile/${pitch.founderId}`));
                 const sData = startupSnap.exists() ? startupSnap.val() : {};
+
                 const card = document.createElement('div');
                 card.className = 'pitch-card';
                 card.innerHTML = `
                     <div class="startup-identity-sq" onclick="window.location.hash='view_application_${pitch.appId}'">
-                        <img src="${sData.logo || 'https://via.placeholder.com/100'}" onerror="this.src='https://via.placeholder.com/100'">
+                        <img src="${sData.logo || 'https://upscalevest.site/ScaleVestLogo.png'}" 
+                             onerror="this.src='https://upscalevest.site/ScaleVestLogo.png'" 
+                             alt="Logo">
                     </div>
                     <div class="card-body-content" onclick="window.location.hash='view_application_${pitch.appId}'">
                         <div><span class="card-header-hook">${pitch.vestHook || 'NEW PITCH'}</span></div>
-                        <h3 class="card-startup-title">${sData.startupName || pitch.startupName}</h3>
+                        <h3 class="card-startup-title">${sData.startupName || pitch.startupName || 'Unnamed Startup'}</h3>
                         <div class="card-footer-meta">
-                            <span class="meta-founder">Sent by ${pitch.founderName}</span>
+                            <span class="meta-founder">Sent by ${pitch.founderName || 'Founder'}</span>
                             <span>•</span>
                             <span class="meta-time">${formatTime(pitch.timestamp)}</span>
                         </div>
                     </div>
-                    <button class="delete-icon-btn" onclick="deletePitch('${pitch.appId}')">🗑️</button>
+                    <button class="delete-icon-btn" onclick="deletePitch('${pitch.appId}')" title="Archive Pitch">🗑️</button>
                 `;
                 listDiv.appendChild(card);
+            } catch (err) {
+                console.error("Failed to render pitch card:", err);
             }
-        });
-    }
+        }
+    }, (error) => {
+        console.error("Database error:", error);
+        listDiv.innerHTML = `<p style="text-align:center; color:red; padding:20px;">Connection error. Please check your permissions.</p>`;
+    });
+}
 
     async function viewApplication(appId) {
         document.getElementById('inboxView').style.display = 'none';
@@ -245,14 +272,9 @@
                         <p style="margin:0; font-size: 1.2rem; color:#00CED1; font-weight:800; text-transform: uppercase;">${aData.founderName || pitch.founderName}</p>
                     </div>
                 </div>
-<div style="margin-top: 30px; background: #f0f0f0; padding: 20px; border-radius: 8px; display: flex; align-items: center; gap: 8px; font-family: 'Inter', sans-serif;">
-    <span style="font-size: 13px; font-weight: 900; color: #666; letter-spacing: 1px;">ATTACHED VEST:</span>
-    <a href="https://upscalevest.site/vest-details.html?id=${aData.vestId}&owner=${pitch.founderId}" 
-       target="_blank" 
-       style="color: #000; font-weight: 800; text-decoration: none; font-size: 1.1rem; border-bottom: 2px solid #00CED1; padding-bottom: 2px; transition: 0.3s;">
-       ${sData.startupName || 'Startup'} Startup Vest
-    </a>
-</div>
+                <div style="margin-top: 30px; background: #f0f0f0; padding: 15px; border-radius: 8px;">
+                    <a href="https://upscalevest.site/vest-details.html?id=${aData.vestId}&owner=${pitch.founderId}" target="_blank" style="color: #000; font-weight: 700;">View Full Startup Vest Profile →</a>
+                </div>
             </div>
         `;
     }
@@ -288,8 +310,6 @@
                 investorId: auth.currentUser.uid,
                 status: tempStatus,
                 comment,
-                 founderId: currentApp.founderId,
-                  applicationId: currentApp.appId,
                 timestamp: serverTimestamp()
             });
 
